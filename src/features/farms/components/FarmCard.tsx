@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import type { Database } from '@/lib/database.types';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 
 type Farm = Database['public']['Tables']['farms']['Row'];
 
@@ -12,10 +14,10 @@ interface FarmCardProps {
 
 export function FarmCard({ farm, onDelete }: FarmCardProps) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+    <Card className="hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h3 className="text-xl font-semibold text-gray-900">{farm.name}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{farm.name}</h3>
           <p className="text-gray-600">{farm.location}</p>
         </div>
         <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
@@ -32,19 +34,16 @@ export function FarmCard({ farm, onDelete }: FarmCardProps) {
       <div className="flex gap-2">
         <Link
           href={`/farms/${farm.id}`}
-          className="flex-1 text-center bg-green-600 text-white py-2 rounded-md hover:bg-green-700"
+          className="flex-1 text-center bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
         >
           View Details
         </Link>
         {onDelete && (
-          <button
-            onClick={() => onDelete(farm.id)}
-            className="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50"
-          >
+          <Button variant="ghost" onClick={() => onDelete(farm.id)}>
             Delete
-          </button>
+          </Button>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

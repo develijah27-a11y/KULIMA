@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 
 interface FarmFormProps {
   onSubmit: (data: {
@@ -34,58 +36,32 @@ export function FarmForm({ onSubmit, loading }: FarmFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium mb-1">
-          Farm Name *
-        </label>
-        <input
-          id="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="location" className="block text-sm font-medium mb-1">
-          Location *
-        </label>
-        <input
-          id="location"
-          type="text"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          required
-          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="size" className="block text-sm font-medium mb-1">
-          Size (hectares)
-        </label>
-        <input
-          id="size"
-          type="number"
-          value={sizeHectares}
-          onChange={(e) => setSizeHectares(e.target.value)}
-          min="0"
-          step="0.01"
-          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="type" className="block text-sm font-medium mb-1">
-          Farm Type
-        </label>
+      <Input
+        label="Farm Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+      />
+      <Input
+        label="Location"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        required
+      />
+      <Input
+        label="Size (hectares)"
+        type="number"
+        value={sizeHectares}
+        onChange={(e) => setSizeHectares(e.target.value)}
+        min="0"
+        step="0.01"
+      />
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-gray-700">Farm Type</label>
         <select
-          id="type"
           value={farmType}
           onChange={(e) => setFarmType(e.target.value)}
-          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
         >
           <option value="">Select type</option>
           <option value="crop">Crop Farm</option>
@@ -93,14 +69,9 @@ export function FarmForm({ onSubmit, loading }: FarmFormProps) {
           <option value="mixed">Mixed Farm</option>
         </select>
       </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
-      >
-        {loading ? 'Creating...' : 'Create Farm'}
-      </button>
+      <Button type="submit" isLoading={loading} className="w-full">
+        Create Farm
+      </Button>
     </form>
   );
 }
