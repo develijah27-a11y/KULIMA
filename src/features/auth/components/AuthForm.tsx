@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -11,6 +12,7 @@ interface AuthFormProps {
 
 export function AuthForm({ mode }: AuthFormProps) {
   const supabase = createClient();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -18,11 +20,28 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setSuccess('');
+        setError(null);
+        router.push('/dashboard');
+        router.refresh();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
       if (mode === 'signup') {
@@ -36,14 +55,19 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         if (signUpError) throw signUpError;
         if (data.user) {
-          await supabase.from('profiles').insert({
-            id: data.user.id,
-            user_id: data.user.id,
-            full_name: fullName,
-            phone_number: phoneNumber || null,
-            location: location || null,
-          });
+          // Upsert profile so re-signup of the same email is idempotent
+          await supabase.from('profiles').upsert(
+            {
+              id: data.user.id,
+              user_id: data.user.id,
+              full_name: fullName,
+              phone_number: phoneNumber || null,
+              location: location || null,
+            },
+            { onConflict: 'id' }
+          );
         }
+        setSuccess('Account created! Check your email to confirm your account, then sign in.');
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -135,6 +159,12 @@ export function AuthForm({ mode }: AuthFormProps) {
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm" role="alert">
             {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm" role="status">
+            {success}
           </div>
         )}
 
