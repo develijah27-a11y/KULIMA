@@ -1,0 +1,93 @@
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.105:3000
+- Environments: .env.local
+✓ Ready in 11.7s
+⚠ Invalid next.config.js options detected: 
+⚠     Unrecognized key(s) in object: 'swcMinify'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+⚠ Slow filesystem detected. The benchmark took 235ms. If C:\Users\PwezaCore\Desktop\KULIMA\.next/dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+○ Compiling proxy ...
+
+○ Compiling / ...
+ GET / 200 in 2.1min (next.js: 116s, proxy.ts: 2.6s, application-code: 8.9s)
+✓ Finished writing to filesystem cache in 18.5s
+○ Compiling /auth/signin ...
+ GET /auth/signin 200 in 23.4s (next.js: 22.8s, proxy.ts: 170ms, application-code: 504ms)
+ GET /auth/signin 200 in 855ms (next.js: 60ms, proxy.ts: 84ms, application-code: 711ms)
+ GET /auth/signin 200 in 1130ms (next.js: 36ms, proxy.ts: 61ms, application-code: 1033ms)
+ GET /auth/signin 200 in 1050ms (next.js: 68ms, proxy.ts: 464ms, application-code: 518ms)
+ GET /auth/signin 200 in 1250ms (next.js: 106ms, proxy.ts: 126ms, application-code: 1018ms)
+ GET /auth/signin 200 in 840ms (next.js: 114ms, proxy.ts: 116ms, application-code: 610ms)
+[browser] ❌ Invalid environment variables: 
+    at validateEnv (src/config/env.ts:50:13)
+    at module evaluation (src/config/env.ts:72:20)
+    at module evaluation (src/lib/supabase/client.ts:3:1)
+    at module evaluation (src/features/auth/components/AuthForm.tsx:4:1)
+    at module evaluation (src/app/auth/signin/page.tsx:4:1)
+  48 |     return envSchema.parse(process.env);
+  49 |   } catch (error) {
+> 50 |     console.error('❌ Invalid environment variables:');
+     |             ^
+  51 |     if (error instanceof z.ZodError) {
+  52 |       error.issues.forEach((err) => {
+  53 |         console.error(`  ${err.path.join('.')}: ${err.message}`); (src/config/env.ts:50:13)
+[browser] Uncaught Error: Environment validation failed. Please check your .env.local file against .env.example
+    at validateEnv (src/config/env.ts:56:11)
+    at module evaluation (src/config/env.ts:72:20)
+    at module evaluation (src/lib/supabase/client.ts:3:1)
+    at module evaluation (src/features/auth/components/AuthForm.tsx:4:1)
+    at module evaluation (src/app/auth/signin/page.tsx:4:1)
+  54 |       });
+  55 |     }
+> 56 |     throw new Error('Environment validation failed. Please check your .env.local file agai...
+     |           ^
+  57 |   }
+  58 | }
+  59 |
+[browser]   NEXT_PUBLIC_SUPABASE_URL: Invalid input: expected string, received undefined 
+    at <unknown> (src/config/env.ts:53:17)
+    at Array.forEach (<anonymous>)
+    at validateEnv (src/config/env.ts:52:20)
+    at module evaluation (src/config/env.ts:72:20)
+    at module evaluation (src/lib/supabase/client.ts:3:1)
+    at module evaluation (src/features/auth/components/AuthForm.tsx:4:1)
+    at module evaluation (src/app/auth/signin/page.tsx:4:1)
+  51 |     if (error instanceof z.ZodError) {
+  52 |       error.issues.forEach((err) => {
+> 53 |         console.error(`  ${err.path.join('.')}: ${err.message}`);
+     |                 ^
+  54 |       });
+  55 |     }
+  56 |     throw new Error('Environment validation failed. Please check your .env.local file agai... (src/config/env.ts:53:17)
+[browser]   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: Invalid input: expected string, received undefined 
+    at <unknown> (src/config/env.ts:53:17)
+    at Array.forEach (<anonymous>)
+    at validateEnv (src/config/env.ts:52:20)
+    at module evaluation (src/config/env.ts:72:20)
+    at module evaluation (src/lib/supabase/client.ts:3:1)
+    at module evaluation (src/features/auth/components/AuthForm.tsx:4:1)
+    at module evaluation (src/app/auth/signin/page.tsx:4:1)
+  51 |     if (error instanceof z.ZodError) {
+  52 |       error.issues.forEach((err) => {
+> 53 |         console.error(`  ${err.path.join('.')}: ${err.message}`);
+     |                 ^
+  54 |       });
+  55 |     }
+  56 |     throw new Error('Environment validation failed. Please check your .env.local file agai... (src/config/env.ts:53:17)
+[browser]   SUPABASE_SERVICE_ROLE_KEY: Invalid input: expected string, received undefined 
+    at <unknown> (src/config/env.ts:53:17)
+    at Array.forEach (<anonymous>)
+    at validateEnv (src/config/env.ts:52:20)
+    at module evaluation (src/config/env.ts:72:20)
+    at module evaluation (src/lib/supabase/client.ts:3:1)
+    at module evaluation (src/features/auth/components/AuthForm.tsx:4:1)
+    at module evaluation (src/app/auth/signin/page.tsx:4:1)
+  51 |     if (error instanceof z.ZodError) {
+  52 |       error.issues.forEach((err) => {
+> 53 |         console.error(`  ${err.path.join('.')}: ${err.message}`);
+     |                 ^
+  54 |       });
+  55 |     }
+  56 |     throw new Error('Environment validation failed. Please check your .env.local file agai... (src/config/env.ts:53:17)

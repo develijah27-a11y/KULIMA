@@ -1,3 +1,60 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Colors - Light Mode */
+  --color-primary: #16a34a;
+  --color-primary-hover: #15803d;
+  --color-primary-active: #166534;
+
+  --color-background: #ffffff;
+  --color-surface: #f9fafb;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  /* Dark Mode */
+  --color-background-dark: #111827;
+  --color-surface-dark: #1f2937;
+  --color-text-primary-dark: #f9fafb;
+  --color-text-secondary-dark: #9ca3af;
+  --color-border-dark: #374151;
+}
+
+/* Dark mode overrides using CSS custom properties */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: var(--color-background-dark);
+    --color-surface: var(--color-surface-dark);
+    --color-text-primary: var(--color-text-primary-dark);
+    --color-text-secondary: var(--color-text-secondary-dark);
+    --color-border: var(--color-border-dark);
+  }
+}
+
+/* Focus rings */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Animation for prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Skeleton animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.animate-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}

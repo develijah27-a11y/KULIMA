@@ -77,23 +77,7 @@ describe('Project Setup Verification', () => {
       expect(packageJson.dependencies.tailwindcss).toBeDefined();
     });
 
-    it('should have tailwind.config.ts', () => {
-      const configExists = fs.existsSync(
-        path.join(process.cwd(), 'tailwind.config.ts')
-      );
-      
-      expect(configExists).toBe(true);
-    });
-
-    it('should have postcss.config.js', () => {
-      const configExists = fs.existsSync(
-        path.join(process.cwd(), 'postcss.config.js')
-      );
-      
-      expect(configExists).toBe(true);
-    });
-
-    it('should have globals.css with Tailwind directives', () => {
+    it('should have globals.css with Tailwind v4 import or @theme config', () => {
       const globalsPath = path.join(process.cwd(), 'src', 'app', 'globals.css');
       const globalsExists = fs.existsSync(globalsPath);
       
@@ -101,13 +85,18 @@ describe('Project Setup Verification', () => {
       
       if (globalsExists) {
         const content = fs.readFileSync(globalsPath, 'utf-8');
-        // Check for Tailwind directives or Tailwind v4 import
+        // Tailwind v4 uses @import "tailwindcss"; — v3-style @tailwind directives are also accepted
         const hasTailwind = 
           content.includes('@tailwind') || 
           content.includes('@import "tailwindcss"');
         
         expect(hasTailwind).toBe(true);
       }
+
+      // Tailwind v4 CSS-first config: globals.css must contain an @theme block
+      const themeConfigPath = globalsPath;
+      const themeContent = fs.readFileSync(themeConfigPath, 'utf-8');
+      expect(themeContent.includes('@theme')).toBe(true);
     });
   });
 

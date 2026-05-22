@@ -1,16 +1,15 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '../database.types';
-import { env } from '@/config/env';
 
-/**
- * Creates a Supabase client for use in Next.js middleware
- * Handles cookie-based session management for authentication middleware
- * 
- * @param request - Next.js request object
- * @returns Object containing Supabase client and response with updated cookies
- */
 export const createClient = (request: NextRequest) => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are required');
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -18,8 +17,8 @@ export const createClient = (request: NextRequest) => {
   });
 
   const supabase = createServerClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name: string) {

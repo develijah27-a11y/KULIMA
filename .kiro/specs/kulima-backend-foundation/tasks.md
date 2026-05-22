@@ -13,15 +13,15 @@ This implementation plan establishes a production-ready, scalable, and secure ba
 
 ## Tasks
 
-- [ ] 1. Project initialization and configuration
-  - [ ] 1.1 Initialize Next.js project with TypeScript and App Router
+- [x] 1. Project initialization and configuration
+  - [x] 1.1 Initialize Next.js project with TypeScript and App Router
     - Create Next.js 14+ project with TypeScript template
     - Configure tsconfig.json with strict mode enabled
     - Set up Tailwind CSS configuration
     - Create initial folder structure: /src/app, /src/features, /src/lib, /src/types, /src/utils, /src/config, /src/server
     - _Requirements: 6.1, 6.4, 8.1_
 
-  - [ ] 1.2 Configure environment variables and validation
+  - [x] 1.2 Configure environment variables and validation
     - Create .env.example with all required variables documented
     - Create /src/config/env.ts with Zod schema for environment validation
     - Define NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (client-safe)
@@ -29,29 +29,29 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Implement startup validation that throws descriptive errors for missing variables
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
 
-  - [ ] 1.3 Set up Supabase project and install dependencies
+  - [x] 1.3 Set up Supabase project and install dependencies
     - Install @supabase/supabase-js, @supabase/ssr, zod, and other core dependencies
     - Initialize Supabase project locally with supabase init
     - Configure supabase/config.toml with project settings
     - Document Supabase project setup in README.md
     - _Requirements: 21.1, 21.2, 25.1_
 
-- [ ] 2. Database schema inspection and migration foundation
-  - [ ] 2.1 Inspect and document existing database schema
+- [x] 2. Database schema inspection and migration foundation
+  - [x] 2.1 Inspect and document existing database schema
     - Export current schema including tables, columns, constraints, indexes, RLS policies
     - Document all existing tables: profiles, farms, crops, soil_reports, disease_scans, weather_logs
     - Identify all foreign key relationships and dependencies
     - Create schema documentation in supabase/SCHEMA.md
     - _Requirements: 1.1, 1.2, 1.4, 1.5_
 
-  - [ ] 2.2 Create migration system foundation
+  - [x] 2.2 Create migration system foundation
     - Create supabase/migrations directory structure
     - Create schema_migrations tracking table
     - Document migration naming convention: YYYYMMDDHHMMSS_description.sql
     - Document rollback plan template in supabase/MIGRATIONS.md
     - _Requirements: 2.1, 2.2, 2.3, 2.6_
 
-  - [ ] 2.3 Create initial schema migration with all tables
+  - [x] 2.3 Create initial schema migration with all tables
     - Create 20240101000000_initial_schema.sql migration
     - Define profiles table with RLS policies and indexes
     - Define farms table with RLS policies, foreign keys, and indexes
@@ -63,7 +63,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Document rollback plan for this migration
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4_
 
-  - [ ] 2.4 Create indexes migration for performance optimization
+  - [x] 2.4 Create indexes migration for performance optimization
     - Create 20240102000000_add_indexes.sql migration
     - Add index on farms.user_id
     - Add index on crops.farm_id
@@ -76,14 +76,14 @@ This implementation plan establishes a production-ready, scalable, and secure ba
 
 
 - [ ] 3. Type system and validation schemas
-  - [ ] 3.1 Generate database types from schema
+  - [x] 3.1 Generate database types from schema
     - Install Supabase CLI and configure type generation
     - Create npm script "generate:types" that runs supabase gen types typescript
     - Generate /src/lib/database.types.ts from database schema
     - Document type generation process in README.md
     - _Requirements: 8.2, 22.1, 22.2, 22.3, 22.6_
 
-  - [ ] 3.2 Create domain types for all features
+  - [-] 3.2 Create domain types for all features
     - Create /src/features/auth/types/auth.types.ts with User, Profile, Session, AuthResult interfaces
     - Create /src/features/farms/types/farm.types.ts with Farm, CreateFarmParams, UpdateFarmParams interfaces
     - Create /src/features/soil/types/soil.types.ts with SoilReport, CreateSoilReportParams interfaces
@@ -92,7 +92,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Use TypeScript utility types (Pick, Omit, Partial) to derive types
     - _Requirements: 8.3, 8.7_
 
-  - [ ] 3.3 Create API contract types
+  - [-] 3.3 Create API contract types
     - Create /src/types/api.types.ts with ApiResponse, ApiError, PaginationParams, PaginatedResponse interfaces
     - Define consistent response structure with success, data, and error fields
     - Define pagination types with page, limit, total, totalPages
@@ -123,14 +123,14 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - _Requirements: 12.1, 24.2, 24.3, 24.4, 24.6_
 
 - [ ] 4. Supabase client configuration
-  - [ ] 4.1 Create client-side Supabase client
+  - [-] 4.1 Create client-side Supabase client
     - Create /src/lib/supabase/client.ts
     - Configure client using NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
     - Configure session persistence in browser storage
     - Export createBrowserClient function
     - _Requirements: 21.1, 21.3, 21.5_
 
-  - [ ] 4.2 Create server-side Supabase client
+  - [-] 4.2 Create server-side Supabase client
     - Create /src/lib/supabase/server.ts
     - Configure server client using Service Role Key for RLS bypass when necessary
     - Configure appropriate timeout and retry settings
@@ -391,7 +391,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Implement useSession hook that retrieves current session
     - _Requirements: 18.1, 18.2, 18.6_
 
-  - [~] 13.2 Create farm management hooks
+  - [ ] 13.2 Create farm management hooks
     - Create /src/features/farms/hooks/useFarms.ts for fetching farms list
     - Create /src/features/farms/hooks/useCreateFarm.ts for creating farms
     - Create /src/features/farms/hooks/useUpdateFarm.ts for updating farms
@@ -401,20 +401,20 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Handle authentication errors and trigger re-login when needed
     - _Requirements: 18.1, 18.2, 18.3, 18.4, 18.5, 18.6, 18.7_
 
-  - [~] 13.3 Create soil report hooks
+  - [ ] 13.3 Create soil report hooks
     - Create /src/features/soil/hooks/useSoilReports.ts for fetching soil reports by farm
     - Create /src/features/soil/hooks/useCreateSoilReport.ts for creating soil reports
     - Handle loading, error, and data states
     - Call API routes rather than service methods directly
     - _Requirements: 18.1, 18.2, 18.3, 18.6_
 
-  - [~] 13.4 Create disease detection hooks
+  - [ ] 13.4 Create disease detection hooks
     - Create /src/features/disease-detection/hooks/useDiseaseScans.ts for fetching disease scans by farm
     - Create /src/features/disease-detection/hooks/useCreateDiseaseScan.ts for creating disease scans
     - Handle loading, error, and data states
     - _Requirements: 18.1, 18.2, 18.3, 18.6_
 
-  - [~] 13.5 Create weather logging hooks
+  - [ ] 13.5 Create weather logging hooks
     - Create /src/features/weather/hooks/useWeatherLogs.ts for fetching weather logs by farm with date filtering
     - Create /src/features/weather/hooks/useCreateWeatherLog.ts for creating weather logs
     - Handle loading, error, and data states
@@ -428,14 +428,14 @@ This implementation plan establishes a production-ready, scalable, and secure ba
 
 
 - [ ] 14. Code quality and modularity improvements
-  - [~] 14.1 Refactor large files and extract shared logic
+  - [ ] 14.1 Refactor large files and extract shared logic
     - Review all files and ensure none exceed 300 lines
     - Extract shared validation logic into reusable functions
     - Extract shared database query patterns into utility functions
     - Ensure each module has single responsibility
     - _Requirements: 19.1, 19.2, 19.3, 19.4, 19.5, 19.7_
 
-  - [~] 14.2 Implement dependency injection for testability
+  - [ ] 14.2 Implement dependency injection for testability
     - Refactor services to accept Supabase client as parameter
     - Create service factory functions for easier testing
     - Document dependency injection patterns in CONTRIBUTING.md
@@ -448,19 +448,19 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - _Requirements: 12.1, 12.4, 24.5, 24.6_
 
 - [ ] 15. Performance optimization and monitoring
-  - [~] 15.1 Implement database connection pooling
+  - [ ] 15.1 Implement database connection pooling
     - Create /src/server/db/connection.ts
     - Configure connection pooling for Supabase client
     - Document connection pool settings
     - _Requirements: 20.5_
 
-  - [~] 15.2 Optimize database queries
+  - [ ] 15.2 Optimize database queries
     - Review all service methods and use SELECT with specific columns
     - Ensure all list queries use pagination
     - Add query performance logging for queries exceeding 1 second
     - _Requirements: 20.4, 20.6, 20.7_
 
-  - [~] 15.3 Implement query result caching
+  - [ ] 15.3 Implement query result caching
     - Identify frequently accessed, slowly changing data
     - Implement caching strategy for farm metadata
     - Document cache invalidation rules
@@ -473,7 +473,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - _Requirements: 20.1, 20.2, 20.5_
 
 - [ ] 16. Documentation and developer experience
-  - [~] 16.1 Create comprehensive README.md
+  - [ ] 16.1 Create comprehensive README.md
     - Document architecture overview with layer descriptions
     - Document folder structure and organization principles
     - Provide setup instructions including environment variables, database setup, and running locally
@@ -481,27 +481,27 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Include entity relationship diagram or markdown table showing table relationships
     - _Requirements: 25.1, 25.4, 25.7_
 
-  - [~] 16.2 Create CONTRIBUTING.md
+  - [ ] 16.2 Create CONTRIBUTING.md
     - Document coding standards (TypeScript strict mode, file size limits, naming conventions)
     - Document git workflow (branch naming, commit messages, PR process)
     - Document testing requirements (unit tests for services, integration tests for API routes)
     - Document migration creation and rollback process
     - _Requirements: 25.2, 25.5_
 
-  - [~] 16.3 Add JSDoc comments to all service methods
+  - [ ] 16.3 Add JSDoc comments to all service methods
     - Document parameters, return types, and examples for all service methods
     - Document error conditions and exceptions
     - Document ownership validation behavior
     - _Requirements: 25.3_
 
-  - [~] 16.4 Create setup validation script
+  - [ ] 16.4 Create setup validation script
     - Create script that validates environment configuration
     - Verify database connectivity
     - Check that all required environment variables are present
     - Provide helpful error messages for common setup issues
     - _Requirements: 25.6_
 
-  - [~] 16.5 Document migration process
+  - [ ] 16.5 Document migration process
     - Create supabase/MIGRATIONS.md with detailed migration guide
     - Document how to create new migrations
     - Document how to apply migrations locally and in production
@@ -509,14 +509,14 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - _Requirements: 25.5_
 
 - [ ] 17. Final integration and testing
-  - [~] 17.1 Run all migrations and verify database state
+  - [ ] 17.1 Run all migrations and verify database state
     - Apply all migrations in sequence
     - Verify all tables, indexes, and RLS policies are created
     - Test RLS policies by attempting unauthorized access
     - Verify foreign key constraints work correctly
     - _Requirements: 2.4, 2.5, 3.6, 4.1, 4.2, 4.5_
 
-  - [~] 17.2 Test complete authentication flow
+  - [ ] 17.2 Test complete authentication flow
     - Test signup creates user and profile
     - Test login returns valid session
     - Test protected routes reject unauthenticated requests
@@ -524,7 +524,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Test logout clears session
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 11.1, 11.2_
 
-  - [~] 17.3 Test complete farm management flow
+  - [ ] 17.3 Test complete farm management flow
     - Test creating farm as authenticated user
     - Test fetching farms returns only user's farms
     - Test updating farm validates ownership
@@ -532,7 +532,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Test pagination works correctly
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 20.1_
 
-  - [~] 17.4 Test complete soil, disease, and weather flows
+  - [ ] 17.4 Test complete soil, disease, and weather flows
     - Test creating soil report validates farm ownership
     - Test creating disease scan validates farm ownership
     - Test creating weather log validates farm ownership
@@ -546,7 +546,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Test validation errors return descriptive messages
     - _Requirements: 12.4, 13.1, 13.2, 13.3_
 
-- [~] 18. Final checkpoint and deployment preparation
+- [ ] 18. Final checkpoint and deployment preparation
   - Ensure all tests pass
   - Verify all documentation is complete and accurate
   - Review code for security issues (exposed secrets, SQL injection, XSS)

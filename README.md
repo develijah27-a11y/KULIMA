@@ -42,9 +42,33 @@ cp .env.example .env.local
 ```
 
 Edit `.env.local` with your Supabase project details:
-- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Your Supabase anon/public key
-- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key (keep secret!)
+
+**Required Variables:**
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL (client-safe)
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: Your Supabase anon/public key (client-safe)
+- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key (server-only, keep secret!)
+
+**Optional Variables:**
+- `DATABASE_URL`: Direct PostgreSQL connection string (for advanced use cases)
+- `NODE_ENV`: Application environment (development, production, test)
+- `LOG_LEVEL`: Logging level (debug, info, warn, error)
+
+**Environment Validation:**
+
+The application automatically validates all environment variables at startup using Zod schemas. If any required variables are missing or invalid, you'll see a descriptive error message indicating which variables need to be fixed.
+
+Example error:
+```
+❌ Invalid environment variables:
+  NEXT_PUBLIC_SUPABASE_URL: Invalid Supabase URL
+  SUPABASE_SERVICE_ROLE_KEY: Supabase service role key is required
+```
+
+**Security Notes:**
+- Variables prefixed with `NEXT_PUBLIC_` are safe for client-side use
+- Server-only variables (without prefix) are NEVER exposed to the browser
+- The service role key bypasses Row Level Security - use only in server-side code
+- Never commit `.env.local` to version control
 
 ### 3. Apply Database Migrations
 

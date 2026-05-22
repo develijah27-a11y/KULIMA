@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "keywords": [
     "agritech",
@@ -33,6 +35,11 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "dotenv": "^17.4.2"
+    "@jest/globals": "^30.4.1",
+    "@types/jest": "^30.0.0",
+    "dotenv": "^17.4.2",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.10",
+    "ts-node": "^10.9.2"
   }
 }
