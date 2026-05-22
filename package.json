@@ -31,5 +31,8 @@
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "dotenv": "^17.4.2"
   }
 }

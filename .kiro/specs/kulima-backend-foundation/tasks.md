@@ -14,14 +14,14 @@ This implementation plan establishes a production-ready, scalable, and secure ba
 ## Tasks
 
 - [ ] 1. Project initialization and configuration
-  - [~] 1.1 Initialize Next.js project with TypeScript and App Router
+  - [ ] 1.1 Initialize Next.js project with TypeScript and App Router
     - Create Next.js 14+ project with TypeScript template
     - Configure tsconfig.json with strict mode enabled
     - Set up Tailwind CSS configuration
     - Create initial folder structure: /src/app, /src/features, /src/lib, /src/types, /src/utils, /src/config, /src/server
     - _Requirements: 6.1, 6.4, 8.1_
 
-  - [-] 1.2 Configure environment variables and validation
+  - [ ] 1.2 Configure environment variables and validation
     - Create .env.example with all required variables documented
     - Create /src/config/env.ts with Zod schema for environment validation
     - Define NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (client-safe)
@@ -37,21 +37,21 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - _Requirements: 21.1, 21.2, 25.1_
 
 - [ ] 2. Database schema inspection and migration foundation
-  - [~] 2.1 Inspect and document existing database schema
+  - [ ] 2.1 Inspect and document existing database schema
     - Export current schema including tables, columns, constraints, indexes, RLS policies
     - Document all existing tables: profiles, farms, crops, soil_reports, disease_scans, weather_logs
     - Identify all foreign key relationships and dependencies
     - Create schema documentation in supabase/SCHEMA.md
     - _Requirements: 1.1, 1.2, 1.4, 1.5_
 
-  - [~] 2.2 Create migration system foundation
+  - [ ] 2.2 Create migration system foundation
     - Create supabase/migrations directory structure
     - Create schema_migrations tracking table
     - Document migration naming convention: YYYYMMDDHHMMSS_description.sql
     - Document rollback plan template in supabase/MIGRATIONS.md
     - _Requirements: 2.1, 2.2, 2.3, 2.6_
 
-  - [~] 2.3 Create initial schema migration with all tables
+  - [ ] 2.3 Create initial schema migration with all tables
     - Create 20240101000000_initial_schema.sql migration
     - Define profiles table with RLS policies and indexes
     - Define farms table with RLS policies, foreign keys, and indexes
@@ -63,7 +63,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Document rollback plan for this migration
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.7, 3.8, 4.1, 4.2, 4.3, 4.4_
 
-  - [~] 2.4 Create indexes migration for performance optimization
+  - [ ] 2.4 Create indexes migration for performance optimization
     - Create 20240102000000_add_indexes.sql migration
     - Add index on farms.user_id
     - Add index on crops.farm_id
@@ -76,14 +76,14 @@ This implementation plan establishes a production-ready, scalable, and secure ba
 
 
 - [ ] 3. Type system and validation schemas
-  - [~] 3.1 Generate database types from schema
+  - [ ] 3.1 Generate database types from schema
     - Install Supabase CLI and configure type generation
     - Create npm script "generate:types" that runs supabase gen types typescript
     - Generate /src/lib/database.types.ts from database schema
     - Document type generation process in README.md
     - _Requirements: 8.2, 22.1, 22.2, 22.3, 22.6_
 
-  - [~] 3.2 Create domain types for all features
+  - [ ] 3.2 Create domain types for all features
     - Create /src/features/auth/types/auth.types.ts with User, Profile, Session, AuthResult interfaces
     - Create /src/features/farms/types/farm.types.ts with Farm, CreateFarmParams, UpdateFarmParams interfaces
     - Create /src/features/soil/types/soil.types.ts with SoilReport, CreateSoilReportParams interfaces
@@ -92,21 +92,21 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Use TypeScript utility types (Pick, Omit, Partial) to derive types
     - _Requirements: 8.3, 8.7_
 
-  - [~] 3.3 Create API contract types
+  - [ ] 3.3 Create API contract types
     - Create /src/types/api.types.ts with ApiResponse, ApiError, PaginationParams, PaginatedResponse interfaces
     - Define consistent response structure with success, data, and error fields
     - Define pagination types with page, limit, total, totalPages
     - Export all API contract types for frontend use
     - _Requirements: 8.4, 12.5, 12.7_
 
-  - [~] 3.4 Create Zod validation schemas for authentication
+  - [ ] 3.4 Create Zod validation schemas for authentication
     - Create /src/features/auth/validation/auth.schema.ts
     - Define signupSchema with email, password, fullName, phoneNumber, location validation
     - Define loginSchema with email and password validation
     - Validate email format, password strength (min 8 chars), required fields
     - _Requirements: 12.1, 24.6_
 
-  - [~] 3.5 Create Zod validation schemas for farms
+  - [ ] 3.5 Create Zod validation schemas for farms
     - Create /src/features/farms/validation/farm.schema.ts
     - Define createFarmSchema with name, location, sizeHectares, farmType validation
     - Define updateFarmSchema with optional fields
@@ -114,7 +114,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Validate required fields, string lengths, number ranges
     - _Requirements: 12.1, 24.1, 24.6_
 
-  - [~] 3.6 Create Zod validation schemas for soil, disease, and weather
+  - [ ] 3.6 Create Zod validation schemas for soil, disease, and weather
     - Create /src/features/soil/validation/soil.schema.ts with createSoilReportSchema
     - Create /src/features/disease-detection/validation/disease.schema.ts with createDiseaseScanSchema
     - Create /src/features/weather/validation/weather.schema.ts with createWeatherLogSchema
@@ -123,14 +123,14 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - _Requirements: 12.1, 24.2, 24.3, 24.4, 24.6_
 
 - [ ] 4. Supabase client configuration
-  - [~] 4.1 Create client-side Supabase client
+  - [ ] 4.1 Create client-side Supabase client
     - Create /src/lib/supabase/client.ts
     - Configure client using NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
     - Configure session persistence in browser storage
     - Export createBrowserClient function
     - _Requirements: 21.1, 21.3, 21.5_
 
-  - [~] 4.2 Create server-side Supabase client
+  - [ ] 4.2 Create server-side Supabase client
     - Create /src/lib/supabase/server.ts
     - Configure server client using Service Role Key for RLS bypass when necessary
     - Configure appropriate timeout and retry settings
@@ -138,13 +138,13 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Export createServerClient function
     - _Requirements: 21.2, 21.4, 21.5, 21.6, 21.7_
 
-  - [~] 4.3 Create middleware Supabase client
+  - [ ] 4.3 Create middleware Supabase client
     - Create /src/lib/supabase/middleware.ts
     - Configure middleware client for session validation in Next.js middleware
     - Export createMiddlewareClient function
     - _Requirements: 21.5_
 
-- [~] 5. Checkpoint - Verify foundation setup
+- [ ] 5. Checkpoint - Verify foundation setup
   - Ensure all configuration files are created and valid
   - Verify environment variables are properly configured
   - Ensure database types are generated successfully
@@ -153,7 +153,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
 
 
 - [ ] 6. Shared utilities and error handling
-  - [~] 6.1 Create centralized error handling utility
+  - [ ] 6.1 Create centralized error handling utility
     - Create /src/utils/error-handler.ts
     - Implement ApiError class with status code, message, and field errors
     - Implement handleError function that transforms errors into consistent response format
@@ -162,21 +162,21 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Prevent sensitive information from appearing in error responses
     - _Requirements: 13.1, 13.2, 13.3, 13.6_
 
-  - [~] 6.2 Create logging utility
+  - [ ] 6.2 Create logging utility
     - Create /src/utils/logger.ts
     - Implement log function with severity levels (error, warn, info, debug)
     - Include request context (user ID, endpoint, timestamp) in logs
     - Prevent sensitive information (passwords, tokens, keys) from appearing in logs
     - _Requirements: 13.4, 13.5, 13.6_
 
-  - [~] 6.3 Create pagination utility
+  - [ ] 6.3 Create pagination utility
     - Create /src/utils/pagination.ts
     - Implement calculatePagination function that computes offset, limit, totalPages
     - Implement buildPaginatedResponse function that formats paginated results
     - Set default page size to 20, maximum to 100
     - _Requirements: 20.1, 20.6_
 
-  - [~] 6.4 Create common validators utility
+  - [ ] 6.4 Create common validators utility
     - Create /src/utils/validators.ts
     - Implement validateUUID function for ID validation
     - Implement validateDateRange function for date filtering
@@ -184,7 +184,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - _Requirements: 12.6_
 
 - [ ] 7. Authentication service and API routes
-  - [~] 7.1 Implement authentication service
+  - [ ] 7.1 Implement authentication service
     - Create /src/features/auth/services/auth.service.ts
     - Implement signup method that creates user and profile record
     - Implement login method that authenticates user and returns session
@@ -194,7 +194,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Use server-side Supabase client for auth operations
     - _Requirements: 10.1, 10.2, 10.6, 10.7_
 
-  - [~] 7.2 Create signup API route
+  - [ ] 7.2 Create signup API route
     - Create /src/app/api/auth/signup/route.ts
     - Implement POST handler that validates request with signupSchema
     - Call auth.service.signup method
@@ -202,7 +202,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return 400 Bad Request with field errors on validation failure
     - _Requirements: 10.1, 10.7, 12.2, 12.4, 23.3, 23.4_
 
-  - [~] 7.3 Create login API route
+  - [ ] 7.3 Create login API route
     - Create /src/app/api/auth/login/route.ts
     - Implement POST handler that validates request with loginSchema
     - Call auth.service.login method
@@ -210,13 +210,13 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return 401 Unauthorized on invalid credentials
     - _Requirements: 10.2, 12.2, 12.4, 23.3, 23.4_
 
-  - [~] 7.4 Create logout API route
+  - [ ] 7.4 Create logout API route
     - Create /src/app/api/auth/logout/route.ts
     - Implement POST handler that calls auth.service.logout
     - Clear session and return 200 OK
     - _Requirements: 10.6, 23.3, 23.4_
 
-  - [~] 7.5 Implement authentication middleware
+  - [ ] 7.5 Implement authentication middleware
     - Create /src/app/middleware.ts
     - Validate session for protected routes using middleware Supabase client
     - Redirect to login page on invalid or missing session
@@ -235,7 +235,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
 
 
 - [ ] 8. Farm management service and API routes
-  - [~] 8.1 Implement farm service
+  - [ ] 8.1 Implement farm service
     - Create /src/features/farms/services/farm.service.ts
     - Implement createFarm method that inserts farm record linked to authenticated user
     - Implement getFarmsByUser method with pagination support
@@ -246,7 +246,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return typed farm objects matching farm.types.ts
     - _Requirements: 7.1, 7.2, 14.1, 14.2, 14.3, 14.4, 14.5, 14.7_
 
-  - [~] 8.2 Create farms list and create API route
+  - [ ] 8.2 Create farms list and create API route
     - Create /src/app/api/farms/route.ts
     - Implement GET handler with pagination, sorting, and filtering
     - Implement POST handler that validates request with createFarmSchema
@@ -257,7 +257,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return consistent JSON responses with success, data, error fields
     - _Requirements: 14.1, 14.2, 14.6, 23.2, 23.3, 23.4, 23.5, 23.6, 23.7_
 
-  - [~] 8.3 Create farm detail API route
+  - [ ] 8.3 Create farm detail API route
     - Create /src/app/api/farms/[id]/route.ts
     - Implement GET handler that retrieves single farm by ID
     - Implement PUT handler that validates request with updateFarmSchema
@@ -275,7 +275,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
 - [ ] 9. Soil report service and API routes
-  - [~] 9.1 Implement soil report service
+  - [ ] 9.1 Implement soil report service
     - Create /src/features/soil/services/soil.service.ts
     - Implement createSoilReport method with farm ownership validation
     - Implement getSoilReportsByFarm method with pagination, ordered by created_at DESC
@@ -284,7 +284,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return typed soil report objects matching soil.types.ts
     - _Requirements: 7.1, 7.2, 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.7_
 
-  - [~] 9.2 Create soil reports list and create API route
+  - [ ] 9.2 Create soil reports list and create API route
     - Create /src/app/api/soil-reports/route.ts
     - Implement GET handler with required farmId query parameter and pagination
     - Implement POST handler that validates request with createSoilReportSchema
@@ -293,7 +293,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return 201 Created for POST with soil report data
     - _Requirements: 15.1, 15.2, 15.4, 15.5, 23.2, 23.3, 23.4, 23.7_
 
-  - [~] 9.3 Create soil report detail API route
+  - [ ] 9.3 Create soil report detail API route
     - Create /src/app/api/soil-reports/[id]/route.ts
     - Implement GET handler that retrieves single soil report by ID
     - Validate authentication and ownership
@@ -308,7 +308,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5_
 
 - [ ] 10. Disease detection service and API routes
-  - [~] 10.1 Implement disease detection service
+  - [ ] 10.1 Implement disease detection service
     - Create /src/features/disease-detection/services/disease.service.ts
     - Implement createDiseaseScan method with farm ownership validation
     - Implement getDiseaseScansByFarm method with pagination
@@ -318,7 +318,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return typed disease scan objects matching disease.types.ts
     - _Requirements: 7.1, 7.2, 16.1, 16.2, 16.3, 16.4, 16.5, 16.6, 16.7_
 
-  - [~] 10.2 Create disease scans list and create API route
+  - [ ] 10.2 Create disease scans list and create API route
     - Create /src/app/api/disease-scans/route.ts
     - Implement GET handler with required farmId query parameter and pagination
     - Implement POST handler that validates request with createDiseaseScanSchema
@@ -327,7 +327,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return 201 Created for POST with disease scan data
     - _Requirements: 16.1, 16.2, 16.4, 16.5, 23.2, 23.3, 23.4, 23.7_
 
-  - [~] 10.3 Create disease scan detail API route
+  - [ ] 10.3 Create disease scan detail API route
     - Create /src/app/api/disease-scans/[id]/route.ts
     - Implement GET handler that retrieves single disease scan by ID
     - Validate authentication and ownership
@@ -343,7 +343,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
 
 
 - [ ] 11. Weather logging service and API routes
-  - [~] 11.1 Implement weather logging service
+  - [ ] 11.1 Implement weather logging service
     - Create /src/features/weather/services/weather.service.ts
     - Implement createWeatherLog method with farm ownership validation
     - Implement getWeatherLogsByFarm method with date range filtering and pagination
@@ -353,7 +353,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return typed weather log objects matching weather.types.ts
     - _Requirements: 7.1, 7.2, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 17.7_
 
-  - [~] 11.2 Create weather logs list and create API route
+  - [ ] 11.2 Create weather logs list and create API route
     - Create /src/app/api/weather-logs/route.ts
     - Implement GET handler with required farmId, optional startDate/endDate query parameters, and pagination
     - Implement POST handler that validates request with createWeatherLogSchema
@@ -362,7 +362,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Return 201 Created for POST with weather log data
     - _Requirements: 17.1, 17.2, 17.4, 17.5, 17.7, 23.2, 23.3, 23.4, 23.7_
 
-  - [~] 11.3 Create weather log detail API route
+  - [ ] 11.3 Create weather log detail API route
     - Create /src/app/api/weather-logs/[id]/route.ts
     - Implement GET handler that retrieves single weather log by ID
     - Validate authentication and ownership
@@ -376,7 +376,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
     - Test getWeatherLogById validates ownership
     - _Requirements: 17.1, 17.2, 17.3, 17.4, 17.5_
 
-- [~] 12. Checkpoint - Verify all services and API routes
+- [ ] 12. Checkpoint - Verify all services and API routes
   - Ensure all service methods are implemented and typed correctly
   - Verify all API routes handle authentication, validation, and errors consistently
   - Test API routes manually with valid and invalid requests
@@ -384,7 +384,7 @@ This implementation plan establishes a production-ready, scalable, and secure ba
   - Ask the user if questions arise
 
 - [ ] 13. React hooks for data fetching and mutations
-  - [~] 13.1 Create authentication hooks
+  - [ ] 13.1 Create authentication hooks
     - Create /src/features/auth/hooks/useAuth.ts
     - Implement useAuth hook that provides signup, login, logout methods
     - Handle loading, error, and success states
