@@ -16,6 +16,7 @@ export interface Database {
           full_name: string
           phone_number: string | null
           location: string | null
+          role: string
           created_at: string
           updated_at: string
         }
@@ -25,6 +26,7 @@ export interface Database {
           full_name: string
           phone_number?: string | null
           location?: string | null
+          role?: string
           created_at?: string
           updated_at?: string
         }
@@ -34,6 +36,7 @@ export interface Database {
           full_name?: string
           phone_number?: string | null
           location?: string | null
+          role?: string
           created_at?: string
           updated_at?: string
         }

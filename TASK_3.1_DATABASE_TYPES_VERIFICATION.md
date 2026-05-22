@@ -19,7 +19,7 @@ The database types file at `src/lib/database.types.ts` has been verified and con
 
 The types file includes complete type definitions for all required tables:
 
-1. **profiles** ✅
+1. **profiles** ✅ (includes `role` column for dashboard routing)
 2. **farms** ✅
 3. **crops** ✅
 4. **soil_reports** ✅
@@ -51,13 +51,14 @@ Row: {
   full_name: string
   phone_number: string | null
   location: string | null
+  role: string
   created_at: string
   updated_at: string
 }
 ```
 
 **Insert Interface:**
-- Optional: `id`, `phone_number`, `location`, `created_at`, `updated_at`
+- Optional: `id`, `phone_number`, `location`, `role`, `created_at`, `updated_at`
 - Required: `user_id`, `full_name`
 
 **Update Interface:**
@@ -422,7 +423,7 @@ The database types file at `src/lib/database.types.ts` has been thoroughly verif
 1. ✅ Exist at the correct location
 2. ✅ Include all 6 required tables (profiles, farms, crops, soil_reports, disease_scans, weather_logs)
 3. ✅ Provide Row, Insert, and Update interfaces for each table
-4. ✅ Accurately match the database schema defined in migrations
+4. ✅ Accurately match the database schema defined in migrations (including `role` column)
 5. ✅ Include foreign key relationship metadata
 6. ✅ Properly type nullable and required fields
 7. ✅ Support type-safe database operations
