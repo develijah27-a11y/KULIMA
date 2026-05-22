@@ -120,3 +120,29 @@ Error: Both middleware file "./src\middleware.ts" and proxy file "./src\proxy.ts
     at ignore-listed frames
 ⨯ unhandledRejection:  Error: Both middleware file "./src\middleware.ts" and proxy file "./src\proxy.ts" are detected. Please use "./src\proxy.ts" only. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
     at ignore-listed frames
+✓ Finished writing to filesystem cache in 11.9s
+
+<--- Last few GCs --->
+
+[14204:000001A78EC9A000] 16572942 ms: Scavenge (interleaved) 1950.3 (1962.7) -> 1949.5 (1967.0) MB, pooled: 0 MB, 19.75 / 0.00 ms  (average mu = 0.221, current mu = 0.165) allocation failure; 
+[14204:000001A78EC9A000] 16580870 ms: Mark-Compact (reduce) 1953.6 (1967.7) -> 1947.9 (1960.5) MB, pooled: 0 MB, 3409.78 / 127.04 ms  (+ 3207.4 ms in 1042 steps since start of marking, biggest step 162.1 ms, walltime since start of marking 7238 ms) (avera
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 00007FF65A6D403F node::OnFatalError+1343
+ 2: 00007FF65B31FAA7 v8::Function::NewInstance+423
+ 3: 00007FF65B1204D7 v8::base::AddressSpaceReservation::AddressSpaceReservation+322071
+ 4: 00007FF65B1241E4 v8::base::AddressSpaceReservation::AddressSpaceReservation+337700
+ 5: 00007FF65B13313C v8::internal::StrongRootAllocatorBase::deallocate_impl+16604
+ 6: 00007FF65B13297B v8::internal::StrongRootAllocatorBase::deallocate_impl+14619
+ 7: 00007FF65C5BA2AD v8::base::UnsignedDivisionByConstant<unsigned __int64>+2794653
+ 8: 00007FF65B11DFA0 v8::base::AddressSpaceReservation::AddressSpaceReservation+312544
+ 9: 00007FF65B1387EA X509_STORE_set_cleanup+5098
+10: 00007FF65B144C86 uv_timer_set_repeat+20694
+11: 00007FF65AD169C7 v8::String::Utf8Value::~Utf8Value+144199
+12: 00007FF65C46B33A v8::base::UnsignedDivisionByConstant<unsigned __int64>+1422634
+13: 00007FF65C4674AD v8::base::UnsignedDivisionByConstant<unsigned __int64>+1406621
+14: 000001A7A793B671 
+[?25h
+
+C:\Users\PwezaCore\Desktop\KULIMA>

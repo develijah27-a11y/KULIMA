@@ -1,4 +1,4 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 
 /**
  * Environment variable schema with validation rules
@@ -47,7 +47,7 @@ function validateEnv(): Env {
   try {
     return envSchema.parse(process.env);
   } catch (error) {
-    console.error('❌ Invalid environment variables:');
+    console.error('Invalid environment variables:');
     if (error instanceof z.ZodError) {
       error.issues.forEach((err) => {
         console.error(`  ${err.path.join('.')}: ${err.message}`);
