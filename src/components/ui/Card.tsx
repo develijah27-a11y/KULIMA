@@ -1,48 +1,68 @@
 'use client';
 
-import React from 'react';
+import { cn } from '@/lib/utils';
+import type { HTMLAttributes } from 'react';
 
-interface CardProps {
-  children: React.ReactNode;
-  className?: string;
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  variant?: 'default' | 'surface' | 'elevated';
   onClick?: () => void;
 }
 
-export function Card({ children, className = '', onClick }: CardProps) {
-  const baseClasses = 'bg-white rounded-xl border border-gray-200 p-6';
-  const clickableClasses = onClick ? 'cursor-pointer hover:border-gray-300 hover:shadow-sm transition-all' : '';
-  
+export function Card({
+  variant = 'default',
+  className,
+  onClick,
+  children,
+  ...props
+}: CardProps) {
+  const variants: Record<string, string> = {
+    default: 'bg-surface border border-surface2',
+    surface: 'bg-surface2 border border-surface',
+    elevated: 'bg-surface border border-surface2 shadow-shadow-card',
+  };
+
+  const clickable = onClick
+    ? 'cursor-pointer hover:bg-surface2 transition-all active:scale-[0.99]'
+    : '';
+
   return (
-    <div 
-      className={`${baseClasses} ${clickableClasses} ${className}`}
+    <div
+      className={cn('rounded-2xl p-5', variants[variant], clickable, className)}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
+      {...props}
     >
       {children}
     </div>
   );
 }
 
-interface CardHeaderProps {
+export function CardHeader({
+  title,
+  subtitle,
+  className,
+}: {
   title: string;
-  description?: string;
-}
-
-export function CardHeader({ title, description }: CardHeaderProps) {
+  subtitle?: string;
+  className?: string;
+}) {
   return (
-    <div className="mb-4">
-      <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-      {description && <p className="text-sm text-gray-600 mt-1">{description}</p>}
+    <div className={cn('mb-3', className)}>
+      <h3
+        className="font-semibold text-cream text-lg"
+        style={{ fontFamily: 'var(--font-headline)' }}
+      >
+        {title}
+      </h3>
+      {subtitle && <p className="text-sm text-cream/50 mt-0.5">{subtitle}</p>}
     </div>
   );
 }
 
-interface CardContentProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-export function CardContent({ children, className = '' }: CardContentProps) {
-  return <div className={className}>{children}</div>;
+export function CardFooter({
+  children,
+  className,
+}: { children: React.ReactNode; className?: string }) {
+  return <div className={cn('mt-4 pt-3 border-t border-surface2', className)}>{children}</div>;
 }

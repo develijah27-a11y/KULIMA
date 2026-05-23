@@ -1,60 +1,104 @@
 @import "tailwindcss";
 
+/*
+ * Kulima Design System — Dark Theme
+ * Colors: earth·leaf·sprout·harvest·sun·clay·soil·surface·surface2·cream
+ * Fonts: Syne (display) · Playfair Display (headline) · DM Sans (body)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Syne:wght@700;800&display=swap');
+
 @theme {
-  /* Colors - Light Mode */
-  --color-primary: #16a34a;
-  --color-primary-hover: #15803d;
-  --color-primary-active: #166534;
+  /* ── Brand Colors ── */
+  --color-earth: #2C4A1E;      /* primary brand */
+  --color-leaf: #4A7C3F;       /* secondary / nav */
+  --color-sprout: #7DB55A;     /* accent / CTA / positive */
+  --color-harvest: #E8A020;    /* prices / financial data */
+  --color-sun: #F5C842;        /* highlights */
+  --color-clay: #C4723A;       /* warnings / danger / price drop */
+  --color-soil: #0D160A;       /* dark background */
+  --color-surface: #162211;    /* card background */
+  --color-surface2: #1C2D17;   /* elevated surface */
+  --color-cream: #F7F2E8;      /* text / light background */
 
-  --color-background: #ffffff;
-  --color-surface: #f9fafb;
-  --color-text-primary: #111827;
-  --color-text-secondary: #6b7280;
-  --color-border: #e5e7eb;
+  /* ── Typography ── */
+  --font-display: 'Syne', sans-serif;            /* 800 — logos, hero numbers */
+  --font-headline: 'Playfair Display', serif;    /* 700 — section titles */
+  --font-body: 'DM Sans', sans-serif;            /* 400/500/600 — all UI text */
 
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
+  /* ── Radius ── */
+  --radius-btn: 14px;
+  --radius-card: 18px;
+  --radius-sm: 10px;
 
-  /* Dark Mode */
-  --color-background-dark: #111827;
-  --color-surface-dark: #1f2937;
-  --color-text-primary-dark: #f9fafb;
-  --color-text-secondary-dark: #9ca3af;
-  --color-border-dark: #374151;
+  /* ── Shadows ── */
+  --shadow-card: 0 2px 12px rgba(0 0 0 / 0.35);
+  --shadow-modal: 0 12px 48px rgba(0 0 0 / 0.55);
 }
 
-/* Dark mode overrides using CSS custom properties */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--color-background-dark);
-    --color-surface: var(--color-surface-dark);
-    --color-text-primary: var(--color-text-primary-dark);
-    --color-text-secondary: var(--color-text-secondary-dark);
-    --color-border: var(--color-border-dark);
-  }
+/* ── Smooth scrolling ── */
+html {
+  scroll-behavior: smooth;
 }
 
-/* Focus rings */
+/* ── Base body styles — dark theme default ── */
+body {
+  background-color: var(--color-soil);
+  color: var(--color-cream);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── Focus ring ── */
 *:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--color-sprout);
   outline-offset: 2px;
 }
 
-/* Animation for prefers-reduced-motion */
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-soil);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface2);
+  border-radius: 4px;
+}
+
+/* ── Selection color ── */
+::selection {
+  background-color: var(--color-sprout);
+  color: var(--color-soil);
+}
+
+/* ── prefers-reduced-motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* Skeleton animation */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+/* ── Pulse / shimmer for skeletons ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
-.animate-pulse {
-  animation: pulse 1.5s ease-in-out infinite;
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface2) 25%,
+    var(--color-surface) 50%,
+    var(--color-surface2) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
 }

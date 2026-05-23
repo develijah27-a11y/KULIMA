@@ -1,0 +1,17 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { Card, CardHeader } from '@/components/ui\Card';
+import { Button } from '@/components/ui\Button';
+import { supabase } from '@/lib/supabase/client';
+
+export function useNotificationsRealtime(farmerId: string, onNew: (n: any) => void) {
+  useEffect(() => {
+    if (!farmerId) return;
+    const channel = supabase
+      .channel('notifications-' + farmerId)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `farmer_id=eq.${farmerId}` }, (payload: any) => onNew(payload.new))
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [farmerId, onNew]);
+}
