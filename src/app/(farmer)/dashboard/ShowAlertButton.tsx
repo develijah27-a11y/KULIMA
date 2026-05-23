@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { Button } from '@/components/ui\Button';
-import { showToast } from '@/components/ui\Toast';
+import { Button } from '@/components/ui/Button';
+import { showToast } from '@/components/ui/Toast';
 
 export function ShowAlertButton() {
   const [open, setOpen] = useState(false);

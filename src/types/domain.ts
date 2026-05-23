@@ -67,3 +67,14 @@ export interface CropCycle {
   createdAt: string;
   updatedAt?: string;
 }
+
+export interface Farmer {
+  id: string;
+  userId: string;
+  fullName: string;
+  phoneNumber?: string;
+  location?: string;
+  primaryCrop?: string;
+  createdAt: string;
+  updatedAt?: string;
+}

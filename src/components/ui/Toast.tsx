@@ -18,6 +18,26 @@ export function showToast(toast: Omit<Toast, 'id'>) {
   addToastFn?.(toast);
 }
 
+export function useToast() {
+  return { showToast };
+}
+
+export function ToastContainer() {
+
+type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+interface Toast {
+  id: string;
+  type: ToastType;
+  message: string;
+}
+
+let addToastFn: ((toast: Omit<Toast, 'id'>) => void) | null = null;
+
+export function showToast(toast: Omit<Toast, 'id'>) {
+  addToastFn?.(toast);
+}
+
 export function ToastContainer() {
   const [toasts, setToasts] = useState<Toast[]>([]);
 

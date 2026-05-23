@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Card, CardHeader } from '@/components/ui\Card';
-import { Button } from '@/components/ui\Button';
 import { supabase } from '@/lib/supabase/client';
 
 export function useNotificationsRealtime(farmerId: string, onNew: (n: any) => void) {

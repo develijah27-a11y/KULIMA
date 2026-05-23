@@ -1,10 +1,11 @@
 import { createServerClient } from '@supabase/ssr';
-import type { NextRequest, NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
+import { env } from '@/config/env';
 
-export async function updateSession(request: NextRequest) {
+export async function createClient(request: NextRequest) {
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     {
       cookies: {
         get(name: string) { return request.cookies.get(name)?.value; },
@@ -21,5 +22,10 @@ export async function updateSession(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession();
   const response = NextResponse.next();
 
-  return supabase;
+  return { supabase, response, session };
+}
+
+export async function updateSession(request: NextRequest) {
+  const { supabase, response } = await createClient(request);
+  return { supabase, response };
 }

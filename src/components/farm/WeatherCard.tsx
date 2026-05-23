@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/Badge';
 import { PriceTag } from '@/components/ui/PriceTag';
 import type { MarketPrice } from '@/types/domain';
 
-const weatherEmoji: Record<string, string> = {
+export const weatherEmoji: Record<string, string> = {
   '01d': '☀️', '01n': '🌙',
   '02d': '🌤', '02n': '🌤',
   '03d': '⛅', '03n': '⛅',

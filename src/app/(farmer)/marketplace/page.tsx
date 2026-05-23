@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
-import ListingCard from './ListingCard';
+import { ListingCard } from '@/components/farm/ListingCard';
 
 export const dynamic = 'force-dynamic';
 
