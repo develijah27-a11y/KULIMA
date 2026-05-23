@@ -58,10 +58,32 @@ async function WeatherLogCardForm() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    const farmId = formData.get('farm_id') as string;
+    // Get farm ID from form or use user's first farm as default
+    let farmId = formData.get('farm_id')?.toString();
+    if (!farmId) {
+      // If no farm_id provided, get the user's first farm
+      const { data: farms, error } = await supabase
+        .from('farms')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching user farms:', error);
+        return;
+      }
+
+      if (farms && farms.length > 0) {
+        farmId = farms[0].id;
+      } else {
+        // User has no farms, redirect to create one or show error
+        console.error('User has no farms');
+        return;
+      }
+    }
 
     await supabase.from('weather_logs').insert({
-      farm_id: farmId || null,
+      farm_id: farmId,
       temperature: parseFloat(formData.get('temperature') as string),
       humidity: parseFloat(formData.get('humidity') as string),
       rainfall: parseFloat(formData.get('rainfall') as string),

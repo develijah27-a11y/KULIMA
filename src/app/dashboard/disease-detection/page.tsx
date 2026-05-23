@@ -58,17 +58,45 @@ async function DiseaseScanCardForm() {
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    const farmId = formData.get('farm_id') as string;
+    // Get farm ID from form or use user's first farm as default
+    let farmId = formData.get('farm_id')?.toString();
+    if (!farmId) {
+      // If no farm_id provided, get the user's first farm
+      const { data: farms, error } = await supabase
+        .from('farms')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (error) {
+        console.error('Error fetching user farms:', error);
+        return;
+      }
+
+      if (farms && farms.length > 0) {
+        farmId = farms[0].id;
+      } else {
+        // User has no farms, redirect to create one or show error
+        console.error('User has no farms');
+        return;
+      }
+    }
+
+    const cropType = formData.get('crop_type');
+    const imageUrl = formData.get('image_url');
+    const diseaseDetected = formData.get('disease_detected');
+    const confidenceScore = formData.get('confidence_score');
+    const treatmentRecommendations = formData.get('treatment_recommendations');
 
     await supabase.from('disease_scans').insert({
-      farm_id: farmId || null,
-      crop_type: formData.get('crop_type') as string,
-      image_url: formData.get('image_url') as string,
-      disease_detected: formData.get('disease_detected') as string || null,
-      confidence_score: formData.get('confidence_score')
-        ? parseFloat(formData.get('confidence_score') as string)
+      farm_id: farmId,
+      crop_type: cropType ? cropType.toString() : '',
+      image_url: imageUrl ? imageUrl.toString() : '',
+      disease_detected: diseaseDetected ? diseaseDetected.toString() : null,
+      confidence_score: confidenceScore
+        ? parseFloat(confidenceScore as string)
         : null,
-      treatment_recommendations: formData.get('treatment_recommendations') as string || null,
+      treatment_recommendations: treatmentRecommendations ? treatmentRecommendations.toString() : null,
     });
   }
 
