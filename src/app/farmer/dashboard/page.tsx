@@ -10,8 +10,6 @@ import {
   type InsightSeverity,
 } from '@/lib/agri-intel';
 
-export const dynamic = 'force-dynamic';
-
 // ─── Shared cached fetchers (deduped per request via React cache) ─────────────
 
 const getProfile = cache(async (userId: string) => {
