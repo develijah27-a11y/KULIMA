@@ -1,24 +1,54 @@
-import { Suspense } from 'react';
+import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { fetchWeatherForFarmer } from '@/lib/weather-server';
 import {
   buildSeasonalPlan,
-  generateAllInsights,
   generateDiseaseAlerts,
   generateMarketInsights,
   generateWeatherInsights,
-  type AgriInsight,
   type InsightSeverity,
 } from '@/lib/agri-intel';
+
+export const dynamic = 'force-dynamic';
+
+// ─── Shared cached fetchers (deduped per request via React cache) ─────────────
+
+const getProfile = cache(async (userId: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('profiles')
+    .select('full_name, primary_crop, phone_number, location, latitude, longitude, id')
+    .eq('user_id', userId)
+    .single();
+  return data as any;
+});
+
+const getUnreadCount = cache(async (userId: string) => {
+  const supabase = await createClient();
+  const { count } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('farmer_id', userId)
+    .eq('read', false);
+  return count ?? 0;
+});
+
+const getListingsCount = cache(async (profileId: string) => {
+  const supabase = await createClient();
+  const { count } = await (supabase.from as any)('listings')
+    .select('id', { count: 'exact', head: true })
+    .eq('farmer_id', profileId);
+  return count ?? 0;
+});
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function computeAgriScore(profile: any, listingsCount: number): number {
   let s = 300;
-  if (profile?.full_name)  s += 50;
+  if (profile?.full_name)   s += 50;
   if (profile?.phone_number) s += 30;
-  if (profile?.location)   s += 30;
+  if (profile?.location)    s += 30;
   if (profile?.primary_crop) s += 40;
   if (profile?.latitude && profile?.longitude) s += 150;
   s += Math.min(listingsCount * 50, 200);
@@ -32,7 +62,7 @@ function timeAgo(iso: string) {
   return `${Math.floor(d / 1440)}d ago`;
 }
 
-const SEVERITY_CONFIG: Record<InsightSeverity, { border: string; bg: string; badge: string; text: string }> = {
+const SEVERITY: Record<InsightSeverity, { border: string; bg: string; badge: string; text: string }> = {
   critical: { border: 'rgba(248,113,113,0.35)', bg: 'rgba(248,113,113,0.08)', badge: 'rgba(248,113,113,0.18)', text: '#F87171' },
   warning:  { border: 'rgba(251,191,36,0.3)',   bg: 'rgba(251,191,36,0.07)',  badge: 'rgba(251,191,36,0.18)',  text: '#FBBF24' },
   positive: { border: 'rgba(0,200,117,0.3)',    bg: 'rgba(0,200,117,0.07)',   badge: 'rgba(0,200,117,0.18)',   text: '#00C875' },
@@ -45,15 +75,64 @@ const CROP_COLORS: Record<string, string> = {
   sorghum: '#F472B6', groundnuts: '#00C875', cotton: '#38BDF8', tomato: '#F87171',
 };
 
-// ─── Skeletons ────────────────────────────────────────────────────────────────
-
-const Sk = ({ h, cls = '' }: { h: string; cls?: string }) => (
-  <div className={`skeleton rounded-2xl ${cls}`} style={{ height: h }} />
+const Sk = ({ h }: { h: string }) => (
+  <div className="skeleton rounded-2xl" style={{ height: h }} />
 );
 
-// ─── AgriScore (instant) ─────────────────────────────────────────────────────
+// ─── Streaming: Header ────────────────────────────────────────────────────────
 
-function AgriScoreCard({ score }: { score: number }) {
+async function DashboardHeader({ userId, greeting }: { userId: string; greeting: string }) {
+  const [profile, unread] = await Promise.all([
+    getProfile(userId),
+    getUnreadCount(userId),
+  ]);
+  const name = profile?.full_name ?? 'Farmer';
+  const firstName = name.split(' ')[0];
+  const district: string | undefined = profile?.location ?? undefined;
+
+  return (
+    <div className="flex items-center justify-between py-5">
+      <div>
+        <p className="text-xs font-medium" style={{ color: 'rgba(241,245,249,0.4)' }}>{greeting}</p>
+        <p className="text-xl font-black mt-0.5" style={{ letterSpacing: '-0.03em' }}>{firstName} 👋</p>
+        {district && (
+          <p className="text-[11px] mt-0.5" style={{ color: 'rgba(241,245,249,0.35)' }}>📍 {district}</p>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-white"
+          style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}
+        >
+          {firstName[0]?.toUpperCase() ?? 'F'}
+        </div>
+        <button
+          className="relative w-10 h-10 rounded-2xl flex items-center justify-center text-lg"
+          style={{ background: 'var(--color-surface2)' }}
+          aria-label="Notifications"
+        >
+          🔔
+          {unread > 0 && (
+            <span
+              className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-black"
+              style={{ background: '#F87171', color: '#060B14' }}
+            >
+              {unread > 9 ? '9+' : unread}
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Streaming: AgriScore ─────────────────────────────────────────────────────
+
+async function AgriScoreSection({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const listingsCount = profile?.id ? await getListingsCount(profile.id) : 0;
+  const score = computeAgriScore(profile, listingsCount);
+
   const pct = Math.round(((score - 300) / (850 - 300)) * 100);
   let label = 'Building'; let color = '#F87171';
   if (score >= 500) { label = 'Fair';      color = '#FBBF24'; }
@@ -88,9 +167,14 @@ function AgriScoreCard({ score }: { score: number }) {
 
 // ─── Streaming: Weather intelligence ─────────────────────────────────────────
 
-async function WeatherIntelligence({ lat, lon }: { lat: number; lon: number }) {
+async function WeatherIntelligence({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const lat: number = profile?.latitude  ?? 0.3476;
+  const lon: number = profile?.longitude ?? 32.5825;
+
   const weather = await fetchWeatherForFarmer(lat, lon);
   const month = new Date().getMonth();
+
   const insights = generateWeatherInsights(
     {
       temp: weather.now.temp,
@@ -107,31 +191,27 @@ async function WeatherIntelligence({ lat, lon }: { lat: number; lon: number }) {
 
   const ICON_MAP: Record<string, string> = {
     '01d': '☀️', '01n': '🌙', '02d': '⛅', '02n': '⛅',
-    '03d': '☁️', '03n': '☁️', '04d': '☁️', '04n': '☁️',
-    '09d': '🌧️', '09n': '🌧️', '10d': '🌦️', '10n': '🌧️',
-    '11d': '⛈️', '11n': '⛈️', '13d': '❄️', '50d': '🌫️',
+    '03d': '☁️', '04d': '☁️', '09d': '🌧️', '10d': '🌦️', '10n': '🌧️',
+    '11d': '⛈️', '13d': '❄️', '50d': '🌫️',
   };
 
   const emoji = ICON_MAP[weather.now.icon] ?? '🌤️';
 
-  // Condense forecast to daily highs
-  const dailyMap: Record<string, { high: number; low: number; icon: string; label: string }> = {};
+  const dailyMap: Record<string, { high: number; low: number; icon: string }> = {};
   for (const item of weather.forecast) {
-    const d = new Date(item.dt_txt);
-    const key = d.toLocaleDateString('en-UG', { weekday: 'short' });
+    const key = new Date(item.dt_txt).toLocaleDateString('en-UG', { weekday: 'short' });
     if (!dailyMap[key]) {
-      dailyMap[key] = { high: item.main.temp_max, low: item.main.temp_min, icon: item.weather[0].icon, label: key };
+      dailyMap[key] = { high: item.main.temp_max, low: item.main.temp_min, icon: item.weather[0].icon };
     } else {
       dailyMap[key].high = Math.max(dailyMap[key].high, item.main.temp_max);
       dailyMap[key].low  = Math.min(dailyMap[key].low,  item.main.temp_min);
     }
   }
-  const days = Object.values(dailyMap).slice(0, 5);
+  const days = Object.entries(dailyMap).slice(0, 5);
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      {/* Current conditions */}
-      <div className="px-5 pt-5 pb-4" style={{ background: 'linear-gradient(135deg, rgba(2,132,199,0.18) 0%, rgba(56,189,248,0.08) 100%)' }}>
+      <div className="px-5 pt-5 pb-4" style={{ background: 'linear-gradient(135deg, rgba(2,132,199,0.18), rgba(56,189,248,0.08))' }}>
         <div className="flex items-start justify-between mb-3">
           <div>
             <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.4)' }}>Weather</p>
@@ -141,7 +221,7 @@ async function WeatherIntelligence({ lat, lon }: { lat: number; lon: number }) {
             </div>
             <p className="text-sm capitalize mt-1" style={{ color: 'rgba(241,245,249,0.55)' }}>{weather.now.description}</p>
           </div>
-          <div className="text-right space-y-1.5">
+          <div className="text-right space-y-1.5 mt-1">
             <div className="flex items-center justify-end gap-1.5">
               <span className="text-xs" style={{ color: 'rgba(241,245,249,0.4)' }}>💧</span>
               <span className="text-xs font-semibold">{weather.now.humidity}%</span>
@@ -152,13 +232,11 @@ async function WeatherIntelligence({ lat, lon }: { lat: number; lon: number }) {
             </div>
           </div>
         </div>
-
-        {/* 5-day strip */}
         {days.length > 0 && (
           <div className="flex gap-2 mt-3">
-            {days.map((d) => (
-              <div key={d.label} className="flex-1 text-center">
-                <p className="text-[10px] font-bold" style={{ color: 'rgba(241,245,249,0.4)' }}>{d.label}</p>
+            {days.map(([label, d]) => (
+              <div key={label} className="flex-1 text-center">
+                <p className="text-[10px] font-bold" style={{ color: 'rgba(241,245,249,0.4)' }}>{label}</p>
                 <p className="text-base my-0.5">{ICON_MAP[d.icon] ?? '🌤️'}</p>
                 <p className="text-[10px] font-bold">{Math.round(d.high)}°</p>
                 <p className="text-[10px]" style={{ color: 'rgba(241,245,249,0.35)' }}>{Math.round(d.low)}°</p>
@@ -167,28 +245,20 @@ async function WeatherIntelligence({ lat, lon }: { lat: number; lon: number }) {
           </div>
         )}
       </div>
-
-      {/* AI Interpretation */}
       {insights.length > 0 && (
         <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
           {insights.map((ins) => {
-            const cfg = SEVERITY_CONFIG[ins.severity];
+            const cfg = SEVERITY[ins.severity];
             return (
               <div key={ins.id} className="px-5 py-3.5 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>
-                  {ins.icon}
-                </div>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>{ins.icon}</div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                    <p className="text-sm font-bold leading-snug">{ins.title}</p>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full capitalize" style={{ background: cfg.badge, color: cfg.text }}>
-                      {ins.severity}
-                    </span>
+                    <p className="text-sm font-bold">{ins.title}</p>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full capitalize" style={{ background: cfg.badge, color: cfg.text }}>{ins.severity}</span>
                   </div>
                   <p className="text-[11px] leading-snug" style={{ color: 'rgba(241,245,249,0.5)' }}>{ins.body}</p>
-                  {ins.action && (
-                    <p className="text-[11px] mt-1 font-semibold" style={{ color: cfg.text }}>→ {ins.action}</p>
-                  )}
+                  {ins.action && <p className="text-[11px] mt-1 font-semibold" style={{ color: cfg.text }}>→ {ins.action}</p>}
                 </div>
               </div>
             );
@@ -201,31 +271,35 @@ async function WeatherIntelligence({ lat, lon }: { lat: number; lon: number }) {
 
 // ─── Streaming: Market intelligence ──────────────────────────────────────────
 
-async function MarketIntelligence({ district, primaryCrop }: { district?: string; primaryCrop: string }) {
+async function MarketIntelligence({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const district: string | undefined = profile?.location ?? undefined;
   const supabase = await createClient();
   const twoDays = new Date(Date.now() - 2 * 864e5).toISOString();
 
-  let query = supabase
-    .from('market_prices')
-    .select('crop_type, price_per_kg, district, market_name, recorded_at')
-    .gte('recorded_at', twoDays)
-    .order('recorded_at', { ascending: false });
-
+  let prices: any[] = [];
   if (district) {
-    const { data: local } = await (query as any).ilike('district', `%${district}%`).limit(30);
-    if ((local ?? []).length > 0) {
-      return <MarketPriceList prices={local ?? []} label={`${district} market`} />;
-    }
+    const { data } = await (supabase.from('market_prices') as any)
+      .select('crop_type, price_per_kg, district, recorded_at')
+      .gte('recorded_at', twoDays)
+      .ilike('district', `%${district}%`)
+      .order('recorded_at', { ascending: false })
+      .limit(30);
+    prices = data ?? [];
+  }
+  if (prices.length === 0) {
+    const { data } = await supabase
+      .from('market_prices')
+      .select('crop_type, price_per_kg, recorded_at')
+      .gte('recorded_at', twoDays)
+      .order('recorded_at', { ascending: false })
+      .limit(30);
+    prices = data ?? [];
   }
 
-  const { data: national } = await (query as any).limit(30);
-  return <MarketPriceList prices={national ?? []} label="National market" />;
-}
-
-function MarketPriceList({ prices, label }: { prices: any[]; label: string }) {
   const groups: Record<string, number[]> = {};
   prices.forEach((p: any) => {
-    const k = p.crop_type?.toLowerCase() ?? 'other';
+    const k = (p.crop_type ?? '').toLowerCase();
     if (!groups[k]) groups[k] = [];
     groups[k].push(p.price_per_kg);
   });
@@ -238,9 +312,7 @@ function MarketPriceList({ prices, label }: { prices: any[]; label: string }) {
     count: ps.length,
   })).sort((a, b) => b.count - a.count).slice(0, 8);
 
-  const insights = generateMarketInsights(prices.map((p: any) => ({
-    crop_type: p.crop_type, price_per_kg: p.price_per_kg, recorded_at: p.recorded_at,
-  })));
+  const insights = generateMarketInsights(prices);
 
   if (rows.length === 0) {
     return (
@@ -257,11 +329,12 @@ function MarketPriceList({ prices, label }: { prices: any[]; label: string }) {
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div>
           <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.35)' }}>Live Prices</p>
-          <p className="text-[10px] mt-0.5 capitalize" style={{ color: 'rgba(241,245,249,0.25)' }}>{label}</p>
+          <p className="text-[10px] mt-0.5" style={{ color: 'rgba(241,245,249,0.25)' }}>
+            {district ? `${district} · national` : 'National market'}
+          </p>
         </div>
         <a href="/farmer/prices" className="text-xs font-semibold" style={{ color: 'var(--color-sprout)' }}>All prices →</a>
       </div>
-
       <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
         {rows.map(({ crop, avg, high, low }) => {
           const color = CROP_COLORS[crop] ?? '#00C875';
@@ -272,27 +345,21 @@ function MarketPriceList({ prices, label }: { prices: any[]; label: string }) {
                 <p className="text-sm font-semibold capitalize">{crop}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-black" style={{ color, letterSpacing: '-0.02em' }}>
-                  UGX {avg.toLocaleString()}
-                </p>
-                <p className="text-[10px]" style={{ color: 'rgba(241,245,249,0.35)' }}>
-                  {low.toLocaleString()} – {high.toLocaleString()}
-                </p>
+                <p className="text-sm font-black" style={{ color, letterSpacing: '-0.02em' }}>UGX {avg.toLocaleString()}</p>
+                <p className="text-[10px]" style={{ color: 'rgba(241,245,249,0.35)' }}>{low.toLocaleString()} – {high.toLocaleString()}</p>
               </div>
             </div>
           );
         })}
       </div>
-
-      {/* Market AI insights */}
       {insights.length > 0 && (
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           {insights.map((ins) => {
-            const cfg = SEVERITY_CONFIG[ins.severity];
+            const cfg = SEVERITY[ins.severity];
             return (
               <div key={ins.id} className="px-5 py-3 flex items-start gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                 <span className="text-base shrink-0 mt-0.5">{ins.icon}</span>
-                <div className="min-w-0">
+                <div>
                   <p className="text-xs font-bold" style={{ color: cfg.text }}>{ins.title}</p>
                   <p className="text-[11px] mt-0.5" style={{ color: 'rgba(241,245,249,0.45)' }}>{ins.body}</p>
                 </div>
@@ -305,20 +372,21 @@ function MarketPriceList({ prices, label }: { prices: any[]; label: string }) {
   );
 }
 
-// ─── Seasonal strategy (instant, computed) ───────────────────────────────────
+// ─── Seasonal strategy (computed, no DB) ─────────────────────────────────────
 
-function SeasonalStrategy({ month, primaryCrop }: { month: number; primaryCrop: string }) {
+async function SeasonalStrategy({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const primaryCrop = profile?.primary_crop ?? 'maize';
+  const month = new Date().getMonth();
   const plan = buildSeasonalPlan(month, primaryCrop);
-  const cfg = SEVERITY_CONFIG[plan.urgency];
+  const cfg = SEVERITY[plan.urgency];
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: `1px solid ${cfg.border}` }}>
       <div className="px-5 py-4" style={{ background: cfg.bg, borderBottom: `1px solid ${cfg.border}` }}>
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.4)' }}>
-              Seasonal Strategy
-            </p>
+            <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.4)' }}>Seasonal Strategy</p>
             <p className="text-base font-black mt-1" style={{ letterSpacing: '-0.02em' }}>{plan.season}</p>
           </div>
           {plan.daysLeft > 0 && (
@@ -329,39 +397,21 @@ function SeasonalStrategy({ month, primaryCrop }: { month: number; primaryCrop: 
           )}
         </div>
       </div>
-
       <div className="p-5 space-y-4">
-        {/* Recommended crops */}
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(241,245,249,0.35)' }}>
-            Recommended crops
-          </p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(241,245,249,0.35)' }}>Recommended crops</p>
           <div className="flex flex-wrap gap-1.5">
             {plan.recommendedCrops.map((crop) => (
-              <span
-                key={crop}
-                className="text-xs font-semibold px-2.5 py-1 rounded-full"
-                style={{ background: cfg.badge, color: cfg.text }}
-              >
-                {crop}
-              </span>
+              <span key={crop} className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: cfg.badge, color: cfg.text }}>{crop}</span>
             ))}
           </div>
         </div>
-
-        {/* Current task */}
         <div className="rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.04)' }}>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: cfg.text }}>
-            Do now
-          </p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: cfg.text }}>Do now</p>
           <p className="text-sm leading-snug" style={{ color: 'rgba(241,245,249,0.8)' }}>{plan.currentTask}</p>
         </div>
-
-        {/* Next task */}
         <div className="rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(241,245,249,0.35)' }}>
-            Coming up
-          </p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(241,245,249,0.35)' }}>Coming up</p>
           <p className="text-sm leading-snug" style={{ color: 'rgba(241,245,249,0.55)' }}>{plan.nextTask}</p>
         </div>
       </div>
@@ -369,38 +419,33 @@ function SeasonalStrategy({ month, primaryCrop }: { month: number; primaryCrop: 
   );
 }
 
-// ─── Disease & risk alerts (instant, computed) ────────────────────────────────
+// ─── Disease & risk (computed, no DB) ────────────────────────────────────────
 
-function DiseaseRiskPanel({ month, primaryCrop }: { month: number; primaryCrop: string }) {
+async function DiseaseRiskPanel({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const primaryCrop = profile?.primary_crop ?? '';
+  const month = new Date().getMonth();
   const alerts = generateDiseaseAlerts(month, primaryCrop);
   if (alerts.length === 0) return null;
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
       <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.35)' }}>
-          Disease & Risk Alerts
-        </p>
+        <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.35)' }}>Disease & Risk Alerts</p>
       </div>
       <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
         {alerts.map((a) => {
-          const cfg = SEVERITY_CONFIG[a.severity];
+          const cfg = SEVERITY[a.severity];
           return (
             <div key={a.id} className="px-5 py-3.5 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>
-                {a.icon}
-              </div>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>{a.icon}</div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="text-sm font-bold">{a.title}</p>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full capitalize" style={{ background: cfg.badge, color: cfg.text }}>
-                    {a.severity}
-                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full capitalize" style={{ background: cfg.badge, color: cfg.text }}>{a.severity}</span>
                 </div>
                 <p className="text-[11px] leading-snug" style={{ color: 'rgba(241,245,249,0.5)' }}>{a.body}</p>
-                {a.action && (
-                  <p className="text-[11px] mt-1 font-semibold" style={{ color: cfg.text }}>→ {a.action}</p>
-                )}
+                {a.action && <p className="text-[11px] mt-1 font-semibold" style={{ color: cfg.text }}>→ {a.action}</p>}
               </div>
             </div>
           );
@@ -412,11 +457,14 @@ function DiseaseRiskPanel({ month, primaryCrop }: { month: number; primaryCrop: 
 
 // ─── Streaming: Buyer offers ──────────────────────────────────────────────────
 
-async function BuyerOffers({ farmerId }: { farmerId: string }) {
+async function BuyerOffers({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  if (!profile?.id) return null;
+
   const supabase = await createClient();
   const { data: offers } = await (supabase.from as any)('offers')
     .select('id, offered_price, status, created_at, listing:listings(crop_type, quantity_kg)')
-    .eq('listing.farmer_id', farmerId)
+    .eq('listing.farmer_id', profile.id)
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
     .limit(5);
@@ -469,13 +517,13 @@ async function SmartAlerts({ userId }: { userId: string }) {
   const rows = alerts ?? [];
   if (rows.length === 0) return null;
 
-  const TYPE_CONFIG: Record<string, { color: string; bg: string; icon: string }> = {
-    rain:   { color: '#38BDF8', bg: 'rgba(56,189,248,0.12)',  icon: '🌧️' },
-    price:  { color: '#FBBF24', bg: 'rgba(251,191,36,0.12)',  icon: '📈' },
-    pest:   { color: '#F87171', bg: 'rgba(248,113,113,0.12)', icon: '🐛' },
-    offer:  { color: '#00C875', bg: 'rgba(0,200,117,0.12)',   icon: '🤝' },
-    loan:   { color: '#A78BFA', bg: 'rgba(167,139,250,0.12)', icon: '💳' },
-    system: { color: 'rgba(241,245,249,0.5)', bg: 'rgba(255,255,255,0.06)', icon: '🔔' },
+  const T: Record<string, { bg: string; icon: string; color: string }> = {
+    rain:   { bg: 'rgba(56,189,248,0.12)',  icon: '🌧️', color: '#38BDF8' },
+    price:  { bg: 'rgba(251,191,36,0.12)',  icon: '📈', color: '#FBBF24' },
+    pest:   { bg: 'rgba(248,113,113,0.12)', icon: '🐛', color: '#F87171' },
+    offer:  { bg: 'rgba(0,200,117,0.12)',   icon: '🤝', color: '#00C875' },
+    loan:   { bg: 'rgba(167,139,250,0.12)', icon: '💳', color: '#A78BFA' },
+    system: { bg: 'rgba(255,255,255,0.06)', icon: '🔔', color: 'rgba(241,245,249,0.5)' },
   };
 
   return (
@@ -485,12 +533,10 @@ async function SmartAlerts({ userId }: { userId: string }) {
       </div>
       <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
         {rows.map((a: any) => {
-          const cfg = TYPE_CONFIG[a.type] ?? TYPE_CONFIG.system;
+          const cfg = T[a.type] ?? T.system;
           return (
             <div key={a.id} className="px-5 py-3.5 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>
-                {cfg.icon}
-              </div>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>{cfg.icon}</div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold leading-snug">{a.title}</p>
                 {a.body && <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'rgba(241,245,249,0.45)' }}>{a.body}</p>}
@@ -504,25 +550,19 @@ async function SmartAlerts({ userId }: { userId: string }) {
   );
 }
 
-// ─── Static: Quick actions ────────────────────────────────────────────────────
+// ─── Static sections ──────────────────────────────────────────────────────────
 
 function QuickActions() {
   const actions = [
-    { label: 'Sell', href: '/farmer/marketplace', emoji: '🤝', gradient: 'linear-gradient(135deg, #059669, #10B981)' },
-    { label: 'Prices', href: '/farmer/prices', emoji: '📈', gradient: 'linear-gradient(135deg, #D97706, #FBBF24)' },
-    { label: 'Doctor', href: '/farmer/doctor', emoji: '🔬', gradient: 'linear-gradient(135deg, #7C3AED, #A78BFA)' },
-    { label: 'Weather', href: '/farmer/weather', emoji: '🌤', gradient: 'linear-gradient(135deg, #0284C7, #38BDF8)' },
+    { label: 'Sell',    href: '/farmer/marketplace', emoji: '🤝', gradient: 'linear-gradient(135deg, #059669, #10B981)' },
+    { label: 'Prices',  href: '/farmer/prices',       emoji: '📈', gradient: 'linear-gradient(135deg, #D97706, #FBBF24)' },
+    { label: 'Doctor',  href: '/farmer/doctor',       emoji: '🔬', gradient: 'linear-gradient(135deg, #7C3AED, #A78BFA)' },
+    { label: 'Weather', href: '/farmer/weather',      emoji: '🌤', gradient: 'linear-gradient(135deg, #0284C7, #38BDF8)' },
   ];
-
   return (
     <div className="grid grid-cols-4 gap-3">
       {actions.map(({ label, href, emoji, gradient }) => (
-        <a
-          key={label}
-          href={href}
-          className="flex flex-col items-center gap-2 py-4 px-2 rounded-2xl transition-opacity hover:opacity-85"
-          style={{ background: gradient }}
-        >
+        <a key={label} href={href} className="flex flex-col items-center gap-2 py-4 px-2 rounded-2xl hover:opacity-85 transition-opacity" style={{ background: gradient }}>
           <span className="text-2xl leading-none">{emoji}</span>
           <span className="text-[11px] font-bold text-white/90">{label}</span>
         </a>
@@ -531,30 +571,21 @@ function QuickActions() {
   );
 }
 
-// ─── Wallet snapshot ──────────────────────────────────────────────────────────
-
 function WalletSnapshot() {
   return (
-    <div className="rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, #0C1526 0%, #132033 100%)', border: '1px solid rgba(255,255,255,0.08)' }}>
+    <div className="rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, #0C1526, #132033)', border: '1px solid rgba(255,255,255,0.08)' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(0,200,117,0.15)' }}>💳</div>
           <p className="text-sm font-bold">Kulima Wallet</p>
         </div>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.12)', color: '#FBBF24' }}>
-          Coming soon
-        </span>
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.12)', color: '#FBBF24' }}>Coming soon</span>
       </div>
-      <p className="text-3xl font-black mb-1" style={{ letterSpacing: '-0.04em', color: 'var(--color-cream)' }}>UGX 0</p>
+      <p className="text-3xl font-black mb-1" style={{ letterSpacing: '-0.04em' }}>UGX 0</p>
       <p className="text-xs mb-4" style={{ color: 'rgba(241,245,249,0.4)' }}>Available balance</p>
       <div className="grid grid-cols-2 gap-3">
         {['Deposit', 'Withdraw'].map((a) => (
-          <button
-            key={a}
-            disabled
-            className="py-2.5 rounded-xl text-sm font-bold"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(241,245,249,0.4)', cursor: 'not-allowed' }}
-          >
+          <button key={a} disabled className="py-2.5 rounded-xl text-sm font-bold" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(241,245,249,0.4)', cursor: 'not-allowed' }}>
             {a === 'Deposit' ? '+ ' : '→ '}{a}
           </button>
         ))}
@@ -567,41 +598,11 @@ function WalletSnapshot() {
 
 export default async function FarmerDashboardPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
 
-  const [profileRes, unreadRes] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select('full_name, primary_crop, phone_number, location, latitude, longitude, id')
-      .eq('user_id', user.id)
-      .single(),
-    supabase
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('farmer_id', user.id)
-      .eq('read', false),
-  ]);
-
-  const profile = profileRes.data as any;
-  const name = profile?.full_name ?? 'Farmer';
-  const firstName = name.split(' ')[0];
-  const primaryCrop = profile?.primary_crop ?? 'maize';
-  const district: string | undefined = profile?.location ?? undefined;
-  const lat: number = profile?.latitude ?? 0.3476;
-  const lon: number = profile?.longitude ?? 32.5825;
-  const unread = unreadRes.count ?? 0;
-  const month = new Date().getMonth();
-
-  let listingsCount = 0;
-  if (profile?.id) {
-    const { count } = await (supabase.from as any)('listings')
-      .select('id', { count: 'exact', head: true })
-      .eq('farmer_id', profile.id);
-    listingsCount = count ?? 0;
-  }
-
-  const agriScore = computeAgriScore(profile, listingsCount);
+  // getSession() reads the cookie without a network call to auth servers
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) redirect('/auth/signin');
+  const userId = session.user.id;
 
   const h = new Date().getHours();
   const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
@@ -610,74 +611,63 @@ export default async function FarmerDashboardPage() {
     <div className="min-h-screen pb-28" style={{ background: 'var(--color-soil)' }}>
       <div className="max-w-lg mx-auto px-4">
 
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between py-5">
-          <div>
-            <p className="text-xs font-medium" style={{ color: 'rgba(241,245,249,0.4)' }}>{greeting}</p>
-            <p className="text-xl font-black mt-0.5" style={{ letterSpacing: '-0.03em' }}>{firstName} 👋</p>
-            {district && (
-              <p className="text-[11px] mt-0.5" style={{ color: 'rgba(241,245,249,0.35)' }}>📍 {district}</p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-white" style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}>
-              {firstName[0]?.toUpperCase() ?? 'F'}
+        {/* Header streams in with profile data */}
+        <Suspense fallback={
+          <div className="flex items-center justify-between py-5">
+            <div className="space-y-2">
+              <div className="skeleton h-3 w-24 rounded" />
+              <div className="skeleton h-6 w-36 rounded" />
             </div>
-            <button
-              className="relative w-10 h-10 rounded-2xl flex items-center justify-center text-lg"
-              style={{ background: 'var(--color-surface2)' }}
-              aria-label="Notifications"
-            >
-              🔔
-              {unread > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-black"
-                  style={{ background: '#F87171', color: '#060B14' }}
-                >
-                  {unread > 9 ? '9+' : unread}
-                </span>
-              )}
-            </button>
+            <div className="flex gap-2">
+              <div className="skeleton w-9 h-9 rounded-xl" />
+              <div className="skeleton w-10 h-10 rounded-2xl" />
+            </div>
           </div>
-        </div>
+        }>
+          <DashboardHeader userId={userId} greeting={greeting} />
+        </Suspense>
 
-        <div className="space-y-4">
+        {/* Quick actions always instant */}
+        <QuickActions />
 
-          {/* 1 · AgriScore (instant) */}
-          <AgriScoreCard score={agriScore} />
+        <div className="space-y-4 mt-4">
 
-          {/* 2 · Quick actions (instant) */}
-          <QuickActions />
+          {/* AgriScore — needs profile + listings (sequential, ~2 DB calls, streams in) */}
+          <Suspense fallback={<Sk h="120px" />}>
+            <AgriScoreSection userId={userId} />
+          </Suspense>
 
-          {/* 3 · Weather intelligence (streams in) */}
+          {/* Weather — needs profile (lat/lon) + OpenWeather */}
+          <Suspense fallback={<Sk h="240px" />}>
+            <WeatherIntelligence userId={userId} />
+          </Suspense>
+
+          {/* Seasonal — needs profile (primaryCrop), computed */}
+          <Suspense fallback={<Sk h="200px" />}>
+            <SeasonalStrategy userId={userId} />
+          </Suspense>
+
+          {/* Market prices — needs profile (district) + DB */}
           <Suspense fallback={<Sk h="260px" />}>
-            <WeatherIntelligence lat={lat} lon={lon} />
+            <MarketIntelligence userId={userId} />
           </Suspense>
 
-          {/* 4 · Seasonal strategy (instant, computed) */}
-          <SeasonalStrategy month={month} primaryCrop={primaryCrop} />
-
-          {/* 5 · Market intelligence (streams in) */}
-          <Suspense fallback={<Sk h="280px" />}>
-            <MarketIntelligence district={district} primaryCrop={primaryCrop} />
+          {/* Disease alerts — needs profile (primaryCrop), computed */}
+          <Suspense fallback={<Sk h="160px" />}>
+            <DiseaseRiskPanel userId={userId} />
           </Suspense>
 
-          {/* 6 · Disease & risk (instant, computed) */}
-          <DiseaseRiskPanel month={month} primaryCrop={primaryCrop} />
+          {/* Buyer offers — needs profile.id + DB */}
+          <Suspense fallback={null}>
+            <BuyerOffers userId={userId} />
+          </Suspense>
 
-          {/* 7 · Buyer offers (streams in) */}
-          {profile?.id && (
-            <Suspense fallback={<Sk h="120px" />}>
-              <BuyerOffers farmerId={profile.id} />
-            </Suspense>
-          )}
-
-          {/* 8 · Wallet (instant placeholder) */}
+          {/* Wallet */}
           <WalletSnapshot />
 
-          {/* 9 · Smart alerts (streams in) */}
-          <Suspense fallback={<Sk h="160px" />}>
-            <SmartAlerts userId={user.id} />
+          {/* Notifications */}
+          <Suspense fallback={null}>
+            <SmartAlerts userId={userId} />
           </Suspense>
 
         </div>
