@@ -55,16 +55,14 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         if (signUpError) throw signUpError;
         if (data.user) {
-          // Upsert profile so re-signup of the same email is idempotent
           await supabase.from('profiles').upsert(
             {
-              id: data.user.id,
               user_id: data.user.id,
               full_name: fullName,
               phone_number: phoneNumber || null,
               location: location || null,
             },
-            { onConflict: 'id' }
+            { onConflict: 'user_id' }
           );
         }
         setSuccess('Account created! Check your email to confirm your account, then sign in.');
