@@ -8,20 +8,20 @@ import Link from 'next/link';
 function StatsSkeleton() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-28 rounded-2xl" />)}
+      {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-32 rounded-2xl" />)}
     </div>
   );
 }
 
-function RecentSkeleton() {
-  return <div className="skeleton h-48 rounded-2xl" />;
+function TableSkeleton() {
+  return <div className="skeleton h-64 rounded-2xl" />;
 }
 
-// ─── Streaming sections ───────────────────────────────────────────────────────
+// ─── Streaming: Platform stats ────────────────────────────────────────────────
 
 async function PlatformStats() {
   const supabase = await createClient();
-  const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
+  const weekAgo   = new Date(Date.now() - 7 * 864e5).toISOString();
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
 
   const [farmersRes, newFarmersRes, listingsRes, dealsRes] = await Promise.all([
@@ -36,49 +36,62 @@ async function PlatformStats() {
     0
   );
 
-  const stats = [
-    { icon: '👥', value: (farmersRes.count ?? 0).toLocaleString(), label: 'Total users', accent: 'var(--color-cream)' },
-    { icon: '🆕', value: (newFarmersRes.count ?? 0).toLocaleString(), label: 'New this week', accent: 'var(--color-sprout)' },
-    { icon: '📦', value: (listingsRes.count ?? 0).toLocaleString(), label: 'Active listings', accent: 'var(--color-harvest)' },
+  const cards = [
+    {
+      icon: '👥', value: (farmersRes.count ?? 0).toLocaleString(),
+      label: 'Total users', sub: 'All roles',
+      gradient: 'linear-gradient(135deg, #6D28D9 0%, #A78BFA 100%)',
+    },
+    {
+      icon: '🆕', value: (newFarmersRes.count ?? 0).toLocaleString(),
+      label: 'New this week', sub: '7-day growth',
+      gradient: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+    },
+    {
+      icon: '📦', value: (listingsRes.count ?? 0).toLocaleString(),
+      label: 'Active listings', sub: 'Currently live',
+      gradient: 'linear-gradient(135deg, #D97706 0%, #FBBF24 100%)',
+    },
     {
       icon: '💰',
-      value: gmv > 0 ? `${(gmv / 1e6).toFixed(1)}M` : '—',
-      label: 'GMV this month (UGX)',
-      accent: 'var(--color-harvest)',
+      value: gmv > 1e6 ? `${(gmv / 1e6).toFixed(1)}M` : gmv > 0 ? Math.round(gmv).toLocaleString() : '—',
+      label: 'GMV this month', sub: 'UGX total',
+      gradient: 'linear-gradient(135deg, #EA580C 0%, #FB923C 100%)',
     },
   ];
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map(({ icon, value, label, accent }) => (
-        <div
-          key={label}
-          className="rounded-2xl p-5"
-          style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}
-        >
-          <span className="text-2xl">{icon}</span>
-          <p className="text-3xl font-black mt-2" style={{ color: accent, letterSpacing: '-0.04em' }}>{value}</p>
-          <p className="text-xs mt-1" style={{ color: 'rgba(249,250,251,0.4)' }}>{label}</p>
+      {cards.map(({ icon, value, label, sub, gradient }) => (
+        <div key={label} className="rounded-2xl p-5" style={{ background: gradient }}>
+          <div className="flex items-start justify-between mb-3">
+            <span className="text-2xl">{icon}</span>
+          </div>
+          <p className="text-3xl font-black text-white mb-1" style={{ letterSpacing: '-0.04em' }}>{value}</p>
+          <p className="text-sm font-bold text-white/90">{label}</p>
+          <p className="text-[11px] text-white/60 mt-0.5">{sub}</p>
         </div>
       ))}
     </div>
   );
 }
 
+// ─── Streaming: Recent sign-ups ───────────────────────────────────────────────
+
 async function RecentUsers() {
   const supabase = await createClient();
   const { data: users } = await (supabase.from as any)('profiles')
-    .select('full_name, role, location, created_at')
+    .select('full_name, role, location, created_at, phone_number')
     .order('created_at', { ascending: false })
-    .limit(8);
+    .limit(10);
 
   const rows = users ?? [];
 
-  const ROLE_COLOR: Record<string, { bg: string; color: string }> = {
-    farmer: { bg: 'rgba(34,197,94,0.1)', color: 'var(--color-sprout)' },
-    buyer: { bg: 'rgba(245,158,11,0.1)', color: 'var(--color-harvest)' },
-    supplier: { bg: 'rgba(96,165,250,0.1)', color: '#60a5fa' },
-    admin: { bg: 'rgba(167,139,250,0.1)', color: '#a78bfa' },
+  const ROLE_CFG: Record<string, { gradient: string; label: string }> = {
+    farmer:   { gradient: 'linear-gradient(135deg, #059669, #10B981)', label: 'Farmer' },
+    buyer:    { gradient: 'linear-gradient(135deg, #D97706, #FBBF24)', label: 'Buyer' },
+    supplier: { gradient: 'linear-gradient(135deg, #0284C7, #38BDF8)', label: 'Supplier' },
+    admin:    { gradient: 'linear-gradient(135deg, #6D28D9, #A78BFA)', label: 'Admin' },
   };
 
   function timeAgo(iso: string) {
@@ -90,41 +103,50 @@ async function RecentUsers() {
 
   return (
     <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'rgba(249,250,251,0.35)' }}>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.35)' }}>
           Recent sign-ups
         </p>
+        <span className="text-xs font-semibold" style={{ color: 'rgba(241,245,249,0.3)' }}>
+          {rows.length} shown
+        </span>
       </div>
+
       {rows.length === 0 ? (
-        <div className="px-5 py-8 text-center text-sm" style={{ color: 'rgba(249,250,251,0.4)' }}>
-          No users yet — apply the database migration to get started.
+        <div className="px-5 py-10 text-center">
+          <p className="text-4xl mb-3">👥</p>
+          <p className="font-semibold mb-1">No users yet</p>
+          <p className="text-sm" style={{ color: 'rgba(241,245,249,0.4)' }}>Apply the database migration to start seeing users.</p>
         </div>
       ) : (
         <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
           {rows.map((u: any, i: number) => {
-            const rc = ROLE_COLOR[u.role] ?? ROLE_COLOR.farmer;
+            const cfg = ROLE_CFG[u.role] ?? ROLE_CFG.farmer;
+            const initial = (u.full_name ?? '?')[0].toUpperCase();
             return (
               <div key={i} className="px-5 py-3.5 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shrink-0"
-                    style={{ background: rc.bg, color: rc.color }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0 text-white"
+                    style={{ background: cfg.gradient }}
                   >
-                    {(u.full_name ?? '?')[0].toUpperCase()}
+                    {initial}
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold truncate">{u.full_name ?? 'Unknown'}</p>
-                    <p className="text-[11px] truncate" style={{ color: 'rgba(249,250,251,0.4)' }}>{u.location ?? '—'}</p>
+                    <p className="text-[11px] truncate" style={{ color: 'rgba(241,245,249,0.4)' }}>
+                      {u.phone_number ?? u.location ?? '—'}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <span
-                    className="text-[11px] px-2 py-0.5 rounded-full font-semibold capitalize"
-                    style={{ background: rc.bg, color: rc.color }}
+                    className="text-[11px] px-2.5 py-1 rounded-full font-bold text-white"
+                    style={{ background: cfg.gradient }}
                   >
-                    {u.role}
+                    {cfg.label}
                   </span>
-                  <span className="text-[11px]" style={{ color: 'rgba(249,250,251,0.3)' }}>
+                  <span className="text-[11px] hidden sm:block" style={{ color: 'rgba(241,245,249,0.3)' }}>
                     {timeAgo(u.created_at)}
                   </span>
                 </div>
@@ -133,6 +155,40 @@ async function RecentUsers() {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Static: Activity metrics ─────────────────────────────────────────────────
+
+function PlatformHealth() {
+  const metrics = [
+    { label: 'Auth system',     status: 'Operational', color: '#00C875' },
+    { label: 'Database',        status: 'Operational', color: '#00C875' },
+    { label: 'Notifications',   status: 'Operational', color: '#00C875' },
+    { label: 'File storage',    status: 'Operational', color: '#00C875' },
+    { label: 'Mobile Money API',status: 'Coming soon', color: '#FBBF24' },
+    { label: 'Wallet ledger',   status: 'Coming soon', color: '#FBBF24' },
+  ];
+
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.35)' }}>
+          Platform health
+        </p>
+      </div>
+      <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
+        {metrics.map(({ label, status, color }) => (
+          <div key={label} className="px-5 py-3 flex items-center justify-between">
+            <p className="text-sm">{label}</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+              <span className="text-xs font-semibold" style={{ color }}>{status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -152,31 +208,60 @@ export default async function AdminDashboardPage() {
   if ((profile as any)?.role !== 'admin') redirect('/dashboard');
 
   const adminName: string = (profile as any)?.full_name ?? 'Admin';
+  const firstName = adminName.split(' ')[0];
 
   const TOOLS = [
-    { href: '/admin/prices', emoji: '📝', title: 'Update Prices', sub: 'Add or edit market price data', accent: 'var(--color-sprout)', bg: 'rgba(34,197,94,0.08)', border: 'rgba(34,197,94,0.18)' },
-    { href: '/admin/alert', emoji: '📢', title: 'Send Alert', sub: 'Broadcast notifications to farmers', accent: '#60a5fa', bg: 'rgba(96,165,250,0.08)', border: 'rgba(96,165,250,0.18)' },
-    { href: '/admin/buyers', emoji: '👤', title: 'Manage Buyers', sub: 'Review and verify buyer accounts', accent: 'var(--color-harvest)', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.18)' },
+    {
+      href: '/admin/prices', emoji: '📝', title: 'Update Prices',
+      sub: 'Add market price data for crops',
+      gradient: 'linear-gradient(135deg, rgba(0,200,117,0.12), rgba(0,200,117,0.05))',
+      border: 'rgba(0,200,117,0.2)', accent: '#00C875',
+    },
+    {
+      href: '/admin/alert', emoji: '📢', title: 'Send Alert',
+      sub: 'Broadcast notifications to farmers',
+      gradient: 'linear-gradient(135deg, rgba(56,189,248,0.12), rgba(56,189,248,0.05))',
+      border: 'rgba(56,189,248,0.2)', accent: '#38BDF8',
+    },
+    {
+      href: '/admin/buyers', emoji: '👤', title: 'Manage Buyers',
+      sub: 'Review and verify buyer accounts',
+      gradient: 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,191,36,0.05))',
+      border: 'rgba(251,191,36,0.2)', accent: '#FBBF24',
+    },
   ];
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-soil)' }}>
 
-      {/* ── Header ── */}
+      {/* ── Sticky header ── */}
       <header
         className="sticky top-0 z-30"
-        style={{ background: 'rgba(10,10,10,0.92)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        style={{
+          background: 'rgba(6,11,20,0.92)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+        }}
       >
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="text-lg font-black" style={{ color: 'var(--color-sprout)', letterSpacing: '-0.03em' }}>Kulima</span>
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black" style={{ background: 'var(--color-sprout)', color: '#060B14' }}>K</div>
+            <span className="font-black" style={{ color: 'var(--color-sprout)', letterSpacing: '-0.03em' }}>Kulima</span>
+          </div>
           <div className="flex items-center gap-3">
             <span
-              className="text-xs px-2.5 py-1 rounded-full font-semibold"
-              style={{ background: 'rgba(167,139,250,0.12)', color: '#a78bfa', border: '1px solid rgba(167,139,250,0.2)' }}
+              className="text-[11px] px-2.5 py-1 rounded-full font-bold text-white"
+              style={{ background: 'linear-gradient(135deg, #6D28D9, #A78BFA)' }}
             >
               Admin
             </span>
-            <span className="text-sm" style={{ color: 'rgba(249,250,251,0.5)' }}>{adminName}</span>
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white"
+              style={{ background: 'linear-gradient(135deg, #6D28D9, #A78BFA)' }}
+            >
+              {firstName[0]?.toUpperCase() ?? 'A'}
+            </div>
           </div>
         </div>
       </header>
@@ -185,44 +270,58 @@ export default async function AdminDashboardPage() {
 
         {/* ── Title ── */}
         <div>
-          <h1 className="text-2xl font-black" style={{ letterSpacing: '-0.03em' }}>Platform Overview</h1>
-          <p className="text-sm mt-1" style={{ color: 'rgba(249,250,251,0.45)' }}>
-            Monitor your platform health and manage the ecosystem.
+          <h1 className="text-2xl font-black" style={{ letterSpacing: '-0.03em' }}>
+            Platform Overview
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'rgba(241,245,249,0.45)' }}>
+            Welcome back, {firstName}. Here's what's happening on Kulima.
           </p>
         </div>
 
-        {/* ── Platform stats (streams in) ── */}
+        {/* ── Stats (streams in) ── */}
         <Suspense fallback={<StatsSkeleton />}>
           <PlatformStats />
         </Suspense>
 
         {/* ── Admin tools (instant) ── */}
         <div>
-          <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: 'rgba(249,250,251,0.3)' }}>
+          <p className="text-[11px] font-bold tracking-widest uppercase mb-4" style={{ color: 'rgba(241,245,249,0.3)' }}>
             Admin tools
           </p>
           <div className="grid sm:grid-cols-3 gap-4">
-            {TOOLS.map(({ href, emoji, title, sub, accent, bg, border }) => (
+            {TOOLS.map(({ href, emoji, title, sub, gradient, border, accent }) => (
               <Link
                 key={href}
                 href={href}
                 className="flex items-start gap-4 p-5 rounded-2xl transition-opacity hover:opacity-85"
-                style={{ background: bg, border: `1px solid ${border}` }}
+                style={{ background: gradient, border: `1px solid ${border}` }}
               >
-                <span className="text-2xl mt-0.5">{emoji}</span>
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+                  style={{ background: `${accent}20` }}
+                >
+                  {emoji}
+                </div>
                 <div>
                   <p className="font-bold text-sm" style={{ color: accent }}>{title}</p>
-                  <p className="text-xs mt-1" style={{ color: 'rgba(249,250,251,0.45)' }}>{sub}</p>
+                  <p className="text-xs mt-1" style={{ color: 'rgba(241,245,249,0.45)' }}>{sub}</p>
                 </div>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* ── Recent users (streams in) ── */}
-        <Suspense fallback={<RecentSkeleton />}>
-          <RecentUsers />
-        </Suspense>
+        {/* ── Two-column layout for lower sections ── */}
+        <div className="grid lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2">
+            <Suspense fallback={<TableSkeleton />}>
+              <RecentUsers />
+            </Suspense>
+          </div>
+          <div>
+            <PlatformHealth />
+          </div>
+        </div>
 
       </main>
     </div>

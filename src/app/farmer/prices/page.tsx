@@ -17,8 +17,6 @@ const cropEmojis: Record<string, string> = {
   coffee: '☕', groundnuts: '🥜', sweet_potatoes: '🍠', bananas: '🍌', sunflower: '🌻',
 };
 
-export const revalidate = 300;
-
 async function getCachedPrices() {
   const supabase = await import('@/lib/supabase/server').then((m) => m.createClient());
   const { data } = await supabase

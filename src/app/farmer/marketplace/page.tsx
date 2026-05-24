@@ -3,8 +3,6 @@ import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/Badge';
 import { ListingCard } from '@/components/farm/ListingCard';
 
-export const dynamic = 'force-dynamic';
-
 export default async function MarketplacePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
