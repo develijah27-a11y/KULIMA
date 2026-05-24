@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
-  const { supabase, response, session } = await createClient(request);
+  const { response, session } = await createClient(request);
 
   const pathname = request.nextUrl.pathname;
 
-  const protectedRoutes = ['/dashboard', '/farms', '/soil', '/disease', '/weather'];
+  const protectedRoutes = ['/dashboard', '/farmer', '/buyer', '/admin', '/farms', '/soil', '/disease', '/weather'];
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (isProtected && !session) {

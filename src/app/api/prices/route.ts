@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ success: false }, { status: 401 });
 
-    revalidateTag('prices');
+    revalidateTag('prices', 'default');
     return NextResponse.json({ success: true });
   } catch { return NextResponse.json({ success: false }, { status: 500 }); }
 }

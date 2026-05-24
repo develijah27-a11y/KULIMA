@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-export const GET = async () => {
-  const { searchParams } = new URL(import.meta.url);
+export const GET = async (request: Request) => {
+  const { searchParams } = new URL(request.url);
   const lat = parseFloat(searchParams.get('lat') ?? '0.3476');
   const lon = parseFloat(searchParams.get('lon') ?? '32.5825');
 
@@ -14,7 +14,7 @@ export const GET = async () => {
     .from('weather_cache')
     .select('*')
     .eq('location_key', locKey)
-    .gte('fetched_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
+    .gte('cached_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
     .single();
 
   if (cached) return NextResponse.json({ success: true, data: cached.data });
@@ -32,13 +32,13 @@ export const GET = async () => {
   };
 
   await supabase.from('weather_cache').upsert({
-    location_key: locKey, data: transformed, fetched_at: new Date().toISOString(),
+    location_key: locKey, data: transformed, cached_at: new Date().toISOString(),
   });
 
   return NextResponse.json({ success: true, data: transformed });
 };
 
-function devWeather() {
+function devWeather(_lat: number, _lon: number) {
   return {
     now: { temp: 28, description: 'partly cloudy', icon: '02d', humidity: 65, wind: 3.2 },
     forecast: Array.from({ length: 6 }, (_, i) => ({

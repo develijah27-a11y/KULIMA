@@ -39,6 +39,7 @@
     "node_modules",
     "**/__tests__/**",
     "**/*.test.ts",
-    "**/*.test.tsx"
+    "**/*.test.tsx",
+    "src/app/sw.ts"
   ]
 }
