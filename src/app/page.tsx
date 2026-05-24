@@ -156,7 +156,7 @@ export default function Home() {
 
       {/* ── Footer ── */}
       <footer className="py-8 text-center text-gray-400 text-sm">
-        <p>© {new Date().getFullYear()} Kulima — Smart Farm Management for Africa</p>
+        <p>© 2025 Kulima — Smart Farm Management for Africa</p>
       </footer>
     </div>
   );

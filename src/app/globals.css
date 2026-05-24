@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Syne:wght@700;800&display=swap');
 @import "tailwindcss";
 
 /*
@@ -5,8 +6,6 @@
  * Colors: earth·leaf·sprout·harvest·sun·clay·soil·surface·surface2·cream
  * Fonts: Syne (display) · Playfair Display (headline) · DM Sans (body)
  */
-
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=Syne:wght@700;800&display=swap');
 
 @theme {
   /* ── Brand Colors ── */
