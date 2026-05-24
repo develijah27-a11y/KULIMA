@@ -27,10 +27,10 @@ export default async function WeatherDashboardPage() {
           </div>
           <div className="lg:col-span-2">
             <Card>
-              <CardHeader
-                title="Weather Logs"
-                description="Track and analyze weather conditions for your farms"
-              />
+            <CardHeader
+              title="Weather Dashboard"
+              subtitle="Track and analyze weather conditions for your farms"
+            />
               <div className="mt-4">
                 <WeatherLogList />
               </div>
@@ -99,10 +99,10 @@ async function WeatherLogCardForm() {
 
   return (
     <Card>
-      <CardHeader
-        title="New Weather Log"
-        description="Record current weather conditions"
-      />
+       <CardHeader
+         title="New Weather Log"
+         subtitle="Record current weather conditions"
+       />
       <form action={handleSubmit} className="mt-4 space-y-4">
         <div className="space-y-1">
           <label htmlFor="farm_id" className="block text-sm font-medium text-gray-700">

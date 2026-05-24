@@ -17,6 +17,9 @@ export interface Database {
           phone_number: string | null
           location: string | null
           role: string
+          latitude: number | null
+          longitude: number | null
+          primary_crop: string | null
           created_at: string
           updated_at: string
         }
@@ -27,6 +30,9 @@ export interface Database {
           phone_number?: string | null
           location?: string | null
           role?: string
+          latitude?: number | null
+          longitude?: number | null
+          primary_crop?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -37,6 +43,9 @@ export interface Database {
           phone_number?: string | null
           location?: string | null
           role?: string
+          latitude?: number | null
+          longitude?: number | null
+          primary_crop?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -254,6 +263,265 @@ export interface Database {
             foreignKeyName: "weather_logs_farm_id_fkey"
             columns: ["farm_id"]
             referencedRelation: "farms"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      listings: {
+        Row: {
+          id: string
+          farmer_id: string
+          crop_type: string
+          quantity_kg: number
+          asking_price: number
+          available_from: string
+          district: string
+          status: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          farmer_id: string
+          crop_type: string
+          quantity_kg: number
+          asking_price: number
+          available_from: string
+          district: string
+          status?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          farmer_id?: string
+          crop_type?: string
+          quantity_kg?: number
+          asking_price?: number
+          available_from?: string
+          district?: string
+          status?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listings_farmer_id_fkey"
+            columns: ["farmer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      offers: {
+        Row: {
+          id: string
+          listing_id: string
+          buyer_id: string
+          offered_price: number
+          status: string
+          message: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          listing_id: string
+          buyer_id: string
+          offered_price: number
+          status?: string
+          message?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          listing_id?: string
+          buyer_id?: string
+          offered_price?: number
+          status?: string
+          message?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_listing_id_fkey"
+            columns: ["listing_id"]
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      notifications: {
+        Row: {
+          id: string
+          farmer_id: string
+          type: string
+          title: string
+          body: string
+          read: boolean
+          sent_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          farmer_id: string
+          type: string
+          title: string
+          body: string
+          read?: boolean
+          sent_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          farmer_id?: string
+          type?: string
+          title?: string
+          body?: string
+          read?: boolean
+          sent_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_farmer_id_fkey"
+            columns: ["farmer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      market_prices: {
+        Row: {
+          id: string
+          crop_type: string
+          price_per_kg: number
+          market_name: string
+          district: string
+          recorded_at: string
+          source: string | null
+          created_at: string
+          change_percent: number | null
+        }
+        Insert: {
+          id?: string
+          crop_type: string
+          price_per_kg: number
+          market_name: string
+          district: string
+          recorded_at: string
+          source?: string | null
+          created_at?: string
+          change_percent?: number | null
+        }
+        Update: {
+          id?: string
+          crop_type?: string
+          price_per_kg?: number
+          market_name?: string
+          district?: string
+          recorded_at?: string
+          source?: string | null
+          created_at?: string
+          change_percent?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_prices_market_name_fkey"
+            columns: ["market_name"]
+            referencedRelation: "markets"
+            referencedColumns: ["name"]
+          }
+        ]
+      }
+      weather_cache: {
+        Row: {
+          location_key: string
+          data: Json
+          cached_at: string
+        }
+        Insert: {
+          location_key: string
+          data: Json
+          cached_at?: string
+        }
+        Update: {
+          location_key?: string
+          data?: Json
+          cached_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "weather_cache_location_key_fkey"
+            columns: ["location_key"]
+            referencedRelation: "locations"
+            referencedColumns: ["key"]
+          }
+        ]
+      }
+      loan_profiles: {
+        Row: {
+          id: string
+          farmer_id: string
+          score: number
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          farmer_id: string
+          score: number
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          farmer_id?: string
+          score?: number
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_profiles_farmer_id_fkey"
+            columns: ["farmer_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      diagnoses: {
+        Row: {
+          id: string
+          farmer_id: string
+          disease_name: string
+          severity: string
+          treatment: string[]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          farmer_id: string
+          disease_name: string
+          severity: string
+          treatment: string[]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          farmer_id?: string
+          disease_name?: string
+          severity?: string
+          treatment?: string[]
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "diagnoses_farmer_id_fkey"
+            columns: ["farmer_id"]
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           }
         ]

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
 
 export default async function BuyerDashboardPage() {
   const supabase = await createClient();

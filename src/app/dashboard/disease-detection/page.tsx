@@ -26,11 +26,11 @@ export default async function DiseaseDetectionDashboardPage() {
             <DiseaseScanCardForm />
           </div>
           <div className="lg:col-span-2">
-            <Card>
-              <CardHeader
-                title="Disease Scans"
-                description="View and analyze crop disease detection results"
-              />
+<Card>
+               <CardHeader
+                 title="Disease Scans"
+                 subtitle="View and analyze crop disease detection results"
+               />
               <div className="mt-4">
                 <DiseaseScanList />
               </div>
@@ -101,11 +101,11 @@ async function DiseaseScanCardForm() {
   }
 
   return (
-    <Card>
-      <CardHeader
-        title="New Disease Scan"
-        description="Record a new crop disease scan"
-      />
+<Card>
+       <CardHeader
+         title="New Disease Scan"
+         subtitle="Record a new crop disease scan"
+       />
       <form action={handleSubmit} className="mt-4 space-y-4">
         <div className="space-y-1">
           <label htmlFor="farm_id" className="block text-sm font-medium text-gray-700">

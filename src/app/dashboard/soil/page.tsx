@@ -27,10 +27,10 @@ export default async function SoilDashboardPage() {
           </div>
           <div className="lg:col-span-2">
             <Card>
-              <CardHeader
-                title="Soil Reports"
-                description="View and analyze soil health data"
-              />
+           <CardHeader
+             title="Soil Reports"
+             subtitle="View and analyze soil health data"
+           />
               <div className="mt-4">
                 <SoilReportList />
               </div>
@@ -97,10 +97,10 @@ async function SoilReportCardForm() {
 
   return (
     <Card>
-      <CardHeader
-        title="New Soil Report"
-        description="Enter soil analysis data"
-      />
+         <CardHeader
+           title="New Soil Report"
+           subtitle="Enter soil analysis data"
+         />
       <form action={handleSubmit} className="mt-4 space-y-4">
         <div className="space-y-1">
           <label htmlFor="farm_id" className="block text-sm font-medium text-gray-700">

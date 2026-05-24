@@ -1,12 +1,10 @@
-const { withSerwist } = require('@serwist/next');
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   compress: true,
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'clsx', 'tailwind-merge'],
-    ppr: true,
   },
+  cacheComponents: true,
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [390, 640, 828, 1080],
@@ -20,12 +18,4 @@ const nextConfig = {
   },
 };
 
-module.exports = withSerwist(
-  {
-    swSrc: 'src/app/sw.ts',
-    swDest: 'public/sw.js',
-    reloadOnOnline: true,
-    disable: process.env.NODE_ENV === 'development',
-  },
-  nextConfig
-);
+module.exports = nextConfig;

@@ -27,7 +27,7 @@ export default async function FarmsDashboardPage() {
           <Card>
             <CardHeader
               title="Your Farms"
-              description="Manage and monitor your farm operations"
+              subtitle="Manage and monitor your farm operations"
             />
             <div className="mt-4">
               <FarmList />
@@ -75,7 +75,7 @@ async function NewFarmForm() {
     <Card>
       <CardHeader
         title="Create Farm"
-        description="Register a new farm to get started"
+        subtitle="Register a new farm to get started"
       />
       <div className="mt-4">
         <form action={handleCreateFarm} className="space-y-4">

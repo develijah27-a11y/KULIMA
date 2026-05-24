@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { createClient } from '@/lib/supabase/client';
 
 export default function AdminAlertClient() {
   const [type, setType] = useState('rain');
@@ -36,5 +38,3 @@ export default function AdminAlertClient() {
     </div>
   );
 }
-
-import { useState } from 'react';

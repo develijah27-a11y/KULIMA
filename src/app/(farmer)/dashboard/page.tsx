@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { Card } from '@/components/ui\Card';
-import { Badge } from '@/components/ui\Badge';
-import { PriceTag } from '@/components/ui\PriceTag';
-import { WeatherCard, getDayLabel, weatherEmoji } from '@/components/farm\WeatherCard';
-import { PriceTicker } from '@/components/farm\PriceTicker';
-import { AlertList } from '@/components/farm\AlertItem';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { PriceTag } from '@/components/ui/PriceTag';
+import { WeatherCard } from '@/components/farm/WeatherCard';
+import { PriceTicker } from '@/components/farm/PriceTicker';
+import { AlertList } from '@/components/farm/AlertItem';
 import { ShowAlertButton } from './ShowAlertButton';
 
 const WEATHER_EMOJI: Record<string, string> = {
@@ -35,15 +35,15 @@ export default async function FarmerDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const [profileRes, priceRes, notifRes, areaRes, bestRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('user_id', user.id).single(),
+  const profileRes = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
+  const profile = profileRes.data;
+
+  const [priceRes, notifRes, areaRes, bestRes] = await Promise.all([
     supabase.from('market_prices').select('*').gte('recorded_at', new Date(Date.now() - 864e5).toISOString()).order('recorded_at', { ascending: false }),
     supabase.from('notifications').select('*').eq('farmer_id', user.id).order('sent_at', { ascending: false }).limit(6),
     supabase.from('farms').select('size_hectares').eq('user_id', user.id),
-    supabase.from('market_prices').select('price_per_kg, market_name').eq('crop_type', (profileRes.data as any)?.primary_crop ?? 'maize').gte('recorded_at', new Date(Date.now() - 864e5).toISOString()).order('price_per_kg', { ascending: false }).limit(1),
+    supabase.from('market_prices').select('price_per_kg, market_name').eq('crop_type', profile?.primary_crop ?? 'maize').gte('recorded_at', new Date(Date.now() - 864e5).toISOString()).order('price_per_kg', { ascending: false }).limit(1),
   ]);
-
-  const profile = profileRes.data;
   const prices = priceRes.data ?? [];
   const notifications = (notifRes.data ?? []).map(n => ({ ...n, farmerId: n.farmer_id, sentAt: n.sent_at }));
   const unreadCount = (notifRes.data ?? []).filter((n: any) => !n.read).length;
@@ -61,16 +61,16 @@ export default async function FarmerDashboardPage() {
   // mark all read
   await supabase.from('notifications').update({ read: true }).eq('farmer_id', user.id).eq('read', false);
 
-  const weather = { temp: 28, description: 'partly cloudy', icon: '02d', forecast: Array.from({ length: 6 }, (_, i) => ({ label: getDayLabel(i + 1).slice(0, 3), emoji: i < 3 ? '🌦' : '☀️', temp: 27 + (i % 3) })) };
+  const weather = { temp: 28, description: 'partly cloudy', icon: '02d', forecast: Array.from({ length: 6 }, (_, i) => ({ label: ['Mon','Tue','Wed','Thu','Fri','Sat'][i] ?? '', emoji: i < 3 ? '🌦' : '☀️', temp: 27 + (i % 3) })) };
 
   return (
     <div className="min-h-screen bg-soil pb-24">
       <main className="max-w-lg mx-auto px-4 pt-4 space-y-4">
         <ShowAlertButton />
         <GreetingBar name={profile?.full_name ?? 'Friend'} unreadCount={unreadCount} />
-        {profile?.latitude && profile?.longitude && (
-          <WeatherCard currentTemp={weather.temp} description={weather.description} iconCode={weather.icon} forecast={weather.forecast} locationName={profile.location} />
-        )}
+{profile?.latitude && profile?.longitude && (
+           <WeatherCard currentTemp={weather.temp} description={weather.description} iconCode={weather.icon} forecast={weather.forecast} />
+         )}
         <div className="grid grid-cols-2 gap-3">
           <Card variant="elevated"><p className="text-[11px] text-sprout/70 font-semibold uppercase">Farm Area</p><p className="text-2xl font-extrabold text-cream mt-1">{totalArea > 0 ? `${totalArea.toFixed(1)}` : '—'}</p><p className="text-[11px] text-cream/35">hectares</p></Card>
           <Card variant="elevated"><p className="text-[11px] text-harvest/70 font-semibold uppercase">{profile?.primary_crop ?? 'Crop'}</p>

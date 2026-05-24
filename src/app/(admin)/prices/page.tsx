@@ -1,5 +1,8 @@
-import { Card, CardHeader } from '@/components/ui\Card';
-import { Button } from '@/components/ui\Button';
+'use client';
+
+import { useState } from 'react';
+import { Card, CardHeader } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 
 export default function AdminPricesClient() {
   const [crop, setCrop] = useState('maize');
@@ -43,7 +46,3 @@ export default function AdminPricesClient() {
     </div>
   );
 }
-
-import { useState, useEffect, useCallback } from 'react';
-import { Card, CardHeader } from '@/components/ui\Card';
-import { Button } from '@/components/ui\Button';
