@@ -9,7 +9,7 @@ export default async function AdminBuyersPage() {
   const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
   if ((profile as any)?.role !== 'admin') redirect('/dashboard');
 
-  const { data: buyers } = await supabase.from('profiles').select('*').eq('role', 'buyer').eq('verified', false).order('created_at', { ascending: false });
+  const { data: buyers } = await supabase.from('profiles').select('*').eq('role', 'buyer').order('created_at', { ascending: false });
 
   return (
     <div className="min-h-screen bg-soil">

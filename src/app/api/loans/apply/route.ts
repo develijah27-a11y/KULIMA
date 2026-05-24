@@ -32,9 +32,8 @@ export async function POST(req: Request) {
   const approved = requestedAmount ? requestedAmount <= maxLoan : false;
 
   await supabase.from('loan_profiles').upsert({
-    farmer_id: farmerId, farm_score: farmScore, credit_limit: maxLoan,
-    requested_amount: requestedAmount ?? null, status: approved ? 'approved' : 'pending_review',
-    created_at: new Date().toISOString(),
+    farmer_id: farmerId, score: farmScore,
+    status: approved ? 'approved' : 'pending_review',
   });
 
   return NextResponse.json({ success: true, data: { farmScore, creditLimit: maxLoan, approved } });

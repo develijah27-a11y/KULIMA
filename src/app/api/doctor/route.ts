@@ -91,9 +91,10 @@ export async function POST(req: Request) {
   try {
     const supabase = await createClient();
     await supabase.from('diagnoses').insert({
-      farmer_id: farmerId, image_url: imageUrl, crop_type: cropType,
-      disease_id: best?.id, confidence: confidence / 100, severity: best?.severity,
-      created_at: new Date().toISOString(),
+      farmer_id: farmerId,
+      disease_name: disease.diseaseName,
+      severity: disease.severity,
+      treatment: disease.treatment,
     });
   } catch { /* diagnoses table not required */ }
 

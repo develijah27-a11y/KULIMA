@@ -32,7 +32,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
   const farms = await getFarms(user.id);
-  const cycles = (await getCycles(user.id)) as CropCycle[];
+  const cycles = (await getCycles(user.id)) as unknown as CropCycle[];
 
   const n = farms.length;
   return (

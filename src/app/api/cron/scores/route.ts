@@ -27,8 +27,7 @@ export async function GET(req: Request) {
   // upsert LoanProfile records
   for (const s of scores) {
     await supabase.from('loan_profiles').upsert({
-      farmer_id: s.farmerId, farm_score: s.farmScore, credit_limit: s.creditLimit,
-      updated_at: new Date().toISOString(),
+      farmer_id: s.farmerId, score: s.farmScore,
     });
   }
 

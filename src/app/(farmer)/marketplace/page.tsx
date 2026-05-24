@@ -21,7 +21,7 @@ export default async function MarketplacePage() {
     .from('offers')
     .select('listing_id, count')
     .eq('status', 'pending')
-    .eq('listing_id', myListings?.map((l) => l.id) ?? [], { count: 'exact' })
+    .in('listing_id', myListings?.map((l) => l.id) ?? [])
     ;
 
   const offerMap: Record<string, number> = {};

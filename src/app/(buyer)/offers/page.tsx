@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { PriceTag } from '@/components/ui/PriceTag';
 import { Badge } from '@/components/ui/Badge';
-import { PageHeader } from '@/components/shared\PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 
 export default async function BuyerOffersPage({ searchParams }: { searchParams: { tab?: string } }) {
   const supabase = await createClient();
