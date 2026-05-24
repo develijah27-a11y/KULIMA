@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 
 interface AuthFormProps {
   mode: 'signin' | 'signup';
@@ -13,6 +11,7 @@ interface AuthFormProps {
 export function AuthForm({ mode }: AuthFormProps) {
   const supabase = createClient();
   const router = useRouter();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -23,21 +22,16 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        setSuccess('');
-        setError(null);
         router.push('/dashboard');
         router.refresh();
       }
     });
-
     return () => subscription.unsubscribe();
   }, [supabase, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -54,6 +48,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         });
 
         if (signUpError) throw signUpError;
+
         if (data.user) {
           await supabase.from('profiles').upsert(
             {
@@ -65,111 +60,175 @@ export function AuthForm({ mode }: AuthFormProps) {
             { onConflict: 'user_id' }
           );
         }
-        setSuccess('Account created! Check your email to confirm your account, then sign in.');
+
+        setSuccess('Account created! Check your email to confirm, then sign in.');
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Card>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {mode === 'signup' && (
-          <>
+    <form onSubmit={handleSubmit} className="space-y-4">
+
+      {mode === 'signup' && (
+        <>
+          {/* Full Name */}
+          <div>
+            <label
+              htmlFor="fullName"
+              className="block text-sm font-medium mb-1.5"
+              style={{ color: 'rgba(249,250,251,0.75)' }}
+            >
+              Full name
+            </label>
+            <input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Hannington Mugisha"
+              required
+              disabled={loading}
+              className="auth-input"
+            />
+          </div>
+
+          {/* Phone + Location side by side */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
-              <input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number
+              <label
+                htmlFor="phoneNumber"
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'rgba(249,250,251,0.75)' }}
+              >
+                Phone
+                <span className="ml-1 text-xs" style={{ color: 'rgba(249,250,251,0.35)' }}>optional</span>
               </label>
               <input
                 id="phoneNumber"
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="+256 700 000000"
+                disabled={loading}
+                className="auth-input"
               />
             </div>
             <div>
-              <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                Location
+              <label
+                htmlFor="location"
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'rgba(249,250,251,0.75)' }}
+              >
+                District
+                <span className="ml-1 text-xs" style={{ color: 'rgba(249,250,251,0.35)' }}>optional</span>
               </label>
               <input
                 id="location"
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                placeholder="Kampala"
+                disabled={loading}
+                className="auth-input"
               />
             </div>
-          </>
-        )}
-
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-        </div>
-
-        {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm" role="alert">
-            {error}
           </div>
-        )}
 
-        {success && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm" role="status">
-            {success}
-          </div>
-        )}
+          {/* Divider */}
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)', margin: '4px 0' }} />
+        </>
+      )}
 
-        <Button type="submit" isLoading={loading} className="w-full">
-          {mode === 'signin' ? 'Sign In' : 'Create Account'}
-        </Button>
-      </form>
-    </Card>
+      {/* Email */}
+      <div>
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium mb-1.5"
+          style={{ color: 'rgba(249,250,251,0.75)' }}
+        >
+          Email address
+        </label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          required
+          disabled={loading}
+          className="auth-input"
+        />
+      </div>
+
+      {/* Password */}
+      <div>
+        <label
+          htmlFor="password"
+          className="block text-sm font-medium mb-1.5"
+          style={{ color: 'rgba(249,250,251,0.75)' }}
+        >
+          Password
+          {mode === 'signup' && (
+            <span className="ml-1 text-xs" style={{ color: 'rgba(249,250,251,0.35)' }}>min. 6 characters</span>
+          )}
+        </label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          required
+          minLength={6}
+          disabled={loading}
+          className="auth-input"
+        />
+      </div>
+
+      {/* Error */}
+      {error && (
+        <div
+          className="rounded-xl px-4 py-3 text-sm"
+          style={{
+            background: 'rgba(239,68,68,0.1)',
+            border: '1px solid rgba(239,68,68,0.25)',
+            color: '#fca5a5',
+          }}
+          role="alert"
+        >
+          {error}
+        </div>
+      )}
+
+      {/* Success */}
+      {success && (
+        <div
+          className="rounded-xl px-4 py-3 text-sm"
+          style={{
+            background: 'rgba(34,197,94,0.1)',
+            border: '1px solid rgba(34,197,94,0.25)',
+            color: '#86efac',
+          }}
+          role="status"
+        >
+          {success}
+        </div>
+      )}
+
+      {/* Submit */}
+      <button type="submit" disabled={loading} className="auth-btn" style={{ marginTop: '8px' }}>
+        {loading
+          ? mode === 'signup' ? 'Creating account…' : 'Signing in…'
+          : mode === 'signup' ? 'Create account' : 'Sign in'}
+      </button>
+
+    </form>
   );
 }

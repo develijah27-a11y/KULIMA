@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description:
     "Real-time weather forecasts, market prices, crop disease detection, and buyer connections — all in one platform for Ugandan smallholder farmers.",
   manifest: "/manifest.json",
-  themeColor: "#2C4A1E",
+  themeColor: "#0a0a0a",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

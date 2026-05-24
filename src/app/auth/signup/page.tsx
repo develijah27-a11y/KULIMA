@@ -6,14 +6,22 @@ import { AuthLayout } from '@/features/auth/components/AuthLayout';
 
 export default function SignUpPage() {
   return (
-    <AuthLayout title="Create Your Account" subtitle="Join Kulima for smart farm management">
+    <AuthLayout
+      title="Create your account"
+      subtitle="Start managing your farm smarter"
+      footer={
+        <span>
+          Already have an account?{' '}
+          <Link
+            href="/auth/signin"
+            style={{ color: 'var(--color-sprout)', fontWeight: 600 }}
+          >
+            Sign in
+          </Link>
+        </span>
+      }
+    >
       <AuthForm mode="signup" />
-      <p className="mt-4 text-center text-sm text-gray-600">
-        Already have an account?{' '}
-        <Link href="/auth/signin" className="text-green-600 hover:text-green-700">
-          Sign in
-        </Link>
-      </p>
     </AuthLayout>
   );
 }

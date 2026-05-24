@@ -6,16 +6,19 @@ import { AuthLayout } from '@/features/auth/components/AuthLayout';
 
 export default function SignInPage() {
   return (
-    <AuthLayout 
-      title="Welcome Back" 
-      subtitle="Sign in to your account to continue"
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to your Kulima account"
       footer={
-        <p className="text-sm text-gray-600">
+        <span>
           Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" className="font-medium text-green-600 hover:text-green-500">
-            Sign up
+          <Link
+            href="/auth/signup"
+            style={{ color: 'var(--color-sprout)', fontWeight: 600 }}
+          >
+            Create one
           </Link>
-        </p>
+        </span>
       }
     >
       <AuthForm mode="signin" />
