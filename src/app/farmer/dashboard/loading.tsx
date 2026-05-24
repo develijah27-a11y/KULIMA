@@ -6,11 +6,11 @@ export default function FarmerDashboardLoading() {
         {/* Header */}
         <div className="flex items-center justify-between py-5">
           <div className="space-y-2">
-            <div className="skeleton h-3 w-20 rounded-md" />
-            <div className="skeleton h-6 w-40 rounded-lg" />
+            <div className="skeleton h-3 w-24 rounded-md" />
+            <div className="skeleton h-6 w-36 rounded-lg" />
           </div>
           <div className="flex items-center gap-2">
-            <div className="skeleton w-8 h-8 rounded-xl" />
+            <div className="skeleton w-9 h-9 rounded-xl" />
             <div className="skeleton w-10 h-10 rounded-2xl" />
           </div>
         </div>
@@ -19,22 +19,25 @@ export default function FarmerDashboardLoading() {
           {/* AgriScore */}
           <div className="skeleton h-28 rounded-2xl" />
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3].map((i) => <div key={i} className="skeleton h-28 rounded-2xl" />)}
+          {/* Quick actions */}
+          <div className="grid grid-cols-4 gap-3">
+            {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-20 rounded-2xl" />)}
           </div>
 
-          {/* Quick actions */}
-          <div className="skeleton h-32 rounded-2xl" />
+          {/* Weather */}
+          <div className="skeleton h-64 rounded-2xl" />
+
+          {/* Seasonal */}
+          <div className="skeleton h-52 rounded-2xl" />
+
+          {/* Prices */}
+          <div className="skeleton h-72 rounded-2xl" />
+
+          {/* Disease alerts */}
+          <div className="skeleton h-44 rounded-2xl" />
 
           {/* Wallet */}
           <div className="skeleton h-40 rounded-2xl" />
-
-          {/* Prices */}
-          <div className="skeleton h-56 rounded-2xl" />
-
-          {/* Alerts */}
-          <div className="skeleton h-44 rounded-2xl" />
         </div>
       </div>
     </div>
