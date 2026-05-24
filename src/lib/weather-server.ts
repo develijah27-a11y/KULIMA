@@ -35,7 +35,7 @@ export async function fetchWeatherForFarmer(
     .gte('cached_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
     .single();
 
-  if (cached?.data) return cached.data as ServerWeatherData;
+  if (cached?.data) return cached.data as unknown as ServerWeatherData;
 
   const apiKey = process.env.OPENWEATHER_API_KEY;
   if (!apiKey) return ugandaDevWeather();
@@ -59,7 +59,7 @@ export async function fetchWeatherForFarmer(
     };
     await supabase.from('weather_cache').upsert({
       location_key: locKey,
-      data,
+      data: data as any,
       cached_at: new Date().toISOString(),
     });
     return data;
