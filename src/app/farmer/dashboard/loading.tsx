@@ -1,45 +1,21 @@
 export default function FarmerDashboardLoading() {
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--color-soil)' }}>
-      <div className="max-w-lg mx-auto px-4">
-
-        {/* Header */}
-        <div className="flex items-center justify-between py-5">
-          <div className="space-y-2">
-            <div className="skeleton h-3 w-24 rounded-md" />
-            <div className="skeleton h-6 w-36 rounded-lg" />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="skeleton w-9 h-9 rounded-xl" />
-            <div className="skeleton w-10 h-10 rounded-2xl" />
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {/* AgriScore */}
-          <div className="skeleton h-28 rounded-2xl" />
-
-          {/* Quick actions */}
-          <div className="grid grid-cols-4 gap-3">
-            {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-20 rounded-2xl" />)}
-          </div>
-
-          {/* Weather */}
-          <div className="skeleton h-64 rounded-2xl" />
-
-          {/* Seasonal */}
-          <div className="skeleton h-52 rounded-2xl" />
-
-          {/* Prices */}
-          <div className="skeleton h-72 rounded-2xl" />
-
-          {/* Disease alerts */}
-          <div className="skeleton h-44 rounded-2xl" />
-
-          {/* Wallet */}
-          <div className="skeleton h-40 rounded-2xl" />
-        </div>
+    <div className="space-y-5 max-w-5xl mx-auto">
+      <div className="dash-skeleton h-36 rounded-xl" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}
       </div>
+      <div className="dash-skeleton h-20 rounded-xl" />
+      <div className="grid lg:grid-cols-2 gap-5">
+        <div className="dash-skeleton h-72 rounded-xl" />
+        <div className="dash-skeleton h-72 rounded-xl" />
+      </div>
+      <div className="grid lg:grid-cols-2 gap-5">
+        <div className="dash-skeleton h-64 rounded-xl" />
+        <div className="dash-skeleton h-64 rounded-xl" />
+      </div>
+      <div className="dash-skeleton h-40 rounded-xl" />
+      <div className="dash-skeleton h-36 rounded-xl" />
     </div>
   );
 }

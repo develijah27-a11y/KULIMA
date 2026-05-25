@@ -2,15 +2,9 @@ import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { fetchWeatherForFarmer } from '@/lib/weather-server';
-import {
-  buildSeasonalPlan,
-  generateDiseaseAlerts,
-  generateMarketInsights,
-  generateWeatherInsights,
-  type InsightSeverity,
-} from '@/lib/agri-intel';
+import { buildSeasonalPlan, generateDiseaseAlerts, type InsightSeverity } from '@/lib/agri-intel';
 
-// ─── Shared cached fetchers (deduped per request via React cache) ─────────────
+// ─── Shared cached fetchers ───────────────────────────────────────────────────
 
 const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
@@ -20,16 +14,6 @@ const getProfile = cache(async (userId: string) => {
     .eq('user_id', userId)
     .single();
   return data as any;
-});
-
-const getUnreadCount = cache(async (userId: string) => {
-  const supabase = await createClient();
-  const { count } = await supabase
-    .from('notifications')
-    .select('id', { count: 'exact', head: true })
-    .eq('farmer_id', userId)
-    .eq('read', false);
-  return count ?? 0;
 });
 
 const getListingsCount = cache(async (profileId: string) => {
@@ -60,535 +44,567 @@ function timeAgo(iso: string) {
   return `${Math.floor(d / 1440)}d ago`;
 }
 
-const SEVERITY: Record<InsightSeverity, { border: string; bg: string; badge: string; text: string }> = {
-  critical: { border: 'rgba(248,113,113,0.35)', bg: 'rgba(248,113,113,0.08)', badge: 'rgba(248,113,113,0.18)', text: '#F87171' },
-  warning:  { border: 'rgba(251,191,36,0.3)',   bg: 'rgba(251,191,36,0.07)',  badge: 'rgba(251,191,36,0.18)',  text: '#FBBF24' },
-  positive: { border: 'rgba(0,200,117,0.3)',    bg: 'rgba(0,200,117,0.07)',   badge: 'rgba(0,200,117,0.18)',   text: '#00C875' },
-  info:     { border: 'rgba(56,189,248,0.25)',  bg: 'rgba(56,189,248,0.06)',  badge: 'rgba(56,189,248,0.18)',  text: '#38BDF8' },
+// Design constants
+const C = {
+  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
+  amber: '#F4A261', red: '#E63946', blue: '#0077B6',
+  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
+  cardBg: '#FFFFFF', pageBg: '#F8FAF9',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+};
+
+const SEVERITY_MAP: Record<InsightSeverity, { color: string; bg: string; border: string }> = {
+  critical: { color: '#E63946', bg: '#FEF2F2', border: '#FECACA' },
+  warning:  { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
+  positive: { color: '#059669', bg: '#F0FDF4', border: '#BBF7D0' },
+  info:     { color: '#0077B6', bg: '#EFF6FF', border: '#BFDBFE' },
 };
 
 const CROP_COLORS: Record<string, string> = {
-  maize: '#FBBF24', beans: '#FB923C', coffee: '#A78BFA',
-  rice: '#38BDF8', banana: '#FDE68A', cassava: '#10B981',
-  sorghum: '#F472B6', groundnuts: '#00C875', cotton: '#38BDF8', tomato: '#F87171',
+  maize: '#D97706', beans: '#DC2626', coffee: '#7C3AED',
+  rice: '#0284C7', banana: '#B45309', cassava: '#059669', tomato: '#DC2626',
 };
 
-const Sk = ({ h }: { h: string }) => (
-  <div className="skeleton rounded-2xl" style={{ height: h }} />
+const Card = ({ children, className = '', style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) => (
+  <div style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, ...style }} className={className}>
+    {children}
+  </div>
 );
 
-// ─── Streaming: Header ────────────────────────────────────────────────────────
+// ─── Streaming: Weather card (3-column) ──────────────────────────────────────
 
-async function DashboardHeader({ userId, greeting }: { userId: string; greeting: string }) {
-  const [profile, unread] = await Promise.all([
-    getProfile(userId),
-    getUnreadCount(userId),
-  ]);
-  const name = profile?.full_name ?? 'Farmer';
-  const firstName = name.split(' ')[0];
-  const district: string | undefined = profile?.location ?? undefined;
-
-  return (
-    <div className="flex items-center justify-between py-5">
-      <div>
-        <p className="text-xs font-medium" style={{ color: 'rgba(241,245,249,0.4)' }}>{greeting}</p>
-        <p className="text-xl font-black mt-0.5" style={{ letterSpacing: '-0.03em' }}>{firstName} 👋</p>
-        {district && (
-          <p className="text-[11px] mt-0.5" style={{ color: 'rgba(241,245,249,0.35)' }}>📍 {district}</p>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-white"
-          style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}
-        >
-          {firstName[0]?.toUpperCase() ?? 'F'}
-        </div>
-        <button
-          className="relative w-10 h-10 rounded-2xl flex items-center justify-center text-lg"
-          style={{ background: 'var(--color-surface2)' }}
-          aria-label="Notifications"
-        >
-          🔔
-          {unread > 0 && (
-            <span
-              className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-black"
-              style={{ background: '#F87171', color: '#060B14' }}
-            >
-              {unread > 9 ? '9+' : unread}
-            </span>
-          )}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── Streaming: AgriScore ─────────────────────────────────────────────────────
-
-async function AgriScoreSection({ userId }: { userId: string }) {
+async function WeatherCard({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
-  const listingsCount = profile?.id ? await getListingsCount(profile.id) : 0;
-  const score = computeAgriScore(profile, listingsCount);
-
-  const pct = Math.round(((score - 300) / (850 - 300)) * 100);
-  let label = 'Building'; let color = '#F87171';
-  if (score >= 500) { label = 'Fair';      color = '#FBBF24'; }
-  if (score >= 650) { label = 'Good';      color = '#10B981'; }
-  if (score >= 780) { label = 'Excellent'; color = '#00C875'; }
-
-  return (
-    <div className="rounded-2xl p-5" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.4)' }}>AgriScore</p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-4xl font-black" style={{ color, letterSpacing: '-0.04em' }}>{score}</span>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: `${color}22`, color }}>{label}</span>
-          </div>
-        </div>
-        <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ background: `${color}18` }}>🏆</div>
-      </div>
-      <div className="h-2 rounded-full mb-1" style={{ background: 'rgba(255,255,255,0.08)' }}>
-        <div className="h-2 rounded-full agriscore-bar" style={{ width: `${pct}%`, background: `linear-gradient(90deg, #FBBF24, ${color})` }} />
-      </div>
-      <div className="flex justify-between">
-        <span className="text-[10px]" style={{ color: 'rgba(241,245,249,0.25)' }}>300 · Building</span>
-        <span className="text-[10px]" style={{ color: 'rgba(241,245,249,0.25)' }}>850 · Excellent</span>
-      </div>
-      <p className="text-xs mt-3" style={{ color: 'rgba(241,245,249,0.4)' }}>
-        Add GPS location, list produce, and complete your profile to raise your score.
-      </p>
-    </div>
-  );
-}
-
-// ─── Streaming: Weather intelligence ─────────────────────────────────────────
-
-async function WeatherIntelligence({ userId }: { userId: string }) {
-  const profile = await getProfile(userId);
-  const lat: number = profile?.latitude  ?? 0.3476;
+  const lat: number = profile?.latitude ?? 0.3476;
   const lon: number = profile?.longitude ?? 32.5825;
-
   const weather = await fetchWeatherForFarmer(lat, lon);
-  const month = new Date().getMonth();
-
-  const insights = generateWeatherInsights(
-    {
-      temp: weather.now.temp,
-      feelsLike: weather.now.temp + 2,
-      humidity: weather.now.humidity,
-      windSpeed: weather.now.wind,
-      description: weather.now.description,
-      icon: weather.now.icon,
-      rainfall: (weather.forecast[0]?.rain?.['3h'] ?? 0) / 3,
-      forecast: [],
-    },
-    month
-  );
-
-  const ICON_MAP: Record<string, string> = {
-    '01d': '☀️', '01n': '🌙', '02d': '⛅', '02n': '⛅',
-    '03d': '☁️', '04d': '☁️', '09d': '🌧️', '10d': '🌦️', '10n': '🌧️',
-    '11d': '⛈️', '13d': '❄️', '50d': '🌫️',
+  const ICON: Record<string, string> = {
+    '01d': '☀️', '01n': '🌙', '02d': '⛅', '03d': '☁️', '04d': '☁️',
+    '09d': '🌧️', '10d': '🌦️', '11d': '⛈️', '13d': '❄️', '50d': '🌫️',
   };
-
-  const emoji = ICON_MAP[weather.now.icon] ?? '🌤️';
 
   const dailyMap: Record<string, { high: number; low: number; icon: string }> = {};
   for (const item of weather.forecast) {
-    const key = new Date(item.dt_txt).toLocaleDateString('en-UG', { weekday: 'short' });
-    if (!dailyMap[key]) {
-      dailyMap[key] = { high: item.main.temp_max, low: item.main.temp_min, icon: item.weather[0].icon };
-    } else {
-      dailyMap[key].high = Math.max(dailyMap[key].high, item.main.temp_max);
-      dailyMap[key].low  = Math.min(dailyMap[key].low,  item.main.temp_min);
-    }
+    const k = new Date(item.dt_txt).toLocaleDateString('en-UG', { weekday: 'short' });
+    if (!dailyMap[k]) dailyMap[k] = { high: item.main.temp_max, low: item.main.temp_min, icon: item.weather[0].icon };
+    else { dailyMap[k].high = Math.max(dailyMap[k].high, item.main.temp_max); dailyMap[k].low = Math.min(dailyMap[k].low, item.main.temp_min); }
   }
-  const days = Object.entries(dailyMap).slice(0, 5);
+  const days = Object.entries(dailyMap).slice(0, 4);
+
+  const todayDate = new Date().toLocaleDateString('en-UG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="px-5 pt-5 pb-4" style={{ background: 'linear-gradient(135deg, rgba(2,132,199,0.18), rgba(56,189,248,0.08))' }}>
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.4)' }}>Weather</p>
-            <div className="flex items-end gap-2 mt-1">
-              <span className="text-5xl font-black leading-none" style={{ letterSpacing: '-0.04em' }}>{weather.now.temp}°</span>
-              <span className="text-4xl leading-none mb-1">{emoji}</span>
-            </div>
-            <p className="text-sm capitalize mt-1" style={{ color: 'rgba(241,245,249,0.55)' }}>{weather.now.description}</p>
+    <Card>
+      <div className="grid grid-cols-3 divide-x" style={{ borderColor: C.border }}>
+        {/* Temperature */}
+        <div className="p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Current Weather</p>
+          <div className="flex items-end gap-2">
+            <span className="text-4xl font-black" style={{ color: C.text, letterSpacing: '-0.04em' }}>{weather.now.temp}°C</span>
+            <span className="text-3xl mb-1">{ICON[weather.now.icon] ?? '🌤️'}</span>
           </div>
-          <div className="text-right space-y-1.5 mt-1">
-            <div className="flex items-center justify-end gap-1.5">
-              <span className="text-xs" style={{ color: 'rgba(241,245,249,0.4)' }}>💧</span>
-              <span className="text-xs font-semibold">{weather.now.humidity}%</span>
-            </div>
-            <div className="flex items-center justify-end gap-1.5">
-              <span className="text-xs" style={{ color: 'rgba(241,245,249,0.4)' }}>💨</span>
-              <span className="text-xs font-semibold">{weather.now.wind.toFixed(1)} m/s</span>
-            </div>
+          <p className="text-sm capitalize mt-1" style={{ color: C.muted }}>{weather.now.description}</p>
+          <div className="flex gap-4 mt-3">
+            <span className="text-xs" style={{ color: C.muted }}>💧 {weather.now.humidity}%</span>
+            <span className="text-xs" style={{ color: C.muted }}>💨 {weather.now.wind.toFixed(1)} m/s</span>
           </div>
         </div>
-        {days.length > 0 && (
-          <div className="flex gap-2 mt-3">
-            {days.map(([label, d]) => (
-              <div key={label} className="flex-1 text-center">
-                <p className="text-[10px] font-bold" style={{ color: 'rgba(241,245,249,0.4)' }}>{label}</p>
-                <p className="text-base my-0.5">{ICON_MAP[d.icon] ?? '🌤️'}</p>
+
+        {/* Rain forecast */}
+        <div className="p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Rain Forecast</p>
+          {(() => {
+            const rainItem = weather.forecast.find((f) => (f.rain?.['3h'] ?? 0) > 0);
+            if (rainItem) {
+              const dt = new Date(rainItem.dt_txt);
+              return (
+                <>
+                  <p className="text-2xl mb-1">🌧️</p>
+                  <p className="text-sm font-bold" style={{ color: C.red }}>
+                    Rain at {dt.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: C.muted }}>
+                    {rainItem.rain?.['3h'].toFixed(1)}mm expected
+                  </p>
+                </>
+              );
+            }
+            return (
+              <>
+                <p className="text-2xl mb-1">☀️</p>
+                <p className="text-sm font-bold" style={{ color: C.greenMed }}>No rain expected</p>
+                <p className="text-xs mt-1" style={{ color: C.muted }}>Good for fieldwork</p>
+              </>
+            );
+          })()}
+        </div>
+
+        {/* Date */}
+        <div className="p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Today</p>
+          <p className="text-2xl mb-1">📅</p>
+          <p className="text-sm font-bold leading-snug" style={{ color: C.text }}>{todayDate}</p>
+          <div className="flex gap-2 mt-3 flex-wrap">
+            {days.slice(0, 2).map(([label, d]) => (
+              <div key={label} className="text-center">
+                <p className="text-[10px]" style={{ color: C.muted }}>{label}</p>
+                <p className="text-sm">{ICON[d.icon] ?? '🌤️'}</p>
                 <p className="text-[10px] font-bold">{Math.round(d.high)}°</p>
-                <p className="text-[10px]" style={{ color: 'rgba(241,245,249,0.35)' }}>{Math.round(d.low)}°</p>
               </div>
             ))}
           </div>
-        )}
-      </div>
-      {insights.length > 0 && (
-        <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-          {insights.map((ins) => {
-            const cfg = SEVERITY[ins.severity];
-            return (
-              <div key={ins.id} className="px-5 py-3.5 flex items-start gap-3">
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>{ins.icon}</div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                    <p className="text-sm font-bold">{ins.title}</p>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full capitalize" style={{ background: cfg.badge, color: cfg.text }}>{ins.severity}</span>
-                  </div>
-                  <p className="text-[11px] leading-snug" style={{ color: 'rgba(241,245,249,0.5)' }}>{ins.body}</p>
-                  {ins.action && <p className="text-[11px] mt-1 font-semibold" style={{ color: cfg.text }}>→ {ins.action}</p>}
-                </div>
-              </div>
-            );
-          })}
         </div>
-      )}
-    </div>
+      </div>
+    </Card>
   );
 }
 
-// ─── Streaming: Market intelligence ──────────────────────────────────────────
+// ─── Streaming: Quick stats (4 cards) ────────────────────────────────────────
 
-async function MarketIntelligence({ userId }: { userId: string }) {
-  const profile = await getProfile(userId);
-  const district: string | undefined = profile?.location ?? undefined;
+async function QuickStats({ userId }: { userId: string }) {
   const supabase = await createClient();
-  const twoDays = new Date(Date.now() - 2 * 864e5).toISOString();
-
-  let prices: any[] = [];
-  if (district) {
-    const { data } = await (supabase.from('market_prices') as any)
-      .select('crop_type, price_per_kg, district, recorded_at')
-      .gte('recorded_at', twoDays)
-      .ilike('district', `%${district}%`)
-      .order('recorded_at', { ascending: false })
-      .limit(30);
-    prices = data ?? [];
-  }
-  if (prices.length === 0) {
-    const { data } = await supabase
-      .from('market_prices')
-      .select('crop_type, price_per_kg, recorded_at')
-      .gte('recorded_at', twoDays)
-      .order('recorded_at', { ascending: false })
-      .limit(30);
-    prices = data ?? [];
-  }
-
-  const groups: Record<string, number[]> = {};
-  prices.forEach((p: any) => {
-    const k = (p.crop_type ?? '').toLowerCase();
-    if (!groups[k]) groups[k] = [];
-    groups[k].push(p.price_per_kg);
-  });
-
-  const rows = Object.entries(groups).map(([crop, ps]) => ({
-    crop,
-    avg: Math.round(ps.reduce((a, b) => a + b, 0) / ps.length),
-    high: Math.round(Math.max(...ps)),
-    low: Math.round(Math.min(...ps)),
-    count: ps.length,
-  })).sort((a, b) => b.count - a.count).slice(0, 8);
-
-  const insights = generateMarketInsights(prices);
-
-  if (rows.length === 0) {
-    return (
-      <div className="rounded-2xl p-8 text-center" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
-        <p className="text-4xl mb-3">📊</p>
-        <p className="font-semibold mb-1">No price data yet</p>
-        <p className="text-sm" style={{ color: 'rgba(241,245,249,0.4)' }}>Admin will add market prices soon.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div>
-          <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.35)' }}>Live Prices</p>
-          <p className="text-[10px] mt-0.5" style={{ color: 'rgba(241,245,249,0.25)' }}>
-            {district ? `${district} · national` : 'National market'}
-          </p>
-        </div>
-        <a href="/farmer/prices" className="text-xs font-semibold" style={{ color: 'var(--color-sprout)' }}>All prices →</a>
-      </div>
-      <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-        {rows.map(({ crop, avg, high, low }) => {
-          const color = CROP_COLORS[crop] ?? '#00C875';
-          return (
-            <div key={crop} className="px-5 py-3 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
-                <p className="text-sm font-semibold capitalize">{crop}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-black" style={{ color, letterSpacing: '-0.02em' }}>UGX {avg.toLocaleString()}</p>
-                <p className="text-[10px]" style={{ color: 'rgba(241,245,249,0.35)' }}>{low.toLocaleString()} – {high.toLocaleString()}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      {insights.length > 0 && (
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          {insights.map((ins) => {
-            const cfg = SEVERITY[ins.severity];
-            return (
-              <div key={ins.id} className="px-5 py-3 flex items-start gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                <span className="text-base shrink-0 mt-0.5">{ins.icon}</span>
-                <div>
-                  <p className="text-xs font-bold" style={{ color: cfg.text }}>{ins.title}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: 'rgba(241,245,249,0.45)' }}>{ins.body}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Seasonal strategy (computed, no DB) ─────────────────────────────────────
-
-async function SeasonalStrategy({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
   const primaryCrop = profile?.primary_crop ?? 'maize';
-  const month = new Date().getMonth();
-  const plan = buildSeasonalPlan(month, primaryCrop);
-  const cfg = SEVERITY[plan.urgency];
 
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: `1px solid ${cfg.border}` }}>
-      <div className="px-5 py-4" style={{ background: cfg.bg, borderBottom: `1px solid ${cfg.border}` }}>
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.4)' }}>Seasonal Strategy</p>
-            <p className="text-base font-black mt-1" style={{ letterSpacing: '-0.02em' }}>{plan.season}</p>
-          </div>
-          {plan.daysLeft > 0 && (
-            <div className="text-center">
-              <p className="text-2xl font-black" style={{ color: cfg.text, letterSpacing: '-0.04em' }}>{plan.daysLeft}</p>
-              <p className="text-[10px]" style={{ color: 'rgba(241,245,249,0.4)' }}>days left</p>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="p-5 space-y-4">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(241,245,249,0.35)' }}>Recommended crops</p>
-          <div className="flex flex-wrap gap-1.5">
-            {plan.recommendedCrops.map((crop) => (
-              <span key={crop} className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: cfg.badge, color: cfg.text }}>{crop}</span>
-            ))}
-          </div>
-        </div>
-        <div className="rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.04)' }}>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: cfg.text }}>Do now</p>
-          <p className="text-sm leading-snug" style={{ color: 'rgba(241,245,249,0.8)' }}>{plan.currentTask}</p>
-        </div>
-        <div className="rounded-xl p-3.5" style={{ background: 'rgba(255,255,255,0.03)' }}>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(241,245,249,0.35)' }}>Coming up</p>
-          <p className="text-sm leading-snug" style={{ color: 'rgba(241,245,249,0.55)' }}>{plan.nextTask}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
+  const [listingsRes, priceRes, alertCount] = await Promise.all([
+    (supabase.from as any)('listings')
+      .select('id', { count: 'exact', head: true })
+      .eq('farmer_id', profile?.id)
+      .eq('status', 'active'),
+    supabase.from('market_prices').select('price_per_kg')
+      .ilike('crop_type', `%${primaryCrop}%`)
+      .order('recorded_at', { ascending: false }).limit(2),
+    (supabase.from as any)('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('farmer_id', userId).eq('read', false),
+  ]);
 
-// ─── Disease & risk (computed, no DB) ────────────────────────────────────────
+  const priceData = priceRes.data ?? [];
+  const latestPrice = priceData[0]?.price_per_kg;
+  const prevPrice = priceData[1]?.price_per_kg;
+  const priceTrend = latestPrice && prevPrice ? ((latestPrice - prevPrice) / prevPrice * 100) : null;
 
-async function DiseaseRiskPanel({ userId }: { userId: string }) {
-  const profile = await getProfile(userId);
-  const primaryCrop = profile?.primary_crop ?? '';
-  const month = new Date().getMonth();
-  const alerts = generateDiseaseAlerts(month, primaryCrop);
-  if (alerts.length === 0) return null;
-
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.35)' }}>Disease & Risk Alerts</p>
-      </div>
-      <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-        {alerts.map((a) => {
-          const cfg = SEVERITY[a.severity];
-          return (
-            <div key={a.id} className="px-5 py-3.5 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>{a.icon}</div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <p className="text-sm font-bold">{a.title}</p>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full capitalize" style={{ background: cfg.badge, color: cfg.text }}>{a.severity}</span>
-                </div>
-                <p className="text-[11px] leading-snug" style={{ color: 'rgba(241,245,249,0.5)' }}>{a.body}</p>
-                {a.action && <p className="text-[11px] mt-1 font-semibold" style={{ color: cfg.text }}>→ {a.action}</p>}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ─── Streaming: Buyer offers ──────────────────────────────────────────────────
-
-async function BuyerOffers({ userId }: { userId: string }) {
-  const profile = await getProfile(userId);
-  if (!profile?.id) return null;
-
-  const supabase = await createClient();
-  const { data: offers } = await (supabase.from as any)('offers')
-    .select('id, offered_price, status, created_at, listing:listings(crop_type, quantity_kg)')
-    .eq('listing.farmer_id', profile.id)
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false })
-    .limit(5);
-
-  const rows = (offers ?? []).filter((o: any) => o?.listing);
-  if (rows.length === 0) return null;
-
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid rgba(0,200,117,0.25)' }}>
-      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,200,117,0.06)' }}>
-        <div>
-          <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.35)' }}>New Buyer Offers</p>
-          <p className="text-xs mt-0.5 font-semibold" style={{ color: '#00C875' }}>{rows.length} pending</p>
-        </div>
-        <a href="/farmer/marketplace" className="text-xs font-semibold" style={{ color: '#00C875' }}>View all →</a>
-      </div>
-      <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-        {rows.map((o: any) => (
-          <div key={o.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-bold capitalize">{o.listing.crop_type} — {o.listing.quantity_kg} kg</p>
-              <p className="text-[11px]" style={{ color: 'rgba(241,245,249,0.4)' }}>{timeAgo(o.created_at)}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm font-black" style={{ color: '#00C875', letterSpacing: '-0.02em' }}>
-                UGX {Math.round(o.offered_price).toLocaleString()}
-              </p>
-              <p className="text-[10px]" style={{ color: 'rgba(241,245,249,0.3)' }}>per kg</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Streaming: Notifications ─────────────────────────────────────────────────
-
-async function SmartAlerts({ userId }: { userId: string }) {
-  const supabase = await createClient();
-  const { data: alerts } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('farmer_id', userId)
-    .order('sent_at', { ascending: false })
-    .limit(5);
-
-  supabase.from('notifications').update({ read: true }).eq('farmer_id', userId).eq('read', false).then(() => {});
-
-  const rows = alerts ?? [];
-  if (rows.length === 0) return null;
-
-  const T: Record<string, { bg: string; icon: string; color: string }> = {
-    rain:   { bg: 'rgba(56,189,248,0.12)',  icon: '🌧️', color: '#38BDF8' },
-    price:  { bg: 'rgba(251,191,36,0.12)',  icon: '📈', color: '#FBBF24' },
-    pest:   { bg: 'rgba(248,113,113,0.12)', icon: '🐛', color: '#F87171' },
-    offer:  { bg: 'rgba(0,200,117,0.12)',   icon: '🤝', color: '#00C875' },
-    loan:   { bg: 'rgba(167,139,250,0.12)', icon: '💳', color: '#A78BFA' },
-    system: { bg: 'rgba(255,255,255,0.06)', icon: '🔔', color: 'rgba(241,245,249,0.5)' },
-  };
-
-  return (
-    <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <div className="px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(241,245,249,0.35)' }}>Smart Alerts</p>
-      </div>
-      <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.04)' }}>
-        {rows.map((a: any) => {
-          const cfg = T[a.type] ?? T.system;
-          return (
-            <div key={a.id} className="px-5 py-3.5 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>{cfg.icon}</div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold leading-snug">{a.title}</p>
-                {a.body && <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'rgba(241,245,249,0.45)' }}>{a.body}</p>}
-              </div>
-              <span className="text-[10px] shrink-0 mt-0.5" style={{ color: 'rgba(241,245,249,0.3)' }}>{timeAgo(a.sent_at)}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ─── Static sections ──────────────────────────────────────────────────────────
-
-function QuickActions() {
-  const actions = [
-    { label: 'Sell',    href: '/farmer/marketplace', emoji: '🤝', gradient: 'linear-gradient(135deg, #059669, #10B981)' },
-    { label: 'Prices',  href: '/farmer/prices',       emoji: '📈', gradient: 'linear-gradient(135deg, #D97706, #FBBF24)' },
-    { label: 'Doctor',  href: '/farmer/doctor',       emoji: '🔬', gradient: 'linear-gradient(135deg, #7C3AED, #A78BFA)' },
-    { label: 'Weather', href: '/farmer/weather',      emoji: '🌤', gradient: 'linear-gradient(135deg, #0284C7, #38BDF8)' },
+  const stats = [
+    {
+      label: 'Active Listings',
+      value: `${listingsRes.count ?? 0}`,
+      sub: 'Available to buyers',
+      icon: '📦',
+      color: C.greenBright,
+      border: C.greenBright,
+    },
+    {
+      label: `${primaryCrop.charAt(0).toUpperCase() + primaryCrop.slice(1)} Price`,
+      value: latestPrice ? `UGX ${Math.round(latestPrice).toLocaleString()}` : '—',
+      sub: priceTrend !== null ? `${priceTrend >= 0 ? '↑' : '↓'} ${Math.abs(priceTrend).toFixed(1)}% today` : 'per kg',
+      icon: '💰',
+      color: priceTrend !== null && priceTrend < 0 ? C.red : C.amber,
+      border: priceTrend !== null && priceTrend < 0 ? C.red : C.amber,
+    },
+    {
+      label: 'Farm Value',
+      value: '—',
+      sub: 'Add inventory to calculate',
+      icon: '🏡',
+      color: C.blue,
+      border: C.blue,
+    },
+    {
+      label: 'Alerts',
+      value: `${alertCount.count ?? 0}`,
+      sub: alertCount.count ? 'Unread notifications' : 'All clear',
+      icon: alertCount.count ? '🔔' : '✅',
+      color: alertCount.count ? C.red : C.greenBright,
+      border: alertCount.count ? C.red : C.greenBright,
+    },
   ];
+
   return (
-    <div className="grid grid-cols-4 gap-3">
-      {actions.map(({ label, href, emoji, gradient }) => (
-        <a key={label} href={href} className="flex flex-col items-center gap-2 py-4 px-2 rounded-2xl hover:opacity-85 transition-opacity" style={{ background: gradient }}>
-          <span className="text-2xl leading-none">{emoji}</span>
-          <span className="text-[11px] font-bold text-white/90">{label}</span>
-        </a>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {stats.map(({ label, value, sub, icon, color, border }) => (
+        <div key={label} style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '20px' }}>
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-xs font-semibold" style={{ color: C.muted }}>{label}</p>
+            <span className="text-xl">{icon}</span>
+          </div>
+          <p className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>{value}</p>
+          <p className="text-xs mt-1" style={{ color }}>{sub}</p>
+        </div>
       ))}
     </div>
   );
 }
 
-function WalletSnapshot() {
+// ─── AI Recommendation banner ─────────────────────────────────────────────────
+
+async function AIBanner({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const month = new Date().getMonth();
+  const season = buildSeasonalPlan(month, profile?.primary_crop ?? 'maize');
+  const crop = profile?.primary_crop ?? 'crops';
+
   return (
-    <div className="rounded-2xl p-5" style={{ background: 'linear-gradient(135deg, #0C1526, #132033)', border: '1px solid rgba(255,255,255,0.08)' }}>
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'rgba(0,200,117,0.15)' }}>💳</div>
-          <p className="text-sm font-bold">Kulima Wallet</p>
-        </div>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(251,191,36,0.12)', color: '#FBBF24' }}>Coming soon</span>
+    <div
+      className="rounded-xl p-5 flex items-start gap-4"
+      style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)' }}
+    >
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: 'rgba(82,183,136,0.2)' }}>
+        🌱
       </div>
-      <p className="text-3xl font-black mb-1" style={{ letterSpacing: '-0.04em' }}>UGX 0</p>
-      <p className="text-xs mb-4" style={{ color: 'rgba(241,245,249,0.4)' }}>Available balance</p>
-      <div className="grid grid-cols-2 gap-3">
-        {['Deposit', 'Withdraw'].map((a) => (
-          <button key={a} disabled className="py-2.5 rounded-xl text-sm font-bold" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(241,245,249,0.4)', cursor: 'not-allowed' }}>
-            {a === 'Deposit' ? '+ ' : '→ '}{a}
-          </button>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#52B788' }}>AI Recommendation</p>
+        <p className="text-sm font-bold text-white leading-snug">{season.currentTask}</p>
+        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
+          {season.season} · {season.daysLeft} days remaining · {crop.charAt(0).toUpperCase() + crop.slice(1)} season
+        </p>
+      </div>
+      <a
+        href="/farmer/weather"
+        className="text-xs font-bold px-3 py-1.5 rounded-lg shrink-0"
+        style={{ background: '#52B788', color: '#1B4332' }}
+      >
+        Details →
+      </a>
+    </div>
+  );
+}
+
+// ─── Streaming: Market prices table ──────────────────────────────────────────
+
+async function MarketPricesTable({ userId }: { userId: string }) {
+  const supabase = await createClient();
+  const profile = await getProfile(userId);
+  const { data: prices } = await supabase
+    .from('market_prices')
+    .select('crop_type, price_per_kg, recorded_at')
+    .gte('recorded_at', new Date(Date.now() - 2 * 864e5).toISOString())
+    .order('recorded_at', { ascending: false })
+    .limit(40);
+
+  const rows = prices ?? [];
+  const groups: Record<string, number[]> = {};
+  rows.forEach((p: any) => {
+    const k = p.crop_type?.toLowerCase() ?? '';
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(p.price_per_kg);
+  });
+
+  // Put farmer's primary crop first
+  const primary = profile?.primary_crop?.toLowerCase() ?? '';
+  const sorted = Object.entries(groups)
+    .map(([crop, ps]) => ({
+      crop,
+      latest: ps[0],
+      trend: ps[1] ? ((ps[0] - ps[1]) / ps[1] * 100) : null,
+    }))
+    .sort((a, b) => (a.crop === primary ? -1 : b.crop === primary ? 1 : 0))
+    .slice(0, 8);
+
+  return (
+    <Card>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Market Prices Today
+        </p>
+        <a href="/farmer/prices" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</a>
+      </div>
+      {sorted.length === 0 ? (
+        <div className="px-5 py-8 text-center">
+          <p className="text-2xl mb-2">📊</p>
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No price data yet</p>
+        </div>
+      ) : (
+        <div className="divide-y" style={{ borderColor: C.border }}>
+          {sorted.map(({ crop, latest, trend }) => {
+            const up = (trend ?? 0) >= 0;
+            const color = CROP_COLORS[crop] ?? C.greenMed;
+            const isPrimary = crop === primary;
+            return (
+              <div key={crop} className="px-5 py-3 flex items-center justify-between" style={{ background: isPrimary ? '#F0FDF4' : 'transparent' }}>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+                  <p className="text-sm font-medium capitalize" style={{ color: C.text }}>{crop}</p>
+                  {isPrimary && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#D1FAE5', color: '#059669' }}>
+                      Your crop
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <p className="text-sm font-bold" style={{ color: C.text }}>
+                    UGX {Math.round(latest).toLocaleString()}
+                  </p>
+                  {trend !== null && (
+                    <span className="text-xs font-bold" style={{ color: up ? '#059669' : C.red }}>
+                      {up ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ─── Streaming: 4-day weather forecast ───────────────────────────────────────
+
+async function WeatherForecast({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const lat = profile?.latitude ?? 0.3476;
+  const lon = profile?.longitude ?? 32.5825;
+  const weather = await fetchWeatherForFarmer(lat, lon);
+
+  const ICON: Record<string, string> = {
+    '01d': '☀️', '02d': '⛅', '03d': '☁️', '04d': '☁️',
+    '09d': '🌧️', '10d': '🌦️', '11d': '⛈️', '13d': '❄️',
+  };
+
+  const dailyMap: Record<string, { high: number; low: number; icon: string; rain: boolean }> = {};
+  for (const item of weather.forecast) {
+    const k = new Date(item.dt_txt).toLocaleDateString('en-UG', { weekday: 'short', day: 'numeric' });
+    if (!dailyMap[k]) dailyMap[k] = { high: item.main.temp_max, low: item.main.temp_min, icon: item.weather[0].icon, rain: (item.rain?.['3h'] ?? 0) > 0 };
+    else {
+      dailyMap[k].high = Math.max(dailyMap[k].high, item.main.temp_max);
+      dailyMap[k].low = Math.min(dailyMap[k].low, item.main.temp_min);
+      if ((item.rain?.['3h'] ?? 0) > 0) dailyMap[k].rain = true;
+    }
+  }
+
+  const days = Object.entries(dailyMap).slice(0, 4);
+
+  return (
+    <Card>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Weather Forecast
+        </p>
+        <a href="/farmer/weather" className="text-xs font-semibold" style={{ color: C.greenMed }}>Details →</a>
+      </div>
+      <div className="grid grid-cols-4 divide-x p-2" style={{ borderColor: C.border }}>
+        {days.map(([label, d], i) => (
+          <div key={label} className="flex flex-col items-center gap-1.5 py-4 px-2" style={{ background: d.rain && i === 1 ? '#FEF3C7' : 'transparent', borderRadius: '8px' }}>
+            <p className="text-[11px] font-bold" style={{ color: C.muted }}>{label.split(' ')[0]}</p>
+            <p className="text-2xl">{ICON[d.icon] ?? '🌤️'}</p>
+            <p className="text-sm font-black" style={{ color: C.text }}>{Math.round(d.high)}°</p>
+            <p className="text-[11px]" style={{ color: C.muted }}>{Math.round(d.low)}°</p>
+            {d.rain && <span className="text-[10px] font-bold" style={{ color: C.red }}>Rain</span>}
+          </div>
         ))}
       </div>
-    </div>
+    </Card>
+  );
+}
+
+// ─── Streaming: Recent offers ─────────────────────────────────────────────────
+
+async function RecentOffers({ userId }: { userId: string }) {
+  const supabase = await createClient();
+  const profile = await getProfile(userId);
+  if (!profile?.id) return null;
+
+  const { data: offers } = await (supabase.from as any)('offers')
+    .select('id, offered_price, status, created_at, listing:listings(crop_type, quantity_kg)')
+    .eq('listing.farmer_id', profile.id)
+    .in('status', ['pending', 'accepted', 'rejected'])
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const rows = (offers ?? []).filter((o: any) => o?.listing);
+
+  const STATUS: Record<string, { label: string; color: string; bg: string }> = {
+    pending:  { label: 'New',      color: '#059669', bg: '#D1FAE5' },
+    accepted: { label: 'Accepted', color: '#0077B6', bg: '#DBEAFE' },
+    rejected: { label: 'Rejected', color: '#E63946', bg: '#FEE2E2' },
+  };
+
+  return (
+    <Card>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent Offers</p>
+        <a href="/farmer/marketplace" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</a>
+      </div>
+      {rows.length === 0 ? (
+        <div className="px-5 py-8 text-center">
+          <p className="text-2xl mb-2">💬</p>
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No offers yet</p>
+          <p className="text-xs mt-1" style={{ color: C.muted }}>Create a listing to attract buyers</p>
+        </div>
+      ) : (
+        <div className="divide-y" style={{ borderColor: C.border }}>
+          {rows.map((o: any) => {
+            const st = STATUS[o.status] ?? STATUS.pending;
+            return (
+              <div key={o.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: '#F0FDF4', color: C.greenMed }}>
+                    🛒
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>
+                      {o.listing.crop_type} · {o.listing.quantity_kg} kg
+                    </p>
+                    <p className="text-[11px]" style={{ color: C.muted }}>{timeAgo(o.created_at)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <p className="text-sm font-black" style={{ color: C.text }}>
+                    UGX {Math.round(o.offered_price).toLocaleString()}
+                  </p>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: st.bg, color: st.color }}>
+                    {st.label}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}
+
+// ─── Streaming: AgriScore + Finance overview ──────────────────────────────────
+
+async function FinanceOverview({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const listingsCount = profile?.id ? await getListingsCount(profile.id) : 0;
+  const score = computeAgriScore(profile, listingsCount);
+  const pct = Math.round(((score - 300) / (850 - 300)) * 100);
+
+  let scoreColor = C.red;
+  let scoreLabel = 'Building';
+  let loanLimit = '500,000';
+  let eligibility = 'Low';
+  if (score >= 500) { scoreColor = C.amber; scoreLabel = 'Fair'; loanLimit = '1,500,000'; eligibility = 'Moderate'; }
+  if (score >= 650) { scoreColor = C.greenMed; scoreLabel = 'Good'; loanLimit = '3,000,000'; eligibility = 'Good'; }
+  if (score >= 780) { scoreColor = C.greenBright; scoreLabel = 'Excellent'; loanLimit = '5,000,000'; eligibility = 'Excellent'; }
+
+  return (
+    <Card>
+      <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Finance Overview
+        </p>
+      </div>
+      <div className="grid grid-cols-3 divide-x" style={{ borderColor: C.border }}>
+        {/* AgriScore */}
+        <div className="p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>AgriScore</p>
+          <p className="text-3xl font-black mb-1" style={{ color: scoreColor, letterSpacing: '-0.04em' }}>{score}</p>
+          <p className="text-xs font-semibold mb-3" style={{ color: scoreColor }}>{scoreLabel}</p>
+          <div className="h-1.5 rounded-full mb-1" style={{ background: '#F3F4F6' }}>
+            <div className="h-1.5 rounded-full agriscore-bar" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${C.amber}, ${scoreColor})` }} />
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[10px]" style={{ color: C.muted }}>300</span>
+            <span className="text-[10px]" style={{ color: C.muted }}>850</span>
+          </div>
+        </div>
+
+        {/* Loan eligibility */}
+        <div className="p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Loan Eligibility</p>
+          <p className="text-base font-bold mb-1" style={{ color: scoreColor }}>{eligibility}</p>
+          <p className="text-xs mb-3" style={{ color: C.muted }}>You can apply for a loan</p>
+          <div className="h-1.5 rounded-full" style={{ background: '#F3F4F6' }}>
+            <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: scoreColor, borderRadius: '9999px' }} />
+          </div>
+        </div>
+
+        {/* Recommended limit */}
+        <div className="p-5">
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Recommended Limit</p>
+          <p className="text-xl font-black mb-1" style={{ color: C.text, letterSpacing: '-0.03em' }}>
+            UGX {loanLimit}
+          </p>
+          <p className="text-xs" style={{ color: C.muted }}>Based on your farm score</p>
+          <a
+            href="/farmer/finance"
+            className="mt-3 block text-xs font-bold px-3 py-1.5 rounded-lg text-center"
+            style={{ background: '#F0FDF4', color: C.greenMed }}
+          >
+            Apply for loan →
+          </a>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+// ─── Disease alerts ───────────────────────────────────────────────────────────
+
+async function DiseasePanel({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const month = new Date().getMonth();
+  const alerts = generateDiseaseAlerts(month, profile?.primary_crop ?? '');
+  if (alerts.length === 0) return null;
+
+  return (
+    <Card>
+      <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Disease & Risk Alerts
+        </p>
+      </div>
+      <div className="divide-y" style={{ borderColor: C.border }}>
+        {alerts.map((a) => {
+          const cfg = SEVERITY_MAP[a.severity];
+          return (
+            <div key={a.id} className="px-5 py-3.5 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>
+                {a.icon}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="text-sm font-bold" style={{ color: C.text }}>{a.title}</p>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full capitalize" style={{ background: cfg.bg, color: cfg.color }}>{a.severity}</span>
+                </div>
+                <p className="text-xs leading-snug" style={{ color: C.muted }}>{a.body}</p>
+                {a.action && <p className="text-xs mt-1 font-semibold" style={{ color: cfg.color }}>→ {a.action}</p>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+// ─── Quick actions ────────────────────────────────────────────────────────────
+
+function QuickActions() {
+  const actions = [
+    { label: 'Create Listing', href: '/farmer/marketplace/create', emoji: '✏️', bg: '#F0FDF4', color: '#1B4332' },
+    { label: 'Add Record',     href: '/farmer/farm',               emoji: '📋', bg: '#EFF6FF', color: '#0077B6' },
+    { label: 'Check Weather',  href: '/farmer/weather',            emoji: '🌤',  bg: '#FFFBEB', color: '#D97706' },
+    { label: 'Scan Disease',   href: '/farmer/doctor',             emoji: '🔍', bg: '#F5F3FF', color: '#7C3AED' },
+    { label: 'Apply for Loan', href: '/farmer/finance',            emoji: '💰', bg: '#FEF2F2', color: '#DC2626' },
+  ];
+
+  return (
+    <Card>
+      <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
+      </div>
+      <div className="grid grid-cols-5 gap-2 p-4">
+        {actions.map(({ label, href, emoji, bg, color }) => (
+          <a
+            key={label}
+            href={href}
+            className="flex flex-col items-center gap-2 py-4 rounded-xl transition-opacity hover:opacity-85"
+            style={{ background: bg, textDecoration: 'none' }}
+          >
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
+              {emoji}
+            </div>
+            <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
+          </a>
+        ))}
+      </div>
+    </Card>
   );
 }
 
@@ -596,80 +612,60 @@ function WalletSnapshot() {
 
 export default async function FarmerDashboardPage() {
   const supabase = await createClient();
-
-  // getSession() reads the cookie without a network call to auth servers
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.user) redirect('/auth/signin');
   const userId = session.user.id;
 
-  const h = new Date().getHours();
-  const greeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-
   return (
-    <div className="min-h-screen pb-28" style={{ background: 'var(--color-soil)' }}>
-      <div className="max-w-lg mx-auto px-4">
+    <div className="space-y-5 max-w-5xl mx-auto">
 
-        {/* Header streams in with profile data */}
-        <Suspense fallback={
-          <div className="flex items-center justify-between py-5">
-            <div className="space-y-2">
-              <div className="skeleton h-3 w-24 rounded" />
-              <div className="skeleton h-6 w-36 rounded" />
-            </div>
-            <div className="flex gap-2">
-              <div className="skeleton w-9 h-9 rounded-xl" />
-              <div className="skeleton w-10 h-10 rounded-2xl" />
-            </div>
-          </div>
-        }>
-          <DashboardHeader userId={userId} greeting={greeting} />
-        </Suspense>
+      {/* 1 · Weather card */}
+      <Suspense fallback={<div className="dash-skeleton h-36 rounded-xl" />}>
+        <WeatherCard userId={userId} />
+      </Suspense>
 
-        {/* Quick actions always instant */}
-        <QuickActions />
-
-        <div className="space-y-4 mt-4">
-
-          {/* AgriScore — needs profile + listings (sequential, ~2 DB calls, streams in) */}
-          <Suspense fallback={<Sk h="120px" />}>
-            <AgriScoreSection userId={userId} />
-          </Suspense>
-
-          {/* Weather — needs profile (lat/lon) + OpenWeather */}
-          <Suspense fallback={<Sk h="240px" />}>
-            <WeatherIntelligence userId={userId} />
-          </Suspense>
-
-          {/* Seasonal — needs profile (primaryCrop), computed */}
-          <Suspense fallback={<Sk h="200px" />}>
-            <SeasonalStrategy userId={userId} />
-          </Suspense>
-
-          {/* Market prices — needs profile (district) + DB */}
-          <Suspense fallback={<Sk h="260px" />}>
-            <MarketIntelligence userId={userId} />
-          </Suspense>
-
-          {/* Disease alerts — needs profile (primaryCrop), computed */}
-          <Suspense fallback={<Sk h="160px" />}>
-            <DiseaseRiskPanel userId={userId} />
-          </Suspense>
-
-          {/* Buyer offers — needs profile.id + DB */}
-          <Suspense fallback={null}>
-            <BuyerOffers userId={userId} />
-          </Suspense>
-
-          {/* Wallet */}
-          <WalletSnapshot />
-
-          {/* Notifications */}
-          <Suspense fallback={null}>
-            <SmartAlerts userId={userId} />
-          </Suspense>
-
+      {/* 2 · Quick stats */}
+      <Suspense fallback={
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}
         </div>
+      }>
+        <QuickStats userId={userId} />
+      </Suspense>
+
+      {/* 3 · AI recommendation */}
+      <Suspense fallback={<div className="dash-skeleton h-20 rounded-xl" />}>
+        <AIBanner userId={userId} />
+      </Suspense>
+
+      {/* 4 · Market prices + Weather forecast (2-col) */}
+      <div className="grid lg:grid-cols-2 gap-5">
+        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+          <MarketPricesTable userId={userId} />
+        </Suspense>
+        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+          <WeatherForecast userId={userId} />
+        </Suspense>
       </div>
+
+      {/* 5 · Recent offers + Disease alerts (2-col) */}
+      <div className="grid lg:grid-cols-2 gap-5">
+        <Suspense fallback={<div className="dash-skeleton h-64 rounded-xl" />}>
+          <RecentOffers userId={userId} />
+        </Suspense>
+        <Suspense fallback={<div className="dash-skeleton h-64 rounded-xl" />}>
+          <DiseasePanel userId={userId} />
+        </Suspense>
+      </div>
+
+      {/* 6 · Finance overview */}
+      <Suspense fallback={<div className="dash-skeleton h-40 rounded-xl" />}>
+        <FinanceOverview userId={userId} />
+      </Suspense>
+
+      {/* 7 · Quick actions */}
+      <QuickActions />
+
     </div>
   );
 }

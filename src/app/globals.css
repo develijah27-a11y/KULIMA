@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -191,3 +192,40 @@ body {
 .glow-green { box-shadow: 0 0 20px rgba(0,200,117,0.25); }
 .glow-amber { box-shadow: 0 0 20px rgba(251,191,36,0.25); }
 .glow-sky   { box-shadow: 0 0 20px rgba(56,189,248,0.25); }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DASHBOARD THEME — forest green sidebar + white cards
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Dashboard card (white, shadow) ── */
+.dash-card {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+}
+
+/* ── Dashboard stat cards with colored top border ── */
+.dash-stat {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  border-top: 3px solid;
+}
+.dash-stat-green  { border-color: #52B788; }
+.dash-stat-amber  { border-color: #F4A261; }
+.dash-stat-red    { border-color: #E63946; }
+.dash-stat-blue   { border-color: #0077B6; }
+.dash-stat-violet { border-color: #A78BFA; }
+
+/* ── Dashboard skeleton (light mode) ── */
+.dash-skeleton {
+  background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+/* ── Sidebar hover state (no JS needed) ── */
+.sidebar-item:hover { background: rgba(255,255,255,0.08); }
+.sidebar-item.active { background: rgba(255,255,255,0.15); }
