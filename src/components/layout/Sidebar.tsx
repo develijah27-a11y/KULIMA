@@ -2,11 +2,33 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { LucideIcon } from 'lucide-react';
+import {
+  LayoutDashboard, ShoppingBag, TrendingUp, Cloud, Microscope, Leaf, User,
+  ShoppingCart, MessageSquare, Package, Users, Bell, UserCheck, BarChart3,
+} from 'lucide-react';
+
+type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+
+const ICON_MAP: Record<string, IconComponent> = {
+  dashboard:   LayoutDashboard,
+  marketplace: ShoppingBag,
+  prices:      TrendingUp,
+  weather:     Cloud,
+  doctor:      Microscope,
+  farm:        Leaf,
+  profile:     User,
+  listings:    ShoppingCart,
+  offers:      MessageSquare,
+  orders:      Package,
+  users:       Users,
+  alerts:      Bell,
+  buyers:      UserCheck,
+  analytics:   BarChart3,
+};
 
 export interface NavItem {
   href: string;
-  icon: LucideIcon;
+  icon: string;
   label: string;
   badge?: number;
 }
@@ -42,7 +64,8 @@ export function Sidebar({ navItems, profile }: SidebarProps) {
         <p className="text-[10px] font-bold tracking-widest uppercase px-3 mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
           Menu
         </p>
-        {navItems.map(({ href, icon: Icon, label, badge }) => {
+        {navItems.map(({ href, icon, label, badge }) => {
+          const Icon = ICON_MAP[icon] ?? LayoutDashboard;
           const active = pathname === href || (href !== '/farmer/dashboard' && href !== '/buyer/dashboard' && href !== '/admin/dashboard' && pathname.startsWith(href));
           return (
             <Link

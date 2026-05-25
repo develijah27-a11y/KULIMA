@@ -2,15 +2,14 @@ import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { LayoutDashboard, Users, TrendingUp, Bell, UserCheck, BarChart3, Settings } from 'lucide-react';
 
 const ADMIN_NAV = [
-  { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Overview' },
-  { href: '/admin/users',     icon: Users,           label: 'Users' },
-  { href: '/admin/prices',    icon: TrendingUp,      label: 'Prices' },
-  { href: '/admin/alert',     icon: Bell,            label: 'Alerts' },
-  { href: '/admin/buyers',    icon: UserCheck,       label: 'Buyers' },
-  { href: '/admin/analytics', icon: BarChart3,       label: 'Analytics' },
+  { href: '/admin/dashboard', icon: 'dashboard', label: 'Overview' },
+  { href: '/admin/users',     icon: 'users',     label: 'Users' },
+  { href: '/admin/prices',    icon: 'prices',    label: 'Prices' },
+  { href: '/admin/alert',     icon: 'alerts',    label: 'Alerts' },
+  { href: '/admin/buyers',    icon: 'buyers',    label: 'Buyers' },
+  { href: '/admin/analytics', icon: 'analytics', label: 'Analytics' },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

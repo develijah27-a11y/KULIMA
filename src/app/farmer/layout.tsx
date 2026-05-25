@@ -2,19 +2,15 @@ import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
-import {
-  LayoutDashboard, ShoppingBag, TrendingUp, Cloud,
-  Microscope, CreditCard, User, Leaf,
-} from 'lucide-react';
 
 const FARMER_NAV = [
-  { href: '/farmer/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/farmer/marketplace',  icon: ShoppingBag,     label: 'Marketplace' },
-  { href: '/farmer/prices',       icon: TrendingUp,      label: 'Prices' },
-  { href: '/farmer/weather',      icon: Cloud,           label: 'Weather' },
-  { href: '/farmer/doctor',       icon: Microscope,      label: 'AI Doctor' },
-  { href: '/farmer/farm',         icon: Leaf,            label: 'My Farm' },
-  { href: '/farmer/profile',      icon: User,            label: 'Profile' },
+  { href: '/farmer/dashboard',   icon: 'dashboard',   label: 'Dashboard' },
+  { href: '/farmer/marketplace', icon: 'marketplace', label: 'Marketplace' },
+  { href: '/farmer/prices',      icon: 'prices',      label: 'Prices' },
+  { href: '/farmer/weather',     icon: 'weather',     label: 'Weather' },
+  { href: '/farmer/doctor',      icon: 'doctor',      label: 'AI Doctor' },
+  { href: '/farmer/farm',        icon: 'farm',        label: 'My Farm' },
+  { href: '/farmer/profile',     icon: 'profile',     label: 'Profile' },
 ];
 
 export default async function FarmerLayout({ children }: { children: React.ReactNode }) {

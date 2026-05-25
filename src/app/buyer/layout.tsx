@@ -2,15 +2,14 @@ import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
-import { LayoutDashboard, ShoppingCart, MessageSquare, Package, TrendingUp, User } from 'lucide-react';
 
 const BUYER_NAV = [
-  { href: '/buyer/dashboard',  icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/buyer/listings',   icon: ShoppingCart,    label: 'Browse' },
-  { href: '/buyer/offers',     icon: MessageSquare,   label: 'My Offers' },
-  { href: '/buyer/orders',     icon: Package,         label: 'Orders' },
-  { href: '/buyer/prices',     icon: TrendingUp,      label: 'Prices' },
-  { href: '/buyer/profile',    icon: User,            label: 'Profile' },
+  { href: '/buyer/dashboard', icon: 'dashboard', label: 'Dashboard' },
+  { href: '/buyer/listings',  icon: 'listings',  label: 'Browse' },
+  { href: '/buyer/offers',    icon: 'offers',    label: 'My Offers' },
+  { href: '/buyer/orders',    icon: 'orders',    label: 'Orders' },
+  { href: '/buyer/prices',    icon: 'prices',    label: 'Prices' },
+  { href: '/buyer/profile',   icon: 'profile',   label: 'Profile' },
 ];
 
 export default async function BuyerLayout({ children }: { children: React.ReactNode }) {
