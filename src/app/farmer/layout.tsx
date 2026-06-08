@@ -7,6 +7,7 @@ const FARMER_NAV = [
   { href: '/farmer/dashboard',   icon: 'dashboard',   label: 'Dashboard' },
   { href: '/farmer/marketplace', icon: 'marketplace', label: 'Marketplace' },
   { href: '/farmer/prices',      icon: 'prices',      label: 'Prices' },
+  { href: '/farmer/finance',     icon: 'finance',     label: 'Finance' },
   { href: '/farmer/weather',     icon: 'weather',     label: 'Weather' },
   { href: '/farmer/planting',    icon: 'planting',    label: 'Planting' },
   { href: '/farmer/doctor',      icon: 'doctor',      label: 'Pathologist' },

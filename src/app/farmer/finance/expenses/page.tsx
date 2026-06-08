@@ -1,0 +1,108 @@
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { ExpenseForm } from './ExpenseForm';
+
+const C = {
+  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
+  green: '#1B4332', greenMed: '#40916C',
+  cardBg: '#FFFFFF',
+  shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+};
+
+export default async function ExpensesPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
+
+  const { data } = await (supabase.from as any)('farm_expenses')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('expense_date', { ascending: false });
+
+  const expenses = (data ?? []) as any[];
+
+  // Server-side summary for Season A2026
+  const current = expenses.filter((e: any) => e.season === 'A2026');
+  const totalSpent = current.reduce((s: number, e: any) => s + Number(e.amount_ugx), 0);
+  const byCat: Record<string, number> = {};
+  current.forEach((e: any) => { byCat[e.category] = (byCat[e.category] ?? 0) + Number(e.amount_ugx); });
+  const topCat = Object.entries(byCat).sort((a, b) => b[1] - a[1])[0];
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+
+      {/* Breadcrumb */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: C.muted }}>
+        <Link href="/farmer/finance" style={{ color: C.muted, textDecoration: 'none' }}>Farm Finance</Link>
+        <span>/</span>
+        <span style={{ color: C.text, fontWeight: 600 }}>Expense Tracker</span>
+      </div>
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h1 style={{ fontSize: '22px', fontWeight: 800, color: C.text, letterSpacing: '-0.03em', marginBottom: '4px' }}>
+            Expense Tracker
+          </h1>
+          <p style={{ fontSize: '13px', color: C.muted }}>
+            Log every farm cost — seeds, fertilizer, labor, transport, and more
+          </p>
+        </div>
+        <Link
+          href="/farmer/finance/calculator"
+          style={{
+            padding: '10px 18px', borderRadius: '10px',
+            background: '#F0FDF4', border: `1.5px solid #A7F3D0`,
+            color: C.green, fontSize: '13px', fontWeight: 700,
+            textDecoration: 'none',
+          }}
+        >
+          🧮 Open Calculator
+        </Link>
+      </div>
+
+      {/* Quick stat row */}
+      {totalSpent > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '14px' }}>
+          {[
+            {
+              label: 'Total Spent (Season A)',
+              value: `UGX ${totalSpent.toLocaleString()}`,
+              sub: `${current.length} expense entries`,
+              color: '#E63946', bg: '#FEF2F2',
+            },
+            {
+              label: 'Biggest Category',
+              value: topCat ? topCat[0].replace(/_/g, ' ') : '—',
+              sub: topCat ? `UGX ${Math.round(topCat[1]).toLocaleString()}` : '',
+              color: C.greenMed, bg: '#F0FDF4',
+            },
+            {
+              label: 'Avg per Entry',
+              value: current.length > 0 ? `UGX ${Math.round(totalSpent / current.length).toLocaleString()}` : '—',
+              sub: 'per expense logged',
+              color: '#0077B6', bg: '#EFF6FF',
+            },
+          ].map(({ label, value, sub, color, bg }) => (
+            <div
+              key={label}
+              style={{
+                background: bg, borderRadius: '12px', padding: '16px',
+                borderLeft: `3px solid ${color}`,
+              }}
+            >
+              <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>{label}</p>
+              <p style={{ fontSize: '17px', fontWeight: 900, color: C.text, letterSpacing: '-0.02em', textTransform: 'capitalize' }}>{value}</p>
+              <p style={{ fontSize: '11px', color, marginTop: '2px' }}>{sub}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* The interactive form + list */}
+      <ExpenseForm initialExpenses={expenses} />
+
+    </div>
+  );
+}

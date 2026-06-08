@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingBag, TrendingUp, Cloud, Microscope, Leaf, User,
   ShoppingCart, MessageSquare, Package, Users, Bell, UserCheck, BarChart3,
-  ShieldCheck, Wallet, Sprout,
+  ShieldCheck, Wallet, Sprout, Calculator,
 } from 'lucide-react';
 import type { NavItem } from './Sidebar';
 
@@ -29,6 +29,7 @@ const ICON_MAP: Record<string, IconComponent> = {
   verify:      ShieldCheck,
   wallet:      Wallet,
   planting:    Sprout,
+  finance:     Calculator,
 };
 
 export function MobileNav({ navItems }: { navItems: NavItem[] }) {
