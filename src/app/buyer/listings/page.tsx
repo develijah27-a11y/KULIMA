@@ -1,33 +1,214 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { PriceTag } from '@/components/ui/PriceTag';
-import { Badge } from '@/components/ui/Badge';
+import { createClient } from '@/lib/supabase/server';
+import Link from 'next/link';
+import { VerificationBadge } from '@/components/trust/VerificationBadge';
+import { type VerificationLevel } from '@/lib/trust';
 
-export default async function BuyerPricesPage() {
+const C = {
+  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB', cardBg: '#FFFFFF',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+  green: '#1B4332', greenBright: '#52B788', greenMed: '#40916C',
+};
+
+const CROPS = ['maize','beans','coffee','rice','banana','cassava','tomato','sorghum','groundnuts','sweet_potatoes','sunflower'];
+const CROP_EMOJI: Record<string, string> = {
+  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
+  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
+  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
+};
+const CROP_COLOR: Record<string, string> = {
+  maize: '#D97706', beans: '#DC2626', coffee: '#7C3AED', rice: '#0284C7',
+  banana: '#B45309', cassava: '#059669', tomato: '#DC2626', sorghum: '#D97706',
+  groundnuts: '#B45309', sweet_potatoes: '#D97706', sunflower: '#B45309',
+};
+
+export default async function BuyerListingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; crop?: string; district?: string; sort?: string }>;
+}) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) redirect('/auth/signin');
 
-  const { data: listings } = await (supabase.from as any)('listings').select('*, farmer:profiles(name,location,rating)').eq('status','active').order('created_at', { ascending: false }).limit(40);
+  const sp       = await searchParams;
+  const q        = sp.q ?? '';
+  const crop     = sp.crop ?? '';
+  const district = sp.district ?? '';
+  const sort     = sp.sort ?? 'newest';
+
+  // Fetch listings with farmer profile
+  let query = (supabase.from as any)('listings')
+    .select('id, crop_type, quantity_kg, asking_price, district, created_at, available_from, farmer:profiles(full_name, location, verification_level, trust_score)')
+    .eq('status', 'active');
+
+  if (crop)     query = query.eq('crop_type', crop);
+  if (district) query = query.eq('district', district);
+  if (q)        query = query.ilike('crop_type', `%${q}%`);
+
+  if (sort === 'price_asc')  query = query.order('asking_price', { ascending: true });
+  else if (sort === 'price_desc') query = query.order('asking_price', { ascending: false });
+  else                            query = query.order('created_at', { ascending: false });
+
+  query = query.limit(60);
+
+  // Market prices for comparison
+  const [listingsRes, pricesRes] = await Promise.all([
+    query,
+    supabase.from('market_prices').select('crop_type, price_per_kg').order('recorded_at', { ascending: false }).limit(50),
+  ]);
+
+  const listings = listingsRes.data ?? [];
+  const prices   = pricesRes.data ?? [];
+
+  const priceMap: Record<string, number> = {};
+  prices.forEach((p: any) => {
+    if (!priceMap[p.crop_type]) priceMap[p.crop_type] = p.price_per_kg;
+  });
+
+  // Build filter URL helper
+  function filterUrl(changes: Record<string, string>) {
+    const params = new URLSearchParams({ q, crop, district, sort, ...changes });
+    ['q','crop','district','sort'].forEach(k => { if (!params.get(k)) params.delete(k); });
+    return `/buyer/listings?${params}`;
+  }
 
   return (
-    <div className="min-h-screen bg-soil pb-24">
-      <main className="max-w-6xl mx-auto px-6 py-6 space-y-4">
-        <h1 className="text-xl font-bold text-cream" style={{ fontFamily: 'var(--font-headline)' }}>Browse Listings</h1>
-        <p className="text-sm text-cream/40">{listings?.length ?? 0} listings available</p>
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {(listings ?? []).map((l: any) => (
-            <div key={l.id} className="rounded-2xl bg-surface border border-surface2 p-4">
-              <p className="text-sm font-semibold text-cream capitalize">{l.crop_type}</p>
-              <p className="text-[11px] text-cream/35">{l.farmer?.name} · {l.farmer?.location}</p>
-              <div className="flex items-end justify-between mt-3">
-                <PriceTag value={l.asking_price} size="md" />
-                <Badge variant="green">Active</Badge>
-              </div>
-            </div>
-          ))}
+    <div className="max-w-4xl mx-auto space-y-5">
+      <div>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Browse Listings
+        </h1>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>{listings.length} listings available</p>
+      </div>
+
+      {/* Search + filters */}
+      <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
+        <form method="get" action="/buyer/listings" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              name="q"
+              defaultValue={q}
+              placeholder="Search crop..."
+              style={{ flex: 1, padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none' }}
+            />
+            <button
+              type="submit"
+              style={{ padding: '9px 18px', background: C.green, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+            >
+              Search
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <select name="crop" defaultValue={crop} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, color: crop ? C.text : C.muted }}>
+              <option value="">All crops</option>
+              {CROPS.map(c => <option key={c} value={c} style={{ textTransform: 'capitalize' }}>{c.replace(/_/g,' ')}</option>)}
+            </select>
+            <select name="district" defaultValue={district} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, color: district ? C.text : C.muted }}>
+              <option value="">All districts</option>
+              {['Kampala','Wakiso','Mukono','Jinja','Mbale','Gulu','Lira','Masaka','Mbarara','Kabale','Fort Portal','Arua','Soroti','Tororo','Iganga'].map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+            <select name="sort" defaultValue={sort} style={{ padding: '6px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, color: C.text }}>
+              <option value="newest">Newest first</option>
+              <option value="price_asc">Price: low to high</option>
+              <option value="price_desc">Price: high to low</option>
+            </select>
+          </div>
+        </form>
+
+        {/* Active filter chips */}
+        {(crop || district || q) && (
+          <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+            {crop && (
+              <a href={filterUrl({ crop: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: '#F0FDF4', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
+                {crop.replace(/_/g,' ')} ✕
+              </a>
+            )}
+            {district && (
+              <a href={filterUrl({ district: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: '#F0FDF4', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
+                {district} ✕
+              </a>
+            )}
+            {q && (
+              <a href={filterUrl({ q: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: '#F0FDF4', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
+                "{q}" ✕
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Listings grid */}
+      {listings.length === 0 ? (
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
+          <p style={{ fontSize: 48, marginBottom: 12 }}>🌾</p>
+          <p style={{ color: C.text, fontWeight: 700, fontSize: 16 }}>No listings found</p>
+          <p style={{ color: C.muted, fontSize: 14, marginTop: 4 }}>Try adjusting your filters or check back later.</p>
         </div>
-      </main>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {listings.map((l: any) => {
+            const k        = l.crop_type?.toLowerCase() ?? '';
+            const color    = CROP_COLOR[k] ?? C.greenMed;
+            const emoji    = CROP_EMOJI[k] ?? '🌾';
+            const market   = priceMap[k];
+            const farmer   = l.farmer ?? {};
+            const priceDelta = market ? Math.round(((l.asking_price - market) / market) * 100) : null;
+
+            return (
+              <Link
+                key={l.id}
+                href={`/buyer/listings/${l.id}`}
+                style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, textDecoration: 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderTop: `3px solid ${color}` }}
+              >
+                <div style={{ padding: '16px 18px', flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <span style={{ fontSize: 28 }}>{emoji}</span>
+                    <div>
+                      <p style={{ color: C.text, fontWeight: 700, fontSize: 15, margin: 0, textTransform: 'capitalize' }}>{l.crop_type}</p>
+                      <p style={{ color: C.muted, fontSize: 11, margin: '1px 0 0' }}>{l.quantity_kg} kg · {l.district}</p>
+                    </div>
+                  </div>
+
+                  {/* Farmer */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: 6, background: C.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+                      {farmer.full_name?.[0]?.toUpperCase() ?? 'F'}
+                    </div>
+                    <p style={{ fontSize: 11, color: C.muted, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {farmer.full_name ?? 'Farmer'}
+                    </p>
+                    {farmer.verification_level && <VerificationBadge level={farmer.verification_level as VerificationLevel} size="xs" showLabel={false} />}
+                  </div>
+
+                  {/* Price */}
+                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                    <div>
+                      <p style={{ fontSize: 18, fontWeight: 800, color, margin: 0, letterSpacing: '-0.02em' }}>
+                        UGX {Math.round(l.asking_price).toLocaleString()}
+                      </p>
+                      <p style={{ fontSize: 10, color: C.muted, margin: '1px 0 0' }}>per kg</p>
+                    </div>
+                    {priceDelta !== null && (
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: Math.abs(priceDelta) <= 10 ? '#D1FAE5' : '#FEF3C7', color: Math.abs(priceDelta) <= 10 ? '#059669' : '#D97706' }}>
+                        {priceDelta >= 0 ? '+' : ''}{priceDelta}% vs market
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ padding: '10px 18px', borderTop: `1px solid ${C.border}`, background: '#FAFAFA' }}>
+                  <p style={{ fontSize: 12, color: C.greenMed, fontWeight: 700, margin: 0, textAlign: 'center' }}>
+                    View & Make Offer →
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
