@@ -1,127 +1,175 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { Card, CardHeader } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import type { CropCycle } from '@/types/domain';
+import Link from 'next/link';
+import { VerificationBadge } from '@/components/trust/VerificationBadge';
+import { TrustScore } from '@/components/trust/TrustScore';
+import { type VerificationLevel } from '@/lib/trust';
 
-const CROP_INTERESTS = [
-  'maize','beans','tomatoes','cassava','rice','coffee',
-  'groundnuts','sweet_potatoes','bananas','sunflower',
-];
+const C = {
+  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB', cardBg: '#FFFFFF',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+  green: '#1B4332', greenBright: '#52B788',
+};
 
-async function getFarms(farmerId: string) {
-  const supabase = await import('@/lib/supabase/server').then(m => m.createClient());
-  const { data } = await supabase.from('farms').select('*').eq('user_id', farmerId);
+const Card = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+  <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, ...style }}>{children}</div>
+);
+
+async function getFarms(userId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from('farms').select('id, name, size_hectares').eq('user_id', userId);
   return data ?? [];
 }
 
-async function getCycles(farmerId: string) {
-  const supabase = await import('@/lib/supabase/server').then(m => m.createClient());
-  const { data: farms } = await supabase.from('farms').select('id').eq('user_id', farmerId);
+async function getCrops(userId: string) {
+  const supabase = await createClient();
+  const { data: farms } = await supabase.from('farms').select('id').eq('user_id', userId);
   const ids = (farms ?? []).map((f: any) => f.id);
-  if (ids.length === 0) return [];
-  const { data: crops } = await supabase.from('crops').select('*').in('farm_id', ids).order('created_at', { ascending: false }).limit(10);
-  return crops ?? [];
+  if (!ids.length) return [];
+  const { data } = await supabase.from('crops').select('id, crop_name, status, planting_date').in('farm_id', ids).order('created_at', { ascending: false }).limit(8);
+  return data ?? [];
 }
 
-export default async function ProfilePage() {
+export default async function FarmerProfilePage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) redirect('/auth/signin');
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
-  const farms = await getFarms(user.id);
-  const cycles = (await getCycles(user.id)) as unknown as CropCycle[];
+  const [profileRes, farms, crops] = await Promise.all([
+    (supabase.from as any)('profiles')
+      .select('full_name, phone_number, location, primary_crop, role, verification_level, trust_score, completed_deals')
+      .eq('user_id', session.user.id)
+      .single(),
+    getFarms(session.user.id),
+    getCrops(session.user.id),
+  ]);
 
-  const n = farms.length;
+  const p = profileRes.data ?? {} as any;
+  const level: VerificationLevel = p.verification_level ?? 'grey';
+  const trust = p.trust_score ?? 50;
+  const deals = p.completed_deals ?? 0;
+
+  const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
+    growing:   { color: '#059669', bg: '#D1FAE5' },
+    harvested: { color: '#0284C7', bg: '#DBEAFE' },
+    planted:   { color: '#D97706', bg: '#FEF3C7' },
+  };
+
   return (
-    <div className="min-h-screen bg-soil pb-24">
-      <main className="max-w-lg mx-auto px-4 pt-4 space-y-4">
-        <h1 className="text-xl font-bold text-cream" style={{ fontFamily: 'var(--font-headline)' }}>Profile</h1>
+    <div className="space-y-5 max-w-2xl mx-auto">
+      <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        My Profile
+      </h1>
 
-        {/* Personal Info */}
-        <Card>
-          <CardHeader title="Personal Info" />
-          <div className="space-y-2 text-sm">
-            <div>
-              <p className="text-cream/35 text-xs">Name</p>
-              <p className="text-cream">{profile?.full_name ?? '—'}</p>
+      {/* Identity card */}
+      <Card>
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-white shrink-0"
+              style={{ background: C.green }}
+            >
+              {p.full_name?.[0]?.toUpperCase() ?? 'F'}
             </div>
-            <div>
-              <p className="text-cream/35 text-xs">Phone</p>
-              <p className="text-cream">{profile?.phone_number ?? '—'}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <p className="text-lg font-black" style={{ color: C.text, letterSpacing: '-0.02em' }}>{p.full_name ?? '—'}</p>
+                <VerificationBadge level={level} size="sm" />
+              </div>
+              <p className="text-sm" style={{ color: C.muted }}>{p.phone_number ?? '—'} · {p.location ?? '—'}</p>
+              {p.primary_crop && (
+                <p className="text-xs mt-1" style={{ color: C.muted }}>Primary crop: <strong style={{ color: C.text, textTransform: 'capitalize' }}>{p.primary_crop}</strong></p>
+              )}
             </div>
-            <div>
-              <p className="text-cream/35 text-xs">District</p>
-              <p className="text-cream">{profile?.location ?? '—'}</p>
-            </div>
+            <TrustScore score={trust} deals={deals} size="sm" />
           </div>
-        </Card>
 
-        {/* My Farms */}
-        <Card>
-          <CardHeader title={`My Farms (${n})`} subtitle={`${n} farm${n === 1 ? '' : 's'} registered`} />
-          {n === 0 ? (
-            <p className="text-cream/30 text-sm py-2">No farms yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {farms.map((f: any) => (
-                <div key={f.id} className="flex justify-between py-2 px-1 border-b border-surface2/60 last:border-none text-sm">
-                  <span className="text-cream/70">{f.name}</span>
-                  <span className="text-cream font-mono">{f.size_hectares ? `${f.size_hectares} ha` : 'N/A'}</span>
-                </div>
-              ))}
-            </div>
+          {/* Verify CTA */}
+          {level !== 'gold' && (
+            <Link
+              href="/farmer/verify"
+              style={{
+                display: 'block', marginTop: 16, padding: '10px 16px',
+                background: '#F0FDF4', border: '1px solid #A7F3D0',
+                borderRadius: 10, textDecoration: 'none', textAlign: 'center',
+              }}
+            >
+              <p className="text-sm font-bold" style={{ color: C.green, margin: 0 }}>
+                {level === 'grey' ? '🔒 Get verified to unlock deals & financing →' : '⬆ Upgrade your verification →'}
+              </p>
+            </Link>
           )}
-        </Card>
+        </div>
+      </Card>
 
-        {/* Crop History */}
-        <Card>
-          <CardHeader title="Crop History" />
-          {cycles.length === 0 ? (
-            <p className="text-cream/30 text-sm py-2">No crops tracked yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {cycles.map((c: any) => (
-                <div key={c.id} className="flex flex-wrap justify-between items-center gap-2 py-2 px-1 border-b border-surface2/60 last:border-none text-sm">
-                  <div>
-                    <p className="text-cream font-semibold capitalize">{c.crop_name}</p>
-                    <p className="text-[11px] text-cream/30">{c.status}</p>
-                  </div>
-                  <Badge variant="neutral">{c.status}</Badge>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        {/* Notifications Settings */}
-        <Card>
-          <CardHeader title="Notification Settings" />
-          {['rain','price','pest','offer'].map(type => (
-            <div key={type} className="flex items-center justify-between py-2 text-sm border-b border-surface2/60 last:border-none">
-              <span className="text-cream/70 capitalize">{type} alerts</span>
-              <Tgl on />
+      {/* Personal details */}
+      <Card>
+        <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+          <p className="text-sm font-bold" style={{ color: C.text }}>Personal Information</p>
+        </div>
+        <div className="divide-y" style={{ borderColor: C.border }}>
+          {[
+            { label: 'Full Name',   value: p.full_name },
+            { label: 'Phone',       value: p.phone_number },
+            { label: 'District',    value: p.location },
+            { label: 'Primary Crop', value: p.primary_crop },
+            { label: 'Role',        value: p.role },
+          ].map(({ label, value }) => (
+            <div key={label} className="px-5 py-3 flex items-center justify-between">
+              <p className="text-sm" style={{ color: C.muted }}>{label}</p>
+              <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>{value ?? '—'}</p>
             </div>
           ))}
-        </Card>
-      </main>
-    </div>
-  );
-}
+        </div>
+      </Card>
 
-function Tgl({ on }: { on: boolean }) {
-  return (
-    <button
-      role="switch"
-      aria-checked={on}
-      className={`w-11 h-[26px] rounded-full transition-colors ${on ? 'bg-sprout' : 'bg-surface2'}`}
-    >
-      <span
-        className={`block h-[20px] w-[20px] bg-cream rounded-full shadow-sm transition-transform ${on ? 'translate-x-5.5' : 'translate-x-0.5'}`}
-        style={{ transform: on ? 'translateX(22px)' : 'translateX(2px)' }}
-      />
-    </button>
+      {/* My farms */}
+      <Card>
+        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+          <p className="text-sm font-bold" style={{ color: C.text }}>My Farms ({farms.length})</p>
+          <Link href="/farmer/farm" className="text-xs font-semibold" style={{ color: '#40916C', textDecoration: 'none' }}>Manage →</Link>
+        </div>
+        {farms.length === 0 ? (
+          <div className="px-5 py-8 text-center">
+            <p className="text-3xl mb-2">🌱</p>
+            <p className="text-sm" style={{ color: C.muted }}>No farms registered yet</p>
+            <Link href="/farmer/farm" className="text-xs font-semibold mt-2 inline-block" style={{ color: '#40916C', textDecoration: 'none' }}>Add your first farm →</Link>
+          </div>
+        ) : (
+          <div className="divide-y" style={{ borderColor: C.border }}>
+            {farms.map((f: any) => (
+              <div key={f.id} className="px-5 py-3 flex items-center justify-between">
+                <p className="text-sm font-semibold" style={{ color: C.text }}>{f.name}</p>
+                <p className="text-sm font-bold" style={{ color: '#40916C' }}>
+                  {f.size_hectares ? `${f.size_hectares} ha` : '—'}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Recent crops */}
+      {crops.length > 0 && (
+        <Card>
+          <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+            <p className="text-sm font-bold" style={{ color: C.text }}>Crop History</p>
+          </div>
+          <div className="divide-y" style={{ borderColor: C.border }}>
+            {crops.map((c: any) => {
+              const sc = STATUS_COLORS[c.status?.toLowerCase()] ?? { color: C.muted, bg: '#F3F4F6' };
+              return (
+                <div key={c.id} className="px-5 py-3 flex items-center justify-between">
+                  <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>{c.crop_name}</p>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: sc.bg, color: sc.color }}>
+                    {c.status}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 }

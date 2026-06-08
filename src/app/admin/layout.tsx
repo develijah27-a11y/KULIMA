@@ -4,12 +4,13 @@ import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
 
 const ADMIN_NAV = [
-  { href: '/admin/dashboard', icon: 'dashboard', label: 'Overview' },
-  { href: '/admin/users',     icon: 'users',     label: 'Users' },
-  { href: '/admin/prices',    icon: 'prices',    label: 'Prices' },
-  { href: '/admin/alert',     icon: 'alerts',    label: 'Alerts' },
-  { href: '/admin/buyers',    icon: 'buyers',    label: 'Buyers' },
-  { href: '/admin/analytics', icon: 'analytics', label: 'Analytics' },
+  { href: '/admin/dashboard',    icon: 'dashboard', label: 'Overview' },
+  { href: '/admin/users',        icon: 'users',     label: 'Users' },
+  { href: '/admin/verification', icon: 'verify',    label: 'KYC Queue' },
+  { href: '/admin/prices',       icon: 'prices',    label: 'Prices' },
+  { href: '/admin/alert',        icon: 'alerts',    label: 'Alerts' },
+  { href: '/admin/buyers',       icon: 'buyers',    label: 'Buyers' },
+  { href: '/admin/analytics',    icon: 'analytics', label: 'Analytics' },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

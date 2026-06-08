@@ -10,6 +10,7 @@ const FARMER_NAV = [
   { href: '/farmer/weather',     icon: 'weather',     label: 'Weather' },
   { href: '/farmer/doctor',      icon: 'doctor',      label: 'AI Doctor' },
   { href: '/farmer/farm',        icon: 'farm',        label: 'My Farm' },
+  { href: '/farmer/verify',      icon: 'verify',      label: 'Get Verified' },
   { href: '/farmer/profile',     icon: 'profile',     label: 'Profile' },
 ];
 
