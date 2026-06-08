@@ -7,6 +7,7 @@ const BUYER_NAV = [
   { href: '/buyer/dashboard', icon: 'dashboard', label: 'Dashboard' },
   { href: '/buyer/listings',  icon: 'listings',  label: 'Browse' },
   { href: '/buyer/offers',    icon: 'offers',    label: 'My Offers' },
+  { href: '/buyer/wallet',    icon: 'wallet',    label: 'Wallet' },
   { href: '/buyer/orders',    icon: 'orders',    label: 'Orders' },
   { href: '/buyer/prices',    icon: 'prices',    label: 'Prices' },
   { href: '/buyer/profile',   icon: 'profile',   label: 'Profile' },

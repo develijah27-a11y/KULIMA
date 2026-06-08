@@ -120,16 +120,25 @@ async function MyListings({ profileId, filter }: { profileId: string; filter: st
 
 async function ListingStats({ profileId }: { profileId: string }) {
   const supabase = await createClient();
-  const [activeRes, soldRes, offersRes] = await Promise.all([
-    (supabase.from as any)('listings').select('id', { count: 'exact', head: true }).eq('farmer_id', profileId).eq('status', 'active'),
-    (supabase.from as any)('listings').select('asking_price, quantity_kg').eq('farmer_id', profileId).eq('status', 'sold'),
-    (supabase.from as any)('offers').select('listing_id').eq('status', 'pending')
-      .in('listing_id', (await (supabase.from as any)('listings').select('id').eq('farmer_id', profileId)).data?.map((l: any) => l.id) ?? []),
+  // Fetch all listings once, derive active count + revenue in JS — avoids waterfall
+  const [allListingsRes, offersRes] = await Promise.all([
+    (supabase.from as any)('listings')
+      .select('id, status, asking_price, quantity_kg')
+      .eq('farmer_id', profileId),
+    (supabase.from as any)('offers')
+      .select('listing_id, status')
+      .eq('status', 'pending'),
   ]);
-  const revenue = (soldRes.data ?? []).reduce((s: number, l: any) => s + l.asking_price * l.quantity_kg, 0);
+  const allListings = allListingsRes.data ?? [];
+  const myIds = new Set(allListings.map((l: any) => l.id));
+  const activeCount = allListings.filter((l: any) => l.status === 'active').length;
+  const revenue = allListings
+    .filter((l: any) => l.status === 'sold')
+    .reduce((s: number, l: any) => s + l.asking_price * l.quantity_kg, 0);
+  const pendingOffers = (offersRes.data ?? []).filter((o: any) => myIds.has(o.listing_id)).length;
   const stats = [
-    { label: 'Active', value: activeRes.count ?? 0, color: '#059669', bg: '#D1FAE5' },
-    { label: 'Pending Offers', value: offersRes.data?.length ?? 0, color: '#D97706', bg: '#FEF3C7' },
+    { label: 'Active', value: activeCount, color: '#059669', bg: '#D1FAE5' },
+    { label: 'Pending Offers', value: pendingOffers, color: '#D97706', bg: '#FEF3C7' },
     { label: 'Revenue (sold)', value: revenue > 1e6 ? `${(revenue / 1e6).toFixed(1)}M` : revenue > 0 ? Math.round(revenue).toLocaleString() : '—', color: C.green, bg: '#F0FDF4', prefix: 'UGX ' },
   ];
   return (

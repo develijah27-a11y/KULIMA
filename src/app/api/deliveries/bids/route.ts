@@ -1,0 +1,79 @@
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+export async function POST(req: Request) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { delivery_id, vehicle_id, price, message } = await req.json();
+  if (!delivery_id || !vehicle_id || !price) {
+    return NextResponse.json({ error: 'delivery_id, vehicle_id, price required' }, { status: 400 });
+  }
+
+  // Verify transporter owns the vehicle
+  const { data: vehicle } = await (supabase.from as any)('vehicles').select('id').eq('id', vehicle_id).eq('user_id', session.user.id).single();
+  if (!vehicle) return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
+
+  const { data, error } = await (supabase.from as any)('delivery_bids').insert({
+    delivery_id,
+    transporter_id: session.user.id,
+    vehicle_id,
+    price,
+    message: message ?? null,
+    status: 'pending',
+  }).select('id').single();
+
+  if (error) {
+    if (error.code === '23505') return NextResponse.json({ error: 'You already submitted a bid for this delivery' }, { status: 409 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ success: true, bidId: data.id });
+}
+
+export async function PATCH(req: Request) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { bid_id, action } = await req.json();
+  if (!bid_id || !action) return NextResponse.json({ error: 'bid_id and action required' }, { status: 400 });
+
+  if (action === 'accept') {
+    // Only the delivery requester can accept a bid
+    const { data: bid } = await (supabase.from as any)('delivery_bids')
+      .select('*, delivery:delivery_requests(id, requester_id)')
+      .eq('id', bid_id)
+      .single();
+
+    if (!bid) return NextResponse.json({ error: 'Bid not found' }, { status: 404 });
+    if (bid.delivery?.requester_id !== session.user.id) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+
+    // Accept this bid, reject others, assign transporter
+    await Promise.all([
+      (supabase.from as any)('delivery_bids').update({ status: 'accepted' }).eq('id', bid_id),
+      (supabase.from as any)('delivery_bids').update({ status: 'rejected' }).eq('delivery_id', bid.delivery_id).neq('id', bid_id),
+      (supabase.from as any)('delivery_requests').update({
+        status: 'assigned',
+        transporter_id: bid.transporter_id,
+        assigned_vehicle_id: bid.vehicle_id,
+        agreed_price: bid.price,
+        updated_at: new Date().toISOString(),
+      }).eq('id', bid.delivery_id),
+    ]);
+
+    return NextResponse.json({ success: true });
+  }
+
+  if (action === 'withdraw') {
+    const { error } = await (supabase.from as any)('delivery_bids')
+      .update({ status: 'withdrawn' })
+      .eq('id', bid_id)
+      .eq('transporter_id', session.user.id)
+      .eq('status', 'pending');
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  }
+
+  return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
+}

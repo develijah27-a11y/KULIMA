@@ -1,0 +1,53 @@
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+import Link from 'next/link';
+import { RequestDeliveryForm } from './RequestDeliveryForm';
+
+const C = {
+  text: '#1A1A1A', muted: '#6B7280', cardBg: '#FFFFFF',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+};
+
+export default async function RequestDeliveryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ offerId?: string }>;
+}) {
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) redirect('/auth/signin');
+
+  const { offerId } = await searchParams;
+
+  // Pre-fill from an accepted offer
+  let prefilledOffer: { id: string; crop_type: string; quantity_kg: number; district: string } | null = null;
+
+  if (offerId) {
+    const { data } = await (supabase.from as any)('offers')
+      .select('id, listing:listings(crop_type, quantity_kg, district)')
+      .eq('id', offerId)
+      .eq('buyer_id', session.user.id)
+      .eq('status', 'accepted')
+      .single();
+
+    if (data?.listing) {
+      prefilledOffer = { id: data.id, crop_type: data.listing.crop_type, quantity_kg: data.listing.quantity_kg, district: data.listing.district };
+    }
+  }
+
+  return (
+    <div className="max-w-xl mx-auto space-y-5">
+      <div>
+        <Link href="/buyer/offers" style={{ color: C.muted, fontSize: 13, textDecoration: 'none' }}>← My Offers</Link>
+        <h1 className="text-xl font-black mt-2" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Request Delivery
+        </h1>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>Find a transporter for your goods</p>
+      </div>
+
+      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
+        <RequestDeliveryForm prefilledOffer={prefilledOffer} />
+      </div>
+    </div>
+  );
+}

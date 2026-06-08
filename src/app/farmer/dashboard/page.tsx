@@ -1,8 +1,14 @@
 import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { fetchWeatherForFarmer } from '@/lib/weather-server';
+import { fetchWeatherForFarmer, type ServerWeatherData } from '@/lib/weather-server';
 import { buildSeasonalPlan, generateDiseaseAlerts, type InsightSeverity } from '@/lib/agri-intel';
+import { generatePlantingAlerts } from '@/lib/planting-calendar';
+
+// Deduplicate weather fetch across WeatherCard + WeatherForecast components in same render
+const getWeatherCached = cache(async (lat: number, lon: number): Promise<ServerWeatherData> => {
+  return fetchWeatherForFarmer(lat, lon);
+});
 
 // ─── Shared cached fetchers ───────────────────────────────────────────────────
 
@@ -77,7 +83,7 @@ async function WeatherCard({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
   const lat: number = profile?.latitude ?? 0.3476;
   const lon: number = profile?.longitude ?? 32.5825;
-  const weather = await fetchWeatherForFarmer(lat, lon);
+  const weather = await getWeatherCached(lat, lon);
   const ICON: Record<string, string> = {
     '01d': '☀️', '01n': '🌙', '02d': '⛅', '03d': '☁️', '04d': '☁️',
     '09d': '🌧️', '10d': '🌦️', '11d': '⛈️', '13d': '❄️', '50d': '🌫️',
@@ -355,7 +361,7 @@ async function WeatherForecast({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
   const lat = profile?.latitude ?? 0.3476;
   const lon = profile?.longitude ?? 32.5825;
-  const weather = await fetchWeatherForFarmer(lat, lon);
+  const weather = await getWeatherCached(lat, lon);
 
   const ICON: Record<string, string> = {
     '01d': '☀️', '02d': '⛅', '03d': '☁️', '04d': '☁️',
@@ -573,6 +579,68 @@ async function DiseasePanel({ userId }: { userId: string }) {
   );
 }
 
+// ─── Planting Alerts widget ───────────────────────────────────────────────────
+
+async function PlantingAlertsWidget({ userId }: { userId: string }) {
+  const supabase = await createClient();
+  const profile = await getProfile(userId);
+  const farmsRes = await (supabase.from as any)('farms')
+    .select('crop_types').eq('user_id', userId).eq('is_active', true);
+
+  const farmCrops: string[] = (farmsRes.data ?? []).flatMap((f: any) => f.crop_types ?? []);
+  if (profile?.primary_crop) farmCrops.push(profile.primary_crop);
+  const farmerCrops = [...new Set(farmCrops)];
+
+  const now = new Date();
+  const alerts = generatePlantingAlerts(now.getMonth(), now.getDate(), farmerCrops);
+  if (alerts.length === 0) return null;
+
+  const URGENCY: Record<string, { bg: string; color: string; border: string }> = {
+    high:   { bg: '#FEF2F2', color: '#E63946', border: '#FECACA' },
+    medium: { bg: '#FFFBEB', color: '#D97706', border: '#FDE68A' },
+    low:    { bg: '#F0FDF4', color: '#059669', border: '#BBF7D0' },
+  };
+
+  return (
+    <Card>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <div>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            Planting Alerts
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>
+            {alerts.length} alert{alerts.length !== 1 ? 's' : ''} for your crops
+          </p>
+        </div>
+        <a href="/farmer/planting" className="text-xs font-semibold" style={{ color: C.greenMed }}>View calendar →</a>
+      </div>
+      <div className="divide-y" style={{ borderColor: C.border }}>
+        {alerts.slice(0, 3).map((alert, i) => {
+          const cfg = URGENCY[alert.urgency];
+          return (
+            <div key={i} className="px-5 py-3.5 flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
+                style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+                {alert.emoji}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                  <p className="text-sm font-bold" style={{ color: C.text }}>{alert.title}</p>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ background: cfg.bg, color: cfg.color }}>
+                    {alert.urgency.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-xs leading-snug" style={{ color: C.muted }}>{alert.message}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
 // ─── Quick actions ────────────────────────────────────────────────────────────
 
 function QuickActions() {
@@ -657,6 +725,11 @@ export default async function FarmerDashboardPage() {
           <DiseasePanel userId={userId} />
         </Suspense>
       </div>
+
+      {/* 5b · Planting alerts */}
+      <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
+        <PlantingAlertsWidget userId={userId} />
+      </Suspense>
 
       {/* 6 · Finance overview */}
       <Suspense fallback={<div className="dash-skeleton h-40 rounded-xl" />}>

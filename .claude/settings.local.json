@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\PwezaCore\\\\Desktop\\\\KULIMA\\\\src\\\\app\\\\farmer\\\\planting\")",
+      "Bash(Out-Null)"
+    ]
+  }
+}

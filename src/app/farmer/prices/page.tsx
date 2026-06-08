@@ -1,210 +1,350 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { unstable_cache } from 'next/cache';
-import { Card, CardHeader } from '@/components/ui/Card';
-import { PriceTag } from '@/components/ui/PriceTag';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { DISTRICT_NAMES } from '@/lib/districts';
 
-const WEATHER_EMOJI: Record<string, string> = {
-  '01d': '☀️','01n': '🌙','02d': '🌤','02n': '🌤','03d': '⛅','03n': '⛅',
-  '04d': '☁️','04n': '☁️','09d': '🌦','10d': '🌧️','11d': '⛈️','13d': '❄️','50d': '🌫️',
+const C = {
+  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB', cardBg: '#FFFFFF',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
 };
 
-const cropEmojis: Record<string, string> = {
-  maize: '🌽', beans: '🥜', tomatoes: '🍅', cassava: '🍠', rice: '🍚',
-  coffee: '☕', groundnuts: '🥜', sweet_potatoes: '🍠', bananas: '🍌', sunflower: '🌻',
+const CROP_EMOJI: Record<string, string> = {
+  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
+  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
+  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
 };
 
-async function getCachedPrices() {
-  const supabase = await import('@/lib/supabase/server').then((m) => m.createClient());
-  const { data } = await supabase
-    .from('market_prices')
-    .select('*')
-    .gte('recorded_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-    .order('recorded_at', { ascending: false });
-  return data ?? [];
+const CROP_COLOR: Record<string, string> = {
+  maize: '#D97706', beans: '#DC2626', coffee: '#7C3AED', rice: '#0284C7',
+  banana: '#B45309', cassava: '#059669', tomato: '#DC2626',
+  sorghum: '#D97706', groundnuts: '#B45309', sweet_potatoes: '#D97706', sunflower: '#B45309',
+};
+
+function demandLabel(bidsPerListing: number): { label: string; color: string; bg: string } {
+  if (bidsPerListing >= 3)  return { label: 'High Demand', color: '#DC2626', bg: '#FEF2F2' };
+  if (bidsPerListing >= 1.5) return { label: 'Rising',     color: '#D97706', bg: '#FFFBEB' };
+  if (bidsPerListing >= 0.5) return { label: 'Moderate',   color: '#0284C7', bg: '#DBEAFE' };
+  return                            { label: 'Low',         color: '#6B7280', bg: '#F3F4F6' };
 }
 
-function Sparkline({ prices }: { prices: { recorded_at: string; price_per_kg: number }[] }) {
-  const values = prices.map(p => p.price_per_kg);
-  if (values.length < 2) return null;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const w = 200, h = 40, pad = 4;
-  const pts = values.map((v, i) => {
-    const x = pad + (i / (values.length - 1)) * (w - pad * 2);
-    const y = h - pad - ((v - min) / range) * (h - pad * 2);
-    return `${x},${y}`;
-  });
-  const path = `M${pts.join(' L')}`;
-  const color = values.at(-1)! >= values[0]! ? '#7DB55A' : '#C4723A';
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-10" preserveAspectRatio="none">
-      <path d={path} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-export default async function PricesPage() {
+export default async function FarmerPricesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ district?: string; crop?: string }>;
+}) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) redirect('/auth/signin');
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
+  const sp       = await searchParams;
+  const district = sp.district ?? '';
+  const cropFilter = sp.crop ?? '';
 
-  const prices = await getCachedPrices();
-  const cropGroups: Record<string, any[]> = {};
-  prices.forEach((p: any) => { if (!cropGroups[p.crop_type]) cropGroups[p.crop_type] = []; cropGroups[p.crop_type].push(p); });
+  const [profileRes, pricesRes, demandRes, historyRes] = await Promise.all([
+    supabase.from('profiles').select('primary_crop, location').eq('user_id', session.user.id).single(),
+    // Current prices
+    (supabase.from as any)('market_prices')
+      .select('crop_type, price_per_kg, market_name, district, recorded_at')
+      .gte('recorded_at', new Date(Date.now() - 7 * 86400000).toISOString())
+      .order('recorded_at', { ascending: false })
+      .limit(300),
+    // Demand signals
+    (supabase.from as any)('crop_demand_signals').select('*'),
+    // Price history (30 days for trend)
+    (supabase.from as any)('market_prices')
+      .select('crop_type, price_per_kg, district, recorded_at')
+      .gte('recorded_at', new Date(Date.now() - 30 * 86400000).toISOString())
+      .order('recorded_at', { ascending: true })
+      .limit(500),
+  ]);
 
-  const cropList = Object.entries(cropGroups).map(([crop, ps]) => {
-    const sorted = [...ps].sort((a: any, b: any) => new Date(b.recorded_at).getTime() - new Date(a.recorded_at).getTime());
-    const latest = sorted[0];
-    const prev = sorted[1];
-    const change = prev ? ((latest.price_per_kg - prev.price_per_kg) / prev.price_per_kg) * 100 : 0;
-    return { cropType: crop, pricePerKg: latest.price_per_kg, marketName: latest.market_name, changePercent: +change.toFixed(2), history: sorted.slice(0, 7).reverse() };
+  const primaryCrop = profileRes.data?.primary_crop ?? 'maize';
+  const allPrices   = pricesRes.data ?? [];
+  const demand      = demandRes.data ?? [];
+  const history     = historyRes.data ?? [];
+
+  // Build demand map
+  const demandMap: Record<string, { offer_count: number; bids_per_listing: number }> = {};
+  demand.forEach((d: any) => {
+    demandMap[d.crop_type] = {
+      offer_count: Number(d.offer_count_30d) ?? 0,
+      bids_per_listing: parseFloat(d.bids_per_listing) || 0,
+    };
   });
 
-  const selectedCrop = profile?.primary_crop ?? 'maize';
-  const featured = cropList.find(c => c.cropType === selectedCrop) ?? cropList[0];
+  // Filter prices by selected district
+  const filteredPrices = district
+    ? allPrices.filter((p: any) => p.district === district)
+    : allPrices;
+
+  // Group by crop: one entry per crop (latest price for selected district or national)
+  const cropMap: Record<string, { price: number; market: string; district: string }> = {};
+  for (const p of filteredPrices) {
+    const crop = p.crop_type?.toLowerCase();
+    if (!crop) continue;
+    if (cropFilter && crop !== cropFilter) continue;
+    if (!cropMap[crop]) {
+      cropMap[crop] = { price: p.price_per_kg, market: p.market_name, district: p.district ?? 'National' };
+    }
+  }
+
+  // National averages
+  const nationalAvg: Record<string, number[]> = {};
+  for (const p of allPrices) {
+    const k = p.crop_type?.toLowerCase();
+    if (k) { if (!nationalAvg[k]) nationalAvg[k] = []; nationalAvg[k].push(p.price_per_kg); }
+  }
+  const avgMap: Record<string, number> = {};
+  for (const [c, vals] of Object.entries(nationalAvg)) {
+    avgMap[c] = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  }
+
+  // Price trend per crop (latest vs 30 days ago)
+  const trendMap: Record<string, number> = {};
+  const historyGroups: Record<string, number[]> = {};
+  for (const h of history) {
+    const k = h.crop_type?.toLowerCase();
+    if (k) { if (!historyGroups[k]) historyGroups[k] = []; historyGroups[k].push(h.price_per_kg); }
+  }
+  for (const [crop, vals] of Object.entries(historyGroups)) {
+    if (vals.length >= 2) {
+      trendMap[crop] = Math.round(((vals[vals.length - 1] - vals[0]) / vals[0]) * 100);
+    }
+  }
+
+  // District price comparison for selected crop
+  const districtCompare: Array<{ district: string; price: number }> = [];
+  if (cropFilter) {
+    const distMap: Record<string, number> = {};
+    for (const p of allPrices) {
+      if (p.crop_type?.toLowerCase() === cropFilter && p.district && !distMap[p.district]) {
+        distMap[p.district] = p.price_per_kg;
+      }
+    }
+    for (const [d, price] of Object.entries(distMap)) {
+      districtCompare.push({ district: d, price });
+    }
+    districtCompare.sort((a, b) => b.price - a.price);
+  }
+
+  // High-demand crops sorted by demand
+  const cropEntries = Object.entries(cropMap).sort(([a], [b]) => {
+    const da = demandMap[a]?.offer_count ?? 0;
+    const db = demandMap[b]?.offer_count ?? 0;
+    if (a === primaryCrop) return -1;
+    if (b === primaryCrop) return 1;
+    return db - da;
+  });
+
+  // Top 3 high-demand crops
+  const hotCrops = [...demand]
+    .sort((a: any, b: any) => (b.offer_count_30d ?? 0) - (a.offer_count_30d ?? 0))
+    .slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-soil pb-24">
-      <main className="max-w-lg mx-auto px-4 pt-4 space-y-4">
-
-        {/* Filter chips */}
-        <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Crop filter">
-          {['All Crops','My Crops','Seeds','Fertilizer','Tools'].map(chip => (
-            <button
-              key={chip}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-                chip === 'All Crops'
-                  ? 'bg-sprout text-soil'
-                  : 'bg-surface2 text-cream/60'
-              }`}
-            >
-              {chip}
-            </button>
-          ))}
+    <div className="max-w-3xl mx-auto space-y-5">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            Market Prices
+          </h1>
+          <p className="text-sm mt-1" style={{ color: C.muted }}>
+            Live prices across Uganda districts
+          </p>
         </div>
+        <Link href="/farmer/planting" style={{ padding: '8px 14px', background: '#F0FDF4', color: C.greenMed, borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+          🌱 Planting Plan →
+        </Link>
+      </div>
 
-        {/* Featured crop hero */}
-        {featured && (
-          <Card variant="elevated" className="text-center py-7">
-            <span className="text-6xl" role="img">{cropEmojis[featured.cropType] ?? '🌾'}</span>
-            <p className="mt-2 text-lg font-bold text-cream capitalize" style={{ fontFamily: 'var(--font-headline)' }}>
-              {featured.cropType.replace('_',' ')}
-            </p>
-            <p className="text-xs text-cream/35">{featured.marketName} · Best today</p>
-            <PriceTag value={featured.pricePerKg} size="lg" className="mt-3 justify-center" />
-            {featured.history.length > 0 && (
-              <div className="mt-4 mx-4 rounded-lg overflow-hidden bg-surface2">
-                <Sparkline prices={featured.history.map(h => ({ recorded_at: h.recorded_at, price_per_kg: h.price_per_kg }))} />
-              </div>
-            )}
-            <div className="mt-4 flex justify-center gap-3 text-xs">
-              <span className="text-cream/35">My crop: {cropEmojis[selectedCrop] ?? '🌾'} {selectedCrop}</span>
-              <span className={`font-bold ${featured.changePercent >= 0 ? 'text-sprout' : 'text-clay'}`}>
-                {featured.changePercent >= 0 ? '+' : ''}{featured.changePercent}% today
-              </span>
-            </div>
-          </Card>
-        )}
-
-        {/* Market comparison */}
-        <Card>
-          <CardHeader title="Market Comparison" subtitle="Best prices across markets today" />
-          <div className="overflow-x-auto mt-2">
-            <table className="w-full text-xs" role="grid">
-              <thead>
-                <tr className="border-b border-surface2 text-cream/35">
-                  <th className="text-left py-2 px-2 font-semibold">Market</th>
-                  <th className="text-right py-2 px-2 font-semibold">Price/kg</th>
-                  <th className="text-right py-2 px-2 font-semibold">Change</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cropList
-                  .filter((c) => c.cropType === (featured?.cropType ?? 'maize'))
-                  .sort((a, b) => b.pricePerKg - a.pricePerKg)
-                  .map((c) => {
-                    const isBest = c === featured;
-                    return (
-                      <tr key={c.marketName} className="border-b border-surface2/50 last:border-none">
-                        <td className="py-2 px-2 text-cream/70 flex items-center gap-1.5">
-                          {isBest && <Badge variant="green">BEST</Badge>}
-                          {c.marketName}
-                        </td>
-                        <td className="text-right py-2 px-2">
-                          <PriceTag value={c.pricePerKg} size="sm" />
-                        </td>
-                        <td className={`text-right py-2 px-2 font-mono text-xs ${c.changePercent >= 0 ? 'text-sprout' : 'text-clay'}`}>
-                          {c.changePercent >= 0 ? '+' : ''}{c.changePercent.toFixed(1)}%
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        {/* Negotiation helper */}
-        {featured && (
-          <Card variant="surface" className="border-harvest/20">
-            <p className="text-xs font-semibold text-harvest mb-1">💬 Negotiation Tip</p>
-            <p className="text-xs text-cream/55 leading-relaxed">
-              Current {featured.marketName} price: <strong className="text-harvest">UGX {Math.round(featured.pricePerKg).toLocaleString()}/kg</strong>.
-              {' '}Counter at{' '}
-              <strong className="text-harvest">UGX {Math.round(featured.pricePerKg * 0.93).toLocaleString()}/kg</strong> minimum
-              {' '}(7% below market — still fair).
-            </p>
-          </Card>
-        )}
-
-        {/* All crops list */}
-        <Card>
-          <CardHeader title="All Crops" subtitle="Today's latest prices across markets" />
-          <div className="space-y-1.5">
-            {cropList.map((c) => (
-              <div key={c.cropType} className="flex items-center justify-between py-2 px-1 rounded-lg hover:bg-soil/40 transition-colors">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">{cropEmojis[c.cropType] ?? '🌾'}</span>
-                  <span className="text-sm font-semibold text-cream capitalize">
-                    {c.cropType.replace('_',' ')}
-                  </span>
-                </div>
-                <PriceTag value={c.pricePerKg} size="sm" />
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Seed & Input tab */}
-        <Card>
-          <CardHeader title="Seeds & Inputs" subtitle="Current input prices near you" />
-          <div className="space-y-2">
-            {[
-              { name: 'H614D Maize Seed 2kg', brand: 'Mukono Seeds', price: 8500, unit: '2kg bag', dealer: 'Agro-Kampala' },
-              { name: 'DAP Fertilizer 50kg', brand: 'Makerere Agro', price: 125000, unit: '50kg bag', dealer: 'Nakasero Agrovet' },
-              { name: 'Emamectin Benzoate', brand: 'Syngenta', price: 15000, unit: '100ml', dealer: 'Bugema Agrovet' },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center justify-between py-2 px-3 rounded-xl bg-surface2">
+      {/* Hot crops demand alert */}
+      {hotCrops.length > 0 && (
+        <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 16, padding: '16px 20px' }}>
+          <p style={{ color: '#52B788', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>
+            🔥 High Buyer Demand (Last 30 Days)
+          </p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {hotCrops.map((d: any) => (
+              <a
+                key={d.crop_type}
+                href={`/farmer/prices?crop=${d.crop_type}`}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'rgba(255,255,255,0.12)', borderRadius: 8, textDecoration: 'none' }}
+              >
+                <span style={{ fontSize: 18 }}>{CROP_EMOJI[d.crop_type] ?? '🌾'}</span>
                 <div>
-                  <p className="text-sm font-semibold text-cream">{item.name}</p>
-                  <p className="text-[11px] text-cream/35">{item.brand} · {item.dealer}</p>
+                  <p style={{ color: '#fff', fontWeight: 700, fontSize: 12, margin: 0, textTransform: 'capitalize' }}>{d.crop_type}</p>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, margin: 0 }}>{d.offer_count_30d} offers · UGX {Math.round(d.avg_asked || d.avg_offered_price || 0).toLocaleString()}/kg avg bid</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-mono font-bold text-harvest">UGX {item.price.toLocaleString()}</p>
-                  <p className="text-[10px] text-cream/30">{item.unit}</p>
-                </div>
-              </div>
+              </a>
             ))}
           </div>
-        </Card>
-      </main>
+        </div>
+      )}
+
+      {/* Filters */}
+      <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
+        <form method="get" action="/farmer/prices" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div style={{ flex: 1, minWidth: 160 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>District</label>
+            <select name="district" defaultValue={district}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: '#fff', color: district ? C.text : C.muted }}>
+              <option value="">All Uganda</option>
+              {DISTRICT_NAMES.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div style={{ flex: 1, minWidth: 140 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Crop</label>
+            <select name="crop" defaultValue={cropFilter}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', background: '#fff', color: cropFilter ? C.text : C.muted }}>
+              <option value="">All Crops</option>
+              {Object.keys(CROP_EMOJI).map(c => <option key={c} value={c} style={{ textTransform: 'capitalize' }}>{c.replace(/_/g,' ')}</option>)}
+            </select>
+          </div>
+          <button type="submit" style={{ padding: '8px 18px', background: C.green, color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer', height: 38 }}>
+            Filter
+          </button>
+          {(district || cropFilter) && (
+            <a href="/farmer/prices" style={{ padding: '8px 14px', background: '#F3F4F6', color: C.muted, borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', height: 38, display: 'flex', alignItems: 'center' }}>
+              Clear
+            </a>
+          )}
+        </form>
+      </div>
+
+      {/* District comparison for selected crop */}
+      {cropFilter && districtCompare.length > 0 && (
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 20 }}>
+          <p className="text-sm font-bold mb-3" style={{ color: C.text }}>
+            {CROP_EMOJI[cropFilter] ?? '🌾'} {cropFilter.replace(/_/g,' ')} prices across districts
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {districtCompare.map((d, i) => {
+              const maxPrice = districtCompare[0].price;
+              const pct = Math.round((d.price / maxPrice) * 100);
+              const isBest = i === 0;
+              return (
+                <div key={d.district} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: C.text, width: 100, flexShrink: 0 }}>{d.district}</p>
+                  <div style={{ flex: 1, background: '#F3F4F6', borderRadius: 999, height: 8, overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: isBest ? C.greenMed : '#B7D9C5', borderRadius: 999 }} />
+                  </div>
+                  <p style={{ fontSize: 12, fontWeight: 800, color: isBest ? C.greenMed : C.text, width: 80, textAlign: 'right', flexShrink: 0 }}>
+                    UGX {Math.round(d.price).toLocaleString()}
+                  </p>
+                  {isBest && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#D1FAE5', color: '#059669', flexShrink: 0 }}>BEST</span>}
+                </div>
+              );
+            })}
+          </div>
+          {districtCompare.length > 1 && (
+            <p style={{ fontSize: 11, color: C.muted, marginTop: 10 }}>
+              💡 Sell in {districtCompare[0].district} for UGX {Math.round(districtCompare[0].price - districtCompare[districtCompare.length - 1].price).toLocaleString()}/kg more than the lowest market.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Main price list */}
+      {cropEntries.length === 0 ? (
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '40px 24px', textAlign: 'center' }}>
+          <p style={{ fontSize: 40, marginBottom: 10 }}>📊</p>
+          <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>No prices found for this filter</p>
+          <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Try selecting a different district or clear the filter</p>
+        </div>
+      ) : (
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
+          <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p className="text-sm font-bold" style={{ color: C.text }}>
+              {district ? `${district} Prices` : 'All Uganda Prices'}
+            </p>
+            <p style={{ fontSize: 11, color: C.muted }}>{cropEntries.length} crops · Updated today</p>
+          </div>
+
+          <div className="divide-y" style={{ borderColor: C.border }}>
+            {cropEntries.map(([crop, info]) => {
+              const color   = CROP_COLOR[crop] ?? C.greenMed;
+              const emoji   = CROP_EMOJI[crop] ?? '🌾';
+              const nat     = avgMap[crop];
+              const trend   = trendMap[crop];
+              const dm      = demandMap[crop];
+              const isPrimary = crop === primaryCrop;
+              const vsNational = nat ? Math.round(((info.price - nat) / nat) * 100) : null;
+              const demandBadge = dm ? demandLabel(dm.bids_per_listing) : null;
+
+              return (
+                <a
+                  key={crop}
+                  href={`/farmer/prices?${district ? `district=${district}&` : ''}crop=${crop}`}
+                  style={{ display: 'block', padding: '14px 20px', textDecoration: 'none', background: isPrimary ? '#F0FDF4' : 'transparent' }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+                      {emoji}
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, textTransform: 'capitalize' }}>
+                          {crop.replace(/_/g, ' ')}
+                        </p>
+                        {isPrimary && (
+                          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#D1FAE5', color: '#059669' }}>YOUR CROP</span>
+                        )}
+                        {demandBadge && dm && dm.offer_count > 0 && (
+                          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: demandBadge.bg, color: demandBadge.color }}>
+                            {demandBadge.label}
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
+                        {info.market} · {info.district}
+                        {dm && dm.offer_count > 0 && ` · ${dm.offer_count} buyers active`}
+                      </p>
+                    </div>
+
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <p style={{ fontSize: 16, fontWeight: 800, color, margin: '0 0 2px', letterSpacing: '-0.02em' }}>
+                        UGX {Math.round(info.price).toLocaleString()}
+                      </p>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                        {trend !== null && (
+                          <span style={{ fontSize: 10, fontWeight: 700, color: trend >= 0 ? '#059669' : '#DC2626' }}>
+                            {trend >= 0 ? '↑' : '↓'}{Math.abs(trend)}% (30d)
+                          </span>
+                        )}
+                        {vsNational !== null && !district && (
+                          <span style={{ fontSize: 10, color: C.muted }}>avg: {Math.round(nat!).toLocaleString()}</span>
+                        )}
+                        {vsNational !== null && district && (
+                          <span style={{ fontSize: 10, fontWeight: 600, color: vsNational >= 0 ? '#059669' : '#DC2626' }}>
+                            {vsNational >= 0 ? '+' : ''}{vsNational}% vs national
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Negotiation tip */}
+      <div style={{ background: '#F0FDF4', borderRadius: 14, padding: '14px 18px', border: '1px solid #A7F3D0' }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: C.greenMed, margin: '0 0 4px' }}>💡 Selling Tip</p>
+        <p style={{ fontSize: 12, color: '#065F46', lineHeight: 1.5, margin: 0 }}>
+          Buyers typically offer 10–20% below asking price. Set your listing price 15% above your minimum acceptable price to leave room to negotiate. Use the "Make Offer" feature to counter back.
+        </p>
+      </div>
+
+      {/* Admin link */}
+      <div style={{ textAlign: 'center' }}>
+        <Link href="/admin/prices" style={{ fontSize: 11, color: C.muted, textDecoration: 'none' }}>
+          Admin: Update market prices →
+        </Link>
+      </div>
     </div>
   );
 }

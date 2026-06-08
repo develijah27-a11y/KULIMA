@@ -1,157 +1,310 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
-import { WeatherCard, getDayLabel, weatherEmoji } from '@/components/farm/WeatherCard';
-import { PriceTicker } from '@/components/farm/PriceTicker';
-import { AlertList } from '@/components/farm/AlertItem';
-import { BottomSheet } from '@/components/ui/BottomSheet';
-import { Button } from '@/components/ui/Button';
-import Link from 'next/link';
+import { fetchWeatherForDistrict } from '@/lib/weather-server';
+import { DISTRICT_NAMES } from '@/lib/districts';
+import { getCurrentSeasonSummary, generatePlantingAlerts } from '@/lib/planting-calendar';
+import { WeatherDistrictSelector } from './WeatherDistrictSelector';
 
-const dayLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const C = {
+  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
+  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
+  amber: '#F4A261', red: '#E63946', blue: '#0077B6',
+  cardBg: '#FFFFFF', pageBg: '#F8FAF9',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+};
 
-export default async function WeatherPage() {
+const WEATHER_ICON: Record<string, string> = {
+  '01d': '☀️', '01n': '🌙', '02d': '⛅', '02n': '⛅',
+  '03d': '☁️', '03n': '☁️', '04d': '☁️', '04n': '☁️',
+  '09d': '🌧️', '09n': '🌧️', '10d': '🌦️', '10n': '🌦️',
+  '11d': '⛈️', '11n': '⛈️', '13d': '❄️', '50d': '🌫️',
+};
+
+const PHASE_COLOR: Record<string, { bg: string; color: string; label: string }> = {
+  planting: { bg: '#D1FAE5', color: '#059669', label: 'Planting Season' },
+  growing:  { bg: '#DBEAFE', color: '#0077B6', label: 'Growing Season' },
+  harvest:  { bg: '#FEF3C7', color: '#D97706', label: 'Harvest Season' },
+  dry:      { bg: '#F3F4F6', color: '#6B7280', label: 'Dry Season' },
+};
+
+const URGENCY_COLOR: Record<string, { bg: string; color: string }> = {
+  high:   { bg: '#FEE2E2', color: '#E63946' },
+  medium: { bg: '#FEF3C7', color: '#D97706' },
+  low:    { bg: '#F0FDF4', color: '#059669' },
+};
+
+function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+export default async function WeatherPage({
+  searchParams,
+}: {
+  searchParams: any;
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
+  const params = await searchParams;
+  const district = (params?.district as string) || 'Kampala';
 
-  const weatherApi = process.env.OPENWEATHER_API_KEY
-    ? `https://api.openweathermap.org/data/2.5/forecast?lat=${profile?.latitude ?? '0.3476'}&lon=${profile?.longitude ?? '32.5825'}&appid=${process.env.OPENWEATHER_API_KEY}&units=metric&cnt=40`
-    : null;
+  const [weather, profileRes] = await Promise.all([
+    fetchWeatherForDistrict(district),
+    supabase.from('profiles').select('primary_crop').eq('user_id', user.id).single(),
+  ]);
 
-  let current: any = null;
-  let forecast: any[] = [];
-  if (weatherApi) {
-    const res = await fetch(weatherApi);
-    const json = await res.json();
-    if (json.list) {
-      forecast = json.list.slice(0, 40);
-      current = { main: json.list[0].main, weather: [json.list[0].weather[0]] };
-    }
-  }
-
-  if (!current) {
-    // Demo fallback
-    current = { main: { temp: 27, humidity: 65 }, weather: [{ description: 'partly cloudy', icon: '02d' }] };
-    forecast = Array.from({ length: 14 }, (_, i) => ({
-      dt_txt: new Date(Date.now() + i * 3600 * 1000 * 24).toISOString(),
-      main: { temp: 26 + (i % 5), rain: i % 3 === 0 ? { '3h': 12 } : undefined },
-      weather: [{ icon: i % 4 === 0 ? '10d' : i < 3 ? '02d' : '01d' }],
-    }));
-  }
-
-  const currentTemp = Math.round(current?.main?.temp ?? 27);
-  const description = current?.weather?.[0]?.description ?? 'partly cloudy';
-  const iconCode = current?.weather?.[0]?.icon ?? '02d';
-  const humidity = current?.main?.humidity ?? 65;
-  const windSpeed = current?.wind?.speed ?? 3.2;
-  const rainProb = forecast.some((f: any) => f.pop > 0.6);
-
-  const dayForecast = Array.from({ length: 6 }, (_, i) => {
-    const fc = forecast[i * 8] ?? forecast[i];
-    const emoji = weatherEmoji[fc?.weather?.[0]?.icon ?? '02d'] ?? '🌤';
-    return { label: dayLabels[i + 1], emoji, temp: Math.round(fc?.main?.temp) };
-  });
-
-  const twoWeekForecast = Array.from({ length: 14 }, (_, i) => {
-    const fc = forecast[i * 8] ?? forecast[i];
-    const emoji = weatherEmoji[fc?.weather?.[0]?.icon ?? '02d'] ?? '🌤';
-    const rain = fc?.main?.rain?.['3h'] ? Math.min(100, Math.round((fc.main.rain['3h'] / 8) * 100)) : 0;
-    const temp = Math.round(fc?.main?.temp);
-    return { emoji, rain, temp, date: new Date(Date.now() + i * 86400000).toISOString() };
-  });
+  const primaryCrop = profileRes.data?.primary_crop ?? '';
+  const farmerCrops = primaryCrop ? [primaryCrop] : [];
+  const now = new Date();
+  const seasonSummary = getCurrentSeasonSummary(now.getMonth());
+  const plantingAlerts = generatePlantingAlerts(now.getMonth(), now.getDate(), farmerCrops);
+  const phaseStyle = PHASE_COLOR[seasonSummary.phase];
 
   return (
-    <div className="min-h-screen bg-soil pb-24">
-      <main className="max-w-lg mx-auto px-4 pt-4 space-y-4">
+    <div style={{ background: C.pageBg, minHeight: '100vh', paddingBottom: '24px' }}>
+      <div className="max-w-4xl mx-auto space-y-5">
 
-        <Card>
-          <p className="text-[11px] text-cream/35 font-semibold tracking-wider uppercase mb-4">Current Weather</p>
-          <div className="flex flex-col items-center py-2">
-            <span className="text-8xl leading-none" role="img">{weatherEmoji[iconCode] ?? '🌤'}</span>
-            <p
-              className="text-6xl font-extrabold text-cream mt-3 font-mono"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              {currentTemp}°
+        {/* Header row */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <h1 style={{ fontSize: '22px', fontWeight: 800, color: C.text, letterSpacing: '-0.03em', marginBottom: '2px' }}>
+              Weather & Forecast
+            </h1>
+            <p style={{ fontSize: '13px', color: C.muted }}>
+              Live conditions for {district} · {weather.source === 'fallback' ? 'Estimated' : 'Live data'}
             </p>
-            <p className="text-sm text-cream/50 capitalize">{description}</p>
-            {profile?.location && <p className="text-xs text-cream/30 mt-1">{profile.location}</p>}
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-xl bg-surface2 py-2">
-              <p className="text-[11px] text-cream/35">Humidity</p>
-              <p className="text-sm font-semibold text-cream">{humidity}%</p>
+          <WeatherDistrictSelector current={district} districts={DISTRICT_NAMES.sort()} />
+        </div>
+
+        {/* Current conditions */}
+        <Card>
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x" style={{ borderColor: C.border }}>
+            {/* Main temp */}
+            <div className="p-5 col-span-2 md:col-span-1">
+              <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+                Current Conditions
+              </p>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', marginBottom: '6px' }}>
+                <span style={{ fontSize: '52px', fontWeight: 900, color: C.text, letterSpacing: '-0.04em', lineHeight: 1 }}>
+                  {weather.now.temp}°
+                </span>
+                <span style={{ fontSize: '36px', marginBottom: '4px' }}>
+                  {WEATHER_ICON[weather.now.icon] ?? '🌤️'}
+                </span>
+              </div>
+              <p style={{ fontSize: '14px', color: C.muted, textTransform: 'capitalize', marginBottom: '4px' }}>
+                {weather.now.description}
+              </p>
+              <p style={{ fontSize: '12px', color: C.muted }}>
+                Feels like {weather.now.feelsLike}°C
+              </p>
             </div>
-            <div className="rounded-xl bg-surface2 py-2">
-              <p className="text-[11px] text-cream/35">Wind</p>
-              <p className="text-sm font-semibold text-cream">{windSpeed} m/s</p>
+
+            {/* Humidity */}
+            <div className="p-5">
+              <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Humidity</p>
+              <p style={{ fontSize: '32px', marginBottom: '4px' }}>💧</p>
+              <p style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>{weather.now.humidity}%</p>
+              <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
+                {weather.now.humidity > 80 ? 'High — disease risk' : weather.now.humidity > 60 ? 'Moderate' : 'Low — irrigation needed'}
+              </p>
             </div>
-            <div className="rounded-xl bg-surface2 py-2">
-              <p className="text-[11px] text-cream/35">Rain Chance</p>
-              <p className={`text-sm font-semibold ${rainProb ? 'text-blue-400' : 'text-sprout'}`}>
-                {rainProb ? 'HIGH' : 'Low'}
+
+            {/* Wind */}
+            <div className="p-5">
+              <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Wind</p>
+              <p style={{ fontSize: '32px', marginBottom: '4px' }}>💨</p>
+              <p style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>{weather.now.wind} m/s</p>
+              <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
+                {weather.now.wind > 8 ? 'Strong — delay spraying' : weather.now.wind > 4 ? 'Moderate' : 'Calm — good for spraying'}
+              </p>
+            </div>
+
+            {/* Precipitation */}
+            <div className="p-5">
+              <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Precipitation</p>
+              <p style={{ fontSize: '32px', marginBottom: '4px' }}>🌧️</p>
+              <p style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>{weather.now.precipitation.toFixed(1)} mm</p>
+              <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
+                {weather.now.precipitation > 10 ? 'Heavy rain' : weather.now.precipitation > 2 ? 'Light rain' : 'No significant rain'}
               </p>
             </div>
           </div>
         </Card>
 
-        {/* 6 Day forecast */}
-        <Card>
-          <p className="text-[11px] text-cream/35 font-semibold tracking-wider uppercase mb-3">6-Day Outlook</p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {dayForecast.map((d) => (
-              <div key={d.label} className="flex flex-col items-center gap-1 min-w-[52px] py-2 rounded-xl bg-surface2">
-                <span className="text-[10px] font-semibold text-cream/50">{d.label}</span>
-                <span className="text-2xl">{d.emoji}</span>
-                <span className="text-xs text-cream/70 font-mono">{d.temp}°</span>
+        {/* Season summary + top alerts */}
+        <div className="grid md:grid-cols-2 gap-5">
+          {/* Season card */}
+          <Card>
+            <div className="p-5">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Current Season</p>
+                <span style={{ fontSize: '11px', fontWeight: 700, padding: '3px 10px', borderRadius: '20px', background: phaseStyle.bg, color: phaseStyle.color }}>
+                  {phaseStyle.label}
+                </span>
               </div>
-            ))}
-          </div>
-        </Card>
+              <p style={{ fontSize: '18px', fontWeight: 800, color: C.text, marginBottom: '6px' }}>{seasonSummary.name}</p>
+              <p style={{ fontSize: '13px', color: C.muted, lineHeight: '1.5', marginBottom: '12px' }}>{seasonSummary.action}</p>
+              <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: '12px' }}>
+                <p style={{ fontSize: '12px', color: C.muted, marginBottom: '6px' }}>
+                  <strong style={{ color: C.text }}>Recommended crops:</strong> {seasonSummary.crops.join(', ')}
+                </p>
+                <p style={{ fontSize: '12px', color: C.greenMed, fontWeight: 600 }}>
+                  {seasonSummary.daysToNextSeason > 0
+                    ? `${seasonSummary.daysToNextSeason} days to ${seasonSummary.nextSeason}`
+                    : `${seasonSummary.nextSeason} starts now`}
+                </p>
+              </div>
+            </div>
+          </Card>
 
-        {/* 14 Day detailed */}
-        <Card>
-          <p className="text-[11px] text-cream/35 font-semibold tracking-wider uppercase mb-3">14-Day Forecast</p>
-          <div className="space-y-1">
-            {twoWeekForecast.map((d, i) => {
-              const date = new Date(d.date);
-              const label = `${dayLabels[date.getDay()]} ${date.getDate()}/${date.getMonth() + 1}`;
-              const rainBar = d.rain > 50 ? 'bg-blue-400' : 'bg-sprout';
-              const highlight = d.rain > 70 ? 'bg-blue-500/10' : '';
-              return (
-                <div key={i} className={`flex items-center gap-3 py-2 px-2 rounded-lg ${highlight}`}>
-                  <span className="text-[11px] font-semibold text-cream/50 w-16">{label}</span>
-                  <span className="text-lg">{d.emoji}</span>
-                  <div className="flex-1 bg-surface2 rounded-full h-2 overflow-hidden">
-                    <div className={`h-full rounded-full ${rainBar}`} style={{ width: `${d.rain}%` }} />
-                  </div>
-                  <span className="text-[11px] text-cream/50 font-mono w-10 text-right">{d.rain}%</span>
-                  <span className="text-xs text-cream/70 w-12 text-right font-mono">{d.temp}°C</span>
+          {/* Planting alerts */}
+          <Card>
+            <div className="p-5">
+              <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>
+                Planting Alerts
+              </p>
+              {plantingAlerts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <p style={{ fontSize: '28px', marginBottom: '8px' }}>📅</p>
+                  <p style={{ fontSize: '13px', color: C.muted }}>No urgent alerts</p>
+                  <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>Add crops to your profile for personalized alerts</p>
                 </div>
-              );
-            })}
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {plantingAlerts.slice(0, 3).map((alert, i) => {
+                    const urg = URGENCY_COLOR[alert.urgency];
+                    return (
+                      <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '10px', borderRadius: '10px', background: urg.bg }}>
+                        <span style={{ fontSize: '20px', flexShrink: 0 }}>{alert.emoji}</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: '13px', fontWeight: 700, color: C.text, marginBottom: '2px' }}>{alert.title}</p>
+                          <p style={{ fontSize: '11px', color: C.muted, lineHeight: '1.4' }}>{alert.message}</p>
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: urg.color, flexShrink: 0 }}>
+                          {alert.urgency.toUpperCase()}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {plantingAlerts.length > 3 && (
+                    <a href="/farmer/planting" style={{ fontSize: '12px', fontWeight: 600, color: C.greenMed, textDecoration: 'none', textAlign: 'center', paddingTop: '4px' }}>
+                      +{plantingAlerts.length - 3} more alerts →
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+
+        {/* 14-day forecast */}
+        <Card>
+          <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>14-Day Forecast</p>
+            <p style={{ fontSize: '12px', color: C.muted, marginTop: '2px' }}>Daily high/low, precipitation and farming conditions</p>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <div style={{ minWidth: '600px' }}>
+              {/* Header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '120px 48px 72px 72px 1fr 180px', gap: '0', padding: '8px 20px', borderBottom: `1px solid ${C.border}` }}>
+                {['Date', '', 'High/Low', 'Rain mm', 'Chance', 'Farming Note'].map((h, i) => (
+                  <p key={i} style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</p>
+                ))}
+              </div>
+              {weather.daily.map((day, i) => {
+                const probPct = day.precipProbability;
+                const barColor = probPct >= 70 ? C.blue : probPct >= 40 ? '#60A5FA' : '#BBF7D0';
+                const rowBg = day.precipMm > 10 ? '#EFF6FF' : day.farmingNote.includes('⚠️') ? '#FEF2F2' : 'transparent';
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '120px 48px 72px 72px 1fr 180px',
+                      gap: '0',
+                      padding: '10px 20px',
+                      borderBottom: i < weather.daily.length - 1 ? `1px solid ${C.border}` : 'none',
+                      background: rowBg,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <p style={{ fontSize: '13px', fontWeight: 600, color: C.text }}>{day.dayLabel}</p>
+                    <p style={{ fontSize: '22px' }}>{WEATHER_ICON[day.icon] ?? '🌤️'}</p>
+                    <div>
+                      <span style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>{day.high}°</span>
+                      <span style={{ fontSize: '12px', color: C.muted }}> / {day.low}°</span>
+                    </div>
+                    <p style={{ fontSize: '13px', fontWeight: probPct > 40 ? 700 : 400, color: probPct > 40 ? C.blue : C.muted }}>
+                      {day.precipMm > 0 ? `${day.precipMm}` : '—'}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ flex: 1, background: '#F3F4F6', borderRadius: '4px', height: '6px', overflow: 'hidden' }}>
+                        <div style={{ width: `${probPct}%`, height: '100%', background: barColor, borderRadius: '4px' }} />
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: C.muted, width: '34px', textAlign: 'right' }}>{probPct}%</span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: C.muted }}>{day.farmingNote}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </Card>
 
-        {/* Seasonal outlook */}
+        {/* Seasonal advisory */}
         <Card>
-          <p className="text-[11px] text-cream/35 font-semibold tracking-wider uppercase mb-3">Seasonal Outlook</p>
-          <div className="space-y-2">
-            {[
-              { season: 'First Rains 2025', onset: 'Mar 15', cessation: 'Jun 20', outlook: 'Above normal rainfall forecast. Good window for maize & beans.' },
-              { season: 'Second Rains 2025', onset: 'Sep 20', cessation: 'Dec 15', outlook: 'Normal rainfall expected. Good for sweet potatoes.' },
-            ].map((s, i) => (
-              <div key={i} className="p-3 rounded-xl bg-surface2 space-y-1">
-                <p className="text-sm font-semibold text-cream">{s.season}</p>
-                <p className="text-xs text-cream/40">{s.outlook}</p>
-              </div>
-            ))}
+          <div
+            style={{
+              padding: '20px',
+              background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)',
+              borderRadius: '12px',
+            }}
+          >
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#52B788', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+              Uganda Seasonal Rainfall Outlook
+            </p>
+            <p style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', marginBottom: '6px' }}>
+              Bi-Modal Rainfall Pattern
+            </p>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5', marginBottom: '16px' }}>
+              Uganda has two main rainy seasons. Season A (March–May) brings long rains ideal for maize and beans.
+              Season B (September–November) brings shorter rains suited for beans, sweet potato and tomatoes.
+              Northern Uganda has a single rainy season (April–October).
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {[
+                { season: 'Season A · Long Rains', months: 'Mar – May', crops: 'Maize, Beans, Groundnuts', icon: '🌱' },
+                { season: 'Season B · Short Rains', months: 'Sep – Nov', crops: 'Beans, Sweet Potato, Tomato', icon: '🫘' },
+              ].map((s) => (
+                <div key={s.season} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px' }}>
+                  <p style={{ fontSize: '20px', marginBottom: '6px' }}>{s.icon}</p>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', marginBottom: '2px' }}>{s.season}</p>
+                  <p style={{ fontSize: '12px', color: '#52B788', marginBottom: '4px' }}>{s.months}</p>
+                  <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>{s.crops}</p>
+                </div>
+              ))}
+            </div>
+            <a
+              href="/farmer/planting"
+              style={{
+                display: 'inline-block', marginTop: '16px', padding: '8px 16px',
+                background: '#52B788', color: '#1B4332', borderRadius: '8px',
+                fontSize: '13px', fontWeight: 700, textDecoration: 'none',
+              }}
+            >
+              View Full Planting Calendar →
+            </a>
           </div>
         </Card>
-      </main>
+
+      </div>
     </div>
   );
 }
