@@ -1,16 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
-
-const FarmMap = dynamic(() => import('./FarmMapClient').then(m => m.FarmMapClient), {
-  ssr: false,
-  loading: () => (
-    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0FDF4', borderRadius: 12 }}>
-      <p style={{ color: '#40916C', fontSize: 13, fontWeight: 600 }}>Loading map...</p>
-    </div>
-  ),
-});
+import { FarmMapLoader } from './FarmMapLoader';
 
 const C = {
   text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB', cardBg: '#FFFFFF',
@@ -85,7 +76,7 @@ export default async function FarmerFarmPage() {
             )}
           </div>
           <div style={{ height: 320 }}>
-            <FarmMap farms={farmList} />
+            <FarmMapLoader farms={farmList} />
           </div>
         </div>
       )}

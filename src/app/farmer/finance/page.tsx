@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 
 const C = {
   text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
@@ -18,7 +18,7 @@ const CAT_COLORS: Record<string, string> = {
 };
 
 async function FinanceSummary({ userId }: { userId: string }) {
-  const supabase = await createClient();
+  const supabase = await getSupabase();
   const currentSeason = 'A2026';
 
   const [expensesRes, projectionRes, walletRes] = await Promise.all([
@@ -192,9 +192,9 @@ async function FinanceSummary({ userId }: { userId: string }) {
 }
 
 export default async function FinancePage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
+  const session = await getAuthSession();
+  if (!session?.user) redirect('/auth/signin');
+  const user = session.user;
 
   const actions = [
     {

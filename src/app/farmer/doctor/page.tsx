@@ -1,11 +1,10 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getAuthSession } from '@/lib/supabase/auth-cache';
 import { PathologistClient } from './PathologistClient';
 
 export default async function PathologistPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
+  const session = await getAuthSession();
+  if (!session?.user) redirect('/auth/signin');
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">

@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import { fetchWeatherForDistrict } from '@/lib/weather-server';
 import { DISTRICT_NAMES } from '@/lib/districts';
 import { getCurrentSeasonSummary, generatePlantingAlerts } from '@/lib/planting-calendar';
@@ -46,16 +46,16 @@ export default async function WeatherPage({
 }: {
   searchParams: any;
 }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
+  const session = await getAuthSession();
+  if (!session?.user) redirect('/auth/signin');
 
   const params = await searchParams;
   const district = (params?.district as string) || 'Kampala';
 
+  const supabase = await getSupabase();
   const [weather, profileRes] = await Promise.all([
     fetchWeatherForDistrict(district),
-    supabase.from('profiles').select('primary_crop').eq('user_id', user.id).single(),
+    supabase.from('profiles').select('primary_crop').eq('user_id', session.user.id).single(),
   ]);
 
   const primaryCrop = profileRes.data?.primary_crop ?? '';

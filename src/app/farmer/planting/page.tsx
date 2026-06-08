@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import {
   PLANTING_CALENDAR,
   generatePlantingAlerts,
@@ -97,13 +97,13 @@ function MonthBar({ cal, currentMonth }: { cal: PlantingWindow; currentMonth: nu
 }
 
 export default async function PlantingPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
+  const session = await getAuthSession();
+  if (!session?.user) redirect('/auth/signin');
 
+  const supabase = await getSupabase();
   const [profileRes, farmsRes] = await Promise.all([
-    supabase.from('profiles').select('primary_crop, full_name').eq('user_id', user.id).single(),
-    (supabase.from as any)('farms').select('crop_types').eq('user_id', user.id).eq('is_active', true),
+    supabase.from('profiles').select('primary_crop, full_name').eq('user_id', session.user.id).single(),
+    (supabase.from as any)('farms').select('crop_types').eq('user_id', session.user.id).eq('is_active', true),
   ]);
 
   const primaryCrop = profileRes.data?.primary_crop ?? '';
