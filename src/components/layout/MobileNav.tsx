@@ -2,39 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard, ShoppingBag, TrendingUp, Cloud, Microscope, Leaf, User,
-  ShoppingCart, MessageSquare, Package, Users, Bell, UserCheck, BarChart3,
-  ShieldCheck, Wallet, Sprout, Calculator,
-} from 'lucide-react';
+import { ICON_MAP } from './Sidebar';
 import type { NavItem } from './Sidebar';
-
-type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
-
-const ICON_MAP: Record<string, IconComponent> = {
-  dashboard:   LayoutDashboard,
-  marketplace: ShoppingBag,
-  prices:      TrendingUp,
-  weather:     Cloud,
-  doctor:      Microscope,
-  farm:        Leaf,
-  profile:     User,
-  listings:    ShoppingCart,
-  offers:      MessageSquare,
-  orders:      Package,
-  users:       Users,
-  alerts:      Bell,
-  buyers:      UserCheck,
-  analytics:   BarChart3,
-  verify:      ShieldCheck,
-  wallet:      Wallet,
-  planting:    Sprout,
-  finance:     Calculator,
-};
+import { LayoutDashboard } from 'lucide-react';
 
 export function MobileNav({ navItems }: { navItems: NavItem[] }) {
   const pathname = usePathname();
-  const items = navItems.slice(0, 5);
+  // show first 5 non-divider items on mobile
+  const items = navItems.filter(i => !i.divider).slice(0, 5);
 
   return (
     <nav

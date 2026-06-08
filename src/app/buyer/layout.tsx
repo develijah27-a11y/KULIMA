@@ -4,13 +4,19 @@ import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
 
 const BUYER_NAV = [
-  { href: '/buyer/dashboard', icon: 'dashboard', label: 'Dashboard' },
-  { href: '/buyer/listings',  icon: 'listings',  label: 'Browse' },
-  { href: '/buyer/offers',    icon: 'offers',    label: 'My Offers' },
-  { href: '/buyer/wallet',    icon: 'wallet',    label: 'Wallet' },
-  { href: '/buyer/orders',    icon: 'orders',    label: 'Orders' },
-  { href: '/buyer/prices',    icon: 'prices',    label: 'Prices' },
-  { href: '/buyer/profile',   icon: 'profile',   label: 'Profile' },
+  { href: '/buyer/dashboard',    icon: 'dashboard',    label: 'Dashboard' },
+  // ── Sourcing
+  { href: '/buyer/listings',     icon: 'marketplace',  label: 'Marketplace',  divider: true, sectionLabel: 'Sourcing' },
+  { href: '/buyer/requests',     icon: 'requests',     label: 'My Requests' },
+  { href: '/buyer/orders',       icon: 'orders',       label: 'My Orders' },
+  { href: '/buyer/contracts',    icon: 'contracts',    label: 'Contracts' },
+  // ── Logistics
+  { href: '/buyer/deliveries',   icon: 'deliveries',   label: 'Deliveries',   divider: true, sectionLabel: 'Logistics' },
+  { href: '/buyer/cold-chain',   icon: 'cold-chain',   label: 'Cold Chain' },
+  // ── Account
+  { href: '/buyer/wallet',       icon: 'wallet',       label: 'Wallet',       divider: true, sectionLabel: 'Account' },
+  { href: '/buyer/notifications',icon: 'notifications',label: 'Notifications' },
+  { href: '/buyer/settings',     icon: 'settings',     label: 'Settings' },
 ];
 
 export default async function BuyerLayout({ children }: { children: React.ReactNode }) {
@@ -40,16 +46,22 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
   const first = profile?.name.split(' ')[0] ?? 'there';
   const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first} 👋`;
 
+  const navWithBadge = BUYER_NAV.map(item =>
+    item.href === '/buyer/notifications' && unreadCount > 0
+      ? { ...item, badge: unreadCount }
+      : item
+  );
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#F8FAF9' }}>
-      <Sidebar navItems={BUYER_NAV} profile={profile} />
+      <Sidebar navItems={navWithBadge} profile={profile} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar greeting={greeting} location={location} unreadCount={unreadCount} />
+        <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/buyer/notifications" />
         <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6">
           {children}
         </main>
       </div>
-      <MobileNav navItems={BUYER_NAV} />
+      <MobileNav navItems={navWithBadge} />
     </div>
   );
 }

@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  const protectedRoutes = ['/dashboard', '/farmer', '/buyer', '/admin', '/farms', '/soil', '/disease', '/weather'];
+  const protectedRoutes = ['/dashboard', '/farmer', '/buyer', '/admin', '/transporter', '/supplier', '/pathologist', '/offtaker', '/groups', '/farms', '/soil', '/disease', '/weather'];
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (isProtected && !session) {

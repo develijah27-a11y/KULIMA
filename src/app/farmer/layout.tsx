@@ -4,17 +4,28 @@ import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
 
 const FARMER_NAV = [
-  { href: '/farmer/dashboard',   icon: 'dashboard',   label: 'Dashboard' },
-  { href: '/farmer/marketplace', icon: 'marketplace', label: 'Marketplace' },
-  { href: '/farmer/prices',      icon: 'prices',      label: 'Prices' },
-  { href: '/farmer/finance',     icon: 'finance',     label: 'Finance' },
-  { href: '/farmer/weather',     icon: 'weather',     label: 'Weather' },
-  { href: '/farmer/planting',    icon: 'planting',    label: 'Planting' },
-  { href: '/farmer/doctor',      icon: 'doctor',      label: 'Pathologist' },
-  { href: '/farmer/wallet',      icon: 'wallet',      label: 'Wallet' },
-  { href: '/farmer/farm',        icon: 'farm',        label: 'My Farm' },
-  { href: '/farmer/verify',      icon: 'verify',      label: 'Get Verified' },
-  { href: '/farmer/profile',     icon: 'profile',     label: 'Profile' },
+  { href: '/farmer/dashboard',   icon: 'dashboard',    label: 'Dashboard' },
+  // ── Marketplace
+  { href: '/farmer/marketplace', icon: 'marketplace',  label: 'Marketplace',  divider: true, sectionLabel: 'Market' },
+  { href: '/farmer/listings',    icon: 'my-listings',  label: 'My Listings' },
+  { href: '/farmer/orders',      icon: 'orders',       label: 'My Orders' },
+  { href: '/farmer/inventory',   icon: 'inventory',    label: 'Inventory' },
+  { href: '/farmer/prices',      icon: 'prices',       label: 'Live Prices' },
+  // ── Farm
+  { href: '/farmer/farm',        icon: 'farm',         label: 'My Farm',      divider: true, sectionLabel: 'Farm' },
+  { href: '/farmer/farm/workers',icon: 'workers',      label: 'Workers' },
+  { href: '/farmer/finance',     icon: 'finance',      label: 'Finance' },
+  { href: '/farmer/planting',    icon: 'planting',     label: 'Planting' },
+  { href: '/farmer/doctor',      icon: 'doctor',       label: 'Pathologist' },
+  // ── Community
+  { href: '/farmer/groups',      icon: 'groups',       label: 'Farmer Groups', divider: true, sectionLabel: 'Community' },
+  { href: '/farmer/geocluster',  icon: 'geocluster',   label: 'GeoCluster' },
+  { href: '/farmer/weather',     icon: 'weather',      label: 'Weather' },
+  // ── Account
+  { href: '/farmer/wallet',      icon: 'wallet',       label: 'Wallet',       divider: true, sectionLabel: 'Account' },
+  { href: '/farmer/notifications',icon: 'notifications',label: 'Notifications' },
+  { href: '/farmer/verify',      icon: 'verify',       label: 'Get Verified' },
+  { href: '/farmer/settings',    icon: 'settings',     label: 'Settings' },
 ];
 
 export default async function FarmerLayout({ children }: { children: React.ReactNode }) {
@@ -44,16 +55,23 @@ export default async function FarmerLayout({ children }: { children: React.React
   const first = profile?.name.split(' ')[0] ?? 'there';
   const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first} 👋`;
 
+  // Badge unread count on notifications
+  const navWithBadge = FARMER_NAV.map(item =>
+    item.href === '/farmer/notifications' && unreadCount > 0
+      ? { ...item, badge: unreadCount }
+      : item
+  );
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#F8FAF9' }}>
-      <Sidebar navItems={FARMER_NAV} profile={profile} />
+      <Sidebar navItems={navWithBadge} profile={profile} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar greeting={greeting} location={location} unreadCount={unreadCount} />
+        <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/farmer/notifications" />
         <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6">
           {children}
         </main>
       </div>
-      <MobileNav navItems={FARMER_NAV} />
+      <MobileNav navItems={navWithBadge} />
     </div>
   );
 }

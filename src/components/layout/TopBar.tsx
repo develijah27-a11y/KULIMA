@@ -1,14 +1,16 @@
 'use client';
 
+import Link from 'next/link';
 import { Bell } from 'lucide-react';
 
 interface TopBarProps {
   greeting: string;
   location?: string;
   unreadCount?: number;
+  notificationsHref?: string;
 }
 
-export function TopBar({ greeting, location, unreadCount = 0 }: TopBarProps) {
+export function TopBar({ greeting, location, unreadCount = 0, notificationsHref }: TopBarProps) {
   return (
     <header
       className="sticky top-0 z-20 flex items-center justify-between px-6 shrink-0"
@@ -38,22 +40,41 @@ export function TopBar({ greeting, location, unreadCount = 0 }: TopBarProps) {
           EN ▾
         </button>
 
-        {/* Notification bell */}
-        <button
-          className="relative w-9 h-9 flex items-center justify-center rounded-lg"
-          style={{ background: '#F8FAF9', border: '1px solid #E5E7EB' }}
-          aria-label="Notifications"
-        >
-          <Bell size={18} style={{ color: '#6B7280' }} />
-          {unreadCount > 0 && (
-            <span
-              className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-black text-white"
-              style={{ background: '#E63946' }}
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-        </button>
+        {/* Notification bell — links to notifications page if href provided */}
+        {notificationsHref ? (
+          <Link
+            href={notificationsHref}
+            className="relative w-9 h-9 flex items-center justify-center rounded-lg"
+            style={{ background: '#F8FAF9', border: '1px solid #E5E7EB' }}
+            aria-label="Notifications"
+          >
+            <Bell size={18} style={{ color: unreadCount > 0 ? '#1B4332' : '#6B7280' }} />
+            {unreadCount > 0 && (
+              <span
+                className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-black text-white"
+                style={{ background: '#E63946' }}
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Link>
+        ) : (
+          <button
+            className="relative w-9 h-9 flex items-center justify-center rounded-lg"
+            style={{ background: '#F8FAF9', border: '1px solid #E5E7EB' }}
+            aria-label="Notifications"
+          >
+            <Bell size={18} style={{ color: '#6B7280' }} />
+            {unreadCount > 0 && (
+              <span
+                className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-black text-white"
+                style={{ background: '#E63946' }}
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+        )}
       </div>
     </header>
   );

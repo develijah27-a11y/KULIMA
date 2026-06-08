@@ -40,12 +40,20 @@ export default async function FarmerFarmPage() {
             {farmList.length} farm{farmList.length !== 1 ? 's' : ''} · {totalHa.toFixed(1)} ha total
           </p>
         </div>
-        <Link
-          href="/farmer/farm/new"
-          style={{ padding: '9px 18px', background: C.green, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
-        >
-          + Add Farm
-        </Link>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Link
+            href="/farmer/farm/workers"
+            style={{ padding: '9px 18px', background: '#F0FDF4', border: '1.5px solid #A7F3D0', color: C.greenMed, borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+          >
+            👷 Workers
+          </Link>
+          <Link
+            href="/farmer/farm/new"
+            style={{ padding: '9px 18px', background: C.green, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+          >
+            + Add Farm
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
