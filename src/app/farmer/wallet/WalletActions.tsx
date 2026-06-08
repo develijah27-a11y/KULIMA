@@ -104,7 +104,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
           <input
             type="tel" value={phone} onChange={e => setPhone(e.target.value)}
             placeholder="e.g. 0772000000"
-            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: '#fff' }}
           />
         </div>
 
@@ -115,7 +115,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
           <input
             type="number" value={amount} onChange={e => setAmount(e.target.value)}
             placeholder="Min: 500"
-            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: '#fff' }}
           />
         </div>
 

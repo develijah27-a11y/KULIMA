@@ -119,6 +119,40 @@ body {
 }
 .auth-input:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Dashboard / app inline inputs ── */
+input[type="text"],
+input[type="number"],
+input[type="tel"],
+input[type="email"],
+input[type="date"],
+input[type="search"],
+select,
+textarea {
+  color: #1A1A1A;
+  background: #ffffff;
+}
+input[type="text"]::placeholder,
+input[type="number"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="email"]::placeholder,
+input[type="date"]::placeholder,
+input[type="search"]::placeholder,
+textarea::placeholder {
+  color: #9CA3AF;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+input[type="email"]:focus,
+input[type="date"]:focus,
+input[type="search"]:focus,
+select:focus,
+textarea:focus {
+  border-color: #40916C !important;
+  box-shadow: 0 0 0 3px rgba(64,145,108,0.12);
+  outline: none;
+}
+
 /* ── Auth submit button ── */
 .auth-btn {
   width: 100%;
