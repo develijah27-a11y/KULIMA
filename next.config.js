@@ -9,7 +9,11 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [390, 640, 828, 1080],
     minimumCacheTTL: 86400,
-    remotePatterns: [{ protocol: 'https', hostname: '*.supabase.co' }],
+    remotePatterns: [
+      { protocol: 'https', hostname: '*.supabase.co' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'plus.unsplash.com' },
+    ],
   },
   async headers() {
     return [

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { type VerificationLevel } from '@/lib/trust';
+import { getCropPhotoUrl, getCropGradient } from '@/lib/crop-photos';
 
 const C = {
   text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB', cardBg: '#FFFFFF',
@@ -157,20 +158,41 @@ export default async function BuyerListingsPage({
             const farmer   = l.farmer ?? {};
             const priceDelta = market ? Math.round(((l.asking_price - market) / market) * 100) : null;
 
+            const photoUrl  = getCropPhotoUrl(k, 400, 220);
+            const gradient  = getCropGradient(k);
+
             return (
               <Link
                 key={l.id}
                 href={`/buyer/listings/${l.id}`}
-                style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, textDecoration: 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderTop: `3px solid ${color}` }}
+                style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, textDecoration: 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
               >
-                <div style={{ padding: '16px 18px', flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                    <span style={{ fontSize: 28 }}>{emoji}</span>
-                    <div>
-                      <p style={{ color: C.text, fontWeight: 700, fontSize: 15, margin: 0, textTransform: 'capitalize' }}>{l.crop_type}</p>
-                      <p style={{ color: C.muted, fontSize: 11, margin: '1px 0 0' }}>{l.quantity_kg} kg · {l.district}</p>
+                {/* Crop photo header */}
+                <div style={{
+                  height: 140, position: 'relative', overflow: 'hidden',
+                  background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`,
+                  backgroundImage: photoUrl ? `url(${photoUrl})` : undefined,
+                  backgroundSize: 'cover', backgroundPosition: 'center',
+                }}>
+                  {/* Overlay gradient for text legibility */}
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)' }} />
+                  {!photoUrl && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: 52, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>{emoji}</span>
                     </div>
+                  )}
+                  {/* Quantity badge */}
+                  <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: 'rgba(0,0,0,0.45)', color: '#fff', backdropFilter: 'blur(4px)' }}>
+                    {l.quantity_kg.toLocaleString()} kg
+                  </span>
+                  {/* Crop name on photo */}
+                  <div style={{ position: 'absolute', bottom: 10, left: 14 }}>
+                    <p style={{ color: '#fff', fontWeight: 800, fontSize: 15, margin: 0, textTransform: 'capitalize', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{l.crop_type}</p>
+                    <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11, margin: '1px 0 0' }}>{l.district}</p>
                   </div>
+                </div>
+
+                <div style={{ padding: '14px 16px', flex: 1 }}>
 
                   {/* Farmer */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
