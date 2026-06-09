@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import { useState, useTransition } from 'react';
 
-const C = { border: '#E5E7EB', muted: '#6B7280', green: '#1B4332' };
+const C = { border: 'var(--d-border)', muted: 'var(--d-muted)', green: '#1B4332' };
 
 interface Props {
   offerId: string;

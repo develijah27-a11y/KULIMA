@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 import { getAuthSession } from '@/lib/supabase/auth-cache';
 
-const C = { text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB', green: '#1B4332', greenMed: '#40916C', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: '#FFFFFF' };
+const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: '#1B4332', greenMed: '#40916C', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
 const SECTIONS = [
   {

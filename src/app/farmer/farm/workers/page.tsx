@@ -1,10 +1,10 @@
-import { Suspense } from 'react';
+﻿import { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import { WorkersClient } from './WorkersClient';
 
-const C = { text: '#1A1A1A', muted: '#6B7280', green: '#1B4332', greenMed: '#40916C', border: '#E5E7EB', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)' };
+const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', green: '#1B4332', greenMed: '#40916C', border: 'var(--d-border)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)' };
 
 async function WorkersData({ userId }: { userId: string }) {
   const supabase = await getSupabase();

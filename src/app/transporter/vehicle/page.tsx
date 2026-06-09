@@ -1,11 +1,11 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { VehicleForm } from './VehicleForm';
 
 const C = {
-  text: '#1A1A1A', muted: '#6B7280', cardBg: '#FFFFFF',
-  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', cardBg: 'var(--d-card)',
+  cardShadow: 'var(--d-shadow-card)',
 };
 
 export default async function TransporterVehiclePage() {

@@ -53,7 +53,7 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
   );
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#F8FAF9' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>
       <Sidebar navItems={navWithBadge} profile={profile} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/buyer/notifications" />

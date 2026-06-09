@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
@@ -10,7 +10,7 @@ const GPSWalkMap = dynamic(() => import('./GPSWalkMap').then(m => m.GPSWalkMap),
 });
 
 const C = {
-  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: '#1B4332', greenMed: '#40916C',
 };
 

@@ -1,11 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
+﻿import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
 const C = {
-  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
-  cardBg: '#FFFFFF', green: '#1B4332', greenMed: '#40916C',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
+  cardBg: 'var(--d-card)', green: '#1B4332', greenMed: '#40916C',
   amber: '#F4A261', red: '#E63946', blue: '#0077B6',
-  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+  cardShadow: 'var(--d-shadow-card)',
 } as const;
 
 function timeAgo(iso: string) {

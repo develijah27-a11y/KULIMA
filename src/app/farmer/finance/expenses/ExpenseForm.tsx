@@ -1,12 +1,12 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { EXPENSE_CATEGORIES, SEASONS } from '@/lib/farm-finance';
 
 const C = {
-  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  red: '#E63946', cardBg: '#FFFFFF',
+  red: '#E63946', cardBg: 'var(--d-card)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 

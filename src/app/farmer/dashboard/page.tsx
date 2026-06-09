@@ -1,4 +1,4 @@
-import { Suspense, cache } from 'react';
+﻿import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { fetchWeatherForFarmer, type ServerWeatherData } from '@/lib/weather-server';
@@ -54,9 +54,9 @@ function timeAgo(iso: string) {
 const C = {
   green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
   amber: '#F4A261', red: '#E63946', blue: '#0077B6',
-  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
-  cardBg: '#FFFFFF', pageBg: '#F8FAF9',
-  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
+  cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
+  cardShadow: 'var(--d-shadow-card)',
 };
 
 const SEVERITY_MAP: Record<InsightSeverity, { color: string; bg: string; border: string }> = {

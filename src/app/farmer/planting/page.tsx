@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import {
   PLANTING_CALENDAR,
@@ -8,11 +8,11 @@ import {
 } from '@/lib/planting-calendar';
 
 const C = {
-  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
   amber: '#F4A261', red: '#E63946', blue: '#0077B6',
-  cardBg: '#FFFFFF', pageBg: '#F8FAF9',
-  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+  cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
+  cardShadow: 'var(--d-shadow-card)',
 };
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -65,7 +65,7 @@ function MonthBar({ cal, currentMonth }: { cal: PlantingWindow; currentMonth: nu
       'harvest-a': { bg: '#FEF3C7', border: '#FCD34D' },
       'plant-b':   { bg: '#DBEAFE', border: '#93C5FD' },
       'harvest-b': { bg: '#FDE8D8', border: '#FDBA74' },
-      'empty':     { bg: '#F9FAFB', border: '#E5E7EB' },
+      'empty':     { bg: '#F9FAFB', border: 'var(--d-border)' },
     };
 
     const cfg = colors[type];

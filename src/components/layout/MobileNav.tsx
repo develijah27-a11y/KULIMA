@@ -15,8 +15,8 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex"
       style={{
-        background: '#FFFFFF',
-        borderTop: '1px solid #E5E7EB',
+        background: 'var(--d-card)',
+        borderTop: '1px solid var(--d-border)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >

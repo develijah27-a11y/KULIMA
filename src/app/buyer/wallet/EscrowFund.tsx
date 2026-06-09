@@ -1,9 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const C = { text: '#1A1A1A', muted: '#6B7280', green: '#1B4332' };
+const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', green: '#1B4332' };
 
 interface Props {
   offerId: string;

@@ -119,27 +119,7 @@ body {
 }
 .auth-input:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Dashboard / app inline inputs ── */
-input[type="text"],
-input[type="number"],
-input[type="tel"],
-input[type="email"],
-input[type="date"],
-input[type="search"],
-select,
-textarea {
-  color: #1A1A1A;
-  background: #ffffff;
-}
-input[type="text"]::placeholder,
-input[type="number"]::placeholder,
-input[type="tel"]::placeholder,
-input[type="email"]::placeholder,
-input[type="date"]::placeholder,
-input[type="search"]::placeholder,
-textarea::placeholder {
-  color: #9CA3AF;
-}
+/* ── Dashboard / app inline inputs (focus ring) ── */
 input[type="text"]:focus,
 input[type="number"]:focus,
 input[type="tel"]:focus,
@@ -263,3 +243,74 @@ textarea:focus {
 /* ── Sidebar hover state (no JS needed) ── */
 .sidebar-item:hover { background: rgba(255,255,255,0.08); }
 .sidebar-item.active { background: rgba(255,255,255,0.15); }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   DASHBOARD CSS CUSTOM PROPERTIES — adapt to light + dark mode
+   ───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --d-page:        #F8FAF9;
+  --d-card:        #FFFFFF;
+  --d-text:        #1A1A1A;
+  --d-muted:       #6B7280;
+  --d-border:      #E5E7EB;
+  --d-shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05);
+  --d-input-bg:    #FFFFFF;
+  --d-input-text:  #1A1A1A;
+  --d-placeholder: #9CA3AF;
+  --d-row-hover:   #F9FAFB;
+  --d-subtle:      #F3F4F6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --d-page:        #0F172A;
+    --d-card:        #1E293B;
+    --d-text:        #F1F5F9;
+    --d-muted:       #94A3B8;
+    --d-border:      rgba(255,255,255,0.08);
+    --d-shadow-card: 0 1px 3px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.35);
+    --d-input-bg:    #1E293B;
+    --d-input-text:  #F1F5F9;
+    --d-placeholder: #64748B;
+    --d-row-hover:   rgba(255,255,255,0.03);
+    --d-subtle:      rgba(255,255,255,0.04);
+  }
+}
+
+/* ── Dashboard card uses CSS variables so it adapts to dark mode ── */
+.dash-card {
+  background: var(--d-card);
+  border-radius: 12px;
+  box-shadow: var(--d-shadow-card);
+}
+
+/* ── Dashboard skeleton adapts to theme ── */
+.dash-skeleton {
+  background: linear-gradient(90deg, var(--d-subtle) 25%, var(--d-border) 50%, var(--d-subtle) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+/* ── Dashboard inline inputs adapt to dark mode ── */
+input[type="text"],
+input[type="number"],
+input[type="tel"],
+input[type="email"],
+input[type="date"],
+input[type="search"],
+select,
+textarea {
+  color: var(--d-input-text);
+  background: var(--d-input-bg);
+}
+input[type="text"]::placeholder,
+input[type="number"]::placeholder,
+input[type="tel"]::placeholder,
+input[type="email"]::placeholder,
+input[type="date"]::placeholder,
+input[type="search"]::placeholder,
+textarea::placeholder {
+  color: var(--d-placeholder);
+}

@@ -1,13 +1,13 @@
-import { Suspense } from 'react';
+﻿import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 
 const C = {
-  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
   amber: '#D97706', red: '#E63946', blue: '#0077B6',
-  cardBg: '#FFFFFF', pageBg: '#F8FAF9',
+  cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 

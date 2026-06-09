@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
@@ -6,8 +6,8 @@ import { type VerificationLevel } from '@/lib/trust';
 import { getCropPhotoUrl, getCropGradient } from '@/lib/crop-photos';
 
 const C = {
-  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB', cardBg: '#FFFFFF',
-  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
+  cardShadow: 'var(--d-shadow-card)',
   green: '#1B4332', greenBright: '#52B788', greenMed: '#40916C',
 };
 

@@ -63,7 +63,7 @@ export default async function FarmerLayout({ children }: { children: React.React
   );
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#F8FAF9' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>
       <Sidebar navItems={navWithBadge} profile={profile} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/farmer/notifications" />
