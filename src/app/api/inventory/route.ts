@@ -8,10 +8,10 @@ async function getProfile(supabase: Awaited<ReturnType<typeof createClient>>, us
 
 export async function GET() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const profile = await getProfile(supabase, session.user.id);
+  const profile = await getProfile(supabase, user.id);
   if (!profile) return NextResponse.json({ items: [] });
 
   const { data, error } = await (supabase.from as any)('farm_inventory')
@@ -26,10 +26,10 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const profile = await getProfile(supabase, session.user.id);
+  const profile = await getProfile(supabase, user.id);
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
   const body = await req.json();
@@ -53,10 +53,10 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const profile = await getProfile(supabase, session.user.id);
+  const profile = await getProfile(supabase, user.id);
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
   const body = await req.json();

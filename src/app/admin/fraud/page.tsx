@@ -1,0 +1,140 @@
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
+
+const C = {
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
+  cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
+  green: '#1B4332', greenMed: '#40916C',
+  red: '#E63946', amber: '#D97706',
+};
+
+const SEV_CFG: Record<string, { color: string; bg: string; label: string }> = {
+  low:      { color: '#D97706', bg: '#FEF3C7', label: 'Low' },
+  medium:   { color: '#EA580C', bg: '#FFEDD5', label: 'Medium' },
+  high:     { color: '#DC2626', bg: '#FEE2E2', label: 'High' },
+  critical: { color: '#7F1D1D', bg: '#FEE2E2', label: 'Critical' },
+};
+
+const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
+  open:         { color: '#DC2626', bg: '#FEE2E2', label: 'Open' },
+  investigating:{ color: '#D97706', bg: '#FEF3C7', label: 'Investigating' },
+  resolved:     { color: '#059669', bg: '#D1FAE5', label: 'Resolved' },
+  dismissed:    { color: '#6B7280', bg: '#F3F4F6', label: 'Dismissed' },
+};
+
+export default async function AdminFraudPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; sev?: string }>;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
+
+  const { data: admin } = await (supabase.from as any)('profiles').select('role').eq('user_id', user.id).single();
+  if ((admin as any)?.role !== 'admin') redirect('/auth/signin');
+
+  const { status = '', sev = '' } = await searchParams;
+
+  let q = (supabase.from as any)('fraud_flags')
+    .select('id, user_id, flagged_by, reason, severity, description, status, created_at')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (status) q = q.eq('status', status);
+  if (sev)    q = q.eq('severity', sev);
+
+  const { data: flags, error } = await q;
+  const rows: any[] = flags ?? [];
+
+  const counts = {
+    open:    rows.filter(r => r.status === 'open').length,
+    high:    rows.filter(r => ['high','critical'].includes(r.severity)).length,
+    total:   rows.length,
+  };
+
+  return (
+    <div className="space-y-5 max-w-4xl mx-auto">
+      <div>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Fraud Flags
+        </h1>
+        <p className="text-sm mt-0.5" style={{ color: C.muted }}>Suspicious activity reports and fraud investigations</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: 'Total Flags', value: counts.total, color: C.text },
+          { label: 'Open Cases', value: counts.open, color: C.red },
+          { label: 'High / Critical', value: counts.high, color: '#EA580C' },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{ background: C.cardBg, borderRadius: 12, boxShadow: C.cardShadow, padding: '16px 18px' }}>
+            <p style={{ fontSize: 24, fontWeight: 900, color, letterSpacing: '-0.03em', margin: '0 0 4px' }}>{value}</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: C.muted, margin: 0 }}>{label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <form method="GET" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <select name="status" defaultValue={status}
+          style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13 }}>
+          <option value="">All Statuses</option>
+          {Object.entries(STATUS_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+        <select name="sev" defaultValue={sev}
+          style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13 }}>
+          <option value="">All Severities</option>
+          {Object.entries(SEV_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+        <button type="submit" style={{ padding: '8px 18px', borderRadius: 10, border: 'none', background: C.green, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          Filter
+        </button>
+      </form>
+
+      {/* Flag list */}
+      {error ? (
+        <div style={{ background: '#FEF2F2', borderRadius: 12, padding: '16px 18px' }}>
+          <p style={{ color: C.red, fontSize: 13 }}>Error loading fraud flags. The table may not exist yet.</p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
+          <p style={{ fontSize: 40, marginBottom: 10 }}>🛡️</p>
+          <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>No fraud flags</p>
+          <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
+            {status || sev ? 'Try a different filter.' : 'The platform looks clean.'}
+          </p>
+        </div>
+      ) : (
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
+          {rows.map((flag: any, i: number) => {
+            const svc  = SEV_CFG[flag.severity]  ?? SEV_CFG.low;
+            const stc  = STATUS_CFG[flag.status] ?? STATUS_CFG.open;
+            return (
+              <div key={flag.id} style={{ padding: '16px 20px', borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 6 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: svc.bg, color: svc.color }}>{svc.label}</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: stc.bg, color: stc.color }}>{stc.label}</span>
+                    </div>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 2px', textTransform: 'capitalize' }}>
+                      {flag.reason?.replace(/_/g, ' ') ?? 'Unknown reason'}
+                    </p>
+                    {flag.description && (
+                      <p style={{ fontSize: 12, color: C.muted, margin: '0 0 2px' }}>{flag.description}</p>
+                    )}
+                    <p style={{ fontSize: 10, color: C.muted, margin: 0, fontFamily: 'monospace' }}>
+                      User: {flag.user_id?.slice(0, 18)}… ·{' '}
+                      {new Date(flag.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

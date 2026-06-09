@@ -78,6 +78,10 @@ export const ICON_MAP: Record<string, IconComponent> = {
   members:          UserPlus,
   'group-chat':     MessageSquare,
   season:           CalendarDays,
+  // admin extras
+  dispute:          Shield,
+  alert:            AlertOctagon,
+  history:          ClipboardList,
 };
 
 export interface NavItem {
