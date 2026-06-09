@@ -1,35 +1,111 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
+const C = {
+  text: '#1A1A1A', muted: '#6B7280', border: '#E5E7EB',
+  cardBg: '#FFFFFF', green: '#1B4332', greenMed: '#40916C',
+  amber: '#F4A261', red: '#E63946', blue: '#0077B6',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+} as const;
+
+function timeAgo(iso: string) {
+  const d = Math.round((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (d === 0) return 'Today';
+  if (d < 30) return `${d}d ago`;
+  return `${Math.floor(d/30)}mo ago`;
+}
+
 export default async function AdminBuyersPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
-
-  const { data: profile } = await supabase.from('profiles').select('*').eq('user_id', user.id).single();
+  const { data: profile } = await supabase.from('profiles').select('role').eq('user_id', user.id).single();
   if ((profile as any)?.role !== 'admin') redirect('/dashboard');
 
-  const { data: buyers } = await supabase.from('profiles').select('*').eq('role', 'buyer').order('created_at', { ascending: false });
+  const { data: buyers } = await (supabase.from as any)('profiles')
+    .select('id, user_id, full_name, phone_number, location, created_at, verification_level, primary_crop')
+    .eq('role', 'buyer')
+    .order('created_at', { ascending: false });
+
+  const rows = buyers ?? [];
+
+  const VER: Record<string, { label: string; color: string; bg: string }> = {
+    none:     { label: 'Unverified', color: C.muted,     bg: '#F3F4F6' },
+    basic:    { label: 'Basic',      color: '#D97706',   bg: '#FEF3C7' },
+    standard: { label: 'Standard',  color: C.blue,      bg: '#DBEAFE' },
+    premium:  { label: 'Premium',   color: '#059669',   bg: '#D1FAE5' },
+  };
 
   return (
-    <div className="min-h-screen bg-soil">
-      <main className="max-w-4xl mx-auto px-6 py-6 space-y-4">
-        <h1 className="text-xl font-bold text-cream">Pending Buyer Verification</h1>
-        <div className="space-y-3">
-          {(buyers ?? []).map((b: any) => (
-            <div key={b.id} className="flex items-center justify-between py-3 px-4 rounded-xl bg-surface2 gap-3">
-              <div>
-                <p className="text-sm font-semibold text-cream">{b.full_name}</p>
-                <p className="text-[11px] text-cream/35">{b.location} · {b.phone_number}</p>
-              </div>
-              <div className="flex gap-2">
-                <button className="px-4 py-2 rounded-xl bg-sprout text-soil text-xs font-bold hover:opacity-90">Verify</button>
-                <button className="px-4 py-2 rounded-xl bg-clay text-cream text-xs font-bold hover:opacity-90">Reject</button>
-              </div>
-            </div>
-          ))}
+    <div className="space-y-5 max-w-5xl mx-auto">
+
+      <div>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Buyer Accounts
+        </h1>
+        <p className="text-sm mt-0.5" style={{ color: C.muted }}>{rows.length} registered buyer{rows.length !== 1 ? 's' : ''}</p>
+      </div>
+
+      {rows.length === 0 ? (
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
+          <p style={{ fontSize: 48, marginBottom: 12 }}>🛒</p>
+          <p style={{ color: C.text, fontWeight: 700, fontSize: 16 }}>No buyers yet</p>
+          <p style={{ color: C.muted, fontSize: 14, marginTop: 4 }}>Buyers will appear here once they register with the buyer role.</p>
         </div>
-      </main>
+      ) : (
+        <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, overflow: 'hidden' }}>
+          {/* Header */}
+          <div className="hidden sm:grid px-5 py-3" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr', borderBottom: `1px solid ${C.border}`, background: '#FAFAFA' }}>
+            {['Buyer', 'Location', 'Verification', 'Joined'].map(h => (
+              <p key={h} className="text-[10px] font-bold uppercase tracking-wide" style={{ color: C.muted }}>{h}</p>
+            ))}
+          </div>
+
+          <div className="divide-y" style={{ borderColor: C.border }}>
+            {rows.map((b: any) => {
+              const ver = VER[b.verification_level ?? 'none'];
+              return (
+                <div key={b.id} className="px-5 py-3.5 flex items-center gap-4">
+                  {/* Avatar + name */}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0" style={{ background: '#FEF3C7', color: '#D97706' }}>
+                      {(b.full_name ?? '?')[0].toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{b.full_name ?? 'Unknown'}</p>
+                      <p className="text-[10px] truncate" style={{ color: C.muted }}>{b.phone_number ?? '—'}</p>
+                    </div>
+                  </div>
+
+                  {/* Location */}
+                  <div className="hidden sm:block flex-1 min-w-0">
+                    <p className="text-xs truncate" style={{ color: C.muted }}>{b.location ?? '—'}</p>
+                  </div>
+
+                  {/* Verification */}
+                  <div className="hidden sm:block" style={{ width: 100 }}>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: ver.bg, color: ver.color }}>{ver.label}</span>
+                  </div>
+
+                  {/* Joined */}
+                  <div className="hidden sm:block" style={{ width: 80 }}>
+                    <p className="text-xs" style={{ color: C.muted }}>{timeAgo(b.created_at)}</p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="shrink-0">
+                    {b.verification_level === 'none' && (
+                      <span className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ background: '#FEF3C7', color: '#D97706' }}>
+                        Needs KYC
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

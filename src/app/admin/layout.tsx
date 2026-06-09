@@ -4,13 +4,13 @@ import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
 
 const ADMIN_NAV = [
-  { href: '/admin/dashboard',    icon: 'dashboard', label: 'Overview' },
-  { href: '/admin/users',        icon: 'users',     label: 'Users' },
-  { href: '/admin/verification', icon: 'verify',    label: 'KYC Queue' },
-  { href: '/admin/prices',       icon: 'prices',    label: 'Prices' },
-  { href: '/admin/alert',        icon: 'alerts',    label: 'Alerts' },
-  { href: '/admin/buyers',       icon: 'buyers',    label: 'Buyers' },
-  { href: '/admin/analytics',    icon: 'analytics', label: 'Analytics' },
+  { href: '/admin/dashboard',    icon: 'dashboard',    label: 'Overview' },
+  { href: '/admin/users',        icon: 'workers',      label: 'Users',      divider: true, sectionLabel: 'Management' },
+  { href: '/admin/verification', icon: 'verify',       label: 'KYC Queue' },
+  { href: '/admin/buyers',       icon: 'marketplace',  label: 'Buyers' },
+  { href: '/admin/prices',       icon: 'prices',       label: 'Prices',     divider: true, sectionLabel: 'Content' },
+  { href: '/admin/alert',        icon: 'notifications',label: 'Alerts' },
+  { href: '/admin/analytics',    icon: 'finance',      label: 'Analytics',  divider: true, sectionLabel: 'Reports' },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'Admin';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first} 👋`;
+  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#F8FAF9' }}>
