@@ -6,22 +6,22 @@ import { BidForm } from './BidForm';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
 export default async function DeliveryDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const [deliveryRes, vehicleRes, existingBidRes] = await Promise.all([
     (supabase.from as any)('delivery_requests')
       .select('*, requester:profiles!delivery_requests_requester_id_fkey(full_name, verification_level)')
       .eq('id', id)
       .single(),
-    (supabase.from as any)('vehicles').select('id, plate_number, vehicle_type, capacity_kg').eq('user_id', session.user.id).maybeSingle(),
-    (supabase.from as any)('delivery_bids').select('id, price, status').eq('delivery_id', id).eq('transporter_id', session.user.id).maybeSingle(),
+    (supabase.from as any)('vehicles').select('id, plate_number, vehicle_type, capacity_kg').eq('user_id', user.id).maybeSingle(),
+    (supabase.from as any)('delivery_bids').select('id, price, status').eq('delivery_id', id).eq('transporter_id', user.id).maybeSingle(),
   ]);
 
   const delivery = deliveryRes.data;

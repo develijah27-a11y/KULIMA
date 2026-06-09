@@ -5,7 +5,7 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
 const STATUS_CFG = {
@@ -18,14 +18,14 @@ const STATUS_CFG = {
 
 export default async function TransporterDashboard() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const [vehicleRes, openRes, myDeliveriesRes, walletRes] = await Promise.all([
-    (supabase.from as any)('vehicles').select('id, plate_number, vehicle_type, capacity_kg, is_available').eq('user_id', session.user.id).maybeSingle(),
+    (supabase.from as any)('vehicles').select('id, plate_number, vehicle_type, capacity_kg, is_available').eq('user_id', user.id).maybeSingle(),
     (supabase.from as any)('delivery_requests').select('id, pickup_district, dropoff_district, cargo_kg, cargo_type, pickup_date, created_at').eq('status', 'open').order('pickup_date', { ascending: true }).limit(10),
-    (supabase.from as any)('delivery_requests').select('id, pickup_district, dropoff_district, cargo_kg, status, pickup_date').eq('transporter_id', session.user.id).order('created_at', { ascending: false }).limit(10),
-    (supabase.from as any)('wallets').select('balance').eq('user_id', session.user.id).maybeSingle(),
+    (supabase.from as any)('delivery_requests').select('id, pickup_district, dropoff_district, cargo_kg, status, pickup_date').eq('transporter_id', user.id).order('created_at', { ascending: false }).limit(10),
+    (supabase.from as any)('wallets').select('balance').eq('user_id', user.id).maybeSingle(),
   ]);
 
   const vehicle      = vehicleRes.data;

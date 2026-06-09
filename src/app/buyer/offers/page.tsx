@@ -5,7 +5,7 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
 const STATUS_CFG = {
@@ -34,15 +34,15 @@ export default async function BuyerOffersPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const { tab = 'active' } = await searchParams;
   const tabs = ['active', 'accepted', 'rejected', 'all'];
 
   let q = (supabase.from as any)('offers')
     .select('id, offered_price, counter_price, status, message, farmer_note, created_at, listing_id, listing:listings(id, crop_type, quantity_kg, asking_price, district, farmer_id)')
-    .eq('buyer_id', session.user.id)
+    .eq('buyer_id', user.id)
     .order('created_at', { ascending: false });
 
   if (tab === 'active') q = q.in('status', ['pending', 'countered']);

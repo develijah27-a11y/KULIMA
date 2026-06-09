@@ -9,8 +9,8 @@ import {
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  amber: '#D97706', red: '#E63946', blue: '#0077B6',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
+  amber: '#D97706', red: 'var(--color-danger)', blue: 'var(--color-info)',
   cardBg: 'var(--d-card)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
@@ -399,7 +399,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                 const yieldVal = result.yield[scenario];
                 const rev = result.revenue[scenario];
                 const pct = result.yield.optimistic > 0 ? Math.round((yieldVal / result.yield.optimistic) * 100) : 0;
-                const colors = ['#E63946', '#059669', '#0077B6'];
+                const colors = ['var(--color-danger)', '#059669', 'var(--color-info)'];
                 const labels = ['Pessimistic', 'Realistic', 'Optimistic'];
                 return (
                   <div key={scenario} style={{ marginBottom: i < 2 ? '14px' : '0' }}>

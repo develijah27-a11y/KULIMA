@@ -3,8 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { delivery_id, vehicle_id, price, message } = await req.json();
   if (!delivery_id || !vehicle_id || !price) {
@@ -12,12 +12,12 @@ export async function POST(req: Request) {
   }
 
   // Verify transporter owns the vehicle
-  const { data: vehicle } = await (supabase.from as any)('vehicles').select('id').eq('id', vehicle_id).eq('user_id', session.user.id).single();
+  const { data: vehicle } = await (supabase.from as any)('vehicles').select('id').eq('id', vehicle_id).eq('user_id', user.id).single();
   if (!vehicle) return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
 
   const { data, error } = await (supabase.from as any)('delivery_bids').insert({
     delivery_id,
-    transporter_id: session.user.id,
+    transporter_id: user.id,
     vehicle_id,
     price,
     message: message ?? null,
@@ -33,8 +33,8 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { bid_id, action } = await req.json();
   if (!bid_id || !action) return NextResponse.json({ error: 'bid_id and action required' }, { status: 400 });
@@ -47,7 +47,7 @@ export async function PATCH(req: Request) {
       .single();
 
     if (!bid) return NextResponse.json({ error: 'Bid not found' }, { status: 404 });
-    if (bid.delivery?.requester_id !== session.user.id) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    if (bid.delivery?.requester_id !== user.id) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
 
     // Accept this bid, reject others, assign transporter
     await Promise.all([
@@ -69,7 +69,7 @@ export async function PATCH(req: Request) {
     const { error } = await (supabase.from as any)('delivery_bids')
       .update({ status: 'withdrawn' })
       .eq('id', bid_id)
-      .eq('transporter_id', session.user.id)
+      .eq('transporter_id', user.id)
       .eq('status', 'pending');
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });

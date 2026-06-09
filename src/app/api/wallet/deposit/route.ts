@@ -5,8 +5,8 @@ const FLW_BASE = 'https://api.flutterwave.com/v3';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { amount, phone, provider } = await req.json();
 
@@ -17,11 +17,11 @@ export async function POST(req: Request) {
   const flwSecret = process.env.FLUTTERWAVE_SECRET_KEY;
   if (!flwSecret) return NextResponse.json({ error: 'Payment service not configured' }, { status: 503 });
 
-  const txRef = `kulima-dep-${session.user.id.slice(0, 8)}-${Date.now()}`;
+  const txRef = `kulima-dep-${user.id.slice(0, 8)}-${Date.now()}`;
 
   // Create mobile_money_request record first
   const { data: momoReq, error: momoErr } = await (supabase.from as any)('mobile_money_requests').insert({
-    user_id: session.user.id,
+    user_id: user.id,
     type: 'deposit',
     amount,
     phone,
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         phone_number: normalizedPhone,
         amount,
         currency: 'UGX',
-        email: session.user.email ?? 'user@kulima.app',
+        email: user.email ?? 'user@kulima.app',
         tx_ref: txRef,
         network: provider.toUpperCase(),
       }),

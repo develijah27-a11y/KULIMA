@@ -8,7 +8,7 @@ import { getCropPhotoUrl, getCropGradient } from '@/lib/crop-photos';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenBright: '#52B788', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)', greenMed: 'var(--color-primary-hover)',
 };
 
 const CROPS = ['maize','beans','coffee','rice','banana','cassava','tomato','sorghum','groundnuts','sweet_potatoes','sunflower'];
@@ -29,8 +29,8 @@ export default async function BuyerListingsPage({
   searchParams: Promise<{ q?: string; crop?: string; district?: string; sort?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const sp       = await searchParams;
   const q        = sp.q ?? '';

@@ -9,8 +9,8 @@ const PROVIDER_BANK: Record<string, string> = { mtn: 'MPS', airtel: 'AIRTEL' };
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { amount, phone, provider } = await req.json();
 
@@ -28,20 +28,20 @@ export async function POST(req: Request) {
 
   const { data: wallet, error: walletErr } = await (admin.from as any)('wallets')
     .select('id, balance')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single();
 
   if (walletErr || !wallet) return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
   if (wallet.balance < amount) return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
 
-  const txRef = `kulima-wdl-${session.user.id.slice(0, 8)}-${Date.now()}`;
+  const txRef = `kulima-wdl-${user.id.slice(0, 8)}-${Date.now()}`;
 
   // Deduct balance and create records atomically
   const newBalance = Number(wallet.balance) - amount;
 
   const [momoInsert, txnInsert, balanceUpdate] = await Promise.all([
     (admin.from as any)('mobile_money_requests').insert({
-      user_id: session.user.id,
+      user_id: user.id,
       type: 'withdrawal',
       amount,
       phone,
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     }).select('id').single(),
     (admin.from as any)('wallet_transactions').insert({
       wallet_id: wallet.id,
-      user_id: session.user.id,
+      user_id: user.id,
       type: 'withdrawal',
       amount,
       status: 'pending',

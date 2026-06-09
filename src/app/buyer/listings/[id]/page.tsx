@@ -9,7 +9,7 @@ import { type VerificationLevel } from '@/lib/trust';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenBright: '#52B788',
+  green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)',
 };
 
 const CROP_EMOJI: Record<string, string> = {
@@ -21,8 +21,8 @@ const CROP_EMOJI: Record<string, string> = {
 export default async function BuyerListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const [listingRes, pricesRes, existingOfferRes] = await Promise.all([
     (supabase.from as any)('listings')
@@ -34,7 +34,7 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
     (supabase.from as any)('offers')
       .select('id, status, offered_price, counter_price')
       .eq('listing_id', id)
-      .eq('buyer_id', session.user.id)
+      .eq('buyer_id', user.id)
       .in('status', ['pending', 'countered', 'accepted'])
       .maybeSingle(),
   ]);

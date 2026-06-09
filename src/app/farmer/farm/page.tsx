@@ -6,7 +6,7 @@ import { FarmMapLoader } from './FarmMapLoader';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
 const CROP_EMOJI: Record<string, string> = {
@@ -16,12 +16,12 @@ const CROP_EMOJI: Record<string, string> = {
 
 export default async function FarmerFarmPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const { data: farms } = await (supabase.from as any)('farms')
     .select('id, name, location, district, size_hectares, farm_type, crop_types, boundary, is_active, created_at')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 

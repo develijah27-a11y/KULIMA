@@ -10,11 +10,11 @@ const C = {
 
 export default async function NewListingPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const [profileRes, pricesRes] = await Promise.all([
-    supabase.from('profiles').select('location, primary_crop').eq('user_id', session.user.id).single(),
+    supabase.from('profiles').select('location, primary_crop').eq('user_id', user.id).single(),
     supabase.from('market_prices').select('crop_type, price_per_kg').order('recorded_at', { ascending: false }).limit(30),
   ]);
 

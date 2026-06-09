@@ -10,8 +10,8 @@ const C = {
 
 export default async function NewFarmPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   return (
     <div className="max-w-xl mx-auto space-y-5">

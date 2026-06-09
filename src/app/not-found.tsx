@@ -1,4 +1,4 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 
 export default function NotFound() {
   return (
@@ -28,7 +28,7 @@ export default function NotFound() {
       <p
         style={{
           fontSize: 96, fontWeight: 900, letterSpacing: '-0.05em',
-          color: '#1B4332', lineHeight: 1, marginBottom: 8,
+          color: 'var(--color-primary)', lineHeight: 1, marginBottom: 8,
           fontFamily: "'Plus Jakarta Sans', sans-serif",
         }}
       >
@@ -48,7 +48,7 @@ export default function NotFound() {
         <Link
           href="/dashboard"
           style={{
-            padding: '12px 24px', background: '#1B4332', color: '#fff',
+            padding: '12px 24px', background: 'var(--color-primary)', color: '#fff',
             borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
             boxShadow: '0 4px 12px rgba(27,67,50,0.3)',
           }}
@@ -58,7 +58,7 @@ export default function NotFound() {
         <Link
           href="/farmer/marketplace"
           style={{
-            padding: '12px 24px', background: '#fff', color: '#1B4332',
+            padding: '12px 24px', background: '#fff', color: 'var(--color-primary)',
             borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
             border: '1.5px solid #E5E7EB',
           }}
@@ -75,7 +75,7 @@ export default function NotFound() {
           { href: '/farmer/prices',    label: 'Live Prices' },
           { href: '/farmer/weather',   label: 'Weather' },
         ].map(({ href, label }) => (
-          <Link key={href} href={href} style={{ fontSize: 12, color: '#40916C', fontWeight: 600, textDecoration: 'none' }}>
+          <Link key={href} href={href} style={{ fontSize: 12, color: 'var(--color-primary-hover)', fontWeight: 600, textDecoration: 'none' }}>
             {label}
           </Link>
         ))}

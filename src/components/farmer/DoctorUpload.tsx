@@ -4,15 +4,13 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useToast } from '@/components/ui/Toast';
+import { showToast } from '@/components/ui/Toast';
 
 export function DoctorUploadClient() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
-  const { showToast } = useToast();
-
   const handleFile = (f: File | null) => {
     setFile(f);
     setResult(null);
@@ -36,9 +34,9 @@ export function DoctorUploadClient() {
       });
       const data = await res.json();
       setResult(data.data ?? data);
-      showToast({ type: 'success', message: 'Analysis complete!' });
+      showToast('Analysis complete!', 'success');
     } catch {
-      showToast({ type: 'error', message: 'Could not analyze image. Try again.' });
+      showToast('Could not analyze image. Try again.', 'error');
     }
     setLoading(false);
   };

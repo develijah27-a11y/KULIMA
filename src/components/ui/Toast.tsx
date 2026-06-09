@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { cn } from '@/lib/utils';
 import { CheckCircle, AlertTriangle, XCircle, Info, X } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -14,12 +13,8 @@ interface Toast {
 
 let addToastFn: ((toast: Omit<Toast, 'id'>) => void) | null = null;
 
-export function showToast(toast: Omit<Toast, 'id'>) {
-  addToastFn?.(toast);
-}
-
-export function useToast() {
-  return { showToast };
+export function showToast(message: string, type: ToastType = 'info') {
+  addToastFn?.({ message, type });
 }
 
 export function ToastContainer() {
@@ -33,17 +28,28 @@ export function ToastContainer() {
         setToasts((prev) => prev.filter((t) => t.id !== id));
       }, 4000);
     };
-    return () => {
-      addToastFn = null;
-    };
+    return () => { addToastFn = null; };
   }, []);
 
   const remove = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  if (toasts.length === 0) return null;
+
   return (
-    <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 w-[calc(100vw-2rem)] max-w-sm">
+    <div
+      style={{
+        position: 'fixed',
+        bottom: 80,
+        right: 16,
+        zIndex: 200,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        width: 'min(calc(100vw - 32px), 360px)',
+      }}
+    >
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onDismiss={() => remove(toast.id)} />
       ))}
@@ -51,39 +57,52 @@ export function ToastContainer() {
   );
 }
 
-function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
-  const icons: Record<ToastType, React.ReactNode> = {
-    success: <CheckCircle className="w-5 h-5 text-sprout flex-shrink-0" />,
-    error: <XCircle className="w-5 h-5 text-clay flex-shrink-0" />,
-    warning: <AlertTriangle className="w-5 h-5 text-harvest flex-shrink-0" />,
-    info: <Info className="w-5 h-5 text-blue-400 flex-shrink-0" />,
-  };
+const TYPE_STYLES: Record<ToastType, { bg: string; border: string; icon: string }> = {
+  success: { bg: 'var(--color-success-bg)', border: 'var(--color-success)',   icon: 'var(--color-success)'  },
+  error:   { bg: 'var(--color-danger-bg)',  border: 'var(--color-danger)',    icon: 'var(--color-danger)'   },
+  warning: { bg: 'var(--color-warning-bg)', border: 'var(--color-warning)',   icon: 'var(--color-warning)'  },
+  info:    { bg: 'var(--color-info-bg)',    border: 'var(--color-info)',      icon: 'var(--color-info)'     },
+};
 
-  const bgClasses: Record<ToastType, string> = {
-    success: 'bg-sprout/10 border-sprout/25',
-    error: 'bg-clay/10 border-clay/25',
-    warning: 'bg-harvest/10 border-harvest/25',
-    info: 'bg-blue-500/10 border-blue-500/20',
-  };
+const ICONS: Record<ToastType, React.ComponentType<{ size?: number; style?: React.CSSProperties }>> = {
+  success: CheckCircle,
+  error:   XCircle,
+  warning: AlertTriangle,
+  info:    Info,
+};
+
+function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }) {
+  const s = TYPE_STYLES[toast.type];
+  const Icon = ICONS[toast.type];
 
   return (
     <div
       role="alert"
       aria-live="polite"
-      className={cn(
-        'flex items-start gap-3 rounded-xl border px-4 py-3',
-        'backdrop-blur-md shadow-shadow-card animate-in slide-up-from-bottom duration-200',
-        bgClasses[toast.type]
-      )}
+      style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 10,
+        padding: '12px 14px',
+        borderRadius: 12,
+        background: s.bg,
+        border: `1px solid ${s.border}`,
+        boxShadow: 'var(--shadow-card)',
+      }}
     >
-      {icons[toast.type]}
-      <p className="flex-1 text-sm text-cream leading-snug">{toast.message}</p>
+      <Icon size={16} style={{ color: s.icon, flexShrink: 0, marginTop: 1 }} />
+      <p style={{ flex: 1, fontSize: 13, color: 'var(--color-text)', lineHeight: 1.4 }}>
+        {toast.message}
+      </p>
       <button
         onClick={onDismiss}
-        className="text-cream/40 hover:text-cream transition-colors flex-shrink-0"
         aria-label="Dismiss"
+        style={{
+          background: 'none', border: 'none', cursor: 'pointer', padding: 2,
+          color: 'var(--color-text-muted)', flexShrink: 0,
+        }}
       >
-        <X className="w-4 h-4" />
+        <X size={14} />
       </button>
     </div>
   );

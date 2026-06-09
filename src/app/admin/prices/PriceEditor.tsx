@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
@@ -146,7 +146,7 @@ export function PriceEditor({ districts }: Props) {
                 style={{
                   width: '32px', height: '32px', borderRadius: '8px',
                   background: entries.length === 1 ? '#F3F4F6' : '#FEE2E2',
-                  color: entries.length === 1 ? '#D1D5DB' : '#E63946',
+                  color: entries.length === 1 ? '#D1D5DB' : 'var(--color-danger)',
                   border: 'none', cursor: entries.length === 1 ? 'not-allowed' : 'pointer',
                   fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
@@ -162,7 +162,7 @@ export function PriceEditor({ districts }: Props) {
             type="button"
             onClick={addRow}
             style={{
-              padding: '7px 14px', background: '#F0FDF4', color: '#1B4332',
+              padding: '7px 14px', background: '#F0FDF4', color: 'var(--color-primary)',
               border: '1.5px solid #BBF7D0', borderRadius: '8px',
               fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             }}
@@ -173,7 +173,7 @@ export function PriceEditor({ districts }: Props) {
             type="submit"
             disabled={loading}
             style={{
-              padding: '8px 20px', background: loading ? '#9CA3AF' : '#1B4332',
+              padding: '8px 20px', background: loading ? '#9CA3AF' : 'var(--color-primary)',
               color: '#FFFFFF', border: 'none', borderRadius: '8px',
               fontSize: '13px', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
             }}
@@ -184,7 +184,7 @@ export function PriceEditor({ districts }: Props) {
             <p
               style={{
                 fontSize: '13px', fontWeight: 600,
-                color: result.ok ? '#059669' : '#E63946',
+                color: result.ok ? '#059669' : 'var(--color-danger)',
               }}
             >
               {result.ok ? '✓' : '✗'} {result.msg}

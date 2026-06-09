@@ -6,10 +6,10 @@ export const getSupabase = cache(async () => {
   return createClient();
 });
 
-// Cached per-request: session read is a local cookie parse — zero network cost
-// Middleware already validated the JWT, so we can trust this session in pages
+// Cached per-request: validates JWT against Supabase auth server (not just cookie parse)
 export const getAuthSession = cache(async () => {
   const supabase = await getSupabase();
-  const { data: { session } } = await supabase.auth.getSession();
-  return session;
+  const { data: { user } } = await supabase.auth.getUser();
+  // Return a session-like object so callers using session?.user still work
+  return user ? { user } : null;
 });

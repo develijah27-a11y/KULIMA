@@ -14,8 +14,8 @@ export default async function RequestDeliveryPage({
   searchParams: Promise<{ offerId?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const { offerId } = await searchParams;
 
@@ -26,7 +26,7 @@ export default async function RequestDeliveryPage({
     const { data } = await (supabase.from as any)('offers')
       .select('id, listing:listings(crop_type, quantity_kg, district)')
       .eq('id', offerId)
-      .eq('buyer_id', session.user.id)
+      .eq('buyer_id', user.id)
       .eq('status', 'accepted')
       .single();
 

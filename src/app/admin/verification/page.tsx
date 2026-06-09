@@ -7,7 +7,7 @@ import { ApproveRejectButtons } from './ApproveRejectButtons';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332',
+  green: 'var(--color-primary)',
 };
 
 const STATUS_CFG = {

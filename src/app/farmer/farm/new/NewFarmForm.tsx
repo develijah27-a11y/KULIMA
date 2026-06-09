@@ -6,12 +6,12 @@ import dynamic from 'next/dynamic';
 
 const GPSWalkMap = dynamic(() => import('./GPSWalkMap').then(m => m.GPSWalkMap), {
   ssr: false,
-  loading: () => <div style={{ height: 300, background: '#F0FDF4', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#40916C', fontSize: 13, fontWeight: 600 }}>Loading map...</p></div>,
+  loading: () => <div style={{ height: 300, background: '#F0FDF4', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: 'var(--color-primary-hover)', fontSize: 13, fontWeight: 600 }}>Loading map...</p></div>,
 });
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
 const CROPS = ['maize','beans','coffee','rice','banana','cassava','tomato','sorghum','groundnuts','sweet_potatoes','sunflower','cotton'];

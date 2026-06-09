@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: '#1B4332' };
+const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)' };
 
 interface Props {
   deliveryId: string;

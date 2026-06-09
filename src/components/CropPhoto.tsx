@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
@@ -100,7 +100,7 @@ export function CropPhotoCard({
       <div style={{ padding: '14px 16px' }}>
         <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', margin: '0 0 2px', textTransform: 'capitalize' }}>{label}</p>
         {sub && <p style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>{sub}</p>}
-        {price && <p style={{ fontSize: 16, fontWeight: 900, color: '#1B4332', margin: '8px 0 0', letterSpacing: '-0.02em' }}>{price}</p>}
+        {price && <p style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-primary)', margin: '8px 0 0', letterSpacing: '-0.02em' }}>{price}</p>}
       </div>
     </div>
   );

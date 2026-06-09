@@ -10,12 +10,12 @@ const C = {
 
 export default async function TransporterVehiclePage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const { data: vehicle } = await (supabase.from as any)('vehicles')
     .select('*')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .maybeSingle();
 
   return (

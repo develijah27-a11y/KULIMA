@@ -21,10 +21,10 @@ export function ShowAlertButton() {
     });
     const data = await res.json().catch(() => ({ success: false }));
     if (data.success) {
-      showToast({ type: 'success', message: 'Alert sent to all farmers.' });
+      showToast('Alert sent to all farmers.', 'success');
       setOpen(false); setTitle(''); setBody('');
     } else {
-      showToast({ type: 'error', message: 'Failed to send alert.' });
+      showToast('Failed to send alert.', 'error');
     }
     setLoading(false);
   }, [type, title, body]);

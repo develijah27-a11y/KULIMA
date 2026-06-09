@@ -30,18 +30,18 @@ const FARMER_NAV = [
 
 export default async function FarmerLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
   let profile: { name: string; role: string } | null = null;
   let unreadCount = 0;
   let location = '';
 
-  if (session?.user) {
+  if (user) {
     const [profileRes, unreadRes] = await Promise.all([
-      supabase.from('profiles').select('full_name, location').eq('user_id', session.user.id).single(),
+      supabase.from('profiles').select('full_name, location').eq('user_id', user.id).single(),
       supabase.from('notifications')
         .select('id', { count: 'exact', head: true })
-        .eq('farmer_id', session.user.id)
+        .eq('farmer_id', user.id)
         .eq('read', false),
     ]);
     if (profileRes.data) {

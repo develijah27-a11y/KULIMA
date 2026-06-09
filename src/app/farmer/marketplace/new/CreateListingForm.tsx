@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
-  green: '#1B4332', greenBright: '#52B788',
+  green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)',
 };
 
 const CROPS = [

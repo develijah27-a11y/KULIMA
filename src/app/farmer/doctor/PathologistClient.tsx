@@ -25,7 +25,7 @@ const SEVERITY_CFG = {
 };
 
 const COMMON_DISEASES = [
-  { name: 'Fall Armyworm',     crop: 'Maize',    icon: '🐛', color: '#E63946', bg: '#FEF2F2' },
+  { name: 'Fall Armyworm',     crop: 'Maize',    icon: '🐛', color: 'var(--color-danger)', bg: '#FEF2F2' },
   { name: 'Northern Leaf Blight', crop: 'Maize', icon: '🍂', color: '#D97706', bg: '#FFFBEB' },
   { name: 'Bacterial Wilt',    crop: 'Tomato',   icon: '🥀', color: '#7C3AED', bg: '#F5F3FF' },
   { name: 'Mosaic Virus',      crop: 'Cassava',  icon: '🟡', color: '#0284C7', bg: '#EFF6FF' },
@@ -47,8 +47,8 @@ type DiagnosisResult = {
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  red: '#E63946', amber: '#D97706',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
+  red: 'var(--color-danger)', amber: '#D97706',
   cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };

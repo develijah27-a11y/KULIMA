@@ -1,11 +1,11 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C',
-  red: '#E63946', amber: '#D97706', blue: '#0284C7',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
+  red: 'var(--color-danger)', amber: '#D97706', blue: '#0284C7',
 };
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {

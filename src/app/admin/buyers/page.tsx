@@ -3,8 +3,8 @@ import { redirect } from 'next/navigation';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  cardBg: 'var(--d-card)', green: '#1B4332', greenMed: '#40916C',
-  amber: '#F4A261', red: '#E63946', blue: '#0077B6',
+  cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
+  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 

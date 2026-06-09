@@ -19,12 +19,12 @@ const ADMIN_NAV = [
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
   let profile: { name: string; role: string } | null = null;
 
-  if (session?.user) {
-    const { data } = await supabase.from('profiles').select('full_name').eq('user_id', session.user.id).single();
+  if (user) {
+    const { data } = await supabase.from('profiles').select('full_name').eq('user_id', user.id).single();
     if (data) profile = { name: data.full_name ?? 'Admin', role: 'Admin' };
   }
 

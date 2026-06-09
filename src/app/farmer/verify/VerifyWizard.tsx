@@ -9,7 +9,7 @@ import {
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  cardBg: 'var(--d-card)', green: '#1B4332', greenBright: '#52B788',
+  cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)',
   cardShadow: 'var(--d-shadow-card)',
 };
 

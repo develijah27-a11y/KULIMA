@@ -1,11 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C', red: '#E63946',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', red: 'var(--color-danger)',
 };
 
 const DISTRICTS = [
@@ -14,7 +14,7 @@ const DISTRICTS = [
 ];
 
 const ROLE_CFG: Record<string, { color: string; bg: string }> = {
-  leader:    { color: '#1B4332', bg: '#D1FAE5' },
+  leader:    { color: 'var(--color-primary)', bg: '#D1FAE5' },
   secretary: { color: '#0284C7', bg: '#DBEAFE' },
   treasurer: { color: '#7C3AED', bg: '#EDE9FE' },
   member:    { color: '#6B7280', bg: '#F3F4F6' },

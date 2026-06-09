@@ -1,11 +1,11 @@
-interface Props {
+﻿interface Props {
   icon: string;
   title: string;
   description: string;
   accent?: string;
 }
 
-export function ComingSoon({ icon, title, description, accent = '#1B4332' }: Props) {
+export function ComingSoon({ icon, title, description, accent = 'var(--color-primary)' }: Props) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', textAlign: 'center', padding: '40px 24px' }}>
       <div style={{ fontSize: 56, marginBottom: 20 }}>{icon}</div>

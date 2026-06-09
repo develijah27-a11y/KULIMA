@@ -52,18 +52,18 @@ function timeAgo(iso: string) {
 
 // Design constants
 const C = {
-  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  amber: '#F4A261', red: '#E63946', blue: '#0077B6',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
+  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)',
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   cardShadow: 'var(--d-shadow-card)',
 };
 
 const SEVERITY_MAP: Record<InsightSeverity, { color: string; bg: string; border: string }> = {
-  critical: { color: '#E63946', bg: '#FEF2F2', border: '#FECACA' },
+  critical: { color: 'var(--color-danger)', bg: '#FEF2F2', border: '#FECACA' },
   warning:  { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
   positive: { color: '#059669', bg: '#F0FDF4', border: '#BBF7D0' },
-  info:     { color: '#0077B6', bg: '#EFF6FF', border: '#BFDBFE' },
+  info:     { color: 'var(--color-info)', bg: '#EFF6FF', border: '#BFDBFE' },
 };
 
 const CROP_COLORS: Record<string, string> = {
@@ -258,7 +258,7 @@ async function AIBanner({ userId }: { userId: string }) {
         🌱
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#52B788' }}>AI Recommendation</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-primary-muted)' }}>AI Recommendation</p>
         <p className="text-sm font-bold text-white leading-snug">{season.currentTask}</p>
         <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
           {season.season} · {season.daysLeft} days remaining · {crop.charAt(0).toUpperCase() + crop.slice(1)} season
@@ -267,7 +267,7 @@ async function AIBanner({ userId }: { userId: string }) {
       <a
         href="/farmer/weather"
         className="text-xs font-bold px-3 py-1.5 rounded-lg shrink-0"
-        style={{ background: '#52B788', color: '#1B4332' }}
+        style={{ background: 'var(--color-primary-muted)', color: 'var(--color-primary)' }}
       >
         Details →
       </a>
@@ -422,8 +422,8 @@ async function RecentOffers({ userId }: { userId: string }) {
 
   const STATUS: Record<string, { label: string; color: string; bg: string }> = {
     pending:  { label: 'New',      color: '#059669', bg: '#D1FAE5' },
-    accepted: { label: 'Accepted', color: '#0077B6', bg: '#DBEAFE' },
-    rejected: { label: 'Rejected', color: '#E63946', bg: '#FEE2E2' },
+    accepted: { label: 'Accepted', color: 'var(--color-info)', bg: '#DBEAFE' },
+    rejected: { label: 'Rejected', color: 'var(--color-danger)', bg: '#FEE2E2' },
   };
 
   return (
@@ -596,7 +596,7 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
   if (alerts.length === 0) return null;
 
   const URGENCY: Record<string, { bg: string; color: string; border: string }> = {
-    high:   { bg: '#FEF2F2', color: '#E63946', border: '#FECACA' },
+    high:   { bg: '#FEF2F2', color: 'var(--color-danger)', border: '#FECACA' },
     medium: { bg: '#FFFBEB', color: '#D97706', border: '#FDE68A' },
     low:    { bg: '#F0FDF4', color: '#059669', border: '#BBF7D0' },
   };
@@ -645,8 +645,8 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Create Listing', href: '/farmer/marketplace/create', emoji: '✏️', bg: '#F0FDF4', color: '#1B4332' },
-    { label: 'Add Record',     href: '/farmer/farm',               emoji: '📋', bg: '#EFF6FF', color: '#0077B6' },
+    { label: 'Create Listing', href: '/farmer/marketplace/create', emoji: '✏️', bg: '#F0FDF4', color: 'var(--color-primary)' },
+    { label: 'Add Record',     href: '/farmer/farm',               emoji: '📋', bg: '#EFF6FF', color: 'var(--color-info)' },
     { label: 'Check Weather',  href: '/farmer/weather',            emoji: '🌤',  bg: '#FFFBEB', color: '#D97706' },
     { label: 'Scan Disease',   href: '/farmer/doctor',             emoji: '🔍', bg: '#F5F3FF', color: '#7C3AED' },
     { label: 'Apply for Loan', href: '/farmer/finance',            emoji: '💰', bg: '#FEF2F2', color: '#DC2626' },
@@ -680,9 +680,9 @@ function QuickActions() {
 
 export default async function FarmerDashboardPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
-  const userId = session.user.id;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
+  const userId = user.id;
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">

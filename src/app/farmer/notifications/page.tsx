@@ -1,7 +1,7 @@
 ﻿import { redirect } from 'next/navigation';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 
-const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: '#1B4332', greenMed: '#40916C', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
+const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
 export default async function NotificationsPage() {
   const session = await getAuthSession();

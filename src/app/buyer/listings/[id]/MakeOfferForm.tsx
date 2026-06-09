@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', amber: '#F4A261',
+  green: 'var(--color-primary)', amber: 'var(--color-accent)',
 };
 
 interface Props {

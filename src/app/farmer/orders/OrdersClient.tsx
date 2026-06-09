@@ -1,12 +1,12 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  red: '#E63946', amber: '#D97706',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
+  red: 'var(--color-danger)', amber: '#D97706',
 };
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {

@@ -4,8 +4,8 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { action, offerId } = await req.json();
   if (!action || !offerId) return NextResponse.json({ error: 'action and offerId required' }, { status: 400 });
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const { data: offer, error: offerErr } = await (admin.from as any)('offers')
       .select('id, buyer_id, status, offered_price, counter_price, listing:listings(id, farmer_id, quantity_kg, farmer:profiles(user_id))')
       .eq('id', offerId)
-      .eq('buyer_id', session.user.id)
+      .eq('buyer_id', user.id)
       .eq('status', 'accepted')
       .single();
 
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     // Get buyer's wallet
     const { data: buyerWallet } = await (admin.from as any)('wallets')
       .select('id, balance')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (!buyerWallet || buyerWallet.balance < totalAmount) {
@@ -62,14 +62,14 @@ export async function POST(req: Request) {
       }).eq('id', buyerWallet.id),
       (admin.from as any)('escrow_accounts').insert({
         offer_id: offerId,
-        buyer_user_id: session.user.id,
+        buyer_user_id: user.id,
         seller_user_id: sellerUserId,
         amount: totalAmount,
         status: 'funded',
       }).select('id').single(),
       (admin.from as any)('wallet_transactions').insert({
         wallet_id: buyerWallet.id,
-        user_id: session.user.id,
+        user_id: user.id,
         type: 'escrow_lock',
         amount: totalAmount,
         status: 'completed',
@@ -93,9 +93,9 @@ export async function POST(req: Request) {
     if (escrowErr || !escrow) return NextResponse.json({ error: 'Escrow not found or already processed' }, { status: 404 });
 
     // Verify requester is buyer or admin
-    const { data: profile } = await (admin.from as any)('profiles').select('role').eq('user_id', session.user.id).single();
+    const { data: profile } = await (admin.from as any)('profiles').select('role').eq('user_id', user.id).single();
     const isAdmin  = profile?.role === 'admin';
-    const isBuyer  = escrow.buyer_user_id === session.user.id;
+    const isBuyer  = escrow.buyer_user_id === user.id;
     if (!isAdmin && !isBuyer) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
 
     const { data: sellerWallet } = await (admin.from as any)('wallets')
@@ -129,7 +129,7 @@ export async function POST(req: Request) {
 
   if (action === 'refund') {
     // Admin refunds buyer (e.g., farmer failed to deliver)
-    const { data: profile } = await (admin.from as any)('profiles').select('role').eq('user_id', session.user.id).single();
+    const { data: profile } = await (admin.from as any)('profiles').select('role').eq('user_id', user.id).single();
     if (profile?.role !== 'admin') return NextResponse.json({ error: 'Admin only' }, { status: 403 });
 
     const { data: escrow } = await (admin.from as any)('escrow_accounts')

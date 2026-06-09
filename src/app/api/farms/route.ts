@@ -3,12 +3,12 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { data, error } = await (supabase.from as any)('farms')
     .select('*')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
@@ -18,8 +18,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
   const { name, district, location, size_hectares, farm_type, crop_types, description, boundary } = body;
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   if (!location && !district) return NextResponse.json({ error: 'Location required' }, { status: 400 });
 
   const { data, error } = await (supabase.from as any)('farms').insert({
-    user_id: session.user.id,
+    user_id: user.id,
     name: name.trim(),
     location: location ?? district,
     district: district ?? location,
@@ -46,8 +46,8 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
   const { id, ...updates } = body;
@@ -62,7 +62,7 @@ export async function PATCH(req: Request) {
   const { error } = await (supabase.from as any)('farms')
     .update(safeUpdates)
     .eq('id', id)
-    .eq('user_id', session.user.id);
+    .eq('user_id', user.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

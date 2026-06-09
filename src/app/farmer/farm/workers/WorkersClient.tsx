@@ -4,15 +4,15 @@ import { useState } from 'react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  amber: '#D97706', red: '#E63946', blue: '#0077B6',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
+  amber: '#D97706', red: 'var(--color-danger)', blue: 'var(--color-info)',
   cardBg: 'var(--d-card)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 
 export const WORKER_ROLES: { value: string; label: string; color: string; bg: string; icon: string }[] = [
-  { value: 'farm_manager',          label: 'Farm Manager',          color: '#1B4332', bg: '#D1FAE5', icon: '👨‍💼' },
-  { value: 'field_worker',          label: 'Field Worker',          color: '#0077B6', bg: '#DBEAFE', icon: '👷' },
+  { value: 'farm_manager',          label: 'Farm Manager',          color: 'var(--color-primary)', bg: '#D1FAE5', icon: '👨‍💼' },
+  { value: 'field_worker',          label: 'Field Worker',          color: 'var(--color-info)', bg: '#DBEAFE', icon: '👷' },
   { value: 'irrigation_specialist', label: 'Irrigation Specialist', color: '#0284C7', bg: '#E0F2FE', icon: '💧' },
   { value: 'pest_controller',       label: 'Pest Controller',       color: '#7C3AED', bg: '#EDE9FE', icon: '🧴' },
   { value: 'harvester',             label: 'Harvester',             color: '#D97706', bg: '#FEF3C7', icon: '🌾' },

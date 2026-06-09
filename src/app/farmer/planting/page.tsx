@@ -9,8 +9,8 @@ import {
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  amber: '#F4A261', red: '#E63946', blue: '#0077B6',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
+  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)',
   cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   cardShadow: 'var(--d-shadow-card)',
 };
@@ -18,7 +18,7 @@ const C = {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const URGENCY_CFG: Record<string, { bg: string; color: string; border: string }> = {
-  high:   { bg: '#FEF2F2', color: '#E63946', border: '#FECACA' },
+  high:   { bg: '#FEF2F2', color: 'var(--color-danger)', border: '#FECACA' },
   medium: { bg: '#FFFBEB', color: '#D97706', border: '#FDE68A' },
   low:    { bg: '#F0FDF4', color: '#059669', border: '#BBF7D0' },
 };
@@ -29,7 +29,7 @@ const ALERT_TYPE_ICON: Record<string, string> = {
 
 const PHASE_CFG: Record<string, { bg: string; color: string; icon: string }> = {
   planting: { bg: '#D1FAE5', color: '#059669', icon: '🌱' },
-  growing:  { bg: '#DBEAFE', color: '#0077B6', icon: '🌿' },
+  growing:  { bg: '#DBEAFE', color: 'var(--color-info)', icon: '🌿' },
   harvest:  { bg: '#FEF3C7', color: '#D97706', icon: '🌾' },
   dry:      { bg: '#F3F4F6', color: '#6B7280', icon: '☀️' },
 };
@@ -147,7 +147,7 @@ export default async function PlantingPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <span style={{ fontSize: '28px' }}>{phaseCfg.icon}</span>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#52B788', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   {phaseCfg.bg && 'Current Season'}
                 </span>
               </div>
@@ -157,7 +157,7 @@ export default async function PlantingPage() {
               </p>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', minWidth: '180px' }}>
-              <p style={{ fontSize: '11px', fontWeight: 700, color: '#52B788', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
+              <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
                 Next Season
               </p>
               <p style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', marginBottom: '4px' }}>{season.nextSeason}</p>

@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { EXPENSE_CATEGORIES, SEASONS } from '@/lib/farm-finance';
+import { queueRecord } from '@/lib/db';
+import { showToast } from '@/components/ui/Toast';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  red: '#E63946', cardBg: 'var(--d-card)',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
+  red: 'var(--color-danger)', cardBg: 'var(--d-card)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 
@@ -86,6 +88,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Failed to save');
       setExpenses(prev => [json.expense, ...prev]);
+      showToast('Expense saved', 'success');
       setForm({
         category: EXPENSE_CATEGORIES[0].value, description: '', amount_ugx: '', quantity: '',
         unit: '', crop_type: '', season: 'A2026',
@@ -93,7 +96,18 @@ export function ExpenseForm({ initialExpenses }: Props) {
       });
       setShowForm(false);
     } catch (e: any) {
-      setError(e.message);
+      if (!navigator.onLine || (e instanceof TypeError && e.message.includes('fetch'))) {
+        const qPayload = {
+          ...form,
+          amount_ugx: Number(form.amount_ugx),
+          quantity: form.quantity ? Number(form.quantity) : null,
+        };
+        await queueRecord('expenses', qPayload, 'insert');
+        showToast('Saved locally — will sync when online', 'warning');
+        setShowForm(false);
+      } else {
+        setError(e.message);
+      }
     } finally {
       setSaving(false);
     }
@@ -274,7 +288,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
           }}
         >
           <div>
-            <p style={{ fontSize: '12px', fontWeight: 700, color: '#52B788', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {filterSeason} {filterCrop ? `· ${filterCrop.replace(/_/g, ' ')}` : '· All Crops'}
             </p>
             <p style={{ fontSize: '22px', fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', marginTop: '2px' }}>

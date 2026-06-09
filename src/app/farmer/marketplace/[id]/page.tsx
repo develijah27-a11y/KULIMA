@@ -9,7 +9,7 @@ import { type VerificationLevel } from '@/lib/trust';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', amber: '#F4A261',
+  green: 'var(--color-primary)', amber: 'var(--color-accent)',
 };
 
 const STATUS_CFG = {
@@ -35,10 +35,10 @@ function timeAgo(iso: string) {
 export default async function FarmerListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', session.user.id).single();
+  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
   if (!profile) redirect('/auth/signin');
 
   const { data: listing } = await (supabase.from as any)('listings')

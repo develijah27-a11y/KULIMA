@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import { WorkersClient } from './WorkersClient';
 
-const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', green: '#1B4332', greenMed: '#40916C', border: 'var(--d-border)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)' };
+const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', border: 'var(--d-border)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)' };
 
 async function WorkersData({ userId }: { userId: string }) {
   const supabase = await getSupabase();

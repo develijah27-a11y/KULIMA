@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+﻿import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { DISTRICT_NAMES } from '@/lib/districts';
 import { PriceEditor } from './PriceEditor';
@@ -120,13 +120,13 @@ export default async function AdminPricesPage() {
                           style={{
                             fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '20px',
                             background: p.source === 'admin' ? '#DBEAFE' : p.source === 'system' ? '#F3F4F6' : '#D1FAE5',
-                            color: p.source === 'admin' ? '#0077B6' : p.source === 'system' ? '#6B7280' : '#059669',
+                            color: p.source === 'admin' ? 'var(--color-info)' : p.source === 'system' ? '#6B7280' : '#059669',
                           }}
                         >
                           {p.source}
                         </span>
                       </td>
-                      <td style={{ padding: '10px 16px', fontSize: '12px', color: isStale ? '#E63946' : '#6B7280' }}>
+                      <td style={{ padding: '10px 16px', fontSize: '12px', color: isStale ? 'var(--color-danger)' : '#6B7280' }}>
                         {age}
                       </td>
                     </tr>

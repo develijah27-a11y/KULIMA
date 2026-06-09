@@ -5,7 +5,7 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
 export default async function TransporterDeliveriesPage({
@@ -14,8 +14,8 @@ export default async function TransporterDeliveriesPage({
   searchParams: Promise<{ tab?: string; district?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const { tab = 'available', district = '' } = await searchParams;
   const tabs = ['available', 'my_bids', 'active', 'completed'];
@@ -31,18 +31,18 @@ export default async function TransporterDeliveriesPage({
   } else if (tab === 'my_bids') {
     query = (supabase.from as any)('delivery_bids')
       .select('id, price, status, created_at, delivery:delivery_requests(id, pickup_district, dropoff_district, cargo_kg, cargo_type, pickup_date, status)')
-      .eq('transporter_id', session.user.id)
+      .eq('transporter_id', user.id)
       .order('created_at', { ascending: false });
   } else if (tab === 'active') {
     query = (supabase.from as any)('delivery_requests')
       .select('id, pickup_district, dropoff_district, cargo_kg, cargo_type, pickup_date, status, agreed_price')
-      .eq('transporter_id', session.user.id)
+      .eq('transporter_id', user.id)
       .in('status', ['assigned', 'in_transit'])
       .order('pickup_date', { ascending: true });
   } else {
     query = (supabase.from as any)('delivery_requests')
       .select('id, pickup_district, dropoff_district, cargo_kg, status, agreed_price, pickup_date')
-      .eq('transporter_id', session.user.id)
+      .eq('transporter_id', user.id)
       .eq('status', 'delivered')
       .order('pickup_date', { ascending: false })
       .limit(30);

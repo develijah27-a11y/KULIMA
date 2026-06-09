@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Polyline, Polygon } from 'leaflet';
@@ -87,7 +87,7 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
     if (polygonRef.current)    { polygonRef.current.remove();    polygonRef.current    = null; }
 
     if (mapRef.current) {
-      trackLayerRef.current = L.polyline([], { color: '#1B4332', weight: 3, dashArray: '6 4' }).addTo(mapRef.current);
+      trackLayerRef.current = L.polyline([], { color: 'var(--color-primary)', weight: 3, dashArray: '6 4' }).addTo(mapRef.current);
     }
 
     watchIdRef.current = navigator.geolocation.watchPosition(
@@ -139,7 +139,7 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
     if (trackLayerRef.current) { trackLayerRef.current.remove(); trackLayerRef.current = null; }
 
     if (mapRef.current) {
-      polygonRef.current = L.polygon(pts, { color: '#1B4332', fillColor: '#52B788', fillOpacity: 0.3, weight: 2 }).addTo(mapRef.current);
+      polygonRef.current = L.polygon(pts, { color: 'var(--color-primary)', fillColor: 'var(--color-primary-muted)', fillOpacity: 0.3, weight: 2 }).addTo(mapRef.current);
       mapRef.current.fitBounds(pts, { padding: [30, 30] });
     }
 
@@ -167,7 +167,7 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
       <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         {!walking ? (
           <button type="button" onClick={startWalk}
-            style={{ padding: '9px 16px', background: '#1B4332', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            style={{ padding: '9px 16px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
             📍 Start GPS Walk
           </button>
         ) : (

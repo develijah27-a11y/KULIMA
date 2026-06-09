@@ -8,7 +8,7 @@ import { type VerificationLevel } from '@/lib/trust';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenBright: '#52B788',
+  green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)',
 };
 
 const Card = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
@@ -32,16 +32,16 @@ async function getCrops(userId: string) {
 
 export default async function FarmerProfilePage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const [profileRes, farms, crops] = await Promise.all([
     (supabase.from as any)('profiles')
       .select('full_name, phone_number, location, primary_crop, role, verification_level, trust_score, completed_deals')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .single(),
-    getFarms(session.user.id),
-    getCrops(session.user.id),
+    getFarms(user.id),
+    getCrops(user.id),
   ]);
 
   const p = profileRes.data ?? {} as any;
@@ -127,20 +127,20 @@ export default async function FarmerProfilePage() {
       <Card>
         <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
           <p className="text-sm font-bold" style={{ color: C.text }}>My Farms ({farms.length})</p>
-          <Link href="/farmer/farm" className="text-xs font-semibold" style={{ color: '#40916C', textDecoration: 'none' }}>Manage →</Link>
+          <Link href="/farmer/farm" className="text-xs font-semibold" style={{ color: 'var(--color-primary-hover)', textDecoration: 'none' }}>Manage →</Link>
         </div>
         {farms.length === 0 ? (
           <div className="px-5 py-8 text-center">
             <p className="text-3xl mb-2">🌱</p>
             <p className="text-sm" style={{ color: C.muted }}>No farms registered yet</p>
-            <Link href="/farmer/farm" className="text-xs font-semibold mt-2 inline-block" style={{ color: '#40916C', textDecoration: 'none' }}>Add your first farm →</Link>
+            <Link href="/farmer/farm" className="text-xs font-semibold mt-2 inline-block" style={{ color: 'var(--color-primary-hover)', textDecoration: 'none' }}>Add your first farm →</Link>
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: C.border }}>
             {farms.map((f: any) => (
               <div key={f.id} className="px-5 py-3 flex items-center justify-between">
                 <p className="text-sm font-semibold" style={{ color: C.text }}>{f.name}</p>
-                <p className="text-sm font-bold" style={{ color: '#40916C' }}>
+                <p className="text-sm font-bold" style={{ color: 'var(--color-primary-hover)' }}>
                   {f.size_hectares ? `${f.size_hectares} ha` : '—'}
                 </p>
               </div>

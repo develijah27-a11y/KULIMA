@@ -5,7 +5,7 @@ import { WalletActions } from './WalletActions';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
 const TXN_TYPE_CFG: Record<string, { label: string; color: string; sign: '+' | '-' }> = {
@@ -24,19 +24,19 @@ function fmtDate(iso: string) {
 
 export default async function FarmerWalletPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const [walletRes, txnsRes, escrowRes] = await Promise.all([
-    (supabase.from as any)('wallets').select('*').eq('user_id', session.user.id).maybeSingle(),
+    (supabase.from as any)('wallets').select('*').eq('user_id', user.id).maybeSingle(),
     (supabase.from as any)('wallet_transactions')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(30),
     (supabase.from as any)('escrow_accounts')
       .select('*, offer:offers(id, listing:listings(crop_type, quantity_kg))')
-      .eq('seller_user_id', session.user.id)
+      .eq('seller_user_id', user.id)
       .in('status', ['funded', 'disputed'])
       .order('funded_at', { ascending: false }),
   ]);

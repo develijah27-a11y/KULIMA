@@ -6,7 +6,7 @@ import { ExpenseForm } from './ExpenseForm';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
   cardBg: 'var(--d-card)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
@@ -35,7 +35,7 @@ async function ExpenseData({ userId }: { userId: string }) {
               label: 'Total Spent (Season A)',
               value: `UGX ${totalSpent.toLocaleString()}`,
               sub: `${current.length} expense entries`,
-              color: '#E63946', bg: '#FEF2F2',
+              color: 'var(--color-danger)', bg: '#FEF2F2',
             },
             {
               label: 'Biggest Category',
@@ -47,7 +47,7 @@ async function ExpenseData({ userId }: { userId: string }) {
               label: 'Avg per Entry',
               value: current.length > 0 ? `UGX ${Math.round(totalSpent / current.length).toLocaleString()}` : '—',
               sub: 'per expense logged',
-              color: '#0077B6', bg: '#EFF6FF',
+              color: 'var(--color-info)', bg: '#EFF6FF',
             },
           ].map(({ label, value, sub, color, bg }) => (
             <div

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
 type Mode = null | 'deposit' | 'withdraw';

@@ -5,8 +5,8 @@ import Link from 'next/link';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  cardBg: 'var(--d-card)', green: '#1B4332', greenBright: '#52B788', greenMed: '#40916C',
-  amber: '#F4A261', red: '#E63946', blue: '#0077B6',
+  cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)', greenMed: 'var(--color-primary-hover)',
+  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -158,9 +158,9 @@ async function MarketPulse() {
 
 export default async function BuyerDashboardPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
-  const userId = session.user.id;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
+  const userId = user.id;
 
   const NAV_CARDS = [
     { href: '/buyer/listings', emoji: '📋', title: 'Browse Listings', sub: 'Find verified produce from farmers', border: C.greenBright },

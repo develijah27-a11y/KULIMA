@@ -14,17 +14,17 @@ const LEVELS: VerificationLevel[] = ['grey', 'green', 'blue', 'gold'];
 
 export default async function VerifyPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const { data: profile } = await (supabase.from as any)('profiles')
     .select('id, role, verification_level, trust_score, reliability_score, completed_deals')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single();
 
   const { data: pending } = await (supabase.from as any)('verifications')
     .select('id, level, status, submitted_at')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .eq('status', 'pending')
     .order('submitted_at', { ascending: false })
     .limit(1)
@@ -108,7 +108,7 @@ export default async function VerifyPage() {
           </div>
         ) : (
           <VerifyWizard
-            userId={session.user.id}
+            userId={user.id}
             profileId={(profile as any)?.id ?? ''}
             role={(profile as any)?.role ?? 'farmer'}
             currentLevel={currentLevel}

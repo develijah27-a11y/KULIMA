@@ -16,7 +16,6 @@ import {
 type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
 
 export const ICON_MAP: Record<string, IconComponent> = {
-  // shared
   dashboard:        LayoutDashboard,
   marketplace:      ShoppingBag,
   prices:           TrendingUp,
@@ -36,37 +35,31 @@ export const ICON_MAP: Record<string, IconComponent> = {
   wallet:           Wallet,
   planting:         Sprout,
   finance:          Calculator,
-  // farmer-specific
   inventory:        Archive,
   'my-listings':    Tag,
   groups:           Users2,
   geocluster:       Globe,
   settings:         Settings,
   workers:          HardHat,
-  // buyer
   requests:         Inbox,
   contracts:        FileText,
   'cold-chain':     Snowflake,
   deliveries:       Truck,
-  // supplier
   catalogue:        BookOpen,
   'flash-deals':    Zap,
   demand:           LineChart,
   coverage:         MapPin,
-  // transporter
   'job-queue':      ClipboardList,
   'active-jobs':    Navigation,
   completed:        CheckCircle2,
   'cold-logs':      Thermometer,
   earnings:         DollarSign,
-  // pathologist
   'case-queue':     Stethoscope,
   'urgent-cases':   AlertCircle,
   'my-cases':       ClipboardCheck,
   resolved:         CheckSquare,
   'disease-alerts': AlertTriangle,
   'geo-map':        Map,
-  // offtaker
   pipeline:         GitMerge,
   scorecard:        Star,
   spend:            PieChart,
@@ -74,11 +67,9 @@ export const ICON_MAP: Record<string, IconComponent> = {
   'risk-alerts':    AlertOctagon,
   messages:         MessageCircle,
   invoices:         Receipt,
-  // farmer group
   members:          UserPlus,
   'group-chat':     MessageSquare,
   season:           CalendarDays,
-  // admin extras
   dispute:          Shield,
   alert:            AlertOctagon,
   history:          ClipboardList,
@@ -89,8 +80,8 @@ export interface NavItem {
   icon: string;
   label: string;
   badge?: number;
-  divider?: boolean;      // renders a section separator above this item
-  sectionLabel?: string;  // optional label for the section
+  divider?: boolean;
+  sectionLabel?: string;
 }
 
 interface SidebarProps {
@@ -99,48 +90,82 @@ interface SidebarProps {
   roleSwitcher?: React.ReactNode;
 }
 
+const DASHBOARD_ROOTS = [
+  '/farmer/dashboard', '/buyer/dashboard', '/admin/dashboard',
+  '/transporter/dashboard', '/supplier/dashboard', '/pathologist/dashboard',
+  '/offtaker/dashboard', '/groups/dashboard',
+];
+
 export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside
-      className="hidden md:flex flex-col w-60 shrink-0 h-screen sticky top-0 overflow-y-auto"
-      style={{ background: '#1B4332' }}
+      className="hidden md:flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto"
+      style={{
+        width: 220,
+        minWidth: 220,
+        background: 'var(--color-sidebar)',
+        borderRight: '1px solid rgba(0,0,0,0.08)',
+      }}
     >
       {/* Logo */}
-      <div className="px-5 h-16 flex items-center gap-2.5 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+      <div
+        className="px-4 flex items-center gap-2.5 shrink-0"
+        style={{
+          height: 56,
+          borderBottom: '1px solid rgba(255,255,255,0.12)',
+        }}
+      >
         <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shrink-0"
-          style={{ background: '#52B788', color: '#1B4332' }}
+          style={{
+            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+            background: 'rgba(255,255,255,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, fontWeight: 900, color: '#fff',
+            fontFamily: 'var(--font-display)',
+          }}
         >
           K
         </div>
-        <span className="text-lg font-black text-white" style={{ letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <span
+          style={{
+            fontSize: 16, fontWeight: 700, color: '#fff',
+            letterSpacing: '-0.02em', fontFamily: 'var(--font-display)',
+          }}
+        >
           Kulima
         </span>
       </div>
 
-      {/* Optional role switcher */}
       {roleSwitcher && (
-        <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="px-3 py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
           {roleSwitcher}
         </div>
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto">
         {navItems.map(({ href, icon, label, badge, divider, sectionLabel }, idx) => {
           const Icon = ICON_MAP[icon] ?? LayoutDashboard;
-          const active = pathname === href || (href !== '/farmer/dashboard' && href !== '/buyer/dashboard' && href !== '/admin/dashboard' && href !== '/transporter/dashboard' && href !== '/supplier/dashboard' && href !== '/pathologist/dashboard' && href !== '/offtaker/dashboard' && href !== '/groups/dashboard' && pathname.startsWith(href));
+          const active =
+            pathname === href ||
+            (!DASHBOARD_ROOTS.includes(href) && href.length > 1 && pathname.startsWith(href + '/'));
 
           return (
             <div key={href}>
-              {/* Section divider */}
               {divider && (
-                <div style={{ marginTop: idx === 0 ? 0 : 12, marginBottom: 8 }}>
-                  <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: sectionLabel ? 8 : 0 }} />
+                <div style={{ marginTop: idx === 0 ? 0 : 10, marginBottom: 6 }}>
+                  <div style={{ height: 1, background: 'rgba(255,255,255,0.1)', marginBottom: sectionLabel ? 6 : 0 }} />
                   {sectionLabel && (
-                    <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', paddingLeft: 12 }}>
+                    <p style={{
+                      fontSize: 9, fontWeight: 700,
+                      color: 'rgba(255,255,255,0.35)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.12em',
+                      paddingLeft: 10,
+                      fontFamily: 'var(--font-body)',
+                    }}>
                       {sectionLabel}
                     </p>
                   )}
@@ -148,19 +173,29 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
               )}
               <Link
                 href={href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors sidebar-item"
+                className="sidebar-item flex items-center gap-2.5 rounded-lg"
                 style={{
-                  background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
+                  padding: '8px 10px',
+                  background: active ? 'rgba(255,255,255,0.18)' : 'transparent',
                   color: active ? '#ffffff' : 'rgba(255,255,255,0.65)',
                   textDecoration: 'none',
+                  minHeight: 40,
                 }}
               >
-                <Icon size={18} strokeWidth={active ? 2.5 : 2} />
-                <span style={{ fontSize: '14px', fontWeight: active ? 600 : 400, flex: 1 }}>{label}</span>
+                <span className="shrink-0">
+                  <Icon size={15} strokeWidth={active ? 2.5 : 2} />
+                </span>
+                <span style={{ fontSize: 13, fontWeight: active ? 600 : 400, flex: 1, lineHeight: 1.3 }}>
+                  {label}
+                </span>
                 {badge !== undefined && badge > 0 && (
                   <span
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                    style={{ background: '#E63946', color: 'white' }}
+                    style={{
+                      fontSize: 10, fontWeight: 800,
+                      padding: '1px 6px', borderRadius: 99,
+                      background: '#fff',
+                      color: 'var(--color-primary)',
+                    }}
                   >
                     {badge > 99 ? '99+' : badge}
                   </span>
@@ -173,21 +208,27 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
 
       {/* User profile card */}
       {profile && (
-        <div className="p-4 shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center gap-3">
+        <div className="p-3 shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="flex items-center gap-2.5">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-white shrink-0"
-              style={{ background: '#40916C' }}
+              style={{
+                width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                background: 'rgba(255,255,255,0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 12, fontWeight: 800, color: '#fff',
+              }}
             >
               {profile.name[0]?.toUpperCase() ?? 'U'}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-white truncate leading-tight">{profile.name}</p>
-              <p className="text-[11px] capitalize leading-tight" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: '#fff', lineHeight: 1.3 }} className="truncate">
+                {profile.name}
+              </p>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', lineHeight: 1.3, textTransform: 'capitalize' }}>
                 {profile.role}
               </p>
             </div>
-            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: '#52B788' }} title="Online" />
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.5)', flexShrink: 0 }} />
           </div>
         </div>
       )}

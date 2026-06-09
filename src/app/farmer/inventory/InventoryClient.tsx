@@ -1,6 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
+import { queueRecord } from '@/lib/db';
+import { showToast } from '@/components/ui/Toast';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export interface InventoryItem {
   id: string;
@@ -31,21 +34,21 @@ const C = {
   border:      'var(--d-border)',
   cardBg:      'var(--d-card)',
   pageBg:      'var(--d-page)',
-  green:       '#1B4332',
-  greenMed:    '#40916C',
-  greenBright: '#52B788',
-  amber:       '#F4A261',
-  red:         '#E63946',
-  blue:        '#0077B6',
+  green:       'var(--color-primary)',
+  greenMed:    'var(--color-primary-hover)',
+  greenBright: 'var(--color-primary-muted)',
+  amber:       'var(--color-accent)',
+  red:         'var(--color-danger)',
+  blue:        'var(--color-info)',
   cardShadow:  'var(--d-shadow-card)',
 };
 
 type Category = 'all' | 'seeds' | 'fertilizers' | 'pesticides' | 'tools' | 'harvest' | 'other';
 
 const CATS: { key: Category; label: string; emoji: string; color: string; bg: string }[] = [
-  { key: 'all',         label: 'All Items',    emoji: '📦', color: '#1B4332', bg: '#F0FDF4' },
+  { key: 'all',         label: 'All Items',    emoji: '📦', color: 'var(--color-primary)', bg: '#F0FDF4' },
   { key: 'seeds',       label: 'Seeds',        emoji: '🌱', color: '#059669', bg: '#D1FAE5' },
-  { key: 'fertilizers', label: 'Fertilizers',  emoji: '🧪', color: '#0077B6', bg: '#DBEAFE' },
+  { key: 'fertilizers', label: 'Fertilizers',  emoji: '🧪', color: 'var(--color-info)', bg: '#DBEAFE' },
   { key: 'pesticides',  label: 'Pesticides',   emoji: '🛡️', color: '#7C3AED', bg: '#EDE9FE' },
   { key: 'tools',       label: 'Tools',        emoji: '🔧', color: '#D97706', bg: '#FEF3C7' },
   { key: 'harvest',     label: 'Harvest',      emoji: '🌾', color: '#B45309', bg: '#FEF3C7' },
@@ -82,6 +85,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
   const [formError, setFormError] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 250);
 
   const totalValue = items.reduce((s, i) => s + i.quantity * (i.cost_per_unit ?? 0), 0);
   const lowStockCount = items.filter(i => i.low_stock_threshold != null && i.quantity <= i.low_stock_threshold).length;
@@ -93,12 +97,12 @@ export function InventoryClient({ initialItems, profile }: Props) {
 
   const filteredItems = useMemo(() => {
     let list = activeCategory === 'all' ? items : items.filter(i => i.category === activeCategory);
-    if (search.trim()) {
-      const q = search.toLowerCase();
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase();
       list = list.filter(i => i.name.toLowerCase().includes(q) || i.notes?.toLowerCase().includes(q));
     }
     return list;
-  }, [items, activeCategory, search]);
+  }, [items, activeCategory, debouncedSearch]);
 
   function openAdd() {
     setEditingItem(null);
@@ -149,6 +153,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
         });
         if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Save failed'); }
         setItems(prev => prev.map(i => i.id === editingItem.id ? { ...i, ...payload } : i));
+        showToast('Item updated', 'success');
       } else {
         const res = await fetch('/api/inventory', {
           method: 'POST',
@@ -158,10 +163,19 @@ export function InventoryClient({ initialItems, profile }: Props) {
         if (!res.ok) { const j = await res.json(); throw new Error(j.error ?? 'Save failed'); }
         const { item } = await res.json();
         setItems(prev => [item, ...prev]);
+        showToast('Item saved', 'success');
       }
       setShowForm(false);
     } catch (e: unknown) {
-      setFormError(e instanceof Error ? e.message : 'Save failed');
+      // Network failure — queue for later sync
+      if (!navigator.onLine || (e instanceof TypeError && e.message.includes('fetch'))) {
+        await queueRecord('inventory', editingItem ? { id: editingItem.id, ...payload } : payload, editingItem ? 'update' : 'insert');
+        if (!editingItem) setItems(prev => [{ ...payload, id: `offline-${Date.now()}`, created_at: new Date().toISOString() } as InventoryItem, ...prev]);
+        showToast('Saved locally — will sync when online', 'warning');
+        setShowForm(false);
+      } else {
+        setFormError(e instanceof Error ? e.message : 'Save failed');
+      }
     } finally {
       setSaving(false);
     }
@@ -192,7 +206,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
         <button
           onClick={openAdd}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-          style={{ background: '#1B4332', color: '#ffffff' }}
+          style={{ background: 'var(--color-primary)', color: '#ffffff' }}
         >
           <span>+</span>
           <span>Add Item</span>
@@ -230,7 +244,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
           <span className="text-xl">⚠️</span>
           <div>
-            <p className="text-sm font-bold" style={{ color: '#E63946' }}>
+            <p className="text-sm font-bold" style={{ color: 'var(--color-danger)' }}>
               {lowStockCount} item{lowStockCount !== 1 ? 's' : ''} running low
             </p>
             <p className="text-xs" style={{ color: '#9CA3AF' }}>
@@ -304,15 +318,15 @@ export function InventoryClient({ initialItems, profile }: Props) {
                 ].map(({ emoji, label, desc }) => (
                   <div key={label} className="rounded-xl p-4 text-center" style={{ background: '#F0FDF4' }}>
                     <p style={{ fontSize: 28, marginBottom: 6 }}>{emoji}</p>
-                    <p className="text-sm font-bold" style={{ color: '#1B4332' }}>{label}</p>
-                    <p className="text-xs mt-1" style={{ color: '#40916C' }}>{desc}</p>
+                    <p className="text-sm font-bold" style={{ color: 'var(--color-primary)' }}>{label}</p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--color-primary-hover)' }}>{desc}</p>
                   </div>
                 ))}
               </div>
               <button
                 onClick={openAdd}
                 className="px-6 py-3 rounded-xl text-sm font-bold"
-                style={{ background: '#1B4332', color: '#ffffff' }}
+                style={{ background: 'var(--color-primary)', color: '#ffffff' }}
               >
                 Add your first item →
               </button>
@@ -407,7 +421,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
                     <button
                       onClick={() => openEdit(item)}
                       className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-80"
-                      style={{ background: '#F0FDF4', color: '#1B4332' }}
+                      style={{ background: '#F0FDF4', color: 'var(--color-primary)' }}
                     >
                       Edit
                     </button>
@@ -415,7 +429,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
                       onClick={() => handleDelete(item.id)}
                       disabled={deleting === item.id}
                       className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-80"
-                      style={{ background: '#FEF2F2', color: '#E63946' }}
+                      style={{ background: '#FEF2F2', color: 'var(--color-danger)' }}
                     >
                       {deleting === item.id ? '...' : 'Del'}
                     </button>
@@ -449,7 +463,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
             {/* Modal body */}
             <div className="p-6 space-y-4 overflow-y-auto" style={{ maxHeight: '70vh' }}>
               {formError && (
-                <div className="px-4 py-3 rounded-xl text-sm font-medium" style={{ background: '#FEF2F2', color: '#E63946' }}>
+                <div className="px-4 py-3 rounded-xl text-sm font-medium" style={{ background: '#FEF2F2', color: 'var(--color-danger)' }}>
                   {formError}
                 </div>
               )}
@@ -572,7 +586,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
                 onClick={handleSave}
                 disabled={saving}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
-                style={{ background: '#1B4332', color: '#ffffff' }}
+                style={{ background: 'var(--color-primary)', color: '#ffffff' }}
               >
                 {saving ? 'Saving...' : editingItem ? 'Update Item' : 'Add Item'}
               </button>

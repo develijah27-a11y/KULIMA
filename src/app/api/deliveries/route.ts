@@ -3,8 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
   const district = searchParams.get('district') ?? '';
@@ -23,8 +23,8 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
   const { offer_id, pickup_district, pickup_location, dropoff_district, dropoff_location, cargo_kg, cargo_type, pickup_date, notes } = body;
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
   const { data, error } = await (supabase.from as any)('delivery_requests').insert({
     offer_id: offer_id ?? null,
-    requester_id: session.user.id,
+    requester_id: user.id,
     pickup_district,
     pickup_location: pickup_location ?? pickup_district,
     dropoff_district,
@@ -53,8 +53,8 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id, action, ...updates } = await req.json();
   if (!id || !action) return NextResponse.json({ error: 'id and action required' }, { status: 400 });
@@ -63,7 +63,7 @@ export async function PATCH(req: Request) {
     const { error } = await (supabase.from as any)('delivery_requests')
       .update({ status: 'in_transit', updated_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('transporter_id', session.user.id)
+      .eq('transporter_id', user.id)
       .eq('status', 'assigned');
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
@@ -73,7 +73,7 @@ export async function PATCH(req: Request) {
     const { error } = await (supabase.from as any)('delivery_requests')
       .update({ status: 'delivered', updated_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('transporter_id', session.user.id)
+      .eq('transporter_id', user.id)
       .eq('status', 'in_transit');
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
@@ -83,7 +83,7 @@ export async function PATCH(req: Request) {
     const { error } = await (supabase.from as any)('delivery_requests')
       .update({ status: 'cancelled', updated_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('requester_id', session.user.id);
+      .eq('requester_id', user.id);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true });
   }

@@ -5,8 +5,8 @@ import Link from 'next/link';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  cardBg: 'var(--d-card)', green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  amber: '#F4A261', red: '#E63946', blue: '#0077B6', purple: '#7C3AED',
+  cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
+  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)', purple: '#7C3AED',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -23,30 +23,29 @@ const getProfile = cache(async (userId: string) => {
 });
 
 // Stats: try supplier_products table, fall back gracefully
-async function SupplierStats({ userId }: { userId: string }) {
+async function SupplierStats({ profileId, userId }: { profileId: string; userId: string }) {
   const supabase = await createClient();
 
-  const [walletRes, profileRes] = await Promise.all([
+  const [walletRes] = await Promise.all([
     (supabase.from as any)('wallets').select('balance').eq('user_id', userId).maybeSingle(),
-    getProfile(userId),
   ]);
 
   // Try supplier-specific tables safely
   const productsRes = await (supabase.from as any)('supplier_products')
     .select('id', { count: 'exact', head: true })
-    .eq('supplier_id', userId)
+    .eq('supplier_id', profileId)
     .catch(() => ({ count: 0 }));
 
   const ordersRes = await (supabase.from as any)('supplier_orders')
     .select('id', { count: 'exact', head: true })
-    .eq('supplier_id', userId)
+    .eq('supplier_id', profileId)
     .eq('status', 'pending')
     .catch(() => ({ count: 0 }));
 
   const lowStockRes = await (supabase.from as any)('supplier_products')
     .select('id', { count: 'exact', head: true })
-    .eq('supplier_id', userId)
-    .lt('stock_quantity', 10)
+    .eq('supplier_id', profileId)
+    .lt('stock_qty', 10)
     .catch(() => ({ count: 0 }));
 
   const stats = [
@@ -74,7 +73,7 @@ async function SupplierStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Add Product', href: '/supplier/catalogue/add', emoji: '➕', bg: '#F0FDF4', color: '#1B4332' },
+    { label: 'Add Product', href: '/supplier/catalogue', emoji: '➕', bg: '#F0FDF4', color: 'var(--color-primary)' },
     { label: 'View Orders', href: '/supplier/orders', emoji: '📋', bg: '#EFF6FF', color: C.blue },
     { label: 'Update Prices', href: '/supplier/catalogue', emoji: '💰', bg: '#FFFBEB', color: '#D97706' },
     { label: 'Demand Map', href: '/supplier/demand', emoji: '🗺️', bg: '#F5F3FF', color: C.purple },
@@ -140,7 +139,7 @@ async function DemandIntelligence() {
           📡
         </div>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#52B788' }}>Demand Intelligence</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--color-primary-muted)' }}>Demand Intelligence</p>
           <p className="text-sm font-bold text-white">What farmers near you are growing</p>
           <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>Stock these inputs to match current market demand</p>
         </div>
@@ -152,7 +151,7 @@ async function DemandIntelligence() {
             <div key={crop} className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.08)' }}>
               <p className="text-xs font-bold text-white capitalize">{crop}</p>
               <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>{count} farms</p>
-              <p className="text-[10px] mt-1 leading-tight" style={{ color: '#52B788' }}>{CROP_INPUTS[crop] ?? 'General inputs'}</p>
+              <p className="text-[10px] mt-1 leading-tight" style={{ color: 'var(--color-primary-muted)' }}>{CROP_INPUTS[crop] ?? 'General inputs'}</p>
             </div>
           ))}
         </div>
@@ -164,7 +163,7 @@ async function DemandIntelligence() {
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Active districts:</span>
           {topDistricts.map(([d, count]) => (
-            <span key={d} className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(82,183,136,0.2)', color: '#52B788' }}>
+            <span key={d} className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(82,183,136,0.2)', color: 'var(--color-primary-muted)' }}>
               {d} ({count})
             </span>
           ))}
@@ -175,11 +174,11 @@ async function DemandIntelligence() {
 }
 
 // Pending orders section
-async function RecentOrders({ userId }: { userId: string }) {
+async function RecentOrders({ profileId }: { profileId: string }) {
   const supabase = await createClient();
   const { data: orders, error } = await (supabase.from as any)('supplier_orders')
     .select('id, product_name, quantity, unit, status, buyer_name, district, created_at')
-    .eq('supplier_id', userId)
+    .eq('supplier_id', profileId)
     .order('created_at', { ascending: false })
     .limit(6);
 
@@ -206,7 +205,7 @@ async function RecentOrders({ userId }: { userId: string }) {
           <p className="text-3xl mb-3">📭</p>
           <p className="text-sm font-bold" style={{ color: C.text }}>No orders yet</p>
           <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Add products to your catalogue so farmers can order from you</p>
-          <Link href="/supplier/catalogue/add" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
+          <Link href="/supplier/catalogue" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
             Add First Product →
           </Link>
         </div>
@@ -234,13 +233,13 @@ async function RecentOrders({ userId }: { userId: string }) {
 }
 
 // Product catalogue preview
-async function CataloguePreview({ userId }: { userId: string }) {
+async function CataloguePreview({ profileId }: { profileId: string }) {
   const supabase = await createClient();
   const { data: products, error } = await (supabase.from as any)('supplier_products')
-    .select('id, name, category, price_ugx, unit, stock_quantity, is_active')
-    .eq('supplier_id', userId)
-    .eq('is_active', true)
-    .order('stock_quantity', { ascending: true })
+    .select('id, name, category, price_per_unit, unit, stock_qty, is_available')
+    .eq('supplier_id', profileId)
+    .eq('is_available', true)
+    .order('stock_qty', { ascending: true })
     .limit(6);
 
   const rows = error ? [] : (products ?? []);
@@ -248,6 +247,8 @@ async function CataloguePreview({ userId }: { userId: string }) {
   const CATEGORY_ICON: Record<string, string> = {
     fertilizer: '🌿', seed: '🌱', pesticide: '🧪', herbicide: '🌾',
     tool: '🔧', irrigation: '💧', organic: '♻️',
+    seeds: '🌱', fertilizers: '🌿', pesticides: '🧪', tools: '🔧',
+    equipment: '⚙️', other: '📦',
   };
 
   return (
@@ -264,14 +265,14 @@ async function CataloguePreview({ userId }: { userId: string }) {
           <p className="text-3xl mb-3">🏪</p>
           <p className="text-sm font-bold" style={{ color: C.text }}>Your catalogue is empty</p>
           <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>List seeds, fertilizers, pesticides and tools for farmers to find you</p>
-          <Link href="/supplier/catalogue/add" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
+          <Link href="/supplier/catalogue" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
             Add First Product →
           </Link>
         </div>
       ) : (
         <div className="divide-y" style={{ borderColor: C.border }}>
           {rows.map((p: any) => {
-            const lowStock = (p.stock_quantity ?? 999) < 10;
+            const lowStock = (p.stock_qty ?? 999) < 10;
             return (
               <div key={p.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -280,11 +281,11 @@ async function CataloguePreview({ userId }: { userId: string }) {
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: C.text }}>{p.name}</p>
-                    <p className="text-[11px]" style={{ color: C.muted }}>Stock: {p.stock_quantity ?? 0} {p.unit}</p>
+                    <p className="text-[11px]" style={{ color: C.muted }}>Stock: {p.stock_qty ?? 0} {p.unit}</p>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-sm font-black" style={{ color: C.text }}>UGX {Math.round(p.price_ugx ?? 0).toLocaleString()}</p>
+                  <p className="text-sm font-black" style={{ color: C.text }}>UGX {Math.round(p.price_per_unit ?? 0).toLocaleString()}</p>
                   {lowStock && (
                     <span className="text-[10px] font-bold" style={{ color: C.red }}>⚠ Low stock</span>
                   )}
@@ -301,10 +302,10 @@ async function CataloguePreview({ userId }: { userId: string }) {
 // Tips / Getting started for new suppliers
 function GettingStarted() {
   const steps = [
-    { done: false, icon: '🏪', title: 'Add your products', sub: 'List seeds, fertilizers, pesticides & tools', href: '/supplier/catalogue/add' },
+    { done: false, icon: '🏪', title: 'Add your products', sub: 'List seeds, fertilizers, pesticides & tools', href: '/supplier/catalogue' },
     { done: false, icon: '📍', title: 'Set your coverage area', sub: 'Which districts do you deliver to?', href: '/supplier/settings' },
     { done: false, icon: '💳', title: 'Set up your wallet', sub: 'Receive payments from farmers directly', href: '/supplier/wallet' },
-    { done: false, icon: '📣', title: 'Get verified', sub: 'Boost trust with a verification badge', href: '/supplier/verify' },
+    { done: false, icon: '📣', title: 'Get verified', sub: 'Boost trust with a verification badge', href: '/supplier/settings' },
   ];
 
   return (
@@ -331,10 +332,11 @@ function GettingStarted() {
 
 export default async function SupplierDashboardPage() {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
-  const userId = session.user.id;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
+  const userId = user.id;
   const profile = await getProfile(userId);
+  const profileId = profile?.id ?? '';
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Supplier';
 
   return (
@@ -350,14 +352,14 @@ export default async function SupplierDashboardPage() {
             Input Supplier Hub · {profile?.location ?? 'Uganda'}
           </p>
         </div>
-        <Link href="/supplier/catalogue/add" className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
+        <Link href="/supplier/catalogue" className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
           + Add Product
         </Link>
       </div>
 
       {/* Stats */}
       <Suspense fallback={<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}</div>}>
-        <SupplierStats userId={userId} />
+        <SupplierStats profileId={profileId} userId={userId} />
       </Suspense>
 
       {/* Quick Actions */}
@@ -371,10 +373,10 @@ export default async function SupplierDashboardPage() {
       {/* Orders + Catalogue (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
-          <RecentOrders userId={userId} />
+          <RecentOrders profileId={profileId} />
         </Suspense>
         <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
-          <CataloguePreview userId={userId} />
+          <CataloguePreview profileId={profileId} />
         </Suspense>
       </div>
 

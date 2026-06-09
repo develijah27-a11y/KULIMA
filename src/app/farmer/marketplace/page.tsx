@@ -6,7 +6,7 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenBright: '#52B788', greenMed: '#40916C', amber: '#F4A261',
+  green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)', greenMed: 'var(--color-primary-hover)', amber: 'var(--color-accent)',
 };
 
 const CROP_EMOJI: Record<string, string> = {
@@ -159,10 +159,10 @@ export default async function FarmerMarketplacePage({
   searchParams: Promise<{ filter?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', session.user.id).single();
+  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
   if (!profile) redirect('/auth/signin');
 
   const { filter = 'active' } = await searchParams;

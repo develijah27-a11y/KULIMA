@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { Bell } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { OfflineStatusPill } from '@/components/ui/OfflineStatusPill';
 
 interface TopBarProps {
   greeting: string;
@@ -11,69 +13,80 @@ interface TopBarProps {
 }
 
 export function TopBar({ greeting, location, unreadCount = 0, notificationsHref }: TopBarProps) {
+  const shortGreeting = greeting.replace(/^Good (morning|afternoon|evening), /, '');
+
   return (
     <header
-      className="sticky top-0 z-20 flex items-center justify-between px-6 shrink-0"
+      className="sticky top-0 z-20 flex items-center justify-between shrink-0"
       style={{
-        height: '64px',
-        background: 'var(--d-card)',
-        borderBottom: '1px solid var(--d-border)',
+        height: '56px',
+        background: 'var(--color-surface)',
+        borderBottom: '1px solid var(--color-border)',
+        paddingLeft: 'clamp(12px, 4vw, 24px)',
+        paddingRight: 'clamp(12px, 4vw, 24px)',
       }}
     >
-      <div>
-        <p className="text-sm font-bold" style={{ color: 'var(--d-text)', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Greeting */}
+      <div className="min-w-0 flex-1 mr-3">
+        <p
+          className="font-bold truncate hidden sm:block"
+          style={{ fontSize: '14px', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
+        >
           {greeting}
         </p>
+        <p
+          className="font-bold truncate sm:hidden"
+          style={{ fontSize: '14px', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
+        >
+          {shortGreeting}
+        </p>
         {location && (
-          <p className="text-xs mt-0.5" style={{ color: 'var(--d-muted)' }}>
+          <p className="text-xs mt-0.5 truncate hidden sm:block" style={{ color: 'var(--color-text-muted)' }}>
             📍 {location}, Uganda
           </p>
         )}
       </div>
 
-      <div className="flex items-center gap-2.5">
-        {/* Language selector */}
-        <button
-          className="text-xs font-semibold px-3 py-1.5 rounded-lg"
-          style={{ background: 'var(--d-subtle)', color: 'var(--d-muted)', border: '1px solid var(--d-border)' }}
-        >
-          EN ▾
-        </button>
+      {/* Right actions */}
+      <div className="flex items-center gap-2 shrink-0">
+        <div className="hidden sm:block">
+          <OfflineStatusPill />
+        </div>
 
-        {/* Notification bell */}
+        <ThemeToggle />
+
         {notificationsHref ? (
           <Link
             href={notificationsHref}
-            className="relative w-9 h-9 flex items-center justify-center rounded-lg"
-            style={{ background: 'var(--d-subtle)', border: '1px solid var(--d-border)' }}
-            aria-label="Notifications"
+            className="topbar-btn relative flex items-center justify-center rounded-lg"
+            style={{
+              width: 36, height: 36,
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--color-border-mid)',
+            }}
+            aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
           >
-            <Bell size={18} style={{ color: unreadCount > 0 ? '#1B4332' : 'var(--d-muted)' }} />
+            <Bell size={17} style={{ color: unreadCount > 0 ? 'var(--color-primary)' : 'var(--color-text-muted)' }} />
             {unreadCount > 0 && (
               <span
-                className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-black text-white"
-                style={{ background: '#E63946' }}
+                className="absolute -top-1 -right-1 flex items-center justify-center rounded-full font-black text-white"
+                style={{ width: 16, height: 16, fontSize: 9, background: 'var(--color-danger)' }}
               >
                 {unreadCount > 9 ? '9+' : unreadCount}
               </span>
             )}
           </Link>
         ) : (
-          <button
-            className="relative w-9 h-9 flex items-center justify-center rounded-lg"
-            style={{ background: 'var(--d-subtle)', border: '1px solid var(--d-border)' }}
-            aria-label="Notifications"
+          <div
+            className="relative flex items-center justify-center rounded-lg"
+            style={{
+              width: 36, height: 36,
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--color-border-mid)',
+            }}
           >
-            <Bell size={18} style={{ color: 'var(--d-muted)' }} />
-            {unreadCount > 0 && (
-              <span
-                className="absolute -top-1 -right-1 w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-black text-white"
-                style={{ background: '#E63946' }}
-              >
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </button>
+            <Bell size={17} style={{ color: 'var(--color-text-muted)' }} />
+          </div>
         )}
       </div>
     </header>

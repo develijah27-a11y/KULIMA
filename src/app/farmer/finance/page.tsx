@@ -5,14 +5,14 @@ import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: '#1B4332', greenMed: '#40916C', greenBright: '#52B788',
-  amber: '#D97706', red: '#E63946', blue: '#0077B6',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
+  amber: '#D97706', red: 'var(--color-danger)', blue: 'var(--color-info)',
   cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 
 const CAT_COLORS: Record<string, string> = {
-  seeds: '#059669', fertilizer: '#0077B6', pesticide: '#7C3AED',
+  seeds: '#059669', fertilizer: 'var(--color-info)', pesticide: '#7C3AED',
   labor: '#D97706', land_prep: '#92400E', transport: '#374151',
   equipment: '#6B7280', irrigation: '#0284C7', storage: '#B45309', other: '#9CA3AF',
 };
@@ -266,7 +266,7 @@ export default async function FinancePage() {
           borderRadius: '16px', padding: '24px',
         }}
       >
-        <p style={{ fontSize: '11px', fontWeight: 700, color: '#52B788', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+        <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
           Profit Tips
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>

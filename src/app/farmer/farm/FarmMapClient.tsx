@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useRef } from 'react';
 import type { Map as LMap } from 'leaflet';
@@ -50,8 +50,8 @@ export function FarmMapClient({ farms }: Props) {
         const latLngs = coords.map(([lng, lat]) => L.latLng(lat, lng));
 
         const polygon = L.polygon(latLngs, {
-          color: '#1B4332',
-          fillColor: '#52B788',
+          color: 'var(--color-primary)',
+          fillColor: 'var(--color-primary-muted)',
           fillOpacity: 0.25,
           weight: 2,
         }).addTo(map);

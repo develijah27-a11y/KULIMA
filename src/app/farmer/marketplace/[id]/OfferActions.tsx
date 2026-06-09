@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 
-const C = { border: 'var(--d-border)', muted: 'var(--d-muted)', green: '#1B4332' };
+const C = { border: 'var(--d-border)', muted: 'var(--d-muted)', green: 'var(--color-primary)' };
 
 interface Props {
   offerId: string;

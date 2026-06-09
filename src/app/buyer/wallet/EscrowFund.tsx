@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', green: '#1B4332' };
+const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', green: 'var(--color-primary)' };
 
 interface Props {
   offerId: string;

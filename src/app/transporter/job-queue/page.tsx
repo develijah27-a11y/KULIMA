@@ -1,11 +1,11 @@
-import { redirect } from 'next/navigation';
+﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
-  green: '#1B4332', greenMed: '#40916C',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
 const DISTRICTS = [
@@ -19,8 +19,8 @@ export default async function JobQueuePage({
   searchParams: Promise<{ district?: string; cargo?: string }>;
 }) {
   const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) redirect('/auth/signin');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
 
   const { district = '', cargo = '' } = await searchParams;
 
@@ -37,10 +37,10 @@ export default async function JobQueuePage({
     })(),
     (supabase.from as any)('delivery_bids')
       .select('delivery_id, status')
-      .eq('transporter_id', session.user.id),
+      .eq('transporter_id', user.id),
     (supabase.from as any)('vehicles')
       .select('id, capacity_kg, is_available')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .maybeSingle(),
   ]);
 
