@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -21,9 +21,14 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Ref is synchronous — set BEFORE signUp() call so the auth listener sees it immediately
+  const isSigningUpRef = useRef(false);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
+      // Only auto-redirect on SIGNED_IN when we are NOT in the middle of a sign-up flow.
+      // (sign-up manages its own redirect after checking for duplicate accounts etc.)
+      if (event === 'SIGNED_IN' && session && !isSigningUpRef.current) {
         router.push('/dashboard');
         router.refresh();
       }
@@ -39,35 +44,71 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       if (mode === 'signup') {
+        // Block the auth-state listener from auto-redirecting during sign-up
+        isSigningUpRef.current = true;
+
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { full_name: fullName, phone_number: phoneNumber, location },
+            emailRedirectTo: `${window.location.origin}/auth/confirm`,
           },
         });
 
+        // Always release the lock after signUp returns
+        isSigningUpRef.current = false;
+
         if (signUpError) throw signUpError;
 
-        if (data.user) {
-          await supabase.from('profiles').upsert(
-            {
-              user_id: data.user.id,
-              full_name: fullName,
-              phone_number: phoneNumber || null,
-              location: location || null,
-            },
-            { onConflict: 'user_id' }
-          );
+        // Supabase returns identities=[] when the email is already registered
+        if (data.user?.identities && data.user.identities.length === 0) {
+          throw new Error('An account with this email already exists. Please sign in instead.');
         }
 
+        // Create profile server-side (bypasses RLS / email-confirmation race condition)
+        if (data.user) {
+          await fetch('/api/auth/create-profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: data.user.id,
+              fullName: fullName || data.user.email?.split('@')[0] || 'User',
+              phoneNumber: phoneNumber || null,
+              location: location || null,
+            }),
+          }).catch(() => {
+            // Best effort — getOrCreateProfile in API routes will handle it on first real request
+          });
+        }
+
+        if (data.session) {
+          // Email confirmation is disabled — user is signed in immediately, redirect now
+          router.push('/dashboard');
+          router.refresh();
+          return;
+        }
+
+        // Email confirmation is enabled — show success, stay on this page
         setSuccess('Account created! Check your email to confirm, then sign in.');
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
+        // onAuthStateChange will fire SIGNED_IN and redirect
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      isSigningUpRef.current = false;
+      const msg = err instanceof Error ? err.message : 'Something went wrong';
+      if (msg === 'Failed to fetch' || msg.includes('NetworkError') || msg.includes('fetch')) {
+        setError(
+          'Cannot reach the server. Please check:\n' +
+          '1. Your internet connection\n' +
+          '2. Your Supabase project is active (free tier pauses after 1 week) — visit supabase.com/dashboard\n' +
+          '3. NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in .env.local'
+        );
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -195,11 +236,11 @@ export function AuthForm({ mode }: AuthFormProps) {
       {/* Error */}
       {error && (
         <div
-          className="rounded-xl px-4 py-3 text-sm"
+          className="rounded-xl px-4 py-3 text-sm whitespace-pre-line"
           style={{
-            background: 'rgba(239,68,68,0.1)',
-            border: '1px solid rgba(239,68,68,0.25)',
-            color: '#fca5a5',
+            background: 'rgba(22,163,74,0.08)',
+            border: '1px solid rgba(22,163,74,0.3)',
+            color: '#BBF7D0',
           }}
           role="alert"
         >

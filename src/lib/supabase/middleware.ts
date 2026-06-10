@@ -3,9 +3,13 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { env } from '@/config/env';
 
 export async function createClient(request: NextRequest) {
+  const anonKey =
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string);
+
   const supabase = createServerClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    anonKey,
     {
       cookies: {
         get(name: string) { return request.cookies.get(name)?.value; },

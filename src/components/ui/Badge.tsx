@@ -10,12 +10,12 @@ interface BadgeProps {
 
 export function Badge({ variant = 'neutral', className, children }: BadgeProps) {
   const variants: Record<string, string> = {
-    green: 'bg-sprout/15 text-sprout border border-sprout/25',
-    gold: 'bg-harvest/15 text-harvest border border-harvest/25',
-    red: 'bg-clay/15 text-clay border border-clay/25',
-    blue: 'bg-blue-500/15 text-blue-400 border border-blue-500/25',
-    purple: 'bg-purple-500/15 text-purple-400 border border-purple-500/25',
-    neutral: 'bg-surface2 text-cream/70 border border-surface2',
+    green: 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/40',
+    gold: 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700/30',
+    red: 'bg-green-100 text-green-900 border border-green-300 dark:bg-green-900/40 dark:text-green-200 dark:border-green-600/40',
+    blue: 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700/30',
+    purple: 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/40',
+    neutral: 'bg-green-50 text-green-600 border border-green-100 dark:bg-green-900/15 dark:text-green-400 dark:border-green-800/40',
   };
 
   return (

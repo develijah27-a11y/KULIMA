@@ -7,7 +7,7 @@ const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
   amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)', violet: '#7C3AED',
-  indigo: '#4F46E5', orange: '#EA580C',
+  indigo: '#4F46E5', orange: 'var(--color-primary-hover)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 

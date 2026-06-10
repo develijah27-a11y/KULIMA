@@ -10,15 +10,15 @@ interface DiseaseScanCardProps {
 }
 
 export function DiseaseScanCard({ scan }: DiseaseScanCardProps) {
-  const getSeverityColor = () => {
-    if (!scan.confidence_score) return 'gray';
-    if (scan.confidence_score >= 80) return 'red';
-    if (scan.confidence_score >= 50) return 'orange';
-    return 'yellow';
+  const getSeverityLabel = () => {
+    if (!scan.confidence_score) return 'Unknown';
+    if (scan.confidence_score >= 80) return 'High';
+    if (scan.confidence_score >= 50) return 'Medium';
+    return 'Low';
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="rounded-lg overflow-hidden shadow-sm border" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}>
       {scan.image_url && (
         <div className="relative h-48">
           <Image
@@ -32,24 +32,24 @@ export function DiseaseScanCard({ scan }: DiseaseScanCardProps) {
 
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-gray-900">{scan.crop_type}</h3>
+          <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>{scan.crop_type}</h3>
           {scan.disease_detected && (
-            <span className={`px-2 py-1 bg-${getSeverityColor()}-100 text-${getSeverityColor()}-800 rounded text-xs`}>
-              {scan.disease_detected}
+            <span className="px-2 py-1 rounded text-xs font-medium" style={{ background: 'var(--color-surface-2)', color: 'var(--color-text)' }}>
+              {scan.disease_detected} · {getSeverityLabel()}
             </span>
           )}
         </div>
 
         {scan.confidence_score && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
             Confidence: {scan.confidence_score}%
           </p>
         )}
 
         {scan.treatment_recommendations && (
-          <div className="mt-3 p-3 bg-blue-50 rounded-md">
-            <p className="text-sm font-medium text-blue-800">Treatment:</p>
-            <p className="text-sm text-blue-700">{scan.treatment_recommendations}</p>
+          <div className="mt-3 p-3 rounded-md" style={{ background: 'var(--color-primary-bg)', border: '1px solid var(--color-border)' }}>
+            <p className="text-sm font-medium" style={{ color: 'var(--color-accent)' }}>Treatment:</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--color-text)' }}>{scan.treatment_recommendations}</p>
           </div>
         )}
       </div>

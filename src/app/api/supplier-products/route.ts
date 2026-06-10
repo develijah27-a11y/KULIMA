@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+﻿import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getOrCreateProfile } from '@/lib/supabase/get-profile';
 
 async function getProfile(supabase: any, userId: string) {
   const { data } = await supabase.from('profiles').select('id').eq('user_id', userId).single();

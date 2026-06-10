@@ -38,7 +38,7 @@ const CROP_COLOR: Record<string, string> = {
   avocado: '#15803D', avocado_kenya: '#16A34A', avocado_global: '#15803D',
   pyrethrum: '#DB2777',
   cashew_tanzania: '#92400E', cashew_global: '#78350F',
-  palm_oil_global: '#EA580C',
+  palm_oil_global: 'var(--color-primary-hover)',
   rubber_global: '#16A34A',
 };
 

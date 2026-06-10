@@ -2,65 +2,65 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════
-   KULIMA COLOUR SYSTEM — Orange · Blue · White
+   KULIMA COLOUR SYSTEM — Light Green + White only
    ═══════════════════════════════════════════════════════════════════ */
 
-/* ─── Light mode (default) ─── */
+/* ─── Light mode ─── */
 :root {
   /* Backgrounds */
-  --color-bg:            #F8FAFC;
+  --color-bg:            #FFFFFF;
   --color-surface:       #FFFFFF;
-  --color-surface-2:     #EFF6FF;
+  --color-surface-2:     #F0FDF4;
 
-  /* Primary — Vibrant Orange */
-  --color-primary:       #F97316;
-  --color-primary-hover: #EA580C;
-  --color-primary-muted: #FDBA74;
-  --color-primary-bg:    #FFF7ED;
+  /* Primary — Light green */
+  --color-primary:       #22C55E;
+  --color-primary-hover: #16A34A;
+  --color-primary-muted: #86EFAC;
+  --color-primary-bg:    #F0FDF4;
 
-  /* Accent — Royal Blue */
-  --color-accent:        #2563EB;
-  --color-accent-hover:  #1D4ED8;
-  --color-accent-bg:     #EFF6FF;
+  /* Accent — deeper green */
+  --color-accent:        #16A34A;
+  --color-accent-hover:  #15803D;
+  --color-accent-bg:     #DCFCE7;
 
-  /* Sidebar — deep blue nav */
-  --color-sidebar:       #1E3A8A;
-  --color-sidebar-hover: #1D4ED8;
+  /* Sidebar */
+  --color-sidebar:       #14532D;
+  --color-sidebar-hover: #166534;
 
-  /* Support — Light Green (crop health only) */
-  --color-support:       #16A34A;
+  /* Support */
+  --color-support:       #22C55E;
   --color-support-bg:    #F0FDF4;
 
-  /* Text */
-  --color-text:          #111827;
-  --color-text-muted:    #6B7280;
-  --color-text-hint:     #9CA3AF;
+  /* Text — black on white for max readability */
+  --color-text:          #052E16;
+  --color-text-muted:    #166534;
+  --color-text-hint:     #4ADE80;
 
-  /* Borders */
-  --color-border:        rgba(0, 0, 0, 0.07);
-  --color-border-mid:    rgba(0, 0, 0, 0.14);
+  /* Borders — green-tinted */
+  --color-border:        rgba(22, 163, 74, 0.15);
+  --color-border-mid:    rgba(22, 163, 74, 0.28);
 
-  /* Semantic */
+  /* Semantic — all green variants, no other hues */
   --color-success:       #16A34A;
-  --color-success-bg:    #F0FDF4;
-  --color-warning:       #D97706;
-  --color-warning-bg:    #FFFBEB;
-  --color-danger:        #DC2626;
-  --color-danger-bg:     #FEF2F2;
-  --color-info:          #2563EB;
-  --color-info-bg:       #EFF6FF;
+  --color-success-bg:    #DCFCE7;
+  --color-warning:       #15803D;
+  --color-warning-bg:    #BBF7D0;
+  --color-danger:        #14532D;
+  --color-danger-bg:     #DCFCE7;
+  --color-info:          #166534;
+  --color-info-bg:       #F0FDF4;
 
-  /* Offline/sync */
-  --color-offline:       #D97706;
-  --color-offline-bg:    #FFFBEB;
-  --color-syncing:       #2563EB;
-  --color-syncing-bg:    #EFF6FF;
+  /* Offline/sync — green tones */
+  --color-offline:       #15803D;
+  --color-offline-bg:    #BBF7D0;
+  --color-syncing:       #22C55E;
+  --color-syncing-bg:    #DCFCE7;
   --color-synced:        #16A34A;
-  --color-synced-bg:     #F0FDF4;
+  --color-synced-bg:     #DCFCE7;
 
-  /* Shadows */
-  --shadow-card:   0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.07);
-  --shadow-modal:  0 8px 40px rgba(0,0,0,0.18);
+  /* Shadows — green-tinted */
+  --shadow-card:   0 1px 3px rgba(22,163,74,0.08), 0 4px 16px rgba(22,163,74,0.10);
+  --shadow-modal:  0 8px 40px rgba(0,0,0,0.14);
 
   /* Typography */
   --font-display: 'Playfair Display', Georgia, serif;
@@ -81,49 +81,49 @@
   --d-subtle:      var(--color-surface-2);
 }
 
-/* ─── Dark mode ─── */
+/* ─── Dark mode — deep green + black ─── */
 .dark {
-  --color-bg:            #0A0A0F;
-  --color-surface:       #111118;
-  --color-surface-2:     #1A1A2E;
+  --color-bg:            #022C12;
+  --color-surface:       #042A13;
+  --color-surface-2:     #063B1B;
 
-  --color-primary:       #FB923C;
-  --color-primary-hover: #F97316;
-  --color-primary-muted: #C2410C;
-  --color-primary-bg:    #1C0D00;
+  --color-primary:       #4ADE80;
+  --color-primary-hover: #22C55E;
+  --color-primary-muted: #166534;
+  --color-primary-bg:    #042A13;
 
-  --color-accent:        #60A5FA;
-  --color-accent-hover:  #3B82F6;
-  --color-accent-bg:     #0D1730;
+  --color-accent:        #86EFAC;
+  --color-accent-hover:  #4ADE80;
+  --color-accent-bg:     #052E16;
 
-  --color-sidebar:       #0F1E4A;
-  --color-sidebar-hover: #1D3A8A;
+  --color-sidebar:       #011A09;
+  --color-sidebar-hover: #042A13;
 
   --color-support:       #4ADE80;
-  --color-support-bg:    #052010;
+  --color-support-bg:    #042A13;
 
-  --color-text:          #F9FAFB;
-  --color-text-muted:    #9CA3AF;
-  --color-text-hint:     #6B7280;
+  --color-text:          #F0FDF4;
+  --color-text-muted:    #BBF7D0;
+  --color-text-hint:     #86EFAC;
 
-  --color-border:        rgba(255, 255, 255, 0.07);
-  --color-border-mid:    rgba(255, 255, 255, 0.14);
+  --color-border:        rgba(74, 222, 128, 0.12);
+  --color-border-mid:    rgba(74, 222, 128, 0.22);
 
   --color-success:       #4ADE80;
-  --color-success-bg:    #052010;
-  --color-warning:       #FCD34D;
-  --color-warning-bg:    #1C1500;
-  --color-danger:        #F87171;
-  --color-danger-bg:     #1C0505;
-  --color-info:          #60A5FA;
-  --color-info-bg:       #0D1730;
+  --color-success-bg:    #052E16;
+  --color-warning:       #86EFAC;
+  --color-warning-bg:    #063B1B;
+  --color-danger:        #BBF7D0;
+  --color-danger-bg:     #063B1B;
+  --color-info:          #4ADE80;
+  --color-info-bg:       #042A13;
 
-  --color-offline:       #FCD34D;
-  --color-offline-bg:    #1C1500;
-  --color-syncing:       #60A5FA;
-  --color-syncing-bg:    #0D1730;
+  --color-offline:       #86EFAC;
+  --color-offline-bg:    #063B1B;
+  --color-syncing:       #4ADE80;
+  --color-syncing-bg:    #042A13;
   --color-synced:        #4ADE80;
-  --color-synced-bg:     #052010;
+  --color-synced-bg:     #052E16;
 
   --shadow-card:   0 1px 3px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4);
   --shadow-modal:  0 8px 40px rgba(0,0,0,0.7);
@@ -241,11 +241,11 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97); }
 .dark .skeleton {
   background: linear-gradient(
     90deg,
-    #1F2937 0%,
-    #374151 40%,
-    #4B5563 50%,
-    #374151 60%,
-    #1F2937 100%
+    #052E16 0%,
+    #063B1B 40%,
+    #0A5225 50%,
+    #063B1B 60%,
+    #052E16 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
@@ -269,11 +269,11 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97); }
 .dark .dash-skeleton {
   background: linear-gradient(
     90deg,
-    #1A1A2E 0%,
-    #1F2937 40%,
-    #374151 50%,
-    #1F2937 60%,
-    #1A1A2E 100%
+    #042A13 0%,
+    #063B1B 40%,
+    #0D5C2A 50%,
+    #063B1B 60%,
+    #042A13 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
@@ -316,7 +316,7 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97); }
 .dash-stat-amber  { border-top-color: var(--color-warning); }
 .dash-stat-red    { border-top-color: var(--color-danger); }
 .dash-stat-blue   { border-top-color: var(--color-accent); }
-.dash-stat-violet { border-top-color: #8B5CF6; }
+.dash-stat-violet { border-top-color: var(--color-primary-muted); }
 
 /* ── Primary button (Orange) ── */
 .btn-primary {
@@ -552,8 +552,8 @@ input:focus, select:focus, textarea:focus {
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
-::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
-.dark ::-webkit-scrollbar-thumb { background: #374151; }
+::-webkit-scrollbar-thumb { background: var(--color-primary-muted); border-radius: 4px; }
+.dark ::-webkit-scrollbar-thumb { background: var(--color-primary-hover); }
 ::selection { background-color: var(--color-accent-bg); color: var(--color-accent); }
 
 /* ── Reduced motion ── */
@@ -571,3 +571,41 @@ input:focus, select:focus, textarea:focus {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   LEGACY TOKEN ALIASES — map old design tokens to green palette
+   ═══════════════════════════════════════════════════════════════════ */
+@theme {
+  --color-sprout:  #22C55E;
+  --color-harvest: #16A34A;
+  --color-clay:    #14532D;
+  --color-surface2:#F0FDF4;
+  --color-cream:   #F0FDF4;
+}
+
+/* Explicit utility overrides for legacy tokens used as Tailwind classes */
+.text-cream        { color: var(--color-text); }
+.bg-surface2       { background-color: var(--color-surface-2); }
+.border-surface2   { border-color: var(--color-border); }
+.bg-sprout         { background-color: var(--color-primary); }
+.text-sprout       { color: var(--color-primary); }
+.border-sprout     { border-color: var(--color-primary); }
+.bg-harvest        { background-color: var(--color-accent); }
+.text-harvest      { color: var(--color-accent); }
+.bg-clay           { background-color: var(--color-sidebar); }
+.text-clay         { color: var(--color-sidebar); }
+
+/* Opacity variants — e.g. text-cream/40, bg-surface2/60 */
+.text-cream\/40    { color: color-mix(in srgb, var(--color-text) 40%, transparent); }
+.text-cream\/50    { color: color-mix(in srgb, var(--color-text) 50%, transparent); }
+.text-cream\/60    { color: color-mix(in srgb, var(--color-text) 60%, transparent); }
+.text-cream\/70    { color: color-mix(in srgb, var(--color-text) 70%, transparent); }
+.text-cream\/25    { color: color-mix(in srgb, var(--color-text) 25%, transparent); }
+.text-cream\/30    { color: color-mix(in srgb, var(--color-text) 30%, transparent); }
+.border-surface2\/60 { border-color: color-mix(in srgb, var(--color-border-mid) 60%, transparent); }
+.bg-sprout\/15     { background-color: color-mix(in srgb, var(--color-primary) 15%, transparent); }
+.border-sprout\/25 { border-color: color-mix(in srgb, var(--color-primary) 25%, transparent); }
+.bg-harvest\/15    { background-color: color-mix(in srgb, var(--color-accent) 15%, transparent); }
+.border-harvest\/25 { border-color: color-mix(in srgb, var(--color-accent) 25%, transparent); }
+.bg-clay\/15       { background-color: color-mix(in srgb, var(--color-sidebar) 15%, transparent); }
+.border-clay\/25   { border-color: color-mix(in srgb, var(--color-sidebar) 25%, transparent); }

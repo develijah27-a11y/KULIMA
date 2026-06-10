@@ -9,7 +9,7 @@ export default function NotFound() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#F8FAF9',
+        background: 'var(--color-bg)',
         padding: '24px',
         textAlign: 'center',
       }}
@@ -17,9 +17,9 @@ export default function NotFound() {
       {/* Logo mark */}
       <div
         style={{
-          width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg, #1B4332, #40916C)',
+          width: 72, height: 72, borderRadius: 20, background: 'var(--color-primary)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 36, marginBottom: 24, boxShadow: '0 8px 32px rgba(27,67,50,0.25)',
+          fontSize: 36, marginBottom: 24, boxShadow: '0 8px 32px rgba(22,163,74,0.25)',
         }}
       >
         🌱
@@ -35,11 +35,11 @@ export default function NotFound() {
         404
       </p>
 
-      <p style={{ fontSize: 20, fontWeight: 700, color: '#1A1A1A', marginBottom: 8 }}>
+      <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)', marginBottom: 8 }}>
         Page not found
       </p>
 
-      <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 32, maxWidth: 360, lineHeight: 1.6 }}>
+      <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 32, maxWidth: 360, lineHeight: 1.6 }}>
         The page you're looking for doesn't exist or has been moved.
         Let's get you back to the farm.
       </p>
@@ -60,7 +60,7 @@ export default function NotFound() {
           style={{
             padding: '12px 24px', background: '#fff', color: 'var(--color-primary)',
             borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
-            border: '1.5px solid #E5E7EB',
+            border: '1.5px solid var(--color-border-mid)',
           }}
         >
           Browse Marketplace

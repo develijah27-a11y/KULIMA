@@ -13,9 +13,14 @@ import { env } from '@/config/env';
 export const createClient = async () => {
   const cookieStore = await cookies();
 
+  const anonKey =
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string) ??
+    '';
+
   return createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
-    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    anonKey,
     {
       cookies: {
         get(name: string) {

@@ -10,7 +10,7 @@ const C = {
 
 const SEV_CFG: Record<string, { color: string; bg: string; label: string }> = {
   low:      { color: '#D97706', bg: '#FEF3C7', label: 'Low' },
-  medium:   { color: '#EA580C', bg: '#FFEDD5', label: 'Medium' },
+  medium:   { color: 'var(--color-primary-hover)', bg: '#FFEDD5', label: 'Medium' },
   high:     { color: '#DC2626', bg: '#FEE2E2', label: 'High' },
   critical: { color: '#7F1D1D', bg: '#FEE2E2', label: 'Critical' },
 };
@@ -66,7 +66,7 @@ export default async function AdminFraudPage({
         {[
           { label: 'Total Flags', value: counts.total, color: C.text },
           { label: 'Open Cases', value: counts.open, color: C.red },
-          { label: 'High / Critical', value: counts.high, color: '#EA580C' },
+          { label: 'High / Critical', value: counts.high, color: 'var(--color-primary-hover)' },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: C.cardBg, borderRadius: 12, boxShadow: C.cardShadow, padding: '16px 18px' }}>
             <p style={{ fontSize: 24, fontWeight: 900, color, letterSpacing: '-0.03em', margin: '0 0 4px' }}>{value}</p>

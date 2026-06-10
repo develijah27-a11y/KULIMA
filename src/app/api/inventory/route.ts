@@ -1,9 +1,33 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import type { User } from '@supabase/supabase-js';
 
-async function getProfile(supabase: Awaited<ReturnType<typeof createClient>>, userId: string) {
-  const { data } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
-  return data;
+async function getOrCreateProfile(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  user: User,
+) {
+  // Try to read existing profile
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
+  if (existing) return existing;
+
+  // Profile missing — create it now (happens when email-confirm was on at sign-up time)
+  const fullName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    user.email?.split('@')[0] ??
+    'User';
+
+  const { data: created } = await supabase
+    .from('profiles')
+    .insert({ user_id: user.id, full_name: fullName })
+    .select('id')
+    .single();
+
+  return created ?? null;
 }
 
 export async function GET() {
@@ -11,8 +35,8 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const profile = await getProfile(supabase, user.id);
-  if (!profile) return NextResponse.json({ items: [] });
+  const profile = await getOrCreateProfile(supabase, user);
+  if (!profile) return NextResponse.json({ error: 'Could not load profile' }, { status: 500 });
 
   const { data, error } = await (supabase.from as any)('farm_inventory')
     .select('*')
@@ -29,7 +53,7 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const profile = await getProfile(supabase, user.id);
+  const profile = await getOrCreateProfile(supabase, user);
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
   const body = await req.json();
@@ -56,7 +80,7 @@ export async function PATCH(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const profile = await getProfile(supabase, user.id);
+  const profile = await getOrCreateProfile(supabase, user);
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
   const body = await req.json();
@@ -86,7 +110,7 @@ export async function DELETE(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const profile = await getProfile(supabase, user.id);
+  const profile = await getOrCreateProfile(supabase, user);
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
   const { searchParams } = new URL(req.url);

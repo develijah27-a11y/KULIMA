@@ -4,7 +4,12 @@
       "Bash(npx tsc *)",
       "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\PwezaCore\\\\Desktop\\\\KULIMA\\\\src\\\\app\\\\farmer\\\\planting\")",
       "Bash(Out-Null)",
-      "PowerShell(Get-ChildItem -Path 'c:\\\\Users\\\\PwezaCore\\\\Desktop\\\\KULIMA\\\\supabase\\\\migrations' -File | ForEach-Object { $_.Name })"
+      "PowerShell(Get-ChildItem -Path 'c:\\\\Users\\\\PwezaCore\\\\Desktop\\\\KULIMA\\\\supabase\\\\migrations' -File | ForEach-Object { $_.Name })",
+      "Bash(mkdir -p \"C:\\\\Users\\\\PwezaCore\\\\Desktop\\\\KULIMA\\\\src\\\\app\\\\auth\\\\confirm\" 2>/dev/null; echo \"done\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\PwezaCore\\\\Desktop\\\\KULIMA\\\\src\\\\app\\\\auth\\\\confirm\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\PwezaCore\\Desktop\\KULIMA\\src\\app\\auth"
     ]
   }
 }

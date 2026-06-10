@@ -1,4 +1,4 @@
-export type VerificationLevel = 'grey' | 'green' | 'blue' | 'gold';
+﻿export type VerificationLevel = 'grey' | 'green' | 'blue' | 'gold';
 export type VerificationStatus = 'pending' | 'approved' | 'rejected';
 
 export const BADGE_CONFIG = {
@@ -17,7 +17,7 @@ export function canUpgradeTo(current: VerificationLevel, target: 'green' | 'blue
 export function getTrustColor(score: number): string {
   if (score >= 80) return '#059669';
   if (score >= 60) return '#D97706';
-  if (score >= 40) return '#F97316';
+  if (score >= 40) return 'var(--color-primary)';
   return '#E63946';
 }
 

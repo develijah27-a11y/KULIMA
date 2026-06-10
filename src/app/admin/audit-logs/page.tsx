@@ -16,7 +16,7 @@ const ACTION_COLOR: Record<string, string> = {
   logout:  '#6B7280',
   approve: '#059669',
   reject:  '#DC2626',
-  suspend: '#EA580C',
+  suspend: 'var(--color-primary-hover)',
 };
 
 const RESOURCE_TYPES = ['profiles','listings','offers','delivery_requests','wallets','verifications','fraud_flags','farm_inventory'];

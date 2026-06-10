@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import type { Notification } from '@/types/domain';
 
 const dotColors: Record<string, string> = {
-  rain: 'bg-blue-400', price: 'bg-harvest', pest: 'bg-clay', offer: 'bg-sprout', loan: 'bg-purple-400',
+  rain: 'bg-green-400', price: 'bg-green-600', pest: 'bg-green-900', offer: 'bg-green-500', loan: 'bg-green-700',
 };
 
 const timeAgo = (epochMs: number) => {

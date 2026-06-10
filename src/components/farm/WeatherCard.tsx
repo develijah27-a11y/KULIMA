@@ -38,7 +38,7 @@ export function WeatherCard({
     <Card variant="elevated" className="overflow-hidden">
       {/* Alert banner */}
       {rainAlert && (
-        <div className="mb-3 flex items-start gap-2 rounded-xl bg-blue-500/10 border border-blue-400/20 px-3 py-2 text-xs text-blue-300">
+        <div className="mb-3 flex items-start gap-2 rounded-xl bg-green-500/10 border border-green-400/20 px-3 py-2 text-xs text-green-700 dark:text-green-300">
           <span className="text-base leading-none">{rainAlert}</span>
         </div>
       )}
