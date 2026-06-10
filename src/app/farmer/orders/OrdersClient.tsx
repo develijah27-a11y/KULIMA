@@ -14,7 +14,7 @@ const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> =
   countered: { color: '#7C3AED', bg: '#EDE9FE', label: 'Countered' },
   accepted:  { color: '#059669', bg: '#D1FAE5', label: 'Accepted' },
   rejected:  { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
-  completed: { color: '#0284C7', bg: '#DBEAFE', label: 'Completed' },
+  completed: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Completed' },
 };
 
 const STATUS_TABS = ['all', 'pending', 'accepted', 'rejected', 'completed'] as const;

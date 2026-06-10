@@ -5,14 +5,14 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)', violet: '#7C3AED',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', violet: '#7C3AED',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
 const ROLE_CFG: Record<string, { color: string; bg: string; label: string }> = {
   farmer:      { color: '#059669', bg: '#D1FAE5', label: 'Farmer' },
   buyer:       { color: '#D97706', bg: '#FEF3C7', label: 'Buyer' },
-  transporter: { color: '#0284C7', bg: '#DBEAFE', label: 'Transporter' },
+  transporter: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Transporter' },
   supplier:    { color: '#7C3AED', bg: '#EDE9FE', label: 'Supplier' },
   pathologist: { color: '#DC2626', bg: '#FEE2E2', label: 'Pathologist' },
   offtaker:    { color: '#0891B2', bg: '#CFFAFE', label: 'Offtaker' },

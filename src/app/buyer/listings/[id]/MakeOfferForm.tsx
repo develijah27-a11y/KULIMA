@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  green: 'var(--color-primary)', amber: 'var(--color-accent)',
+  green: 'var(--color-primary)', amber: 'var(--color-harvest)',
 };
 
 interface Props {
@@ -78,7 +78,7 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
   if (existingOffer) {
     const OFFER_CFG: Record<string, { color: string; bg: string; label: string }> = {
       pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Under Review' },
-      countered: { color: '#0284C7', bg: '#DBEAFE', label: 'Farmer Countered' },
+      countered: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Farmer Countered' },
       accepted:  { color: '#059669', bg: '#D1FAE5', label: 'Accepted!' },
       rejected:  { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
     };

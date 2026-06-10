@@ -6,7 +6,7 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)', greenMed: 'var(--color-primary-hover)', amber: 'var(--color-accent)',
+  green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)', greenMed: 'var(--color-primary-hover)', amber: 'var(--color-harvest)',
 };
 
 const CROP_EMOJI: Record<string, string> = {
@@ -16,7 +16,7 @@ const CROP_EMOJI: Record<string, string> = {
 };
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
   active:  { color: '#059669', bg: '#D1FAE5', label: 'Active' },
-  sold:    { color: '#0284C7', bg: '#DBEAFE', label: 'Sold' },
+  sold:    { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Sold' },
   expired: { color: '#6B7280', bg: '#F3F4F6', label: 'Expired' },
 };
 

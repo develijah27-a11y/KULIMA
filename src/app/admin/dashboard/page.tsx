@@ -4,10 +4,19 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
 const C = {
-  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)', violet: '#7C3AED',
-  indigo: '#4F46E5', orange: 'var(--color-primary-hover)',
+  text:       'var(--d-text)',
+  muted:      'var(--d-muted)',
+  border:     'var(--d-border)',
+  cardBg:     'var(--d-card)',
+  green:      'var(--color-primary)',
+  greenMed:   'var(--color-primary-hover)',
+  greenBright:'var(--color-primary-muted)',
+  amber:      'var(--color-harvest)',
+  red:        'var(--color-danger)',
+  blue:       'var(--color-sky)',
+  violet:     '#8B5CF6',
+  indigo:     '#6366F1',
+  orange:     'var(--color-harvest)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -20,7 +29,7 @@ const Card = ({ children, style = {} }: { children: React.ReactNode; style?: Rea
 const ROLE_CFG: Record<string, { color: string; bg: string; label: string }> = {
   farmer:      { color: '#059669', bg: '#D1FAE5', label: 'Farmer' },
   buyer:       { color: '#D97706', bg: '#FEF3C7', label: 'Buyer' },
-  transporter: { color: '#0284C7', bg: '#DBEAFE', label: 'Transporter' },
+  transporter: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Transporter' },
   supplier:    { color: '#7C3AED', bg: '#EDE9FE', label: 'Supplier' },
   pathologist: { color: '#DC2626', bg: '#FEE2E2', label: 'Pathologist' },
   offtaker:    { color: '#0891B2', bg: '#CFFAFE', label: 'Offtaker' },
@@ -297,7 +306,7 @@ async function MarketplaceActivity() {
 
   const STATUS: Record<string, { color: string; bg: string; label: string }> = {
     pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Offer' },
-    accepted:  { color: '#0284C7', bg: '#DBEAFE', label: 'Accepted' },
+    accepted:  { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Accepted' },
     completed: { color: '#059669', bg: '#D1FAE5', label: 'Completed' },
     rejected:  { color: '#DC2626', bg: '#FEE2E2', label: 'Rejected' },
   };
@@ -486,7 +495,7 @@ function AdminTools() {
     { href: '/admin/users',        emoji: '👥', label: 'Manage Users',    sub: 'Search, edit roles, suspend',      bg: '#EDE9FE', color: C.violet },
     { href: '/admin/verification', emoji: '🪪', label: 'KYC Queue',       sub: 'Approve/reject verifications',     bg: '#FEE2E2', color: C.red },
     { href: '/admin/prices',       emoji: '📊', label: 'Market Prices',   sub: 'Update crop price data',            bg: '#D1FAE5', color: C.greenMed },
-    { href: '/admin/alert',        emoji: '📢', label: 'Send Alert',      sub: 'Broadcast notifications',           bg: '#DBEAFE', color: C.blue },
+    { href: '/admin/alert',        emoji: '📢', label: 'Send Alert',      sub: 'Broadcast notifications',           bg: 'var(--color-sky-bg)', color: C.blue },
     { href: '/admin/buyers',       emoji: '🛒', label: 'Buyer Accounts',  sub: 'Review buyer registrations',        bg: '#FEF3C7', color: '#D97706' },
     { href: '/admin/analytics',    emoji: '📈', label: 'Analytics',       sub: 'Growth, revenue & trends',          bg: '#CFFAFE', color: '#0891B2' },
   ];

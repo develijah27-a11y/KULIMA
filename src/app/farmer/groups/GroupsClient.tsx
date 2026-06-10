@@ -15,7 +15,7 @@ const DISTRICTS = [
 
 const ROLE_CFG: Record<string, { color: string; bg: string }> = {
   leader:    { color: 'var(--color-primary)', bg: '#D1FAE5' },
-  secretary: { color: '#0284C7', bg: '#DBEAFE' },
+  secretary: { color: '#0284C7', bg: 'var(--color-sky-bg)' },
   treasurer: { color: '#7C3AED', bg: '#EDE9FE' },
   member:    { color: '#6B7280', bg: '#F3F4F6' },
 };

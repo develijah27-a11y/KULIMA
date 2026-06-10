@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
-  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -32,7 +32,7 @@ export default async function AdminBuyersPage() {
   const VER: Record<string, { label: string; color: string; bg: string }> = {
     none:     { label: 'Unverified', color: C.muted,     bg: '#F3F4F6' },
     basic:    { label: 'Basic',      color: '#D97706',   bg: '#FEF3C7' },
-    standard: { label: 'Standard',  color: C.blue,      bg: '#DBEAFE' },
+    standard: { label: 'Standard',  color: C.blue,      bg: 'var(--color-sky-bg)' },
     premium:  { label: 'Premium',   color: '#059669',   bg: '#D1FAE5' },
   };
 

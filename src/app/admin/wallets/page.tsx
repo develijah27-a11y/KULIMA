@@ -6,7 +6,7 @@ const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  red: 'var(--color-danger)', blue: 'var(--color-info)', amber: '#D97706',
+  red: 'var(--color-danger)', blue: 'var(--color-sky)', amber: '#D97706',
 };
 
 const TX_CFG: Record<string, { color: string; label: string }> = {

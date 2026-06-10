@@ -53,7 +53,7 @@ export default async function TransporterDeliveriesPage({
 
   const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
     open:      { color: '#059669', bg: '#D1FAE5', label: 'Open' },
-    assigned:  { color: '#0284C7', bg: '#DBEAFE', label: 'Assigned' },
+    assigned:  { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Assigned' },
     in_transit:{ color: '#D97706', bg: '#FEF3C7', label: 'In Transit' },
     delivered: { color: '#7C3AED', bg: '#EDE9FE', label: 'Delivered' },
     pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Bid Pending' },

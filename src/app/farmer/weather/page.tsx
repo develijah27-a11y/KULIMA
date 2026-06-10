@@ -8,7 +8,7 @@ import { WeatherDistrictSelector } from './WeatherDistrictSelector';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)',
   cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   cardShadow: 'var(--d-shadow-card)',
 };
@@ -22,7 +22,7 @@ const WEATHER_ICON: Record<string, string> = {
 
 const PHASE_COLOR: Record<string, { bg: string; color: string; label: string }> = {
   planting: { bg: '#D1FAE5', color: '#059669', label: 'Planting Season' },
-  growing:  { bg: '#DBEAFE', color: 'var(--color-info)', label: 'Growing Season' },
+  growing:  { bg: 'var(--color-sky-bg)', color: 'var(--color-info)', label: 'Growing Season' },
   harvest:  { bg: '#FEF3C7', color: '#D97706', label: 'Harvest Season' },
   dry:      { bg: '#F3F4F6', color: '#6B7280', label: 'Dry Season' },
 };

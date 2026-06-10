@@ -9,17 +9,17 @@ import { type VerificationLevel } from '@/lib/trust';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
-  green: 'var(--color-primary)', amber: 'var(--color-accent)',
+  green: 'var(--color-primary)', amber: 'var(--color-harvest)',
 };
 
 const STATUS_CFG = {
   active:   { color: '#059669', bg: '#D1FAE5', label: 'Active' },
-  sold:     { color: '#0284C7', bg: '#DBEAFE', label: 'Sold' },
+  sold:     { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Sold' },
   expired:  { color: '#6B7280', bg: '#F3F4F6', label: 'Expired' },
 };
 const OFFER_STATUS_CFG = {
   pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Pending' },
-  countered: { color: '#0284C7', bg: '#DBEAFE', label: 'Countered' },
+  countered: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Countered' },
   accepted:  { color: '#059669', bg: '#D1FAE5', label: 'Accepted' },
   rejected:  { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
   completed: { color: '#7C3AED', bg: '#EDE9FE', label: 'Completed' },
@@ -177,7 +177,7 @@ export default async function FarmerListingDetailPage({ params }: { params: Prom
 
                     {offer.counter_price && (
                       <div className="mt-2 ml-13 flex items-center gap-2">
-                        <span style={{ fontSize: 11, background: '#DBEAFE', color: '#0284C7', padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>
+                        <span style={{ fontSize: 11, background: 'var(--color-sky-bg)', color: '#0284C7', padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>
                           Your counter: UGX {Math.round(offer.counter_price).toLocaleString()}
                         </span>
                       </div>

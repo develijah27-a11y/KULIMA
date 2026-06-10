@@ -2,21 +2,26 @@
 import { createClient } from '@/lib/supabase/server';
 
 const C = {
-  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
-  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
-  red: 'var(--color-danger)', blue: 'var(--color-info)',
+  text:       'var(--d-text)',
+  muted:      'var(--d-muted)',
+  border:     'var(--d-border)',
+  cardBg:     'var(--d-card)',
+  cardShadow: 'var(--d-shadow-card)',
+  green:      'var(--color-primary)',
+  greenMed:   'var(--color-primary-hover)',
+  red:        'var(--color-danger)',
+  blue:       'var(--color-sky)',
 };
 
 const ACTION_COLOR: Record<string, string> = {
-  create:  '#059669',
-  update:  '#0284C7',
-  delete:  '#DC2626',
-  login:   '#7C3AED',
+  create:  'var(--color-success)',
+  update:  'var(--color-sky)',
+  delete:  'var(--color-danger)',
+  login:   'var(--color-primary)',
   logout:  '#6B7280',
-  approve: '#059669',
-  reject:  '#DC2626',
-  suspend: 'var(--color-primary-hover)',
+  approve: 'var(--color-success)',
+  reject:  'var(--color-danger)',
+  suspend: 'var(--color-warning)',
 };
 
 const RESOURCE_TYPES = ['profiles','listings','offers','delivery_requests','wallets','verifications','fraud_flags','farm_inventory'];

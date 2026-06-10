@@ -6,7 +6,7 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)', greenMed: 'var(--color-primary-hover)',
-  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 

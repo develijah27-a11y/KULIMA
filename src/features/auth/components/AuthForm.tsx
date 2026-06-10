@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, type FormEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -36,7 +36,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     return () => subscription.unsubscribe();
   }, [supabase, router]);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -99,12 +99,15 @@ export function AuthForm({ mode }: AuthFormProps) {
     } catch (err: unknown) {
       isSigningUpRef.current = false;
       const msg = err instanceof Error ? err.message : 'Something went wrong';
+      console.error('[Kulima Auth] Error during', mode, ':', err);
       if (msg === 'Failed to fetch' || msg.includes('NetworkError') || msg.includes('fetch')) {
         setError(
-          'Cannot reach the server. Please check:\n' +
-          '1. Your internet connection\n' +
-          '2. Your Supabase project is active (free tier pauses after 1 week) — visit supabase.com/dashboard\n' +
-          '3. NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in .env.local'
+          'Network error — could not reach Supabase.\n\n' +
+          'Open the browser console (F12 → Console) and look for a [Kulima] message showing your project ref.\n\n' +
+          'Common fixes:\n' +
+          '1. Check your internet connection\n' +
+          '2. Visit supabase.com/dashboard — free tier pauses after 7 days of inactivity\n' +
+          '3. Restart the dev server after editing .env.local (Ctrl+C then npm run dev)'
         );
       } else {
         setError(msg);

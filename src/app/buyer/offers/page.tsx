@@ -10,7 +10,7 @@ const C = {
 
 const STATUS_CFG = {
   pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Pending Review' },
-  countered: { color: '#0284C7', bg: '#DBEAFE', label: 'Farmer Countered' },
+  countered: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Farmer Countered' },
   accepted:  { color: '#059669', bg: '#D1FAE5', label: 'Accepted' },
   rejected:  { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
   completed: { color: '#7C3AED', bg: '#EDE9FE', label: 'Completed' },
@@ -167,7 +167,7 @@ export default async function BuyerOffersPage({
                         <div style={{ marginTop: 10 }}>
                           <Link
                             href={`/buyer/listings/${listing.id}`}
-                            style={{ display: 'inline-block', padding: '7px 14px', background: '#DBEAFE', color: '#0284C7', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}
+                            style={{ display: 'inline-block', padding: '7px 14px', background: 'var(--color-sky-bg)', color: '#0284C7', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}
                           >
                             Review Counter Offer →
                           </Link>

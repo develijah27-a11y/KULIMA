@@ -10,7 +10,7 @@ import {
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)',
   cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   cardShadow: 'var(--d-shadow-card)',
 };
@@ -29,7 +29,7 @@ const ALERT_TYPE_ICON: Record<string, string> = {
 
 const PHASE_CFG: Record<string, { bg: string; color: string; icon: string }> = {
   planting: { bg: '#D1FAE5', color: '#059669', icon: '🌱' },
-  growing:  { bg: '#DBEAFE', color: 'var(--color-info)', icon: '🌿' },
+  growing:  { bg: 'var(--color-sky-bg)', color: 'var(--color-info)', icon: '🌿' },
   harvest:  { bg: '#FEF3C7', color: '#D97706', icon: '🌾' },
   dry:      { bg: '#F3F4F6', color: '#6B7280', icon: '☀️' },
 };
@@ -63,7 +63,7 @@ function MonthBar({ cal, currentMonth }: { cal: PlantingWindow; currentMonth: nu
     const colors: Record<string, { bg: string; border: string }> = {
       'plant-a':   { bg: '#D1FAE5', border: '#34D399' },
       'harvest-a': { bg: '#FEF3C7', border: '#FCD34D' },
-      'plant-b':   { bg: '#DBEAFE', border: '#93C5FD' },
+      'plant-b':   { bg: 'var(--color-sky-bg)', border: '#93C5FD' },
       'harvest-b': { bg: '#FDE8D8', border: '#FDBA74' },
       'empty':     { bg: '#F9FAFB', border: 'var(--d-border)' },
     };
@@ -261,7 +261,7 @@ export default async function PlantingPage() {
           {[
             { color: '#D1FAE5', border: '#34D399', label: 'Plant (Season A)' },
             { color: '#FEF3C7', border: '#FCD34D', label: 'Harvest (Season A)' },
-            { color: '#DBEAFE', border: '#93C5FD', label: 'Plant (Season B)' },
+            { color: 'var(--color-sky-bg)', border: '#93C5FD', label: 'Plant (Season B)' },
             { color: '#FDE8D8', border: '#FDBA74', label: 'Harvest (Season B)' },
           ].map((item) => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

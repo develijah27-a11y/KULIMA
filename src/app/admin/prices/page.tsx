@@ -119,7 +119,7 @@ export default async function AdminPricesPage() {
                         <span
                           style={{
                             fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '20px',
-                            background: p.source === 'admin' ? '#DBEAFE' : p.source === 'system' ? '#F3F4F6' : '#D1FAE5',
+                            background: p.source === 'admin' ? 'var(--color-sky-bg)' : p.source === 'system' ? '#F3F4F6' : '#D1FAE5',
                             color: p.source === 'admin' ? 'var(--color-info)' : p.source === 'system' ? '#6B7280' : '#059669',
                           }}
                         >

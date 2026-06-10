@@ -6,7 +6,7 @@ import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: '#D97706', red: 'var(--color-danger)', blue: 'var(--color-info)',
+  amber: '#D97706', red: 'var(--color-danger)', blue: 'var(--color-sky)',
   cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };

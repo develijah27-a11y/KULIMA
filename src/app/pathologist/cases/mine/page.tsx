@@ -5,7 +5,7 @@ import Link from 'next/link';
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
   open:      { color: '#DC2626', bg: '#FEE2E2', label: 'Open' },
   assigned:  { color: '#D97706', bg: '#FEF3C7', label: 'Assigned' },
-  diagnosed: { color: '#0284C7', bg: '#DBEAFE', label: 'Diagnosed' },
+  diagnosed: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Diagnosed' },
   closed:    { color: '#059669', bg: '#D1FAE5', label: 'Closed' },
 };
 

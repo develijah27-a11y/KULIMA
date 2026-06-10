@@ -37,9 +37,9 @@ const C = {
   green:       'var(--color-primary)',
   greenMed:    'var(--color-primary-hover)',
   greenBright: 'var(--color-primary-muted)',
-  amber:       'var(--color-accent)',
+  amber:       'var(--color-harvest)',
   red:         'var(--color-danger)',
-  blue:        'var(--color-info)',
+  blue:        'var(--color-sky)',
   cardShadow:  'var(--d-shadow-card)',
 };
 
@@ -48,7 +48,7 @@ type Category = 'all' | 'seeds' | 'fertilizers' | 'pesticides' | 'tools' | 'harv
 const CATS: { key: Category; label: string; emoji: string; color: string; bg: string }[] = [
   { key: 'all',         label: 'All Items',    emoji: '📦', color: 'var(--color-primary)', bg: '#F0FDF4' },
   { key: 'seeds',       label: 'Seeds',        emoji: '🌱', color: '#059669', bg: '#D1FAE5' },
-  { key: 'fertilizers', label: 'Fertilizers',  emoji: '🧪', color: 'var(--color-info)', bg: '#DBEAFE' },
+  { key: 'fertilizers', label: 'Fertilizers',  emoji: '🧪', color: 'var(--color-info)', bg: 'var(--color-sky-bg)' },
   { key: 'pesticides',  label: 'Pesticides',   emoji: '🛡️', color: '#7C3AED', bg: '#EDE9FE' },
   { key: 'tools',       label: 'Tools',        emoji: '🔧', color: '#D97706', bg: '#FEF3C7' },
   { key: 'harvest',     label: 'Harvest',      emoji: '🌾', color: '#B45309', bg: '#FEF3C7' },

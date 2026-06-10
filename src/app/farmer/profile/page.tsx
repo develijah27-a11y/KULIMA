@@ -51,7 +51,7 @@ export default async function FarmerProfilePage() {
 
   const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
     growing:   { color: '#059669', bg: '#D1FAE5' },
-    harvested: { color: '#0284C7', bg: '#DBEAFE' },
+    harvested: { color: '#0284C7', bg: 'var(--color-sky-bg)' },
     planted:   { color: '#D97706', bg: '#FEF3C7' },
   };
 

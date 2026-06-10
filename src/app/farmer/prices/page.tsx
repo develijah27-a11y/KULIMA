@@ -43,10 +43,10 @@ const CROP_COLOR: Record<string, string> = {
 };
 
 function trendColor(t: number) {
-  if (t > 5) return '#DC2626';
-  if (t > 0) return '#D97706';
-  if (t < -5) return 'var(--color-info)';
-  if (t < 0) return '#0284C7';
+  if (t > 5)  return 'var(--color-success)';
+  if (t > 0)  return 'var(--color-primary)';
+  if (t < -5) return 'var(--color-danger)';
+  if (t < 0)  return 'var(--color-warning)';
   return C.muted;
 }
 function trendIcon(t: number) { return t > 0 ? '↑' : t < 0 ? '↓' : '→'; }

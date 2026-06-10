@@ -6,7 +6,7 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)', purple: '#7C3AED',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: '#7C3AED',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -221,7 +221,7 @@ async function GroupListings({ userId }: { userId: string }) {
   const STATUS: Record<string, { label: string; color: string; bg: string }> = {
     active:  { label: 'Active', color: '#059669', bg: '#D1FAE5' },
     pending: { label: 'Pending', color: '#D97706', bg: '#FEF3C7' },
-    sold:    { label: 'Sold', color: '#0284C7', bg: '#DBEAFE' },
+    sold:    { label: 'Sold', color: '#0284C7', bg: 'var(--color-sky-bg)' },
   };
 
   return (

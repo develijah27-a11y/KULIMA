@@ -2,24 +2,29 @@
 import { createClient } from '@/lib/supabase/server';
 
 const C = {
-  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
-  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
-  red: 'var(--color-danger)', amber: '#D97706',
+  text:       'var(--d-text)',
+  muted:      'var(--d-muted)',
+  border:     'var(--d-border)',
+  cardBg:     'var(--d-card)',
+  cardShadow: 'var(--d-shadow-card)',
+  green:      'var(--color-primary)',
+  greenMed:   'var(--color-primary-hover)',
+  red:        'var(--color-danger)',
+  amber:      'var(--color-harvest)',
 };
 
 const SEV_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  low:      { color: '#D97706', bg: '#FEF3C7', label: 'Low' },
-  medium:   { color: 'var(--color-primary-hover)', bg: '#FFEDD5', label: 'Medium' },
-  high:     { color: '#DC2626', bg: '#FEE2E2', label: 'High' },
-  critical: { color: '#7F1D1D', bg: '#FEE2E2', label: 'Critical' },
+  low:      { color: 'var(--color-warning)', bg: 'var(--color-warning-bg)', label: 'Low'      },
+  medium:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Medium'   },
+  high:     { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'High'     },
+  critical: { color: '#B91C1C',              bg: '#FEE2E2',                 label: 'Critical' },
 };
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  open:         { color: '#DC2626', bg: '#FEE2E2', label: 'Open' },
-  investigating:{ color: '#D97706', bg: '#FEF3C7', label: 'Investigating' },
-  resolved:     { color: '#059669', bg: '#D1FAE5', label: 'Resolved' },
-  dismissed:    { color: '#6B7280', bg: '#F3F4F6', label: 'Dismissed' },
+  open:          { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Open'          },
+  investigating: { color: 'var(--color-warning)', bg: 'var(--color-warning-bg)', label: 'Investigating' },
+  resolved:      { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Resolved'      },
+  dismissed:     { color: '#6B7280',              bg: '#F3F4F6',                 label: 'Dismissed'     },
 };
 
 export default async function AdminFraudPage({

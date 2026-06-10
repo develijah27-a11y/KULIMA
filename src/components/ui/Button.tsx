@@ -21,11 +21,11 @@ export function Button({
     'inline-flex items-center justify-center font-semibold rounded-xl transition-all active:scale-[0.97] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-soil disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variants: Record<string, string> = {
-    primary: 'bg-sprout text-soil hover:bg-harvest focus:ring-sprout',
-    secondary: 'bg-surface2 text-cream border border-surface hover:bg-surface focus:ring-leaf',
-    ghost: 'text-cream hover:bg-surface2 focus:ring-sprout',
-    danger: 'bg-clay text-cream hover:bg-[#a15928] focus:ring-clay',
-    outline: 'border border-sprout text-sprout hover:bg-sprout/10 focus:ring-sprout',
+    primary:   'bg-sprout text-white hover:bg-leaf focus:ring-sprout',
+    secondary: 'bg-surface2 text-[var(--color-text)] border border-[var(--color-border-mid)] hover:bg-[var(--color-surface-3)] focus:ring-sprout',
+    ghost:     'text-sprout hover:bg-sprout/10 focus:ring-sprout',
+    danger:    'bg-clay text-white hover:bg-[#B91C1C] focus:ring-clay',
+    outline:   'border border-sprout text-sprout hover:bg-sprout/10 focus:ring-sprout',
   };
 
   const sizes: Record<string, string> = {

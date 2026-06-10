@@ -6,7 +6,7 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)', purple: '#7C3AED',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: '#7C3AED',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -186,7 +186,7 @@ async function RecentOrders({ profileId }: { profileId: string }) {
 
   const STATUS: Record<string, { label: string; color: string; bg: string }> = {
     pending:   { label: 'Pending',   color: '#D97706', bg: '#FEF3C7' },
-    confirmed: { label: 'Confirmed', color: '#0284C7', bg: '#DBEAFE' },
+    confirmed: { label: 'Confirmed', color: '#0284C7', bg: 'var(--color-sky-bg)' },
     delivered: { label: 'Delivered', color: '#059669', bg: '#D1FAE5' },
     cancelled: { label: 'Cancelled', color: '#DC2626', bg: '#FEE2E2' },
   };

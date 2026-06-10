@@ -104,7 +104,7 @@ export function OfferActions({ offerId, askingPrice, offeredPrice, onDone }: Pro
       <button
         onClick={() => setMode('counter')}
         disabled={isPending}
-        style={{ padding: '7px 14px', background: '#DBEAFE', color: '#0284C7', border: '1px solid #BFDBFE', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+        style={{ padding: '7px 14px', background: 'var(--color-sky-bg)', color: '#0284C7', border: '1px solid #BFDBFE', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
       >
         ↕ Counter
       </button>

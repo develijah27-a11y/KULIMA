@@ -10,7 +10,7 @@ const C = {
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   pending:   { label: 'Pending',   color: '#D97706', bg: '#FEF3C7' },
-  confirmed: { label: 'Confirmed', color: '#0284C7', bg: '#DBEAFE' },
+  confirmed: { label: 'Confirmed', color: '#0284C7', bg: 'var(--color-sky-bg)' },
   delivered: { label: 'Delivered', color: '#059669', bg: '#D1FAE5' },
   cancelled: { label: 'Cancelled', color: '#DC2626', bg: '#FEE2E2' },
 };
@@ -161,7 +161,7 @@ export default function SupplierOrdersPage() {
                           <button
                             disabled={updating === order.id}
                             onClick={() => updateStatus(order.id, 'confirmed')}
-                            style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: '#DBEAFE', color: '#0284C7', border: 'none', cursor: 'pointer' }}>
+                            style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: 'var(--color-sky-bg)', color: '#0284C7', border: 'none', cursor: 'pointer' }}>
                             Confirm
                           </button>
                           <button

@@ -10,12 +10,12 @@ interface BadgeProps {
 
 export function Badge({ variant = 'neutral', className, children }: BadgeProps) {
   const variants: Record<string, string> = {
-    green: 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/40',
-    gold: 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700/30',
-    red: 'bg-green-100 text-green-900 border border-green-300 dark:bg-green-900/40 dark:text-green-200 dark:border-green-600/40',
-    blue: 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-700/30',
-    purple: 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/40',
-    neutral: 'bg-green-50 text-green-600 border border-green-100 dark:bg-green-900/15 dark:text-green-400 dark:border-green-800/40',
+    green:   'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/40',
+    gold:    'bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-900/25 dark:text-amber-300 dark:border-amber-700/35',
+    red:     'bg-red-100 text-red-700 border border-red-200 dark:bg-red-900/25 dark:text-red-400 dark:border-red-700/35',
+    blue:    'bg-sky-100 text-sky-700 border border-sky-200 dark:bg-sky-900/25 dark:text-sky-300 dark:border-sky-700/35',
+    purple:  'bg-violet-100 text-violet-700 border border-violet-200 dark:bg-violet-900/25 dark:text-violet-300 dark:border-violet-700/35',
+    neutral: 'bg-gray-100 text-gray-600 border border-gray-200 dark:bg-gray-800/50 dark:text-gray-400 dark:border-gray-700/50',
   };
 
   return (

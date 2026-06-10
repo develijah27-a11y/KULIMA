@@ -52,23 +52,30 @@ function timeAgo(iso: string) {
 
 // Design constants
 const C = {
-  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-accent)', red: 'var(--color-danger)', blue: 'var(--color-info)',
-  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
+  green:      'var(--color-primary)',
+  greenMed:   'var(--color-primary-hover)',
+  greenBright:'var(--color-primary-muted)',
+  amber:      'var(--color-harvest)',
+  red:        'var(--color-danger)',
+  blue:       'var(--color-sky)',
+  text:       'var(--d-text)',
+  muted:      'var(--d-muted)',
+  border:     'var(--d-border)',
+  cardBg:     'var(--d-card)',
+  pageBg:     'var(--d-page)',
   cardShadow: 'var(--d-shadow-card)',
 };
 
 const SEVERITY_MAP: Record<InsightSeverity, { color: string; bg: string; border: string }> = {
-  critical: { color: 'var(--color-danger)', bg: '#FEF2F2', border: '#FECACA' },
-  warning:  { color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-  positive: { color: '#059669', bg: '#F0FDF4', border: '#BBF7D0' },
-  info:     { color: 'var(--color-info)', bg: '#EFF6FF', border: '#BFDBFE' },
+  critical: { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  border: 'var(--color-danger-border)'  },
+  warning:  { color: 'var(--color-warning)', bg: 'var(--color-warning-bg)', border: 'var(--color-warning-border)' },
+  positive: { color: 'var(--color-success)', bg: 'var(--color-success-bg)', border: 'var(--color-success-border)' },
+  info:     { color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)',     border: 'var(--color-sky-muted)'      },
 };
 
 const CROP_COLORS: Record<string, string> = {
-  maize: '#D97706', beans: '#DC2626', coffee: '#7C3AED',
-  rice: '#0284C7', banana: '#B45309', cassava: '#059669', tomato: '#DC2626',
+  maize: '#D97706', beans: '#16A34A', coffee: '#92400E',
+  rice: '#0EA5E9', banana: '#D97706', cassava: '#16A34A', tomato: '#DC2626',
 };
 
 const Card = ({ children, className = '', style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) => (
@@ -422,7 +429,7 @@ async function RecentOffers({ userId }: { userId: string }) {
 
   const STATUS: Record<string, { label: string; color: string; bg: string }> = {
     pending:  { label: 'New',      color: '#059669', bg: '#D1FAE5' },
-    accepted: { label: 'Accepted', color: 'var(--color-info)', bg: '#DBEAFE' },
+    accepted: { label: 'Accepted', color: 'var(--color-info)', bg: 'var(--color-sky-bg)' },
     rejected: { label: 'Rejected', color: 'var(--color-danger)', bg: '#FEE2E2' },
   };
 

@@ -11,7 +11,7 @@ interface AuthLayoutProps {
   mode?: 'signin' | 'signup';
 }
 
-export function AuthLayout({ children, title, subtitle, footer, mode }: AuthLayoutProps) {
+export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProps) {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-10"
@@ -21,10 +21,10 @@ export function AuthLayout({ children, title, subtitle, footer, mode }: AuthLayo
       <div
         className="w-full max-w-[420px]"
         style={{
-          background: 'var(--color-surface)',
-          border: '1px solid rgba(255,255,255,0.07)',
+          background: '#132416',
+          border: '1px solid rgba(74,222,128,0.12)',
           borderRadius: 'var(--radius-card)',
-          boxShadow: 'var(--shadow-modal)',
+          boxShadow: '0 8px 48px rgba(0,0,0,0.50)',
         }}
       >
         {/* Header strip */}
