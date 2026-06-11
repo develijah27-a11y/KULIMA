@@ -1,5 +1,5 @@
 'use client';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
@@ -20,46 +20,57 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
+// Stable singleton — createClient() must NOT be called inside the component body
+// because each new reference causes the useEffect to re-run, producing an
+// infinite loop of getUser() network calls.
+const supabase = createClient();
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const supabase = createClient();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      const currentUser = data.user;
+    let mounted = true;
+
+    const fetchProfile = async (userId: string) => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      if (mounted) setProfile(data);
+    };
+
+    const init = async () => {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!mounted) return;
       setUser(currentUser);
-      if (currentUser) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .single();
-        setProfile(profileData);
-      }
+      if (currentUser) await fetchProfile(currentUser.id);
       setLoading(false);
     };
-    getUser();
+
+    init();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        if (!mounted) return;
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .single();
-          setProfile(profileData);
+          await fetchProfile(currentUser.id);
         } else {
           setProfile(null);
         }
+        setLoading(false);
       }
     );
-    return () => subscription.unsubscribe();
-  }, [supabase]);
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // empty — supabase is a stable module-level singleton
 
   const signOut = async () => {
     await supabase.auth.signOut();

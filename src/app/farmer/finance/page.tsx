@@ -71,7 +71,7 @@ async function FinanceSummary({ userId }: { userId: string }) {
             label: 'Projected Revenue',
             value: totalProjectedRevenue > 0 ? `UGX ${totalProjectedRevenue.toLocaleString()}` : '—',
             sub: projections.length > 0 ? `${projections.length} plan${projections.length !== 1 ? 's' : ''}` : 'Run the calculator',
-            icon: '📈', border: C.green, bg: '#F0FDF4', color: C.green,
+            icon: '📈', border: C.green, bg: 'var(--color-primary-bg)', color: C.green,
           },
           {
             label: 'Projected Profit',
@@ -79,14 +79,14 @@ async function FinanceSummary({ userId }: { userId: string }) {
             sub: ROI !== null ? `${ROI}% return on investment` : 'No projection yet',
             icon: totalProjectedProfit >= 0 ? '✅' : '⚠️',
             border: totalProjectedProfit >= 0 ? C.greenMed : C.amber,
-            bg: totalProjectedProfit >= 0 ? '#F0FDF4' : '#FFFBEB',
+            bg: totalProjectedProfit >= 0 ? 'var(--color-primary-bg)' : 'var(--color-harvest-bg)',
             color: totalProjectedProfit >= 0 ? C.greenMed : C.amber,
           },
           {
             label: 'Wallet Balance',
             value: `UGX ${walletBalance.toLocaleString()}`,
             sub: 'Available for farm inputs',
-            icon: '💰', border: C.blue, bg: '#EFF6FF', color: C.blue,
+            icon: '💰', border: C.blue, bg: 'var(--color-sky-bg)', color: C.blue,
           },
         ].map(({ label, value, sub, icon, border, bg, color }) => (
           <div
@@ -134,7 +134,7 @@ async function FinanceSummary({ userId }: { userId: string }) {
                           <span style={{ fontSize: '11px', color: C.muted, marginLeft: '6px' }}>{pct}%</span>
                         </div>
                       </div>
-                      <div style={{ height: '6px', background: '#F3F4F6', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{ height: '6px', background: 'var(--color-surface-2)', borderRadius: '3px', overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: '3px' }} />
                       </div>
                     </div>
@@ -201,19 +201,19 @@ export default async function FinancePage() {
       href: '/farmer/finance/calculator',
       icon: '🧮', title: 'Profitability Calculator',
       desc: 'Calculate expected yield, costs & profit for any crop and farm size',
-      color: C.green, bg: '#F0FDF4', border: '#A7F3D0',
+      color: C.green, bg: 'var(--color-primary-bg)', border: 'var(--color-primary-muted)',
     },
     {
       href: '/farmer/finance/expenses',
       icon: '📋', title: 'Expense Tracker',
       desc: 'Log fertilizer, seed, labor and other costs as you spend',
-      color: C.blue, bg: '#EFF6FF', border: '#BFDBFE',
+      color: C.blue, bg: 'var(--color-sky-bg)', border: 'var(--color-sky)',
     },
     {
       href: '/farmer/prices',
       icon: '📊', title: 'Live Market Prices',
       desc: 'Check current buying prices across all districts before selling',
-      color: C.amber, bg: '#FFFBEB', border: '#FDE68A',
+      color: C.amber, bg: 'var(--color-harvest-bg)', border: 'var(--color-warning-border)',
     },
   ];
 

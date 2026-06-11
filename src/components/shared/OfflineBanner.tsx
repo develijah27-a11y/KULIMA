@@ -4,10 +4,13 @@ import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 export function OfflineBanner() {
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState(false); // safe default for SSR
   const [showSyncing, setShowSyncing] = useState(false);
 
   useEffect(() => {
+    // Read navigator.onLine only in the browser, after hydration
+    setIsOffline(!navigator.onLine);
+
     const onOffline = () => setIsOffline(true);
     const onOnline = () => {
       setIsOffline(false);
@@ -16,7 +19,6 @@ export function OfflineBanner() {
       return () => clearTimeout(t);
     };
 
-    setIsOffline(!navigator.onLine);
     window.addEventListener('offline', onOffline);
     window.addEventListener('online', onOnline);
     return () => {

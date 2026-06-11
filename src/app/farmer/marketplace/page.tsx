@@ -15,9 +15,9 @@ const CROP_EMOJI: Record<string, string> = {
   sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
 };
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  active:  { color: '#059669', bg: '#D1FAE5', label: 'Active' },
-  sold:    { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Sold' },
-  expired: { color: '#6B7280', bg: '#F3F4F6', label: 'Expired' },
+  active:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Active' },
+  sold:    { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Sold' },
+  expired: { color: 'var(--d-muted)',       bg: 'var(--color-surface-2)',  label: 'Expired' },
 };
 
 function timeAgo(iso: string) {
@@ -83,7 +83,7 @@ async function MyListings({ profileId, filter }: { profileId: string; filter: st
               <div className="flex items-center gap-3">
                 <div
                   className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
-                  style={{ background: '#F0FDF4' }}
+                  style={{ background: 'var(--color-primary-bg)' }}
                 >
                   {emoji}
                 </div>
@@ -94,7 +94,7 @@ async function MyListings({ profileId, filter }: { profileId: string; filter: st
                       {st.label}
                     </span>
                     {pendingOffers > 0 && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: '#FEF3C7', color: '#D97706' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: 'var(--color-harvest-bg)', color: 'var(--color-harvest)' }}>
                         {pendingOffers} offer{pendingOffers !== 1 ? 's' : ''}
                       </span>
                     )}
@@ -137,9 +137,9 @@ async function ListingStats({ profileId }: { profileId: string }) {
     .reduce((s: number, l: any) => s + l.asking_price * l.quantity_kg, 0);
   const pendingOffers = (offersRes.data ?? []).filter((o: any) => myIds.has(o.listing_id)).length;
   const stats = [
-    { label: 'Active', value: activeCount, color: '#059669', bg: '#D1FAE5' },
-    { label: 'Pending Offers', value: pendingOffers, color: '#D97706', bg: '#FEF3C7' },
-    { label: 'Revenue (sold)', value: revenue > 1e6 ? `${(revenue / 1e6).toFixed(1)}M` : revenue > 0 ? Math.round(revenue).toLocaleString() : '—', color: C.green, bg: '#F0FDF4', prefix: 'UGX ' },
+    { label: 'Active', value: activeCount, color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+    { label: 'Pending Offers', value: pendingOffers, color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+    { label: 'Revenue (sold)', value: revenue > 1e6 ? `${(revenue / 1e6).toFixed(1)}M` : revenue > 0 ? Math.round(revenue).toLocaleString() : '—', color: C.green, bg: 'var(--color-primary-bg)', prefix: 'UGX ' },
   ];
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -190,7 +190,7 @@ export default async function FarmerMarketplacePage({
       </Suspense>
 
       {/* Price protection notice */}
-      <div style={{ background: '#F0FDF4', border: '1px solid #A7F3D0', borderRadius: 12, padding: '10px 16px', display: 'flex', gap: 10, alignItems: 'center' }}>
+      <div style={{ background: 'var(--color-primary-bg)', border: '1px solid var(--color-primary-muted)', borderRadius: 12, padding: '10px 16px', display: 'flex', gap: 10, alignItems: 'center' }}>
         <span>🛡</span>
         <p style={{ fontSize: 12, color: '#065F46', margin: 0 }}>
           Kulima alerts you if any offer is more than 30% below your asking price.
@@ -206,7 +206,7 @@ export default async function FarmerMarketplacePage({
             style={{
               padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600,
               textDecoration: 'none', textTransform: 'capitalize',
-              background: filter === f ? C.green : '#F3F4F6',
+              background: filter === f ? C.green : 'var(--color-surface-2)',
               color: filter === f ? '#fff' : C.muted,
             }}
           >

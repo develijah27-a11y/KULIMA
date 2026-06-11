@@ -14,13 +14,13 @@ export function WeatherDistrictSelector({ current, districts }: Props) {
       value={current}
       onChange={(e) => router.push(`/farmer/weather?district=${encodeURIComponent(e.target.value)}`)}
       style={{
-        background: '#FFFFFF',
-        border: '1.5px solid #E5E7EB',
+        background: 'var(--d-input-bg)',
+        border: '1.5px solid var(--d-border)',
         borderRadius: '10px',
         padding: '8px 12px',
         fontSize: '14px',
         fontWeight: 600,
-        color: '#1A1A1A',
+        color: 'var(--d-text)',
         cursor: 'pointer',
         outline: 'none',
         minWidth: '160px',

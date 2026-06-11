@@ -109,7 +109,7 @@ export function OrdersClient({ offers: initial }: { offers: Offer[] }) {
       </div>
 
       {error && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 10, padding: '10px 14px' }}>
+        <div style={{ background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)', borderRadius: 10, padding: '10px 14px' }}>
           <p style={{ color: C.red, fontSize: 13 }}>{error}</p>
         </div>
       )}

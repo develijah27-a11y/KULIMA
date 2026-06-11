@@ -538,7 +538,7 @@ async function FinanceOverview({ userId }: { userId: string }) {
           <a
             href="/farmer/finance"
             className="mt-3 block text-xs font-bold px-3 py-1.5 rounded-lg text-center"
-            style={{ background: '#F0FDF4', color: C.greenMed }}
+            style={{ background: 'var(--color-primary-bg)', color: C.greenMed }}
           >
             Apply for loan →
           </a>

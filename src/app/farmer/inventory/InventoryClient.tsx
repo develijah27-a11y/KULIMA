@@ -46,13 +46,13 @@ const C = {
 type Category = 'all' | 'seeds' | 'fertilizers' | 'pesticides' | 'tools' | 'harvest' | 'other';
 
 const CATS: { key: Category; label: string; emoji: string; color: string; bg: string }[] = [
-  { key: 'all',         label: 'All Items',    emoji: '📦', color: 'var(--color-primary)', bg: '#F0FDF4' },
-  { key: 'seeds',       label: 'Seeds',        emoji: '🌱', color: '#059669', bg: '#D1FAE5' },
-  { key: 'fertilizers', label: 'Fertilizers',  emoji: '🧪', color: 'var(--color-info)', bg: 'var(--color-sky-bg)' },
+  { key: 'all',         label: 'All Items',    emoji: '📦', color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
+  { key: 'seeds',       label: 'Seeds',        emoji: '🌱', color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+  { key: 'fertilizers', label: 'Fertilizers',  emoji: '🧪', color: 'var(--color-sky)', bg: 'var(--color-sky-bg)' },
   { key: 'pesticides',  label: 'Pesticides',   emoji: '🛡️', color: '#7C3AED', bg: '#EDE9FE' },
-  { key: 'tools',       label: 'Tools',        emoji: '🔧', color: '#D97706', bg: '#FEF3C7' },
-  { key: 'harvest',     label: 'Harvest',      emoji: '🌾', color: '#B45309', bg: '#FEF3C7' },
-  { key: 'other',       label: 'Other',        emoji: '📌', color: '#6B7280', bg: '#F3F4F6' },
+  { key: 'tools',       label: 'Tools',        emoji: '🔧', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { key: 'harvest',     label: 'Harvest',      emoji: '🌾', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { key: 'other',       label: 'Other',        emoji: '📌', color: 'var(--d-muted)', bg: 'var(--color-surface-2)' },
 ];
 
 const UNITS = ['kg', 'g', 'liters', 'ml', 'bags', 'crates', 'bunches', 'items', 'tons', 'acres'];
@@ -241,13 +241,13 @@ export function InventoryClient({ initialItems, profile }: Props) {
 
       {/* Low stock alert */}
       {lowStockCount > 0 && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)' }}>
           <span className="text-xl">⚠️</span>
           <div>
             <p className="text-sm font-bold" style={{ color: 'var(--color-danger)' }}>
               {lowStockCount} item{lowStockCount !== 1 ? 's' : ''} running low
             </p>
-            <p className="text-xs" style={{ color: '#9CA3AF' }}>
+            <p className="text-xs" style={{ color: 'var(--d-muted)' }}>
               {items.filter(i => i.low_stock_threshold != null && i.quantity <= i.low_stock_threshold).map(i => i.name).join(', ')}
             </p>
           </div>
@@ -288,7 +288,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
               {count > 0 && (
                 <span
                   className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                  style={{ background: active ? 'rgba(255,255,255,0.2)' : '#F3F4F6', color: active ? '#fff' : C.muted }}
+                  style={{ background: active ? 'rgba(255,255,255,0.2)' : 'var(--color-surface-2)', color: active ? '#fff' : C.muted }}
                 >
                   {count}
                 </span>
@@ -316,7 +316,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
                   { emoji: '🧪', label: 'Fertilizers', desc: 'DAP, urea, organic...' },
                   { emoji: '🔧', label: 'Tools', desc: 'Hoes, sprayers, pumps...' },
                 ].map(({ emoji, label, desc }) => (
-                  <div key={label} className="rounded-xl p-4 text-center" style={{ background: '#F0FDF4' }}>
+                  <div key={label} className="rounded-xl p-4 text-center" style={{ background: 'var(--color-primary-bg)' }}>
                     <p style={{ fontSize: 28, marginBottom: 6 }}>{emoji}</p>
                     <p className="text-sm font-bold" style={{ color: 'var(--color-primary)' }}>{label}</p>
                     <p className="text-xs mt-1" style={{ color: 'var(--color-primary-hover)' }}>{desc}</p>
@@ -394,7 +394,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
                       {item.quantity} {item.unit}
                     </p>
                     {stockPct !== null && (
-                      <div className="mt-1 h-1 rounded-full" style={{ background: '#F3F4F6', width: 80 }}>
+                      <div className="mt-1 h-1 rounded-full" style={{ background: 'var(--color-surface-2)', width: 80 }}>
                         <div className="h-1 rounded-full transition-all"
                           style={{ width: `${stockPct}%`, background: isLow ? C.red : C.greenBright }} />
                       </div>
@@ -421,7 +421,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
                     <button
                       onClick={() => openEdit(item)}
                       className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-80"
-                      style={{ background: '#F0FDF4', color: 'var(--color-primary)' }}
+                      style={{ background: 'var(--color-primary-bg)', color: 'var(--color-primary)' }}
                     >
                       Edit
                     </button>
@@ -429,7 +429,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
                       onClick={() => handleDelete(item.id)}
                       disabled={deleting === item.id}
                       className="px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity hover:opacity-80"
-                      style={{ background: '#FEF2F2', color: 'var(--color-danger)' }}
+                      style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}
                     >
                       {deleting === item.id ? '...' : 'Del'}
                     </button>
@@ -463,7 +463,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
             {/* Modal body */}
             <div className="p-6 space-y-4 overflow-y-auto" style={{ maxHeight: '70vh' }}>
               {formError && (
-                <div className="px-4 py-3 rounded-xl text-sm font-medium" style={{ background: '#FEF2F2', color: 'var(--color-danger)' }}>
+                <div className="px-4 py-3 rounded-xl text-sm font-medium" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>
                   {formError}
                 </div>
               )}

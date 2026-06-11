@@ -222,7 +222,7 @@ export default async function WeatherPage({
               {weather.daily.map((day, i) => {
                 const probPct = day.precipProbability;
                 const barColor = probPct >= 70 ? C.blue : probPct >= 40 ? '#60A5FA' : '#BBF7D0';
-                const rowBg = day.precipMm > 10 ? '#EFF6FF' : day.farmingNote.includes('⚠️') ? '#FEF2F2' : 'transparent';
+                const rowBg = day.precipMm > 10 ? 'var(--color-sky-bg)' : day.farmingNote.includes('⚠️') ? 'var(--color-danger-bg)' : 'transparent';
                 return (
                   <div
                     key={i}
@@ -246,7 +246,7 @@ export default async function WeatherPage({
                       {day.precipMm > 0 ? `${day.precipMm}` : '—'}
                     </p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ flex: 1, background: '#F3F4F6', borderRadius: '4px', height: '6px', overflow: 'hidden' }}>
+                      <div style={{ flex: 1, background: 'var(--color-surface-2)', borderRadius: '4px', height: '6px', overflow: 'hidden' }}>
                         <div style={{ width: `${probPct}%`, height: '100%', background: barColor, borderRadius: '4px' }} />
                       </div>
                       <span style={{ fontSize: '11px', fontWeight: 600, color: C.muted, width: '34px', textAlign: 'right' }}>{probPct}%</span>

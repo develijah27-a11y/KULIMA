@@ -71,7 +71,7 @@ export default async function VerifyPage() {
                   <div key={lvl} className="flex items-center" style={{ flex: i < LEVELS.length - 1 ? 1 : 'none' }}>
                     <div style={{
                       width: 32, height: 32, borderRadius: '50%',
-                      background: done ? cfg.bg : '#F3F4F6',
+                      background: done ? cfg.bg : 'var(--color-surface-2)',
                       border: `2px solid ${done ? cfg.border : C.border}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: 13, color: done ? cfg.color : C.muted,

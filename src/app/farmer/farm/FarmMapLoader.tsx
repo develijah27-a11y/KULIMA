@@ -7,7 +7,7 @@ const FarmMapClient = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F0FDF4', borderRadius: 12 }}>
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-primary-bg)', borderRadius: 12 }}>
         <p style={{ color: 'var(--color-primary-hover)', fontSize: 13, fontWeight: 600 }}>Loading map...</p>
       </div>
     ),

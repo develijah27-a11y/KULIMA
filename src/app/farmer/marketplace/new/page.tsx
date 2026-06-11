@@ -48,9 +48,9 @@ export default async function NewListingPage() {
       </div>
 
       {/* Price shield info */}
-      <div style={{ background: '#F0FDF4', border: '1px solid #A7F3D0', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 10 }}>
+      <div style={{ background: 'var(--color-primary-bg)', border: '1px solid var(--color-primary-muted)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 10 }}>
         <span style={{ fontSize: 18, flexShrink: 0 }}>🛡</span>
-        <p style={{ fontSize: 13, color: '#065F46', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--color-success)', margin: 0 }}>
           <strong>Price protection active.</strong> Buyers cannot offer below 70% of your asking price. We also alert you if your price is significantly below market.
         </p>
       </div>

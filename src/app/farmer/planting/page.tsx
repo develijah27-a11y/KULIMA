@@ -18,9 +18,9 @@ const C = {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const URGENCY_CFG: Record<string, { bg: string; color: string; border: string }> = {
-  high:   { bg: '#FEF2F2', color: 'var(--color-danger)', border: '#FECACA' },
-  medium: { bg: '#FFFBEB', color: '#D97706', border: '#FDE68A' },
-  low:    { bg: '#F0FDF4', color: '#059669', border: '#BBF7D0' },
+  high:   { bg: 'var(--color-danger-bg)',  color: 'var(--color-danger)',  border: 'var(--color-danger)' },
+  medium: { bg: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', border: 'var(--color-warning-border)' },
+  low:    { bg: 'var(--color-primary-bg)', color: 'var(--color-success)', border: 'var(--color-primary-muted)' },
 };
 
 const ALERT_TYPE_ICON: Record<string, string> = {
@@ -28,10 +28,10 @@ const ALERT_TYPE_ICON: Record<string, string> = {
 };
 
 const PHASE_CFG: Record<string, { bg: string; color: string; icon: string }> = {
-  planting: { bg: '#D1FAE5', color: '#059669', icon: '🌱' },
-  growing:  { bg: 'var(--color-sky-bg)', color: 'var(--color-info)', icon: '🌿' },
-  harvest:  { bg: '#FEF3C7', color: '#D97706', icon: '🌾' },
-  dry:      { bg: '#F3F4F6', color: '#6B7280', icon: '☀️' },
+  planting: { bg: 'var(--color-success-bg)', color: 'var(--color-success)', icon: '🌱' },
+  growing:  { bg: 'var(--color-sky-bg)',     color: 'var(--color-sky)',     icon: '🌿' },
+  harvest:  { bg: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', icon: '🌾' },
+  dry:      { bg: 'var(--color-surface-2)',  color: 'var(--d-muted)',       icon: '☀️' },
 };
 
 function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -61,8 +61,8 @@ function MonthBar({ cal, currentMonth }: { cal: PlantingWindow; currentMonth: nu
     }
 
     const colors: Record<string, { bg: string; border: string }> = {
-      'plant-a':   { bg: '#D1FAE5', border: '#34D399' },
-      'harvest-a': { bg: '#FEF3C7', border: '#FCD34D' },
+      'plant-a':   { bg: 'var(--color-success-bg)', border: '#34D399' },
+      'harvest-a': { bg: 'var(--color-harvest-bg)', border: '#FCD34D' },
       'plant-b':   { bg: 'var(--color-sky-bg)', border: '#93C5FD' },
       'harvest-b': { bg: '#FDE8D8', border: '#FDBA74' },
       'empty':     { bg: '#F9FAFB', border: 'var(--d-border)' },
@@ -237,7 +237,7 @@ export default async function PlantingPage() {
                         <span
                           style={{
                             fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '20px',
-                            background: '#F3F4F6', color: C.muted,
+                            background: 'var(--color-surface-2)', color: C.muted,
                           }}
                         >
                           {typeIcon} {alert.type.replace(/_/g, ' ')}
@@ -259,8 +259,8 @@ export default async function PlantingPage() {
         {/* Calendar legend */}
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
           {[
-            { color: '#D1FAE5', border: '#34D399', label: 'Plant (Season A)' },
-            { color: '#FEF3C7', border: '#FCD34D', label: 'Harvest (Season A)' },
+            { color: 'var(--color-success-bg)', border: '#34D399', label: 'Plant (Season A)' },
+            { color: 'var(--color-harvest-bg)', border: '#FCD34D', label: 'Harvest (Season A)' },
             { color: 'var(--color-sky-bg)', border: '#93C5FD', label: 'Plant (Season B)' },
             { color: '#FDE8D8', border: '#FDBA74', label: 'Harvest (Season B)' },
           ].map((item) => (
@@ -314,7 +314,7 @@ export default async function PlantingPage() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: '12px',
                     padding: '10px 20px',
-                    background: isMyCrop ? '#F0FDF4' : 'transparent',
+                    background: isMyCrop ? 'var(--color-primary-bg)' : 'transparent',
                   }}
                 >
                   <div style={{ width: '160px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -324,7 +324,7 @@ export default async function PlantingPage() {
                         {cal.crop.replace(/_/g, ' ')}
                       </p>
                       {isMyCrop && (
-                        <span style={{ fontSize: '10px', fontWeight: 700, color: '#059669' }}>YOUR CROP</span>
+                        <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--color-success)' }}>YOUR CROP</span>
                       )}
                     </div>
                   </div>
@@ -398,7 +398,7 @@ export default async function PlantingPage() {
                     padding: '14px 20px',
                     borderBottom: isLast ? 'none' : `1px solid ${C.border}`,
                     borderRight: i % 2 === 0 ? `1px solid ${C.border}` : 'none',
-                    background: isMyCrop ? '#F0FDF4' : 'transparent',
+                    background: isMyCrop ? 'var(--color-primary-bg)' : 'transparent',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -407,7 +407,7 @@ export default async function PlantingPage() {
                       {cal.crop.replace(/_/g, ' ')}
                     </p>
                     {isMyCrop && (
-                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#059669', background: '#D1FAE5', padding: '2px 6px', borderRadius: '10px' }}>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: 'var(--color-success)', background: 'var(--color-success-bg)', padding: '2px 6px', borderRadius: '10px' }}>
                         YOURS
                       </span>
                     )}
@@ -429,7 +429,7 @@ export default async function PlantingPage() {
         {farmerCrops.length === 0 && (
           <div
             style={{
-              background: '#FFFBEB', border: '1.5px solid #FDE68A', borderRadius: '12px',
+              background: 'var(--color-harvest-bg)', border: '1.5px solid var(--color-warning-border)', borderRadius: '12px',
               padding: '20px', display: 'flex', alignItems: 'center', gap: '16px',
             }}
           >

@@ -22,18 +22,18 @@ const CROP_COLOR: Record<string, string> = {
   coffee_robusta: '#7C3AED', coffee_arabica: '#6D28D9', coffee_kenya: '#5B21B6',
   coffee_ethiopia: '#4C1D95', coffee_tanzania: '#7C3AED',
   coffee_arabica_global: '#6D28D9', coffee_robusta_global: '#7C3AED',
-  tea_green_leaf: '#059669', tea_made: '#10B981', tea_kenya: '#34D399', tea_global: '#059669',
-  cotton_seed: '#6B7280', cotton_lint: '#9CA3AF', cotton_global: '#6B7280',
+  tea_green_leaf: 'var(--color-success)', tea_made: '#10B981', tea_kenya: '#34D399', tea_global: 'var(--color-success)',
+  cotton_seed: 'var(--d-muted)', cotton_lint: 'var(--d-muted)', cotton_global: 'var(--d-muted)',
   vanilla_green: '#8B5CF6', vanilla_cured: '#7C3AED',
   vanilla_madagascar: '#A78BFA', vanilla_global: '#8B5CF6',
-  sesame_simsim: '#D97706', sesame_ethiopia: '#B45309', sesame_global: '#D97706',
+  sesame_simsim: 'var(--color-harvest)', sesame_ethiopia: '#B45309', sesame_global: 'var(--color-harvest)',
   sunflower: '#F59E0B', sunflower_oil: '#FBBF24', sunflower_global: '#F59E0B',
   soybean: '#65A30D', soybean_global: '#84CC16',
   tobacco_flue: '#78716C', tobacco_fire: '#92400E',
   cocoa_beans: '#78350F', cocoa_global: '#92400E',
   groundnuts: '#B45309',
-  maize_export: '#D97706',
-  beans_export: '#DC2626',
+  maize_export: 'var(--color-harvest)',
+  beans_export: 'var(--color-danger)',
   macadamia: '#0D9488', macadamia_kenya: '#0F766E', macadamia_global: '#0D9488',
   avocado: '#15803D', avocado_kenya: '#16A34A', avocado_global: '#15803D',
   pyrethrum: '#DB2777',
@@ -79,7 +79,7 @@ function CashPriceCard({ price }: { price: any }) {
           {trend !== 0 && (
             <span style={{
               fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 999,
-              background: trend > 0 ? '#FEF2F2' : '#EFF6FF',
+              background: trend > 0 ? 'var(--color-success-bg)' : 'var(--color-sky-bg)',
               color: trendColor(trend),
             }}>
               {trendIcon(trend)}{Math.abs(trend).toFixed(1)}%
@@ -178,7 +178,7 @@ async function UgandaLocalPrices({
   });
 
   const EMOJI: Record<string, string> = { maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌', cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜', sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️' };
-  const COLOR: Record<string, string> = { maize: '#D97706', beans: '#DC2626', coffee: '#7C3AED', rice: '#0284C7', banana: '#B45309', cassava: '#059669', tomato: '#DC2626', sorghum: '#D97706', groundnuts: '#B45309', sweet_potatoes: '#D97706', sunflower: '#B45309' };
+  const COLOR: Record<string, string> = { maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED', rice: 'var(--color-sky)', banana: '#B45309', cassava: 'var(--color-success)', tomato: 'var(--color-danger)', sorghum: 'var(--color-harvest)', groundnuts: '#B45309', sweet_potatoes: 'var(--color-harvest)', sunflower: '#B45309' };
 
   // Group cash prices by crop_key
   const cashByCrop: Record<string, any[]> = {};
@@ -216,14 +216,14 @@ async function UgandaLocalPrices({
           <input type="hidden" name="tab" value="uganda" />
           <div style={{ flex: 1, minWidth: 140 }}>
             <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>District</label>
-            <select name="district" defaultValue={district} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: '#fff' }}>
+            <select name="district" defaultValue={district} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: 'var(--d-input-bg)' }}>
               <option value="">All Uganda</option>
               {DISTRICT_NAMES.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div style={{ flex: 1, minWidth: 120 }}>
             <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Crop</label>
-            <select name="crop" defaultValue={cropFilter} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: '#fff' }}>
+            <select name="crop" defaultValue={cropFilter} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: 'var(--d-input-bg)' }}>
               <option value="">All Crops</option>
               {Object.keys(EMOJI).map(c => <option key={c} value={c} style={{ textTransform: 'capitalize' }}>{c.replace(/_/g,' ')}</option>)}
             </select>
@@ -250,21 +250,21 @@ async function UgandaLocalPrices({
             const vsNat = nat && district ? Math.round(((info.price - nat) / nat) * 100) : null;
             return (
               <a key={crop} href={`/farmer/prices?tab=uganda${district ? `&district=${district}` : ''}&crop=${crop}`}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: i < cropEntries.length - 1 ? `1px solid ${C.border}` : 'none', textDecoration: 'none', background: isPrimary ? '#F0FDF4' : 'transparent' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: i < cropEntries.length - 1 ? `1px solid ${C.border}` : 'none', textDecoration: 'none', background: isPrimary ? 'var(--color-primary-bg)' : 'transparent' }}>
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
                   {EMOJI[crop] ?? '🌾'}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 2 }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, textTransform: 'capitalize' }}>{crop.replace(/_/g,' ')}</p>
-                    {isPrimary && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#D1FAE5', color: '#059669' }}>YOUR CROP</span>}
-                    {dm?.offer_count_30d > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#FEF2F2', color: '#DC2626' }}>🔥 IN DEMAND</span>}
+                    {isPrimary && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-success-bg)', color: 'var(--color-success)' }}>YOUR CROP</span>}
+                    {dm?.offer_count_30d > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>🔥 IN DEMAND</span>}
                   </div>
                   <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{info.market} · {info.district}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={{ fontSize: 16, fontWeight: 900, color, margin: 0, letterSpacing: '-0.02em' }}>UGX {Math.round(info.price).toLocaleString()}</p>
-                  {vsNat !== null && <p style={{ fontSize: 10, fontWeight: 700, color: vsNat >= 0 ? '#059669' : '#DC2626', margin: '2px 0 0' }}>{vsNat >= 0 ? '+' : ''}{vsNat}% vs national avg</p>}
+                  {vsNat !== null && <p style={{ fontSize: 10, fontWeight: 700, color: vsNat >= 0 ? 'var(--color-success)' : 'var(--color-danger)', margin: '2px 0 0' }}>{vsNat >= 0 ? '+' : ''}{vsNat}% vs national avg</p>}
                 </div>
               </a>
             );
@@ -277,7 +277,7 @@ async function UgandaLocalPrices({
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <h2 style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0 }}>🇺🇬 Uganda Cash Crop Prices</h2>
-            <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: '#F0FDF4', color: C.greenMed }}>FARM GATE & EXPORT</span>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: 'var(--color-primary-bg)', color: C.greenMed }}>FARM GATE & EXPORT</span>
           </div>
           {Object.entries(cashByCrop).map(([key, rows]) => (
             <div key={key} style={{ marginBottom: 16 }}>
@@ -328,8 +328,8 @@ async function RegionalPrices({ region }: { region: 'east_africa' | 'global' }) 
       </div>
 
       {/* Disclaimer */}
-      <div style={{ background: '#FFFBEB', borderRadius: 10, padding: '12px 16px', border: '1px solid #FDE68A' }}>
-        <p style={{ fontSize: 12, color: '#92400E', margin: 0, lineHeight: 1.5 }}>
+      <div style={{ background: 'var(--color-harvest-bg)', borderRadius: 10, padding: '12px 16px', border: '1px solid var(--color-warning-border)' }}>
+        <p style={{ fontSize: 12, color: 'var(--color-harvest)', margin: 0, lineHeight: 1.5 }}>
           ⚠️ <strong>Reference prices only.</strong> Actual transaction prices depend on grade, quantity, buyer relationship, and current exchange rates.
           {region === 'global' && ' Global prices are futures/OTC benchmark prices converted at 1 USD = UGX 3,800.'}
           {region === 'east_africa' && ' East Africa prices are regional exchange/auction averages.'}
@@ -354,7 +354,7 @@ async function RegionalPrices({ region }: { region: 'east_africa' | 'global' }) 
         <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Price Sources</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {[...new Set(prices.map(p => p.price_source))].map(src => (
-            <span key={String(src)} style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: '#E5E7EB', color: C.muted }}>
+            <span key={String(src)} style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: 'var(--color-surface-2)', color: C.muted }}>
               {String(src)}
             </span>
           ))}
@@ -400,13 +400,13 @@ export default async function PricesPage({
             Uganda farm gate · East Africa · Global markets
           </p>
         </div>
-        <Link href="/farmer/planting" style={{ padding: '8px 14px', background: '#F0FDF4', color: C.greenMed, borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+        <Link href="/farmer/planting" style={{ padding: '8px 14px', background: 'var(--color-primary-bg)', color: C.greenMed, borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
           🌱 Planting Plan →
         </Link>
       </div>
 
       {/* Region tabs */}
-      <div style={{ display: 'flex', gap: 6, background: '#F3F4F6', borderRadius: 12, padding: 4 }}>
+      <div style={{ display: 'flex', gap: 6, background: 'var(--color-surface-2)', borderRadius: 12, padding: 4 }}>
         {(Object.entries(REGION_CFG) as [Region, typeof REGION_CFG[Region]][]).map(([key, cfg]) => (
           <a
             key={key}
@@ -445,9 +445,9 @@ export default async function PricesPage({
       )}
 
       {/* Selling tip */}
-      <div style={{ background: '#F0FDF4', borderRadius: 14, padding: '14px 18px', border: '1px solid #A7F3D0' }}>
+      <div style={{ background: 'var(--color-primary-bg)', borderRadius: 14, padding: '14px 18px', border: '1px solid var(--color-primary-muted)' }}>
         <p style={{ fontSize: 12, fontWeight: 700, color: C.greenMed, margin: '0 0 4px' }}>💡 Know Your Value</p>
-        <p style={{ fontSize: 12, color: '#065F46', lineHeight: 1.5, margin: 0 }}>
+        <p style={{ fontSize: 12, color: 'var(--color-success)', lineHeight: 1.5, margin: 0 }}>
           Uganda's export crops earn 2–4× more than local market prices. If you grow coffee, tea, or vanilla — connect with certified exporters and UCDA to access export premiums. Use the Finance Calculator to estimate your actual profit at different price levels.
         </p>
       </div>

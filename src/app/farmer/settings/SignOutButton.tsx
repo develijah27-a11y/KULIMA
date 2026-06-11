@@ -28,7 +28,7 @@ export function SignOutButton({ borderTop = true }: SignOutButtonProps) {
     >
       <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>🚪</span>
       <div style={{ flex: 1 }}>
-        <p style={{ fontSize: 14, fontWeight: 600, color: '#DC2626', marginBottom: 1 }}>Sign Out</p>
+        <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
         <p style={{ fontSize: 12, color: 'var(--d-muted)' }}>Log out of your Kulima account</p>
       </div>
       <span style={{ color: 'var(--d-muted)', fontSize: 16 }}>›</span>

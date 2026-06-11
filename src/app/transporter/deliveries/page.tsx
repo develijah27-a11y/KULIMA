@@ -112,7 +112,7 @@ export default async function TransporterDeliveriesPage({
                   </div>
                   {tab === 'available' && (
                     <Link href={`/transporter/deliveries/${row.id}`}
-                      style={{ padding: '6px 14px', background: '#F0FDF4', color: C.greenMed, borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
+                      style={{ padding: '6px 14px', background: 'var(--color-primary-bg)', color: C.greenMed, borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
                       Bid →
                     </Link>
                   )}

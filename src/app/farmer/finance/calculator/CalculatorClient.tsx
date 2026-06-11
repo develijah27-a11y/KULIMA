@@ -399,7 +399,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                 const yieldVal = result.yield[scenario];
                 const rev = result.revenue[scenario];
                 const pct = result.yield.optimistic > 0 ? Math.round((yieldVal / result.yield.optimistic) * 100) : 0;
-                const colors = ['var(--color-danger)', '#059669', 'var(--color-info)'];
+                const colors = ['var(--color-danger)', 'var(--color-success)', 'var(--color-sky)'];
                 const labels = ['Pessimistic', 'Realistic', 'Optimistic'];
                 return (
                   <div key={scenario} style={{ marginBottom: i < 2 ? '14px' : '0' }}>
@@ -407,7 +407,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                       <p style={{ fontSize: '12px', fontWeight: 700, color: C.muted }}>{labels[i]}</p>
                       <p style={{ fontSize: '12px', fontWeight: 800, color: C.text }}>{fmt(yieldVal)} kg</p>
                     </div>
-                    <div style={{ height: '8px', background: '#F3F4F6', borderRadius: '4px', overflow: 'hidden', marginBottom: '3px' }}>
+                    <div style={{ height: '8px', background: 'var(--color-surface-2)', borderRadius: '4px', overflow: 'hidden', marginBottom: '3px' }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: colors[i], borderRadius: '4px' }} />
                     </div>
                     {marketPriceNum > 0 && (
@@ -438,7 +438,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                     padding: big ? '12px 16px' : '10px 16px',
                     borderBottom: i < 7 ? `1px solid ${C.border}` : 'none',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: label.includes('Suggested') ? '#EFF6FF' : label.includes('break-even') || label.includes('Break-even') ? '#FFFBEB' : 'transparent',
+                    background: label.includes('Suggested') ? 'var(--color-sky-bg)' : label.includes('break-even') || label.includes('Break-even') ? 'var(--color-harvest-bg)' : 'transparent',
                   }}
                 >
                   <p style={{ fontSize: '12px', fontWeight: 600, color: C.muted }}>{label}</p>
@@ -459,7 +459,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                       <p style={{ fontSize: '12px', color: C.text }}>{item.label}</p>
                       <p style={{ fontSize: '12px', fontWeight: 700, color: C.text }}>{item.pct}%</p>
                     </div>
-                    <div style={{ height: '5px', background: '#F3F4F6', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '5px', background: 'var(--color-surface-2)', borderRadius: '3px', overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${item.pct}%`, background: C.greenMed, borderRadius: '3px' }} />
                     </div>
                   </div>
@@ -473,8 +473,8 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
               disabled={saving || saved}
               style={{
                 padding: '14px', borderRadius: '12px', fontSize: '14px', fontWeight: 800,
-                background: saved ? '#D1FAE5' : saving ? '#E5E7EB' : `linear-gradient(135deg, ${C.green} 0%, #2D6A4F 100%)`,
-                color: saved ? '#059669' : saving ? C.muted : '#FFFFFF',
+                background: saved ? 'var(--color-success-bg)' : saving ? 'var(--color-surface-2)' : `linear-gradient(135deg, ${C.green} 0%, #2D6A4F 100%)`,
+                color: saved ? 'var(--color-success)' : saving ? C.muted : '#FFFFFF',
                 border: 'none', cursor: saving || saved ? 'default' : 'pointer',
                 width: '100%',
               }}

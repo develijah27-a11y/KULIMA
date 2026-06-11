@@ -126,7 +126,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 12px', borderRadius: '8px',
     border: `1.5px solid ${C.border}`, fontSize: '14px',
-    color: C.text, outline: 'none', background: '#FAFAFA',
+    color: C.text, outline: 'none', background: 'var(--d-input-bg)',
     boxSizing: 'border-box',
   };
   const labelStyle: React.CSSProperties = {

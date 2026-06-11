@@ -37,7 +37,7 @@ export default async function DeliveryDetailPage({ params }: { params: Promise<{
       {/* Delivery details */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🚛</div>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🚛</div>
           <div>
             <h1 className="text-lg font-black" style={{ color: C.text, letterSpacing: '-0.02em', margin: '0 0 2px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               {delivery.pickup_district} → {delivery.dropoff_district}
@@ -83,11 +83,11 @@ export default async function DeliveryDetailPage({ params }: { params: Promise<{
         ) : existingBid ? (
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 8px' }}>Your Bid</p>
-            <div style={{ padding: '12px 14px', background: existingBid.status === 'accepted' ? '#D1FAE5' : existingBid.status === 'rejected' ? '#FEF2F2' : '#FEF3C7', borderRadius: 10 }}>
-              <p style={{ fontSize: 14, fontWeight: 800, color: existingBid.status === 'accepted' ? '#059669' : existingBid.status === 'rejected' ? '#DC2626' : '#D97706', margin: '0 0 3px' }}>
+            <div style={{ padding: '12px 14px', background: existingBid.status === 'accepted' ? 'var(--color-success-bg)' : existingBid.status === 'rejected' ? 'var(--color-danger-bg)' : 'var(--color-harvest-bg)', borderRadius: 10 }}>
+              <p style={{ fontSize: 14, fontWeight: 800, color: existingBid.status === 'accepted' ? 'var(--color-success)' : existingBid.status === 'rejected' ? 'var(--color-danger)' : 'var(--color-harvest)', margin: '0 0 3px' }}>
                 UGX {Math.round(existingBid.price).toLocaleString()}
               </p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: existingBid.status === 'accepted' ? '#059669' : existingBid.status === 'rejected' ? '#DC2626' : '#D97706', margin: 0 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: existingBid.status === 'accepted' ? 'var(--color-success)' : existingBid.status === 'rejected' ? 'var(--color-danger)' : 'var(--color-harvest)', margin: 0 }}>
                 {existingBid.status === 'accepted' ? '✓ Bid accepted! Check your active deliveries.' : existingBid.status === 'rejected' ? 'Bid rejected' : 'Awaiting response'}
               </p>
             </div>

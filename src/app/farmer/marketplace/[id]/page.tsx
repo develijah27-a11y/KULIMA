@@ -13,15 +13,15 @@ const C = {
 };
 
 const STATUS_CFG = {
-  active:   { color: '#059669', bg: '#D1FAE5', label: 'Active' },
-  sold:     { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Sold' },
-  expired:  { color: '#6B7280', bg: '#F3F4F6', label: 'Expired' },
+  active:   { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Active' },
+  sold:     { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Sold' },
+  expired:  { color: 'var(--d-muted)',       bg: 'var(--color-surface-2)',  label: 'Expired' },
 };
 const OFFER_STATUS_CFG = {
-  pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Pending' },
-  countered: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Countered' },
-  accepted:  { color: '#059669', bg: '#D1FAE5', label: 'Accepted' },
-  rejected:  { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
+  pending:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Pending' },
+  countered: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Countered' },
+  accepted:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Accepted' },
+  rejected:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Rejected' },
   completed: { color: '#7C3AED', bg: '#EDE9FE', label: 'Completed' },
 };
 
@@ -139,7 +139,7 @@ export default async function FarmerListingDetailPage({ params }: { params: Prom
                       <div className="flex items-center gap-3">
                         <div
                           className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
-                          style={{ background: '#F0FDF4', color: C.green }}
+                          style={{ background: 'var(--color-primary-bg)', color: C.green }}
                         >
                           {buyer?.full_name?.[0]?.toUpperCase() ?? '?'}
                         </div>
@@ -159,7 +159,7 @@ export default async function FarmerListingDetailPage({ params }: { params: Prom
                         <p className="text-lg font-black" style={{ color: isPending ? C.green : C.muted, letterSpacing: '-0.02em' }}>
                           UGX {Math.round(offer.offered_price).toLocaleString()}
                         </p>
-                        <p className="text-xs font-semibold" style={{ color: priceDiff >= 0 ? '#059669' : '#DC2626' }}>
+                        <p className="text-xs font-semibold" style={{ color: priceDiff >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
                           {priceDiff >= 0 ? '+' : ''}{priceDiff}% vs asking
                         </p>
                       </div>

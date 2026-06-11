@@ -42,7 +42,7 @@ export function TrustScore({ score, deals = 0, size = 'md' }: Props) {
       <div>
         <p style={{ fontSize: size === 'sm' ? 12 : 14, fontWeight: 700, color, margin: 0 }}>{label}</p>
         {deals > 0 && (
-          <p style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>{deals} completed deal{deals !== 1 ? 's' : ''}</p>
+          <p style={{ fontSize: 11, color: 'var(--d-muted)', margin: 0 }}>{deals} completed deal{deals !== 1 ? 's' : ''}</p>
         )}
       </div>
     </div>

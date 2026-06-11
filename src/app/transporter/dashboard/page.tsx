@@ -9,11 +9,11 @@ const C = {
 };
 
 const STATUS_CFG = {
-  open:        { color: '#059669', bg: '#D1FAE5', label: 'Open' },
-  assigned:    { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Assigned' },
-  in_transit:  { color: '#D97706', bg: '#FEF3C7', label: 'In Transit' },
-  delivered:   { color: '#7C3AED', bg: '#EDE9FE', label: 'Delivered' },
-  cancelled:   { color: '#DC2626', bg: '#FEF2F2', label: 'Cancelled' },
+  open:        { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Open' },
+  assigned:    { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Assigned' },
+  in_transit:  { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'In Transit' },
+  delivered:   { color: '#7C3AED',              bg: '#EDE9FE',                label: 'Delivered' },
+  cancelled:   { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Cancelled' },
 } as const;
 
 export default async function TransporterDashboard() {
@@ -45,10 +45,10 @@ export default async function TransporterDashboard() {
 
       {/* No vehicle warning */}
       {!vehicle && (
-        <div style={{ background: '#FFFBEB', borderRadius: 14, border: '1px solid #FDE68A', padding: '16px 18px' }}>
-          <p style={{ color: '#D97706', fontWeight: 700, fontSize: 13, margin: '0 0 6px' }}>Register Your Vehicle</p>
-          <p style={{ color: '#92400E', fontSize: 12, margin: '0 0 12px' }}>You need to register a vehicle before accepting deliveries.</p>
-          <Link href="/transporter/vehicle" style={{ display: 'inline-block', padding: '8px 16px', background: '#D97706', color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+        <div style={{ background: 'var(--color-harvest-bg)', borderRadius: 14, border: '1px solid var(--color-warning-border)', padding: '16px 18px' }}>
+          <p style={{ color: 'var(--color-harvest)', fontWeight: 700, fontSize: 13, margin: '0 0 6px' }}>Register Your Vehicle</p>
+          <p style={{ color: 'var(--color-harvest)', fontSize: 12, margin: '0 0 12px' }}>You need to register a vehicle before accepting deliveries.</p>
+          <Link href="/transporter/vehicle" style={{ display: 'inline-block', padding: '8px 16px', background: 'var(--color-harvest)', color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
             Register Vehicle →
           </Link>
         </div>
@@ -75,7 +75,7 @@ export default async function TransporterDashboard() {
       {/* Vehicle card */}
       {vehicle && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
             🚛
           </div>
           <div style={{ flex: 1 }}>
@@ -85,7 +85,7 @@ export default async function TransporterDashboard() {
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: vehicle.is_available ? '#D1FAE5' : '#FEF2F2', color: vehicle.is_available ? '#059669' : '#DC2626' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: vehicle.is_available ? 'var(--color-success-bg)' : 'var(--color-danger-bg)', color: vehicle.is_available ? 'var(--color-success)' : 'var(--color-danger)' }}>
               {vehicle.is_available ? 'Available' : 'Busy'}
             </span>
             <Link href="/transporter/vehicle" style={{ fontSize: 12, color: C.greenMed, fontWeight: 600, textDecoration: 'none' }}>Edit</Link>
@@ -118,7 +118,7 @@ export default async function TransporterDashboard() {
                 </div>
                 <Link
                   href={`/transporter/deliveries/${job.id}`}
-                  style={{ padding: '6px 14px', background: '#F0FDF4', color: C.greenMed, borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}
+                  style={{ padding: '6px 14px', background: 'var(--color-primary-bg)', color: C.greenMed, borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}
                 >
                   Bid →
                 </Link>

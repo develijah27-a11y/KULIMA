@@ -9,13 +9,13 @@ const C = {
 };
 
 const TXN_TYPE_CFG: Record<string, { label: string; color: string; sign: '+' | '-' }> = {
-  deposit:         { label: 'Deposit',          color: '#059669', sign: '+' },
-  withdrawal:      { label: 'Withdrawal',        color: '#DC2626', sign: '-' },
-  escrow_lock:     { label: 'Escrow Hold',       color: '#D97706', sign: '-' },
-  escrow_release:  { label: 'Payment Received',  color: '#059669', sign: '+' },
-  escrow_refund:   { label: 'Escrow Refund',     color: '#0284C7', sign: '+' },
-  transfer_in:     { label: 'Transfer In',       color: '#059669', sign: '+' },
-  transfer_out:    { label: 'Transfer Out',      color: '#DC2626', sign: '-' },
+  deposit:         { label: 'Deposit',          color: 'var(--color-success)', sign: '+' },
+  withdrawal:      { label: 'Withdrawal',        color: 'var(--color-danger)',  sign: '-' },
+  escrow_lock:     { label: 'Escrow Hold',       color: 'var(--color-harvest)', sign: '-' },
+  escrow_release:  { label: 'Payment Received',  color: 'var(--color-success)', sign: '+' },
+  escrow_refund:   { label: 'Escrow Refund',     color: 'var(--color-sky)',     sign: '+' },
+  transfer_in:     { label: 'Transfer In',       color: 'var(--color-success)', sign: '+' },
+  transfer_out:    { label: 'Transfer Out',      color: 'var(--color-danger)',  sign: '-' },
 };
 
 function fmtDate(iso: string) {
@@ -102,15 +102,15 @@ export default async function FarmerWalletPage() {
               const crop = e.offer?.listing?.crop_type ?? 'Crop';
               const qty  = e.offer?.listing?.quantity_kg ?? 0;
               return (
-                <div key={e.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: '#FFFBEB', borderRadius: 10, border: '1px solid #FDE68A' }}>
+                <div key={e.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', background: 'var(--color-harvest-bg)', borderRadius: 10, border: '1px solid var(--color-warning-border)' }}>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, textTransform: 'capitalize' }}>{crop} · {qty} kg</p>
-                    <p style={{ fontSize: 11, color: '#D97706', margin: '2px 0 0', fontWeight: 600 }}>
+                    <p style={{ fontSize: 11, color: 'var(--color-harvest)', margin: '2px 0 0', fontWeight: 600 }}>
                       {e.status === 'disputed' ? 'Under Dispute' : 'Awaiting delivery confirmation'}
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: 14, fontWeight: 800, color: '#D97706', margin: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-harvest)', margin: 0 }}>
                       UGX {Math.round(e.amount).toLocaleString()}
                     </p>
                     <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>held in escrow</p>
@@ -145,10 +145,10 @@ export default async function FarmerWalletPage() {
               return (
                 <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 20px', borderBottom: `1px solid ${C.border}` }}>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: failed ? '#DC2626' : C.text, margin: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: failed ? 'var(--color-danger)' : C.text, margin: 0 }}>
                       {cfg.label}
-                      {pending && <span style={{ fontSize: 10, color: '#D97706', fontWeight: 700, marginLeft: 6 }}>PENDING</span>}
-                      {failed  && <span style={{ fontSize: 10, color: '#DC2626', fontWeight: 700, marginLeft: 6 }}>FAILED</span>}
+                      {pending && <span style={{ fontSize: 10, color: 'var(--color-harvest)', fontWeight: 700, marginLeft: 6 }}>PENDING</span>}
+                      {failed  && <span style={{ fontSize: 10, color: 'var(--color-danger)', fontWeight: 700, marginLeft: 6 }}>FAILED</span>}
                     </p>
                     {t.description && <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{t.description}</p>}
                     <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>{fmtDate(t.created_at)}</p>

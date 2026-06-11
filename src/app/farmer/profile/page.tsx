@@ -50,9 +50,9 @@ export default async function FarmerProfilePage() {
   const deals = p.completed_deals ?? 0;
 
   const STATUS_COLORS: Record<string, { color: string; bg: string }> = {
-    growing:   { color: '#059669', bg: '#D1FAE5' },
-    harvested: { color: '#0284C7', bg: 'var(--color-sky-bg)' },
-    planted:   { color: '#D97706', bg: '#FEF3C7' },
+    growing:   { color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+    harvested: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)' },
+    planted:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   };
 
   return (
@@ -90,7 +90,7 @@ export default async function FarmerProfilePage() {
               href="/farmer/verify"
               style={{
                 display: 'block', marginTop: 16, padding: '10px 16px',
-                background: '#F0FDF4', border: '1px solid #A7F3D0',
+                background: 'var(--color-primary-bg)', border: '1px solid var(--color-primary-muted)',
                 borderRadius: 10, textDecoration: 'none', textAlign: 'center',
               }}
             >
@@ -157,7 +157,7 @@ export default async function FarmerProfilePage() {
           </div>
           <div className="divide-y" style={{ borderColor: C.border }}>
             {crops.map((c: any) => {
-              const sc = STATUS_COLORS[c.status?.toLowerCase()] ?? { color: C.muted, bg: '#F3F4F6' };
+              const sc = STATUS_COLORS[c.status?.toLowerCase()] ?? { color: C.muted, bg: 'var(--color-surface-2)' };
               return (
                 <div key={c.id} className="px-5 py-3 flex items-center justify-between">
                   <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>{c.crop_name}</p>

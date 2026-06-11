@@ -14,10 +14,10 @@ const DISTRICTS = [
 ];
 
 const ROLE_CFG: Record<string, { color: string; bg: string }> = {
-  leader:    { color: 'var(--color-primary)', bg: '#D1FAE5' },
-  secretary: { color: '#0284C7', bg: 'var(--color-sky-bg)' },
+  leader:    { color: 'var(--color-primary)', bg: 'var(--color-success-bg)' },
+  secretary: { color: 'var(--color-sky)', bg: 'var(--color-sky-bg)' },
   treasurer: { color: '#7C3AED', bg: '#EDE9FE' },
-  member:    { color: '#6B7280', bg: '#F3F4F6' },
+  member:    { color: 'var(--d-muted)', bg: 'var(--color-surface-2)' },
 };
 
 interface Group {
@@ -123,7 +123,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
       </div>
 
       {error && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 10, padding: '10px 14px' }}>
+        <div style={{ background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)', borderRadius: 10, padding: '10px 14px' }}>
           <p style={{ color: C.red, fontSize: 13 }}>{error}</p>
         </div>
       )}
@@ -147,7 +147,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
               const isLeader = g.my_role === 'leader';
               return (
                 <div key={g.id} style={{ padding: '16px 20px', borderBottom: i < myGroups.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 10, background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>👥</div>
+                  <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>👥</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                       <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>{g.name}</p>
@@ -189,7 +189,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
           <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
             {browseable.map((g, i) => (
               <div key={g.id} style={{ padding: '16px 20px', borderBottom: i < browseable.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>👥</div>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>👥</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 3px' }}>{g.name}</p>
                   {g.description && <p style={{ fontSize: 12, color: C.muted, margin: '0 0 2px' }}>{g.description}</p>}

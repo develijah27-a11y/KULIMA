@@ -41,7 +41,7 @@ export default async function NotificationsPage() {
             <div key={n.id} style={{
               padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-start',
               borderBottom: i < notifications.length - 1 ? `1px solid ${C.border}` : 'none',
-              background: n.read ? C.cardBg : '#F0FDF4',
+              background: n.read ? C.cardBg : 'var(--color-primary-bg)',
             }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: n.read ? 'transparent' : C.greenMed, marginTop: 6, flexShrink: 0 }} />
               <div style={{ flex: 1 }}>

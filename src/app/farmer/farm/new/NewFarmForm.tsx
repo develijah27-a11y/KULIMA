@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 
 const GPSWalkMap = dynamic(() => import('./GPSWalkMap').then(m => m.GPSWalkMap), {
   ssr: false,
-  loading: () => <div style={{ height: 300, background: '#F0FDF4', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: 'var(--color-primary-hover)', fontSize: 13, fontWeight: 600 }}>Loading map...</p></div>,
+  loading: () => <div style={{ height: 300, background: 'var(--color-primary-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: 'var(--color-primary-hover)', fontSize: 13, fontWeight: 600 }}>Loading map...</p></div>,
 });
 
 const C = {
@@ -92,7 +92,7 @@ export function NewFarmForm() {
         <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>District *</label>
         <select
           value={district} onChange={e => setDistrict(e.target.value)}
-          style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', color: district ? C.text : C.muted, background: '#fff' }}
+          style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', color: district ? C.text : C.muted, background: 'var(--d-input-bg)' }}
         >
           <option value="">Select district...</option>
           {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -105,7 +105,7 @@ export function NewFarmForm() {
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Farm Type</label>
           <select
             value={farmType} onChange={e => setFarmType(e.target.value)}
-            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: farmType ? C.text : C.muted, background: '#fff' }}
+            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: farmType ? C.text : C.muted, background: 'var(--d-input-bg)' }}
           >
             <option value="">Select type...</option>
             <option value="arable">Arable</option>
@@ -117,11 +117,11 @@ export function NewFarmForm() {
         </div>
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
-            Size (ha){areaHa > 0 && <span style={{ color: '#059669', fontSize: 11, marginLeft: 6 }}>from GPS walk</span>}
+            Size (ha){areaHa > 0 && <span style={{ color: 'var(--color-success)', fontSize: 11, marginLeft: 6 }}>from GPS walk</span>}
           </label>
           <input
             type="number" value={sizeHa} onChange={e => setSizeHa(e.target.value)} placeholder="e.g. 2.5" step="0.01" min="0"
-            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${areaHa > 0 ? '#A7F3D0' : C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text }}
+            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${areaHa > 0 ? 'var(--color-primary-muted)' : C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text }}
           />
         </div>
       </div>
@@ -136,7 +136,7 @@ export function NewFarmForm() {
               style={{
                 padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 border: `1px solid ${selectedCrops.includes(crop) ? C.green : C.border}`,
-                background: selectedCrops.includes(crop) ? '#F0FDF4' : '#fff',
+                background: selectedCrops.includes(crop) ? 'var(--color-primary-bg)' : 'var(--d-input-bg)',
                 color: selectedCrops.includes(crop) ? C.green : C.muted,
                 textTransform: 'capitalize',
               }}
@@ -152,7 +152,7 @@ export function NewFarmForm() {
         <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
           Farm Boundary
           {boundary.length < 3 && <span style={{ color: C.muted, fontWeight: 400, fontSize: 12, marginLeft: 6 }}>(optional — walk your farm with GPS)</span>}
-          {boundary.length >= 3 && <span style={{ color: '#059669', fontWeight: 600, fontSize: 12, marginLeft: 6 }}>✓ {boundary.length} points captured</span>}
+          {boundary.length >= 3 && <span style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: 12, marginLeft: 6 }}>✓ {boundary.length} points captured</span>}
         </label>
         <GPSWalkMap onBoundaryChange={onBoundaryChange} />
       </div>
@@ -171,14 +171,14 @@ export function NewFarmForm() {
       </div>
 
       {error && (
-        <div style={{ padding: '10px 14px', background: '#FEF2F2', borderRadius: 10, border: '1px solid #FECACA' }}>
-          <p style={{ color: '#DC2626', fontSize: 13, margin: 0 }}>⚠ {error}</p>
+        <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, border: '1px solid var(--color-danger)' }}>
+          <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>⚠ {error}</p>
         </div>
       )}
 
       <button
         type="submit" disabled={loading}
-        style={{ padding: '13px', background: loading ? '#E5E7EB' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}
+        style={{ padding: '13px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}
       >
         {loading ? 'Saving...' : 'Save Farm →'}
       </button>

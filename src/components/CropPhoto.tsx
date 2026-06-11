@@ -98,8 +98,8 @@ export function CropPhotoCard({
       </div>
       {/* Content */}
       <div style={{ padding: '14px 16px' }}>
-        <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', margin: '0 0 2px', textTransform: 'capitalize' }}>{label}</p>
-        {sub && <p style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>{sub}</p>}
+        <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--d-text)', margin: '0 0 2px', textTransform: 'capitalize' }}>{label}</p>
+        {sub && <p style={{ fontSize: 11, color: 'var(--d-muted)', margin: 0 }}>{sub}</p>}
         {price && <p style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-primary)', margin: '8px 0 0', letterSpacing: '-0.02em' }}>{price}</p>}
       </div>
     </div>

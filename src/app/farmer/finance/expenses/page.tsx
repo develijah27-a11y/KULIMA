@@ -35,19 +35,19 @@ async function ExpenseData({ userId }: { userId: string }) {
               label: 'Total Spent (Season A)',
               value: `UGX ${totalSpent.toLocaleString()}`,
               sub: `${current.length} expense entries`,
-              color: 'var(--color-danger)', bg: '#FEF2F2',
+              color: 'var(--color-danger)', bg: 'var(--color-danger-bg)',
             },
             {
               label: 'Biggest Category',
               value: topCat ? topCat[0].replace(/_/g, ' ') : '—',
               sub: topCat ? `UGX ${Math.round(topCat[1]).toLocaleString()}` : '',
-              color: C.greenMed, bg: '#F0FDF4',
+              color: C.greenMed, bg: 'var(--color-primary-bg)',
             },
             {
               label: 'Avg per Entry',
               value: current.length > 0 ? `UGX ${Math.round(totalSpent / current.length).toLocaleString()}` : '—',
               sub: 'per expense logged',
-              color: 'var(--color-info)', bg: '#EFF6FF',
+              color: 'var(--color-sky)', bg: 'var(--color-sky-bg)',
             },
           ].map(({ label, value, sub, color, bg }) => (
             <div
@@ -100,7 +100,7 @@ export default async function ExpensesPage() {
           href="/farmer/finance/calculator"
           style={{
             padding: '10px 18px', borderRadius: '10px',
-            background: '#F0FDF4', border: `1.5px solid #A7F3D0`,
+            background: 'var(--color-primary-bg)', border: `1.5px solid var(--color-primary-muted)`,
             color: C.green, fontSize: '13px', fontWeight: 700,
             textDecoration: 'none',
           }}

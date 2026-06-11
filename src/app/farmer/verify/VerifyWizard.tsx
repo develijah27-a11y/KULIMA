@@ -91,8 +91,8 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
           <strong style={{ color: C.text }}>1–3 business days</strong>.
           You'll receive a notification once approved.
         </p>
-        <div style={{ background: '#F0FDF4', borderRadius: 12, padding: '12px 16px', display: 'inline-block' }}>
-          <p style={{ color: '#059669', fontSize: 13, fontWeight: 600, margin: 0 }}>
+        <div style={{ background: 'var(--color-primary-bg)', borderRadius: 12, padding: '12px 16px', display: 'inline-block' }}>
+          <p style={{ color: 'var(--color-success)', fontSize: 13, fontWeight: 600, margin: 0 }}>
             ✓ Documents submitted successfully
           </p>
         </div>
@@ -204,8 +204,8 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
               key={doc.key}
               onClick={() => fileRefs.current[doc.key]?.click()}
               style={{
-                background: file ? '#F0FDF4' : C.cardBg,
-                border: `2px dashed ${file ? '#A7F3D0' : C.border}`,
+                background: file ? 'var(--color-primary-bg)' : C.cardBg,
+                border: `2px dashed ${file ? 'var(--color-primary-muted)' : C.border}`,
                 borderRadius: 12, padding: '16px 20px',
                 cursor: 'pointer', transition: 'all 0.15s',
               }}
@@ -235,8 +235,8 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
       </div>
 
       {error && (
-        <div style={{ marginTop: 16, padding: '10px 14px', background: '#FEF2F2', borderRadius: 10, border: '1px solid #FECACA' }}>
-          <p style={{ color: '#DC2626', fontSize: 13, margin: 0 }}>⚠ {error}</p>
+        <div style={{ marginTop: 16, padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, border: '1px solid var(--color-danger)' }}>
+          <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>⚠ {error}</p>
         </div>
       )}
 

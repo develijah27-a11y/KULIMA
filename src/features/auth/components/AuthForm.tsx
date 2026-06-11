@@ -3,13 +3,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface AuthFormProps {
   mode: 'signin' | 'signup';
 }
 
+// Stable singleton — keeps the same client reference across renders
+const supabase = createClient();
+
 export function AuthForm({ mode }: AuthFormProps) {
-  const supabase = createClient();
   const router = useRouter();
 
   const [email, setEmail] = useState('');
@@ -34,7 +37,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       }
     });
     return () => subscription.unsubscribe();
-  }, [supabase, router]);
+  }, [router]); // router is stable from useRouter — supabase is now a module-level singleton
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

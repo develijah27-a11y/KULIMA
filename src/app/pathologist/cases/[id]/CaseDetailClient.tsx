@@ -17,11 +17,11 @@ const C = {
 };
 
 const SEV_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  low:      { color: '#059669', bg: '#D1FAE5', label: 'Low' },
-  medium:   { color: '#D97706', bg: '#FEF3C7', label: 'Medium' },
-  high:     { color: '#DC2626', bg: '#FEE2E2', label: 'High' },
-  critical: { color: '#7F1D1D', bg: '#FEE2E2', label: 'Critical' },
-  unknown:  { color: '#6B7280', bg: '#F3F4F6', label: 'Unknown' },
+  low:      { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Low' },
+  medium:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Medium' },
+  high:     { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'High' },
+  critical: { color: '#7F1D1D',              bg: 'var(--color-danger-bg)',  label: 'Critical' },
+  unknown:  { color: 'var(--d-muted)',       bg: 'var(--color-surface-2)',  label: 'Unknown' },
 };
 
 const TREATMENT_TEMPLATES: Record<string, string> = {

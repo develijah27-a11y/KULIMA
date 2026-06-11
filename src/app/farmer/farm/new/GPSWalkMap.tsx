@@ -172,35 +172,35 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
           </button>
         ) : (
           <button type="button" onClick={stopWalk}
-            style={{ padding: '9px 16px', background: '#DC2626', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+            style={{ padding: '9px 16px', background: 'var(--color-danger)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
             ⏹ Stop Walk ({points.length} pts)
           </button>
         )}
 
         {points.length > 0 && !walking && (
           <button type="button" onClick={clearBoundary}
-            style={{ padding: '9px 14px', background: '#F3F4F6', color: '#6B7280', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
+            style={{ padding: '9px 14px', background: 'var(--color-surface-2)', color: 'var(--d-muted)', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}>
             Clear
           </button>
         )}
 
         {areaHa > 0 && (
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#059669', marginLeft: 4 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-success)', marginLeft: 4 }}>
             ✓ {areaHa.toFixed(2)} hectares
           </span>
         )}
       </div>
 
       {status && (
-        <p style={{ fontSize: 12, color: walking ? '#D97706' : '#059669', fontWeight: 600, marginBottom: 8 }}>
+        <p style={{ fontSize: 12, color: walking ? 'var(--color-harvest)' : 'var(--color-success)', fontWeight: 600, marginBottom: 8 }}>
           {walking && <span style={{ marginRight: 6 }}>🔴</span>}{status}
         </p>
       )}
-      {error && <p style={{ fontSize: 12, color: '#DC2626', marginBottom: 8 }}>{error}</p>}
+      {error && <p style={{ fontSize: 12, color: 'var(--color-danger)', marginBottom: 8 }}>{error}</p>}
 
-      <div ref={containerRef} style={{ height: 300, borderRadius: 12, overflow: 'hidden', border: '1px solid #E5E7EB' }} />
+      <div ref={containerRef} style={{ height: 300, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--d-border)' }} />
 
-      <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 8 }}>
+      <p style={{ fontSize: 11, color: 'var(--d-muted)', marginTop: 8 }}>
         Walk around your entire farm perimeter, then tap Stop. Requires GPS — use outdoors for best accuracy.
       </p>
     </div>

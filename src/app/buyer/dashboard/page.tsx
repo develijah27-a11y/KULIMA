@@ -64,7 +64,7 @@ async function RecentListings() {
 
   const rows = listings ?? [];
   const EMOJI: Record<string, string> = { maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌', cassava: '🥔', tomato: '🍅' };
-  const COLORS: Record<string, string> = { maize: '#D97706', beans: '#DC2626', coffee: '#7C3AED', rice: '#0284C7', banana: '#B45309', cassava: '#059669', tomato: '#DC2626' };
+  const COLORS: Record<string, string> = { maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED', rice: 'var(--color-sky)', banana: '#B45309', cassava: 'var(--color-success)', tomato: 'var(--color-danger)' };
 
   return (
     <Card>
@@ -130,7 +130,7 @@ async function MarketPulse() {
     high: Math.round(Math.max(...ps)), low: Math.round(Math.min(...ps)),
   }));
 
-  const COLORS: Record<string, string> = { maize: '#D97706', beans: '#DC2626', coffee: '#7C3AED', rice: '#0284C7', banana: '#B45309', cassava: '#059669' };
+  const COLORS: Record<string, string> = { maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED', rice: 'var(--color-sky)', banana: '#B45309', cassava: 'var(--color-success)' };
 
   return (
     <Card>

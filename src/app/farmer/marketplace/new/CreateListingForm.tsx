@@ -121,11 +121,11 @@ export function CreateListingForm({ marketPrice, farmerDistrict }: Props) {
             style={{
               width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box',
               border: `1px solid ${low ? '#FCA5A5' : high ? '#FCA5A5' : C.border}`,
-              color: C.text, background: low ? '#FEF2F2' : '#fff',
+              color: C.text, background: low ? 'var(--color-danger-bg)' : 'var(--d-input-bg)',
             }}
           />
           {marketPrice && price > 0 && (
-            <p style={{ fontSize: 11, marginTop: 4, color: low ? '#DC2626' : high ? '#D97706' : '#059669', fontWeight: 600 }}>
+            <p style={{ fontSize: 11, marginTop: 4, color: low ? 'var(--color-danger)' : high ? 'var(--color-harvest)' : 'var(--color-success)', fontWeight: 600 }}>
               {low  ? `⚠ ${Math.round((price / marketPrice - 1) * 100)}% below market — buyers may hesitate` :
                high ? `↑ ${Math.round((price / marketPrice - 1) * 100)}% above market` :
                `✓ Within market range (UGX ${marketPrice.toLocaleString()}/kg)`}
@@ -142,7 +142,7 @@ export function CreateListingForm({ marketPrice, farmerDistrict }: Props) {
             value={form.district}
             onChange={e => set('district', e.target.value)}
             required
-            style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, color: form.district ? C.text : C.muted, background: '#fff', outline: 'none' }}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, color: form.district ? C.text : C.muted, background: 'var(--d-input-bg)', outline: 'none' }}
           >
             <option value="">Select district...</option>
             {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -175,8 +175,8 @@ export function CreateListingForm({ marketPrice, farmerDistrict }: Props) {
       </div>
 
       {error && (
-        <div style={{ padding: '10px 14px', background: '#FEF2F2', borderRadius: 10, border: '1px solid #FECACA' }}>
-          <p style={{ color: '#DC2626', fontSize: 13, margin: 0 }}>⚠ {error}</p>
+        <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, border: '1px solid var(--color-danger)' }}>
+          <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>⚠ {error}</p>
         </div>
       )}
 
