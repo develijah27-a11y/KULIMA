@@ -6,15 +6,15 @@ import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: '#D97706', red: 'var(--color-danger)', blue: 'var(--color-sky)',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)',
   cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 
 const CAT_COLORS: Record<string, string> = {
-  seeds: '#059669', fertilizer: 'var(--color-info)', pesticide: '#7C3AED',
-  labor: '#D97706', land_prep: '#92400E', transport: '#374151',
-  equipment: '#6B7280', irrigation: '#0284C7', storage: '#B45309', other: '#9CA3AF',
+  seeds: 'var(--color-success)', fertilizer: 'var(--color-info)', pesticide: '#7C3AED',
+  labor: 'var(--color-harvest)', land_prep: 'var(--color-harvest)', transport: 'var(--d-muted)',
+  equipment: 'var(--d-muted)', irrigation: 'var(--color-sky)', storage: 'var(--color-harvest)', other: 'var(--d-muted)',
 };
 
 async function FinanceSummary({ userId }: { userId: string }) {
@@ -65,7 +65,7 @@ async function FinanceSummary({ userId }: { userId: string }) {
             label: 'Total Invested (Season A)',
             value: totalSpent > 0 ? `UGX ${totalSpent.toLocaleString()}` : '—',
             sub: `${expenses.length} expense entries`,
-            icon: '💸', border: C.red, bg: '#FEF2F2', color: C.red,
+            icon: '💸', border: C.red, bg: 'var(--color-danger-bg)', color: C.red,
           },
           {
             label: 'Projected Revenue',

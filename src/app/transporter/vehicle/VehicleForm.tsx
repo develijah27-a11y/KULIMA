@@ -79,7 +79,7 @@ export function VehicleForm({ existing }: Props) {
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Vehicle Type *</label>
           <select value={type} onChange={e => setType(e.target.value)}
-            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: type ? C.text : C.muted, background: '#fff' }}>
+            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: type ? C.text : C.muted, background: 'var(--d-input-bg)' }}>
             <option value="">Select...</option>
             <option value="motorcycle">Motorcycle (Boda)</option>
             <option value="pickup">Pickup Truck</option>
@@ -117,7 +117,7 @@ export function VehicleForm({ existing }: Props) {
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {DISTRICTS.map(d => (
             <button key={d} type="button" onClick={() => toggleDistrict(d)}
-              style={{ padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: `1px solid ${availDist.includes(d) ? C.green : C.border}`, background: availDist.includes(d) ? '#F0FDF4' : '#fff', color: availDist.includes(d) ? C.green : C.muted }}>
+              style={{ padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: `1px solid ${availDist.includes(d) ? C.green : C.border}`, background: availDist.includes(d) ? 'var(--color-primary-bg)' : 'var(--d-input-bg)', color: availDist.includes(d) ? C.green : C.muted }}>
               {d}
             </button>
           ))}
@@ -132,10 +132,10 @@ export function VehicleForm({ existing }: Props) {
         </label>
       </div>
 
-      {error && <p style={{ color: '#DC2626', fontSize: 13 }}>{error}</p>}
+      {error && <p style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}
 
       <button type="submit" disabled={loading}
-        style={{ padding: '13px', background: loading ? '#E5E7EB' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}>
+        style={{ padding: '13px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}>
         {loading ? 'Saving...' : existing ? 'Update Vehicle' : 'Register Vehicle →'}
       </button>
     </form>

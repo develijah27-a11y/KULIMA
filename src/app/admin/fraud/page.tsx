@@ -17,14 +17,14 @@ const SEV_CFG: Record<string, { color: string; bg: string; label: string }> = {
   low:      { color: 'var(--color-warning)', bg: 'var(--color-warning-bg)', label: 'Low'      },
   medium:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Medium'   },
   high:     { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'High'     },
-  critical: { color: '#B91C1C',              bg: '#FEE2E2',                 label: 'Critical' },
+  critical: { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Critical' },
 };
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
   open:          { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Open'          },
   investigating: { color: 'var(--color-warning)', bg: 'var(--color-warning-bg)', label: 'Investigating' },
   resolved:      { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Resolved'      },
-  dismissed:     { color: '#6B7280',              bg: '#F3F4F6',                 label: 'Dismissed'     },
+  dismissed:     { color: 'var(--d-muted)',        bg: 'var(--color-surface-2)',  label: 'Dismissed'     },
 };
 
 export default async function AdminFraudPage({
@@ -99,7 +99,7 @@ export default async function AdminFraudPage({
 
       {/* Flag list */}
       {error ? (
-        <div style={{ background: '#FEF2F2', borderRadius: 12, padding: '16px 18px' }}>
+        <div style={{ background: 'var(--color-danger-bg)', borderRadius: 12, padding: '16px 18px' }}>
           <p style={{ color: C.red, fontSize: 13 }}>Error loading fraud flags. The table may not exist yet.</p>
         </div>
       ) : rows.length === 0 ? (

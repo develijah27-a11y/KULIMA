@@ -61,9 +61,9 @@ export default async function JobQueuePage({
       </div>
 
       {!vehicle && (
-        <div style={{ background: '#FFFBEB', borderRadius: 14, border: '1px solid #FDE68A', padding: '14px 18px' }}>
-          <p style={{ color: '#92400E', fontSize: 13, margin: '0 0 8px', fontWeight: 700 }}>Register a vehicle to bid on jobs</p>
-          <Link href="/transporter/vehicle" style={{ fontSize: 12, color: '#D97706', fontWeight: 700, textDecoration: 'none' }}>
+        <div style={{ background: 'var(--color-harvest-bg)', borderRadius: 14, border: '1px solid var(--color-warning-border)', padding: '14px 18px' }}>
+          <p style={{ color: 'var(--color-harvest)', fontSize: 13, margin: '0 0 8px', fontWeight: 700 }}>Register a vehicle to bid on jobs</p>
+          <Link href="/transporter/vehicle" style={{ fontSize: 12, color: 'var(--color-harvest)', fontWeight: 700, textDecoration: 'none' }}>
             Register now →
           </Link>
         </div>
@@ -106,7 +106,7 @@ export default async function JobQueuePage({
             const hasBid    = !!bidStatus;
             return (
               <div key={job.id} style={{ padding: '16px 20px', borderBottom: i < jobs.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                <div style={{ width: 42, height: 42, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
                   🚛
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -128,14 +128,14 @@ export default async function JobQueuePage({
                   {hasBid ? (
                     <span style={{
                       fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 999,
-                      background: bidStatus === 'accepted' ? '#D1FAE5' : bidStatus === 'rejected' ? '#FEF2F2' : '#FEF3C7',
-                      color: bidStatus === 'accepted' ? '#059669' : bidStatus === 'rejected' ? '#DC2626' : '#D97706',
+                      background: bidStatus === 'accepted' ? 'var(--color-success-bg)' : bidStatus === 'rejected' ? 'var(--color-danger-bg)' : 'var(--color-harvest-bg)',
+                      color: bidStatus === 'accepted' ? 'var(--color-success)' : bidStatus === 'rejected' ? 'var(--color-danger)' : 'var(--color-harvest)',
                     }}>
                       {bidStatus === 'accepted' ? '✓ Accepted' : bidStatus === 'rejected' ? 'Rejected' : 'Bid Sent'}
                     </span>
                   ) : (
                     <Link href={`/transporter/deliveries/${job.id}`}
-                      style={{ display: 'block', padding: '7px 16px', background: vehicle ? C.green : '#F3F4F6', color: vehicle ? '#fff' : C.muted, borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+                      style={{ display: 'block', padding: '7px 16px', background: vehicle ? C.green : 'var(--color-surface-2)', color: vehicle ? '#fff' : C.muted, borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
                       {vehicle ? 'Bid →' : 'View'}
                     </Link>
                   )}

@@ -184,7 +184,7 @@ export default async function BuyerDashboardPage() {
             className="flex items-center gap-4 p-5 rounded-xl hover:opacity-90 transition-opacity"
             style={{ background: C.cardBg, boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, textDecoration: 'none' }}
           >
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0" style={{ background: '#F0FDF4' }}>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0" style={{ background: 'var(--color-primary-bg)' }}>
               {emoji}
             </div>
             <div>

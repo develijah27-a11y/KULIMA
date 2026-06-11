@@ -1,5 +1,6 @@
 ﻿import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { fetchWeatherForFarmer, type ServerWeatherData } from '@/lib/weather-server';
 import { buildSeasonalPlan, generateDiseaseAlerts, type InsightSeverity } from '@/lib/agri-intel';
@@ -74,8 +75,8 @@ const SEVERITY_MAP: Record<InsightSeverity, { color: string; bg: string; border:
 };
 
 const CROP_COLORS: Record<string, string> = {
-  maize: '#D97706', beans: '#16A34A', coffee: '#92400E',
-  rice: '#0EA5E9', banana: '#D97706', cassava: '#16A34A', tomato: '#DC2626',
+  maize: 'var(--color-harvest)', beans: 'var(--color-success)', coffee: '#92400E',
+  rice: 'var(--color-sky)', banana: 'var(--color-harvest)', cassava: 'var(--color-success)', tomato: 'var(--color-danger)',
 };
 
 const Card = ({ children, className = '', style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) => (
@@ -319,7 +320,7 @@ async function MarketPricesTable({ userId }: { userId: string }) {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           Market Prices Today
         </p>
-        <a href="/farmer/prices" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</a>
+        <Link href="/farmer/prices" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
       {sorted.length === 0 ? (
         <div className="px-5 py-8 text-center">
@@ -333,12 +334,12 @@ async function MarketPricesTable({ userId }: { userId: string }) {
             const color = CROP_COLORS[crop] ?? C.greenMed;
             const isPrimary = crop === primary;
             return (
-              <div key={crop} className="px-5 py-3 flex items-center justify-between" style={{ background: isPrimary ? '#F0FDF4' : 'transparent' }}>
+              <div key={crop} className="px-5 py-3 flex items-center justify-between" style={{ background: isPrimary ? 'var(--color-primary-bg)' : 'transparent' }}>
                 <div className="flex items-center gap-2.5">
                   <div className="w-2 h-2 rounded-full" style={{ background: color }} />
                   <p className="text-sm font-medium capitalize" style={{ color: C.text }}>{crop}</p>
                   {isPrimary && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: '#D1FAE5', color: '#059669' }}>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-success-bg)', color: 'var(--color-success)' }}>
                       Your crop
                     </span>
                   )}
@@ -348,7 +349,7 @@ async function MarketPricesTable({ userId }: { userId: string }) {
                     UGX {Math.round(latest).toLocaleString()}
                   </p>
                   {trend !== null && (
-                    <span className="text-xs font-bold" style={{ color: up ? '#059669' : C.red }}>
+                    <span className="text-xs font-bold" style={{ color: up ? 'var(--color-success)' : C.red }}>
                       {up ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
                     </span>
                   )}
@@ -394,11 +395,11 @@ async function WeatherForecast({ userId }: { userId: string }) {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           Weather Forecast
         </p>
-        <a href="/farmer/weather" className="text-xs font-semibold" style={{ color: C.greenMed }}>Details →</a>
+        <Link href="/farmer/weather" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Details →</Link>
       </div>
       <div className="grid grid-cols-4 divide-x p-2" style={{ borderColor: C.border }}>
         {days.map(([label, d], i) => (
-          <div key={label} className="flex flex-col items-center gap-1.5 py-4 px-2" style={{ background: d.rain && i === 1 ? '#FEF3C7' : 'transparent', borderRadius: '8px' }}>
+          <div key={label} className="flex flex-col items-center gap-1.5 py-4 px-2" style={{ background: d.rain && i === 1 ? 'var(--color-harvest-bg)' : 'transparent', borderRadius: '8px' }}>
             <p className="text-[11px] font-bold" style={{ color: C.muted }}>{label.split(' ')[0]}</p>
             <p className="text-2xl">{ICON[d.icon] ?? '🌤️'}</p>
             <p className="text-sm font-black" style={{ color: C.text }}>{Math.round(d.high)}°</p>
@@ -428,16 +429,16 @@ async function RecentOffers({ userId }: { userId: string }) {
   const rows = (offers ?? []).filter((o: any) => o?.listing);
 
   const STATUS: Record<string, { label: string; color: string; bg: string }> = {
-    pending:  { label: 'New',      color: '#059669', bg: '#D1FAE5' },
-    accepted: { label: 'Accepted', color: 'var(--color-info)', bg: 'var(--color-sky-bg)' },
-    rejected: { label: 'Rejected', color: 'var(--color-danger)', bg: '#FEE2E2' },
+    pending:  { label: 'New',      color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+    accepted: { label: 'Accepted', color: 'var(--color-sky)', bg: 'var(--color-sky-bg)' },
+    rejected: { label: 'Rejected', color: 'var(--color-danger)', bg: 'var(--color-danger-bg)' },
   };
 
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent Offers</p>
-        <a href="/farmer/marketplace" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</a>
+        <Link href="/farmer/marketplace" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-8 text-center">
@@ -452,7 +453,7 @@ async function RecentOffers({ userId }: { userId: string }) {
             return (
               <div key={o.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: '#F0FDF4', color: C.greenMed }}>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: 'var(--color-primary-bg)', color: C.greenMed }}>
                     🛒
                   </div>
                   <div>
@@ -508,7 +509,7 @@ async function FinanceOverview({ userId }: { userId: string }) {
           <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>AgriScore</p>
           <p className="text-3xl font-black mb-1" style={{ color: scoreColor, letterSpacing: '-0.04em' }}>{score}</p>
           <p className="text-xs font-semibold mb-3" style={{ color: scoreColor }}>{scoreLabel}</p>
-          <div className="h-1.5 rounded-full mb-1" style={{ background: '#F3F4F6' }}>
+          <div className="h-1.5 rounded-full mb-1" style={{ background: 'var(--color-surface-2)' }}>
             <div className="h-1.5 rounded-full agriscore-bar" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${C.amber}, ${scoreColor})` }} />
           </div>
           <div className="flex justify-between">
@@ -522,7 +523,7 @@ async function FinanceOverview({ userId }: { userId: string }) {
           <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Loan Eligibility</p>
           <p className="text-base font-bold mb-1" style={{ color: scoreColor }}>{eligibility}</p>
           <p className="text-xs mb-3" style={{ color: C.muted }}>You can apply for a loan</p>
-          <div className="h-1.5 rounded-full" style={{ background: '#F3F4F6' }}>
+          <div className="h-1.5 rounded-full" style={{ background: 'var(--color-surface-2)' }}>
             <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: scoreColor, borderRadius: '9999px' }} />
           </div>
         </div>
@@ -603,9 +604,9 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
   if (alerts.length === 0) return null;
 
   const URGENCY: Record<string, { bg: string; color: string; border: string }> = {
-    high:   { bg: '#FEF2F2', color: 'var(--color-danger)', border: '#FECACA' },
-    medium: { bg: '#FFFBEB', color: '#D97706', border: '#FDE68A' },
-    low:    { bg: '#F0FDF4', color: '#059669', border: '#BBF7D0' },
+    high:   { bg: 'var(--color-danger-bg)',  color: 'var(--color-danger)',  border: 'var(--color-danger-border)'  },
+    medium: { bg: 'var(--color-warning-bg)', color: 'var(--color-warning)', border: 'var(--color-warning-border)' },
+    low:    { bg: 'var(--color-success-bg)', color: 'var(--color-success)', border: 'var(--color-success-border)' },
   };
 
   return (
@@ -619,7 +620,7 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
             {alerts.length} alert{alerts.length !== 1 ? 's' : ''} for your crops
           </p>
         </div>
-        <a href="/farmer/planting" className="text-xs font-semibold" style={{ color: C.greenMed }}>View calendar →</a>
+        <Link href="/farmer/planting" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View calendar →</Link>
       </div>
       <div className="divide-y" style={{ borderColor: C.border }}>
         {alerts.slice(0, 3).map((alert, i) => {
@@ -652,11 +653,11 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Create Listing', href: '/farmer/marketplace/create', emoji: '✏️', bg: '#F0FDF4', color: 'var(--color-primary)' },
-    { label: 'Add Record',     href: '/farmer/farm',               emoji: '📋', bg: '#EFF6FF', color: 'var(--color-info)' },
-    { label: 'Check Weather',  href: '/farmer/weather',            emoji: '🌤',  bg: '#FFFBEB', color: '#D97706' },
-    { label: 'Scan Disease',   href: '/farmer/doctor',             emoji: '🔍', bg: '#F5F3FF', color: '#7C3AED' },
-    { label: 'Apply for Loan', href: '/farmer/finance',            emoji: '💰', bg: '#FEF2F2', color: '#DC2626' },
+    { label: 'Create Listing', href: '/farmer/marketplace/create', emoji: '✏️', bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
+    { label: 'Add Record',     href: '/farmer/farm',               emoji: '📋', bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
+    { label: 'Check Weather',  href: '/farmer/weather',            emoji: '🌤',  bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
+    { label: 'Scan Disease',   href: '/farmer/doctor',             emoji: '🔍', bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
+    { label: 'Apply for Loan', href: '/farmer/finance',            emoji: '💰', bg: 'var(--color-success-bg)',  color: 'var(--color-success)' },
   ];
 
   return (
@@ -666,17 +667,18 @@ function QuickActions() {
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
         {actions.map(({ label, href, emoji, bg, color }) => (
-          <a
+          <Link
             key={label}
             href={href}
-            className="flex flex-col items-center gap-2 py-4 rounded-xl transition-opacity hover:opacity-85"
+            prefetch={true}
+            className="flex flex-col items-center gap-2 py-4 rounded-xl transition-opacity hover:opacity-85 active:scale-95"
             style={{ background: bg, textDecoration: 'none' }}
           >
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
               {emoji}
             </div>
             <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
-          </a>
+          </Link>
         ))}
       </div>
     </Card>

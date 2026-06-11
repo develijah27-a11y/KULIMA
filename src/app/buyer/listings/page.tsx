@@ -18,9 +18,9 @@ const CROP_EMOJI: Record<string, string> = {
   sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
 };
 const CROP_COLOR: Record<string, string> = {
-  maize: '#D97706', beans: '#DC2626', coffee: '#7C3AED', rice: '#0284C7',
-  banana: '#B45309', cassava: '#059669', tomato: '#DC2626', sorghum: '#D97706',
-  groundnuts: '#B45309', sweet_potatoes: '#D97706', sunflower: '#B45309',
+  maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED', rice: 'var(--color-sky)',
+  banana: 'var(--color-harvest)', cassava: 'var(--color-success)', tomato: 'var(--color-danger)', sorghum: 'var(--color-harvest)',
+  groundnuts: 'var(--color-harvest)', sweet_potatoes: 'var(--color-harvest)', sunflower: 'var(--color-harvest)',
 };
 
 export default async function BuyerListingsPage({
@@ -123,17 +123,17 @@ export default async function BuyerListingsPage({
         {(crop || district || q) && (
           <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
             {crop && (
-              <a href={filterUrl({ crop: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: '#F0FDF4', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
+              <a href={filterUrl({ crop: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
                 {crop.replace(/_/g,' ')} ✕
               </a>
             )}
             {district && (
-              <a href={filterUrl({ district: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: '#F0FDF4', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
+              <a href={filterUrl({ district: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
                 {district} ✕
               </a>
             )}
             {q && (
-              <a href={filterUrl({ q: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: '#F0FDF4', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
+              <a href={filterUrl({ q: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
                 "{q}" ✕
               </a>
             )}
@@ -214,14 +214,14 @@ export default async function BuyerListingsPage({
                       <p style={{ fontSize: 10, color: C.muted, margin: '1px 0 0' }}>per kg</p>
                     </div>
                     {priceDelta !== null && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: Math.abs(priceDelta) <= 10 ? '#D1FAE5' : '#FEF3C7', color: Math.abs(priceDelta) <= 10 ? '#059669' : '#D97706' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: Math.abs(priceDelta) <= 10 ? 'var(--color-success-bg)' : 'var(--color-harvest-bg)', color: Math.abs(priceDelta) <= 10 ? 'var(--color-success)' : 'var(--color-harvest)' }}>
                         {priceDelta >= 0 ? '+' : ''}{priceDelta}% vs market
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div style={{ padding: '10px 18px', borderTop: `1px solid ${C.border}`, background: '#FAFAFA' }}>
+                <div style={{ padding: '10px 18px', borderTop: `1px solid ${C.border}`, background: 'var(--color-surface-2)' }}>
                   <p style={{ fontSize: 12, color: C.greenMed, fontWeight: 700, margin: 0, textAlign: 'center' }}>
                     View & Make Offer →
                   </p>

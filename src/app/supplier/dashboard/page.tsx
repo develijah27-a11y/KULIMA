@@ -73,11 +73,11 @@ async function SupplierStats({ profileId, userId }: { profileId: string; userId:
 
 function QuickActions() {
   const actions = [
-    { label: 'Add Product', href: '/supplier/catalogue', emoji: '➕', bg: '#F0FDF4', color: 'var(--color-primary)' },
-    { label: 'View Orders', href: '/supplier/orders', emoji: '📋', bg: '#EFF6FF', color: C.blue },
-    { label: 'Update Prices', href: '/supplier/catalogue', emoji: '💰', bg: '#FFFBEB', color: '#D97706' },
+    { label: 'Add Product', href: '/supplier/catalogue', emoji: '➕', bg: 'var(--color-primary-bg)', color: 'var(--color-primary)' },
+    { label: 'View Orders', href: '/supplier/orders', emoji: '📋', bg: 'var(--color-sky-bg)', color: C.blue },
+    { label: 'Update Prices', href: '/supplier/catalogue', emoji: '💰', bg: 'var(--color-harvest-bg)', color: C.amber },
     { label: 'Demand Map', href: '/supplier/demand', emoji: '🗺️', bg: '#F5F3FF', color: C.purple },
-    { label: 'Analytics', href: '/supplier/analytics', emoji: '📊', bg: '#FEF2F2', color: C.red },
+    { label: 'Analytics', href: '/supplier/analytics', emoji: '📊', bg: 'var(--color-danger-bg)', color: C.red },
   ];
 
   return (
@@ -185,10 +185,10 @@ async function RecentOrders({ profileId }: { profileId: string }) {
   const rows = error ? [] : (orders ?? []);
 
   const STATUS: Record<string, { label: string; color: string; bg: string }> = {
-    pending:   { label: 'Pending',   color: '#D97706', bg: '#FEF3C7' },
-    confirmed: { label: 'Confirmed', color: '#0284C7', bg: 'var(--color-sky-bg)' },
-    delivered: { label: 'Delivered', color: '#059669', bg: '#D1FAE5' },
-    cancelled: { label: 'Cancelled', color: '#DC2626', bg: '#FEE2E2' },
+    pending:   { label: 'Pending',   color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+    confirmed: { label: 'Confirmed', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
+    delivered: { label: 'Delivered', color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+    cancelled: { label: 'Cancelled', color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
   };
 
   return (
@@ -216,7 +216,7 @@ async function RecentOrders({ profileId }: { profileId: string }) {
             return (
               <div key={o.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: '#F0FDF4' }}>🧪</div>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-primary-bg)' }}>🧪</div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: C.text }}>{o.product_name}</p>
                     <p className="text-[11px]" style={{ color: C.muted }}>{o.quantity} {o.unit} · {o.buyer_name ?? o.district}</p>
@@ -276,7 +276,7 @@ async function CataloguePreview({ profileId }: { profileId: string }) {
             return (
               <div key={p.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: lowStock ? '#FEF2F2' : '#F0FDF4' }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: lowStock ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)' }}>
                     {CATEGORY_ICON[p.category] ?? '📦'}
                   </div>
                   <div>
@@ -317,7 +317,7 @@ function GettingStarted() {
       <div className="divide-y" style={{ borderColor: C.border }}>
         {steps.map(({ icon, title, sub, href }) => (
           <Link key={title} href={href} className="px-5 py-3.5 flex items-center gap-3 hover:bg-gray-50 transition-colors" style={{ textDecoration: 'none' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: '#F0FDF4' }}>{icon}</div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-primary-bg)' }}>{icon}</div>
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: C.text }}>{title}</p>
               <p className="text-xs" style={{ color: C.muted }}>{sub}</p>

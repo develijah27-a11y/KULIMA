@@ -1,7 +1,6 @@
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+'use client';
 
-export default async function AdminDashboardErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function AdminDashboardErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <div className="min-h-screen bg-soil flex items-center justify-center">
       <div className="text-center px-6 py-10">

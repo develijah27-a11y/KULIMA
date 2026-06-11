@@ -5,7 +5,7 @@ import { useState } from 'react';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
-  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', red: 'var(--color-danger)', amber: '#D97706',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', red: 'var(--color-danger)', amber: 'var(--color-harvest)',
 };
 
 const CATEGORIES = ['seeds','fertilizers','pesticides','tools','equipment','other'] as const;
@@ -128,7 +128,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
       </div>
 
       {error && (
-        <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 10, padding: '10px 14px' }}>
+        <div style={{ background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)', borderRadius: 10, padding: '10px 14px' }}>
           <p style={{ color: C.red, fontSize: 13 }}>{error}</p>
         </div>
       )}
@@ -148,17 +148,17 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
             const lowStock = p.stock_qty < 5 && p.is_available;
             return (
               <div key={p.id} style={{ padding: '16px 20px', borderBottom: i < visible.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: lowStock ? '#FEF2F2' : '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: lowStock ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
                   {CAT_ICON[p.category]}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>{p.name}</p>
                     {!p.is_available && (
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, background: '#F3F4F6', color: C.muted }}>Hidden</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, background: 'var(--color-surface-2)', color: C.muted }}>Hidden</span>
                     )}
                     {lowStock && (
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, background: '#FEF3C7', color: C.amber }}>Low stock</span>
+                      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, background: 'var(--color-harvest-bg)', color: C.amber }}>Low stock</span>
                     )}
                   </div>
                   <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', textTransform: 'capitalize' }}>
@@ -183,7 +183,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                     Edit
                   </button>
                   <button disabled={deleting === p.id} onClick={() => del(p.id)}
-                    style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#FEF2F2', color: C.red, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                    style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: 'var(--color-danger-bg)', color: C.red, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     {deleting === p.id ? '…' : 'Del'}
                   </button>
                 </div>

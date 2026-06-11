@@ -1,12 +1,19 @@
 ﻿'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const C = {
-  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
-  cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
-  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', red: 'var(--color-danger)', amber: '#D97706',
+  text:       'var(--d-text)',
+  muted:      'var(--d-muted)',
+  border:     'var(--d-border)',
+  cardBg:     'var(--d-card)',
+  cardShadow: 'var(--d-shadow-card)',
+  green:      'var(--color-primary)',
+  greenMed:   'var(--color-primary-hover)',
+  red:        'var(--color-danger)',
+  amber:      'var(--color-harvest)',
 };
 
 const SEV_CFG: Record<string, { color: string; bg: string; label: string }> = {
@@ -74,7 +81,7 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
-      <a href="/pathologist/cases" style={{ color: C.muted, fontSize: 13, textDecoration: 'none' }}>← Back to Case Queue</a>
+      <Link href="/pathologist/cases" style={{ color: C.muted, fontSize: 13, textDecoration: 'none' }}>← Back to Case Queue</Link>
 
       {/* Case summary */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>

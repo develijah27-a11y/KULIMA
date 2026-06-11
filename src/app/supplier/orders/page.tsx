@@ -9,10 +9,10 @@ const C = {
 };
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-  pending:   { label: 'Pending',   color: '#D97706', bg: '#FEF3C7' },
-  confirmed: { label: 'Confirmed', color: '#0284C7', bg: 'var(--color-sky-bg)' },
-  delivered: { label: 'Delivered', color: '#059669', bg: '#D1FAE5' },
-  cancelled: { label: 'Cancelled', color: '#DC2626', bg: '#FEE2E2' },
+  pending:   { label: 'Pending',   color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  confirmed: { label: 'Confirmed', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
+  delivered: { label: 'Delivered', color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+  cancelled: { label: 'Cancelled', color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
 };
 
 const TABS = ['all', 'pending', 'confirmed', 'delivered', 'cancelled'] as const;
@@ -103,14 +103,14 @@ export default function SupplierOrdersPage() {
             }}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
             {t === 'pending' && pendingCount > 0 && (
-              <span style={{ marginLeft: 6, background: '#D97706', color: '#fff', borderRadius: 99, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>{pendingCount}</span>
+              <span style={{ marginLeft: 6, background: 'var(--color-harvest)', color: '#fff', borderRadius: 99, fontSize: 10, padding: '1px 6px', fontWeight: 700 }}>{pendingCount}</span>
             )}
           </button>
         ))}
       </div>
 
       {error && (
-        <div style={{ background: '#FEE2E2', color: '#DC2626', padding: '10px 14px', borderRadius: 8, fontSize: 13 }}>{error}</div>
+        <div style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', padding: '10px 14px', borderRadius: 8, fontSize: 13 }}>{error}</div>
       )}
 
       {/* Orders list */}
@@ -132,7 +132,7 @@ export default function SupplierOrdersPage() {
                 <div key={order.id} style={{ padding: '16px 20px', borderBottom: isLast ? 'none' : `1px solid ${C.border}` }}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
                         🧪
                       </div>
                       <div>
@@ -161,13 +161,13 @@ export default function SupplierOrdersPage() {
                           <button
                             disabled={updating === order.id}
                             onClick={() => updateStatus(order.id, 'confirmed')}
-                            style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: 'var(--color-sky-bg)', color: '#0284C7', border: 'none', cursor: 'pointer' }}>
+                            style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: 'var(--color-sky-bg)', color: 'var(--color-sky)', border: 'none', cursor: 'pointer' }}>
                             Confirm
                           </button>
                           <button
                             disabled={updating === order.id}
                             onClick={() => updateStatus(order.id, 'cancelled')}
-                            style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: '#FEE2E2', color: '#DC2626', border: 'none', cursor: 'pointer' }}>
+                            style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: 'none', cursor: 'pointer' }}>
                             Decline
                           </button>
                         </div>
@@ -176,7 +176,7 @@ export default function SupplierOrdersPage() {
                         <button
                           disabled={updating === order.id}
                           onClick={() => updateStatus(order.id, 'delivered')}
-                          style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: '#D1FAE5', color: '#059669', border: 'none', cursor: 'pointer' }}>
+                          style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 6, background: 'var(--color-success-bg)', color: 'var(--color-success)', border: 'none', cursor: 'pointer' }}>
                           Mark Delivered
                         </button>
                       )}

@@ -30,10 +30,10 @@ export default async function AdminBuyersPage() {
   const rows = buyers ?? [];
 
   const VER: Record<string, { label: string; color: string; bg: string }> = {
-    none:     { label: 'Unverified', color: C.muted,     bg: '#F3F4F6' },
-    basic:    { label: 'Basic',      color: '#D97706',   bg: '#FEF3C7' },
-    standard: { label: 'Standard',  color: C.blue,      bg: 'var(--color-sky-bg)' },
-    premium:  { label: 'Premium',   color: '#059669',   bg: '#D1FAE5' },
+    none:     { label: 'Unverified', color: C.muted,                bg: 'var(--color-surface-2)'  },
+    basic:    { label: 'Basic',      color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+    standard: { label: 'Standard',  color: C.blue,                 bg: 'var(--color-sky-bg)'     },
+    premium:  { label: 'Premium',   color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
   };
 
   return (
@@ -55,7 +55,7 @@ export default async function AdminBuyersPage() {
       ) : (
         <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, overflow: 'hidden' }}>
           {/* Header */}
-          <div className="hidden sm:grid px-5 py-3" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr', borderBottom: `1px solid ${C.border}`, background: '#FAFAFA' }}>
+          <div className="hidden sm:grid px-5 py-3" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr', borderBottom: `1px solid ${C.border}`, background: 'var(--color-surface-2)' }}>
             {['Buyer', 'Location', 'Verification', 'Joined'].map(h => (
               <p key={h} className="text-[10px] font-bold uppercase tracking-wide" style={{ color: C.muted }}>{h}</p>
             ))}
@@ -68,7 +68,7 @@ export default async function AdminBuyersPage() {
                 <div key={b.id} className="px-5 py-3.5 flex items-center gap-4">
                   {/* Avatar + name */}
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0" style={{ background: '#FEF3C7', color: '#D97706' }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0" style={{ background: 'var(--color-harvest-bg)', color: 'var(--color-harvest)' }}>
                       {(b.full_name ?? '?')[0].toUpperCase()}
                     </div>
                     <div className="min-w-0">
@@ -95,7 +95,7 @@ export default async function AdminBuyersPage() {
                   {/* Actions */}
                   <div className="shrink-0">
                     {b.verification_level === 'none' && (
-                      <span className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ background: '#FEF3C7', color: '#D97706' }}>
+                      <span className="text-[10px] font-bold px-2 py-1 rounded-lg" style={{ background: 'var(--color-harvest-bg)', color: 'var(--color-harvest)' }}>
                         Needs KYC
                       </span>
                     )}

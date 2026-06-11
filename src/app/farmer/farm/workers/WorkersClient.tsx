@@ -5,22 +5,22 @@ import { useState } from 'react';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: '#D97706', red: 'var(--color-danger)', blue: 'var(--color-sky)',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)',
   cardBg: 'var(--d-card)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 
 export const WORKER_ROLES: { value: string; label: string; color: string; bg: string; icon: string }[] = [
-  { value: 'farm_manager',          label: 'Farm Manager',          color: 'var(--color-primary)', bg: '#D1FAE5', icon: '👨‍💼' },
+  { value: 'farm_manager',          label: 'Farm Manager',          color: 'var(--color-primary)', bg: 'var(--color-success-bg)', icon: '👨‍💼' },
   { value: 'field_worker',          label: 'Field Worker',          color: 'var(--color-info)', bg: 'var(--color-sky-bg)', icon: '👷' },
-  { value: 'irrigation_specialist', label: 'Irrigation Specialist', color: '#0284C7', bg: '#E0F2FE', icon: '💧' },
-  { value: 'pest_controller',       label: 'Pest Controller',       color: '#7C3AED', bg: '#EDE9FE', icon: '🧴' },
-  { value: 'harvester',             label: 'Harvester',             color: '#D97706', bg: '#FEF3C7', icon: '🌾' },
-  { value: 'driver',                label: 'Driver / Transport',    color: '#374151', bg: '#F3F4F6', icon: '🚜' },
-  { value: 'watchman',              label: 'Watchman / Security',   color: '#DC2626', bg: '#FEE2E2', icon: '🔒' },
-  { value: 'store_keeper',          label: 'Store Keeper',          color: '#92400E', bg: '#FEF3C7', icon: '🏚️' },
-  { value: 'casual_laborer',        label: 'Casual Laborer',        color: '#6B7280', bg: '#F9FAFB', icon: '🧑‍🌾' },
-  { value: 'other',                 label: 'Other',                 color: '#6B7280', bg: '#F3F4F6', icon: '👤' },
+  { value: 'irrigation_specialist', label: 'Irrigation Specialist', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     icon: '💧' },
+  { value: 'pest_controller',       label: 'Pest Controller',       color: '#7C3AED',              bg: '#EDE9FE',                icon: '🧴' },
+  { value: 'harvester',             label: 'Harvester',             color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', icon: '🌾' },
+  { value: 'driver',                label: 'Driver / Transport',    color: 'var(--d-muted)',       bg: 'var(--color-surface-2)', icon: '🚜' },
+  { value: 'watchman',              label: 'Watchman / Security',   color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  icon: '🔒' },
+  { value: 'store_keeper',          label: 'Store Keeper',          color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', icon: '🏚️' },
+  { value: 'casual_laborer',        label: 'Casual Laborer',        color: 'var(--d-muted)',       bg: 'var(--d-subtle)',         icon: '🧑‍🌾' },
+  { value: 'other',                 label: 'Other',                 color: 'var(--d-muted)',       bg: 'var(--color-surface-2)', icon: '👤' },
 ];
 
 const WAGE_PERIODS = [
@@ -95,7 +95,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '10px 12px', borderRadius: 8,
     border: `1.5px solid ${C.border}`, fontSize: 14,
-    color: C.text, background: '#fff', boxSizing: 'border-box',
+    color: C.text, background: 'var(--d-input-bg)', boxSizing: 'border-box',
   };
   const labelStyle: React.CSSProperties = {
     fontSize: 12, fontWeight: 700, color: C.muted, display: 'block', marginBottom: 4,
@@ -212,7 +212,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
       {/* Stats strip */}
       {workers.length > 0 && (
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
-          <div style={{ background: '#F0FDF4', borderRadius: 10, padding: '12px 18px', borderLeft: `3px solid ${C.greenMed}` }}>
+          <div style={{ background: 'var(--color-primary-bg)', borderRadius: 10, padding: '12px 18px', borderLeft: `3px solid ${C.greenMed}` }}>
             <p style={{ fontSize: 22, fontWeight: 900, color: C.green, letterSpacing: '-0.03em' }}>{activeCount}</p>
             <p style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>Active Workers</p>
           </div>
@@ -275,7 +275,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
           </p>
 
           {error && (
-            <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
+            <div style={{ background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)', borderRadius: 8, padding: '10px 14px', marginBottom: 16 }}>
               <p style={{ fontSize: 13, color: C.red }}>{error}</p>
             </div>
           )}
@@ -352,7 +352,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                     style={{
                       padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600,
                       border: `1.5px solid ${active ? C.greenMed : C.border}`,
-                      background: active ? '#F0FDF4' : '#fff',
+                      background: active ? 'var(--color-primary-bg)' : 'var(--d-input-bg)',
                       color: active ? C.greenMed : C.muted, cursor: 'pointer',
                     }}
                   >
@@ -365,11 +365,11 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
 
           <div style={{ marginTop: 20, display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
             <button type="button" onClick={cancelForm}
-              style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#F3F4F6', color: C.muted, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: 'var(--color-surface-2)', color: C.muted, fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
               Cancel
             </button>
             <button type="submit" disabled={saving}
-              style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? '#9CA3AF' : C.green, color: '#fff', fontWeight: 700, fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
+              style={{ padding: '10px 24px', borderRadius: 8, border: 'none', background: saving ? 'var(--color-surface-2)' : C.green, color: saving ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: saving ? 'default' : 'pointer' }}>
               {saving ? 'Saving…' : editId ? 'Save Changes' : 'Add Worker'}
             </button>
           </div>
@@ -418,7 +418,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                     <p style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0 }}>{w.name}</p>
                     <RoleBadge role={w.role} />
                     {!w.is_active && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: '#F3F4F6', color: C.muted }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: 'var(--color-surface-2)', color: C.muted }}>
                         INACTIVE
                       </span>
                     )}
@@ -444,7 +444,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                   {w.tasks && w.tasks.length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                       {w.tasks.map(t => (
-                        <span key={t} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: '#F0FDF4', color: C.greenMed, fontWeight: 600 }}>
+                        <span key={t} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, fontWeight: 600 }}>
                           {t}
                         </span>
                       ))}
@@ -460,7 +460,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
                   <button
                     onClick={() => openEdit(w)}
-                    style={{ padding: '6px 12px', borderRadius: 7, border: `1px solid ${C.border}`, background: '#fff', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    style={{ padding: '6px 12px', borderRadius: 7, border: `1px solid ${C.border}`, background: 'var(--d-input-bg)', color: C.text, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                   >
                     Edit
                   </button>
@@ -469,7 +469,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                     disabled={deleting === w.id}
                     style={{
                       padding: '6px 12px', borderRadius: 7, border: 'none',
-                      background: w.is_active ? '#FEF3C7' : '#F0FDF4',
+                      background: w.is_active ? 'var(--color-harvest-bg)' : 'var(--color-primary-bg)',
                       color: w.is_active ? C.amber : C.greenMed,
                       fontSize: 12, fontWeight: 600, cursor: 'pointer',
                     }}
@@ -479,7 +479,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                   <button
                     onClick={() => handleDelete(w.id)}
                     disabled={deleting === w.id}
-                    style={{ padding: '6px 10px', borderRadius: 7, border: 'none', background: '#FEF2F2', color: C.red, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    style={{ padding: '6px 10px', borderRadius: 7, border: 'none', background: 'var(--color-danger-bg)', color: C.red, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
                   >
                     ✕
                   </button>

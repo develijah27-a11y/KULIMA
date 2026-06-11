@@ -42,7 +42,7 @@ export function BidForm({ deliveryId, vehicle }: Props) {
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Submit a Bid</p>
 
-      <div style={{ padding: '10px 14px', background: '#F9FAFB', borderRadius: 8, border: `1px solid ${C.border}` }}>
+      <div style={{ padding: '10px 14px', background: 'var(--d-subtle)', borderRadius: 8, border: `1px solid ${C.border}` }}>
         <p style={{ fontSize: 11, color: C.muted, margin: '0 0 2px', fontWeight: 600 }}>YOUR VEHICLE</p>
         <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0 }}>
           {vehicle.plate_number} · {vehicle.vehicle_type} · {vehicle.capacity_kg} kg capacity
@@ -65,10 +65,10 @@ export function BidForm({ deliveryId, vehicle }: Props) {
           rows={2} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
       </div>
 
-      {error && <p style={{ color: '#DC2626', fontSize: 12 }}>{error}</p>}
+      {error && <p style={{ color: 'var(--color-danger)', fontSize: 12 }}>{error}</p>}
 
       <button type="submit" disabled={loading}
-        style={{ padding: '12px', background: loading ? '#E5E7EB' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer' }}>
+        style={{ padding: '12px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer' }}>
         {loading ? 'Submitting...' : 'Submit Bid →'}
       </button>
     </form>

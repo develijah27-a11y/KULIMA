@@ -6,14 +6,14 @@ const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  red: 'var(--color-danger)', blue: 'var(--color-sky)', amber: '#D97706',
+  red: 'var(--color-danger)', blue: 'var(--color-sky)', amber: 'var(--color-harvest)',
 };
 
 const TX_CFG: Record<string, { color: string; label: string }> = {
-  credit:   { color: '#059669', label: 'Credit' },
-  debit:    { color: '#DC2626', label: 'Debit' },
-  escrow:   { color: '#D97706', label: 'Escrow' },
-  release:  { color: '#0284C7', label: 'Release' },
+  credit:   { color: 'var(--color-success)', label: 'Credit' },
+  debit:    { color: 'var(--color-danger)',  label: 'Debit'  },
+  escrow:   { color: 'var(--color-harvest)', label: 'Escrow' },
+  release:  { color: 'var(--color-sky)',     label: 'Release' },
   refund:   { color: '#7C3AED', label: 'Refund' },
 };
 
@@ -142,7 +142,7 @@ export default async function AdminWalletsPage({
                   <div key={tx.id} style={{ padding: '10px 18px', borderBottom: `1px solid ${C.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: cfg.color }}>{cfg.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: isCredit ? '#059669' : C.red }}>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: isCredit ? 'var(--color-success)' : C.red }}>
                         {isCredit ? '+' : '-'}UGX {Math.round(tx.amount).toLocaleString()}
                       </span>
                     </div>

@@ -3,10 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  open:      { color: '#DC2626', bg: '#FEE2E2', label: 'Open' },
-  assigned:  { color: '#D97706', bg: '#FEF3C7', label: 'Assigned' },
-  diagnosed: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Diagnosed' },
-  closed:    { color: '#059669', bg: '#D1FAE5', label: 'Closed' },
+  open:      { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Open' },
+  assigned:  { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Assigned' },
+  diagnosed: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Diagnosed' },
+  closed:    { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Closed' },
 };
 
 export default async function MyCasesPage() {
@@ -41,7 +41,7 @@ export default async function MyCasesPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {list.map((c: any) => {
-            const st = STATUS_CFG[c.status] ?? { color: '#6B7280', bg: '#F3F4F6', label: c.status };
+            const st = STATUS_CFG[c.status] ?? { color: 'var(--d-muted)', bg: 'var(--color-surface-2)', label: c.status };
             return (
               <Link
                 key={c.id}

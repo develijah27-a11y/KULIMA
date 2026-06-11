@@ -71,7 +71,7 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
         <div className="flex items-start gap-4">
           <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shrink-0"
-            style={{ background: '#F0FDF4' }}
+            style={{ background: 'var(--color-primary-bg)' }}
           >
             {emoji}
           </div>
@@ -94,10 +94,10 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
           {marketPrice && (
             <div>
               <p style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: 'uppercase', margin: '0 0 2px' }}>Market Avg</p>
-              <p style={{ fontSize: 18, fontWeight: 800, color: '#059669', margin: 0, letterSpacing: '-0.02em' }}>
+              <p style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-success)', margin: 0, letterSpacing: '-0.02em' }}>
                 UGX {marketPrice.toLocaleString()}
               </p>
-              <p style={{ fontSize: 10, margin: '1px 0 0', fontWeight: 600, color: (priceDelta ?? 0) > 10 ? '#D97706' : '#059669' }}>
+              <p style={{ fontSize: 10, margin: '1px 0 0', fontWeight: 600, color: (priceDelta ?? 0) > 10 ? 'var(--color-harvest)' : 'var(--color-success)' }}>
                 {priceDelta !== null ? `${priceDelta >= 0 ? '+' : ''}${priceDelta}% vs avg` : ''}
               </p>
             </div>

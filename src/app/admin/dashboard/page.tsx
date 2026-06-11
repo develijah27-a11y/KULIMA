@@ -27,14 +27,14 @@ const Card = ({ children, style = {} }: { children: React.ReactNode; style?: Rea
 );
 
 const ROLE_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  farmer:      { color: '#059669', bg: '#D1FAE5', label: 'Farmer' },
-  buyer:       { color: '#D97706', bg: '#FEF3C7', label: 'Buyer' },
-  transporter: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Transporter' },
-  supplier:    { color: '#7C3AED', bg: '#EDE9FE', label: 'Supplier' },
-  pathologist: { color: '#DC2626', bg: '#FEE2E2', label: 'Pathologist' },
-  offtaker:    { color: '#0891B2', bg: '#CFFAFE', label: 'Offtaker' },
-  groups:      { color: '#65A30D', bg: '#ECFCCB', label: 'Group' },
-  admin:       { color: '#6B7280', bg: '#F3F4F6', label: 'Admin' },
+  farmer:      { color: 'var(--color-success)',  bg: 'var(--color-success-bg)',  label: 'Farmer' },
+  buyer:       { color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)',  label: 'Buyer' },
+  transporter: { color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)',      label: 'Transporter' },
+  supplier:    { color: '#7C3AED',               bg: '#EDE9FE',                  label: 'Supplier' },
+  pathologist: { color: 'var(--color-danger)',   bg: 'var(--color-danger-bg)',   label: 'Pathologist' },
+  offtaker:    { color: '#0891B2',               bg: '#CFFAFE',                  label: 'Offtaker' },
+  groups:      { color: '#65A30D',               bg: '#ECFCCB',                  label: 'Group' },
+  admin:       { color: 'var(--d-muted)',         bg: 'var(--color-surface-2)',   label: 'Admin' },
 };
 
 function timeAgo(iso: string) {
@@ -136,7 +136,7 @@ async function RoleBreakdown() {
                 </div>
                 <span className="text-xs font-bold" style={{ color: C.text }}>{count.toLocaleString()} <span style={{ color: C.muted, fontWeight: 400 }}>({pct}%)</span></span>
               </div>
-              <div style={{ height: 6, background: '#F3F4F6', borderRadius: 999 }}>
+              <div style={{ height: 6, background: 'var(--color-surface-2)', borderRadius: 999 }}>
                 <div style={{ height: 6, width: `${pct}%`, background: cfg.color, borderRadius: 999, transition: 'width 0.5s ease' }} />
               </div>
             </div>
@@ -187,7 +187,7 @@ async function GrowthSparkline() {
                 style={{
                   width: '100%', minHeight: 4,
                   height: `${Math.round((count / max) * 64) + 4}px`,
-                  background: count > 0 ? `linear-gradient(180deg, ${C.greenBright}, ${C.greenMed})` : '#F3F4F6',
+                  background: count > 0 ? `linear-gradient(180deg, ${C.greenBright}, ${C.greenMed})` : 'var(--color-surface-2)',
                   borderRadius: '4px 4px 0 0',
                   transition: 'height 0.3s ease',
                 }}
@@ -280,7 +280,7 @@ async function PendingActions() {
         {items.map(({ label, count, href, icon, urgency }) => (
           <Link key={label} href={href} className="px-5 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors" style={{ textDecoration: 'none' }}>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base" style={{ background: urgency ? '#FEE2E2' : '#F0FDF4' }}>{icon}</div>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base" style={{ background: urgency ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)' }}>{icon}</div>
               <p className="text-sm font-medium" style={{ color: C.text }}>{label}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -305,10 +305,10 @@ async function MarketplaceActivity() {
   const rows = (activity ?? []).filter((o: any) => o?.listing);
 
   const STATUS: Record<string, { color: string; bg: string; label: string }> = {
-    pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Offer' },
-    accepted:  { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Accepted' },
-    completed: { color: '#059669', bg: '#D1FAE5', label: 'Completed' },
-    rejected:  { color: '#DC2626', bg: '#FEE2E2', label: 'Rejected' },
+    pending:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Offer' },
+    accepted:  { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Accepted' },
+    completed: { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Completed' },
+    rejected:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Rejected' },
   };
 
   return (
@@ -329,7 +329,7 @@ async function MarketplaceActivity() {
             return (
               <div key={o.id} className="px-5 py-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0" style={{ background: '#F0FDF4' }}>🛒</div>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0" style={{ background: 'var(--color-primary-bg)' }}>🛒</div>
                   <div>
                     <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>{o.listing.crop_type} · {o.listing.quantity_kg}kg</p>
                     <p className="text-[10px]" style={{ color: C.muted }}>{o.listing.district} · {timeAgo(o.created_at)}</p>
@@ -384,7 +384,7 @@ async function DistrictActivity() {
                 </div>
                 <span className="text-xs font-bold" style={{ color: C.greenMed }}>{count}</span>
               </div>
-              <div style={{ height: 4, background: '#F3F4F6', borderRadius: 999 }}>
+              <div style={{ height: 4, background: 'var(--color-surface-2)', borderRadius: 999 }}>
                 <div style={{ height: 4, width: `${Math.round((count / max) * 100)}%`, background: `linear-gradient(90deg, ${C.greenMed}, ${C.greenBright})`, borderRadius: 999 }} />
               </div>
             </div>
@@ -441,7 +441,7 @@ async function MarketPriceSummary() {
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold" style={{ color: C.text }}>UGX {Math.round(latest).toLocaleString()}</span>
                   {trend !== 0 && (
-                    <span className="text-[10px] font-bold" style={{ color: up ? '#059669' : C.red }}>
+                    <span className="text-[10px] font-bold" style={{ color: up ? 'var(--color-success)' : C.red }}>
                       {up ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
                     </span>
                   )}
@@ -479,8 +479,8 @@ function SystemHealth() {
           <div key={name} className="px-5 py-2.5 flex items-center justify-between">
             <p className="text-xs" style={{ color: C.text }}>{name}</p>
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full" style={{ background: ok ? '#22C55E' : C.red }} />
-              <span className="text-[10px] font-semibold" style={{ color: ok ? '#22C55E' : C.red }}>{ok ? 'Online' : 'Down'}</span>
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: ok ? 'var(--color-primary)' : C.red }} />
+              <span className="text-[10px] font-semibold" style={{ color: ok ? 'var(--color-primary)' : C.red }}>{ok ? 'Online' : 'Down'}</span>
             </div>
           </div>
         ))}
@@ -492,12 +492,12 @@ function SystemHealth() {
 // ─── Admin Quick Actions ───────────────────────────────────────────────────────
 function AdminTools() {
   const tools = [
-    { href: '/admin/users',        emoji: '👥', label: 'Manage Users',    sub: 'Search, edit roles, suspend',      bg: '#EDE9FE', color: C.violet },
-    { href: '/admin/verification', emoji: '🪪', label: 'KYC Queue',       sub: 'Approve/reject verifications',     bg: '#FEE2E2', color: C.red },
-    { href: '/admin/prices',       emoji: '📊', label: 'Market Prices',   sub: 'Update crop price data',            bg: '#D1FAE5', color: C.greenMed },
-    { href: '/admin/alert',        emoji: '📢', label: 'Send Alert',      sub: 'Broadcast notifications',           bg: 'var(--color-sky-bg)', color: C.blue },
-    { href: '/admin/buyers',       emoji: '🛒', label: 'Buyer Accounts',  sub: 'Review buyer registrations',        bg: '#FEF3C7', color: '#D97706' },
-    { href: '/admin/analytics',    emoji: '📈', label: 'Analytics',       sub: 'Growth, revenue & trends',          bg: '#CFFAFE', color: '#0891B2' },
+    { href: '/admin/users',        emoji: '👥', label: 'Manage Users',    sub: 'Search, edit roles, suspend',      bg: '#EDE9FE',                   color: C.violet },
+    { href: '/admin/verification', emoji: '🪪', label: 'KYC Queue',       sub: 'Approve/reject verifications',     bg: 'var(--color-danger-bg)',     color: C.red },
+    { href: '/admin/prices',       emoji: '📊', label: 'Market Prices',   sub: 'Update crop price data',            bg: 'var(--color-success-bg)',    color: C.greenMed },
+    { href: '/admin/alert',        emoji: '📢', label: 'Send Alert',      sub: 'Broadcast notifications',           bg: 'var(--color-sky-bg)',        color: C.blue },
+    { href: '/admin/buyers',       emoji: '🛒', label: 'Buyer Accounts',  sub: 'Review buyer registrations',        bg: 'var(--color-harvest-bg)',    color: C.amber },
+    { href: '/admin/analytics',    emoji: '📈', label: 'Analytics',       sub: 'Growth, revenue & trends',          bg: '#CFFAFE',                   color: '#0891B2' },
   ];
 
   return (
@@ -529,13 +529,13 @@ async function AlertBanner() {
   if (!count || count === 0) return null;
 
   return (
-    <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: '#FEF3C7', border: '1px solid #FDE68A' }}>
+    <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: 'var(--color-harvest-bg)', border: '1px solid var(--color-warning-border)' }}>
       <span className="text-lg">⚠️</span>
       <div className="flex-1">
-        <p className="text-sm font-bold" style={{ color: '#92400E' }}>{count} KYC verification{count > 1 ? 's' : ''} pending review</p>
-        <p className="text-xs" style={{ color: '#B45309' }}>Users are waiting to be verified. Review the queue to unlock their full access.</p>
+        <p className="text-sm font-bold" style={{ color: 'var(--color-harvest)' }}>{count} KYC verification{count > 1 ? 's' : ''} pending review</p>
+        <p className="text-xs" style={{ color: 'var(--color-harvest)' }}>Users are waiting to be verified. Review the queue to unlock their full access.</p>
       </div>
-      <Link href="/admin/verification" className="px-4 py-2 rounded-lg text-xs font-bold shrink-0" style={{ background: '#D97706', color: '#fff', textDecoration: 'none' }}>
+      <Link href="/admin/verification" className="px-4 py-2 rounded-lg text-xs font-bold shrink-0" style={{ background: 'var(--color-harvest)', color: '#fff', textDecoration: 'none' }}>
         Review →
       </Link>
     </div>
@@ -562,8 +562,8 @@ export default async function AdminDashboardPage() {
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>{dayLabel} · KULIMA Admin</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full" style={{ background: '#22C55E' }} />
-          <span className="text-xs font-semibold" style={{ color: '#22C55E' }}>All systems operational</span>
+          <div className="w-2 h-2 rounded-full" style={{ background: 'var(--color-primary)' }} />
+          <span className="text-xs font-semibold" style={{ color: 'var(--color-primary)' }}>All systems operational</span>
         </div>
       </div>
 

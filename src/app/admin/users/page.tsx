@@ -10,14 +10,14 @@ const C = {
 } as const;
 
 const ROLE_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  farmer:      { color: '#059669', bg: '#D1FAE5', label: 'Farmer' },
-  buyer:       { color: '#D97706', bg: '#FEF3C7', label: 'Buyer' },
-  transporter: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Transporter' },
-  supplier:    { color: '#7C3AED', bg: '#EDE9FE', label: 'Supplier' },
-  pathologist: { color: '#DC2626', bg: '#FEE2E2', label: 'Pathologist' },
-  offtaker:    { color: '#0891B2', bg: '#CFFAFE', label: 'Offtaker' },
-  groups:      { color: '#65A30D', bg: '#ECFCCB', label: 'Group Admin' },
-  admin:       { color: '#6B7280', bg: '#F3F4F6', label: 'Admin' },
+  farmer:      { color: 'var(--color-success)',  bg: 'var(--color-success-bg)',  label: 'Farmer' },
+  buyer:       { color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)',  label: 'Buyer' },
+  transporter: { color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)',      label: 'Transporter' },
+  supplier:    { color: '#7C3AED',               bg: '#EDE9FE',                  label: 'Supplier' },
+  pathologist: { color: 'var(--color-danger)',   bg: 'var(--color-danger-bg)',   label: 'Pathologist' },
+  offtaker:    { color: '#0891B2',               bg: '#CFFAFE',                  label: 'Offtaker' },
+  groups:      { color: '#65A30D',               bg: '#ECFCCB',                  label: 'Group Admin' },
+  admin:       { color: 'var(--d-muted)',         bg: 'var(--color-surface-2)',   label: 'Admin' },
 };
 
 const ALL_ROLES = Object.keys(ROLE_CFG);
@@ -97,13 +97,13 @@ export default async function AdminUsersPage({
             name="q"
             defaultValue={q}
             placeholder="Search by name, phone, or district..."
-            style={{ flex: 1, padding: '9px 14px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', color: C.text, background: '#FAFAFA' }}
+            style={{ flex: 1, padding: '9px 14px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', color: C.text, background: 'var(--d-input-bg)' }}
           />
           <button type="submit" style={{ padding: '9px 20px', background: C.green, color: '#fff', borderRadius: 10, fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer' }}>
             Search
           </button>
           {q && (
-            <a href={filterUrl({ q: '' })} style={{ padding: '9px 14px', background: '#F3F4F6', borderRadius: 10, fontSize: 13, color: C.muted, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <a href={filterUrl({ q: '' })} style={{ padding: '9px 14px', background: 'var(--color-surface-2)', borderRadius: 10, fontSize: 13, color: C.muted, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
               Clear ✕
             </a>
           )}
@@ -111,7 +111,7 @@ export default async function AdminUsersPage({
 
         {/* Role chips */}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          <a href={filterUrl({ role: '' })} style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 999, background: !role ? C.green : '#F3F4F6', color: !role ? '#fff' : C.muted, textDecoration: 'none' }}>
+          <a href={filterUrl({ role: '' })} style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 999, background: !role ? C.green : 'var(--color-surface-2)', color: !role ? '#fff' : C.muted, textDecoration: 'none' }}>
             All ({(count ?? 0).toLocaleString()})
           </a>
           {ALL_ROLES.filter(r => r !== 'admin').map(r => {
@@ -130,7 +130,7 @@ export default async function AdminUsersPage({
       {/* Users table */}
       <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, overflow: 'hidden' }}>
         {/* Table header */}
-        <div className="hidden sm:grid" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 0.8fr', padding: '12px 20px', borderBottom: `1px solid ${C.border}`, background: '#FAFAFA' }}>
+        <div className="hidden sm:grid" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 0.8fr', padding: '12px 20px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-surface-2)' }}>
           {['User', 'Role', 'Location', 'Joined', 'Verification'].map(h => (
             <p key={h} className="text-[10px] font-bold uppercase tracking-wide" style={{ color: C.muted }}>{h}</p>
           ))}
@@ -148,9 +148,9 @@ export default async function AdminUsersPage({
               const cfg = ROLE_CFG[u.role] ?? ROLE_CFG.farmer;
               const VER_CFG: Record<string, { label: string; color: string }> = {
                 none:     { label: 'Unverified', color: C.muted },
-                basic:    { label: 'Basic',      color: '#D97706' },
-                standard: { label: 'Standard',   color: '#0284C7' },
-                premium:  { label: 'Premium',    color: '#059669' },
+                basic:    { label: 'Basic',      color: 'var(--color-harvest)' },
+                standard: { label: 'Standard',   color: 'var(--color-sky)' },
+                premium:  { label: 'Premium',    color: 'var(--color-success)' },
               };
               const ver = VER_CFG[u.verification_level ?? 'none'];
 
@@ -206,7 +206,7 @@ export default async function AdminUsersPage({
             </p>
             <div className="flex gap-2">
               {page > 1 && (
-                <a href={filterUrl({ page: String(page - 1) })} style={{ padding: '6px 14px', borderRadius: 8, background: '#F3F4F6', fontSize: 12, fontWeight: 600, color: C.text, textDecoration: 'none' }}>
+                <a href={filterUrl({ page: String(page - 1) })} style={{ padding: '6px 14px', borderRadius: 8, background: 'var(--color-surface-2)', fontSize: 12, fontWeight: 600, color: C.text, textDecoration: 'none' }}>
                   ← Prev
                 </a>
               )}

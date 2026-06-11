@@ -72,11 +72,11 @@ async function GroupStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Add Member', href: '/groups/members/add', emoji: '👤', bg: '#F0FDF4', color: C.green },
-    { label: 'Group Listing', href: '/groups/listings/create', emoji: '📦', bg: '#EFF6FF', color: C.blue },
-    { label: 'Record Payment', href: '/groups/finance', emoji: '💰', bg: '#FFFBEB', color: '#D97706' },
+    { label: 'Add Member', href: '/groups/members/add', emoji: '👤', bg: 'var(--color-primary-bg)', color: C.green },
+    { label: 'Group Listing', href: '/groups/listings/create', emoji: '📦', bg: 'var(--color-sky-bg)', color: C.blue },
+    { label: 'Record Payment', href: '/groups/finance', emoji: '💰', bg: 'var(--color-harvest-bg)', color: C.amber },
     { label: 'Apply for Loan', href: '/groups/loans', emoji: '🏦', bg: '#F5F3FF', color: C.purple },
-    { label: 'Season Plan', href: '/groups/announcements', emoji: '📅', bg: '#FEF2F2', color: C.red },
+    { label: 'Season Plan', href: '/groups/announcements', emoji: '📅', bg: 'var(--color-danger-bg)', color: C.red },
   ];
 
   return (
@@ -187,7 +187,7 @@ async function MembersList({ userId }: { userId: string }) {
           {rows.map((m: any) => (
             <div key={m.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0" style={{ background: '#F0FDF4', color: C.green }}>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0" style={{ background: 'var(--color-primary-bg)', color: C.green }}>
                   {m.name?.[0]?.toUpperCase() ?? '?'}
                 </div>
                 <div>
@@ -219,9 +219,9 @@ async function GroupListings({ userId }: { userId: string }) {
 
   const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾', cotton: '🌾' };
   const STATUS: Record<string, { label: string; color: string; bg: string }> = {
-    active:  { label: 'Active', color: '#059669', bg: '#D1FAE5' },
-    pending: { label: 'Pending', color: '#D97706', bg: '#FEF3C7' },
-    sold:    { label: 'Sold', color: '#0284C7', bg: 'var(--color-sky-bg)' },
+    active:  { label: 'Active',  color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+    pending: { label: 'Pending', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+    sold:    { label: 'Sold',    color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
   };
 
   return (
@@ -250,7 +250,7 @@ async function GroupListings({ userId }: { userId: string }) {
             return (
               <div key={l.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: '#F0FDF4' }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-primary-bg)' }}>
                     {CROP_EMOJI[k] ?? '🌾'}
                   </div>
                   <div>
@@ -311,7 +311,7 @@ async function FinancialSummary({ userId }: { userId: string }) {
         {items.map(({ label, value, icon, color }) => (
           <div key={label} className="px-5 py-3.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0" style={{ background: '#F0FDF4' }}>{icon}</div>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0" style={{ background: 'var(--color-primary-bg)' }}>{icon}</div>
               <p className="text-sm font-medium" style={{ color: C.text }}>{label}</p>
             </div>
             <p className="text-sm font-black shrink-0" style={{ color }}>{value}</p>
@@ -319,7 +319,7 @@ async function FinancialSummary({ userId }: { userId: string }) {
         ))}
       </div>
       <div className="px-5 py-4">
-        <Link href="/groups/finance/record" className="block w-full text-center py-2.5 rounded-xl text-sm font-bold" style={{ background: '#F0FDF4', color: C.greenMed, textDecoration: 'none' }}>
+        <Link href="/groups/finance/record" className="block w-full text-center py-2.5 rounded-xl text-sm font-bold" style={{ background: 'var(--color-primary-bg)', color: C.greenMed, textDecoration: 'none' }}>
           + Record Contribution
         </Link>
       </div>
@@ -345,7 +345,7 @@ function GroupSetupGuide() {
       <div className="divide-y" style={{ borderColor: C.border }}>
         {steps.map(({ icon, title, sub, href }) => (
           <Link key={title} href={href} className="px-5 py-3.5 flex items-center gap-3 hover:bg-gray-50 transition-colors" style={{ textDecoration: 'none' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: '#F0FDF4' }}>{icon}</div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-primary-bg)' }}>{icon}</div>
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: C.text }}>{title}</p>
               <p className="text-xs" style={{ color: C.muted }}>{sub}</p>

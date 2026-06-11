@@ -3,8 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
 const SEV_CFG: Record<string, { color: string; bg: string }> = {
-  high:     { color: '#DC2626', bg: '#FEE2E2' },
-  critical: { color: '#7F1D1D', bg: '#FEE2E2' },
+  high:     { color: 'var(--color-danger)', bg: 'var(--color-danger-bg)' },
+  critical: { color: 'var(--color-danger)', bg: 'var(--color-danger-bg)' },
 };
 
 export default async function UrgentCasesPage() {
@@ -40,7 +40,7 @@ export default async function UrgentCasesPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {list.map((c: any) => {
-            const sev = SEV_CFG[c.severity] ?? { color: '#6B7280', bg: '#F3F4F6' };
+            const sev = SEV_CFG[c.severity] ?? { color: 'var(--d-muted)', bg: 'var(--color-surface-2)' };
             return (
               <Link
                 key={c.id}

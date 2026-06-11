@@ -75,11 +75,11 @@ async function OfftakerStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'New Contract', href: '/offtaker/pipeline/new', emoji: '📝', bg: '#F0FDF4', color: C.green },
-    { label: 'Browse Supply', href: '/offtaker/pipeline', emoji: '🔍', bg: '#EFF6FF', color: C.blue },
-    { label: 'Rate Supplier', href: '/offtaker/scorecard', emoji: '⭐', bg: '#FFFBEB', color: '#D97706' },
+    { label: 'New Contract', href: '/offtaker/pipeline/new', emoji: '📝', bg: 'var(--color-primary-bg)', color: C.green },
+    { label: 'Browse Supply', href: '/offtaker/pipeline', emoji: '🔍', bg: 'var(--color-sky-bg)', color: C.blue },
+    { label: 'Rate Supplier', href: '/offtaker/scorecard', emoji: '⭐', bg: 'var(--color-harvest-bg)', color: C.amber },
     { label: 'Analytics', href: '/offtaker/spend', emoji: '📊', bg: '#F5F3FF', color: C.purple },
-    { label: 'Send Offer', href: '/offtaker/pipeline', emoji: '📨', bg: '#FEF2F2', color: C.red },
+    { label: 'Send Offer', href: '/offtaker/pipeline', emoji: '📨', bg: 'var(--color-danger-bg)', color: C.red },
   ];
 
   return (
@@ -204,7 +204,7 @@ async function ActiveContracts({ userId }: { userId: string }) {
             return (
               <div key={c.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: urgent ? '#FEF3C7' : '#F0FDF4' }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: urgent ? 'var(--color-harvest-bg)' : 'var(--color-primary-bg)' }}>
                     {CROP_EMOJI[k] ?? '🌾'}
                   </div>
                   <div>
@@ -236,7 +236,7 @@ async function AvailableSupply() {
 
   const rows = listings ?? [];
   const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾', cotton: '🌾' };
-  const CROP_COLOR: Record<string, string> = { maize: '#D97706', coffee: '#7C3AED', beans: '#DC2626', rice: '#0284C7', banana: '#B45309', cassava: '#059669', tomato: '#DC2626' };
+  const CROP_COLOR: Record<string, string> = { maize: 'var(--color-harvest)', coffee: '#7C3AED', beans: 'var(--color-danger)', rice: 'var(--color-sky)', banana: 'var(--color-harvest)', cassava: 'var(--color-success)', tomato: 'var(--color-danger)' };
 
   return (
     <Card>
@@ -311,11 +311,11 @@ async function SupplierScorecard({ userId }: { userId: string }) {
         <div className="divide-y" style={{ borderColor: C.border }}>
           {rows.map((s: any, i: number) => {
             const score = ((s.reliability_score + s.quality_score) / 2).toFixed(1);
-            const color = parseFloat(score) >= 4 ? '#059669' : parseFloat(score) >= 3 ? '#D97706' : C.red;
+            const color = parseFloat(score) >= 4 ? 'var(--color-success)' : parseFloat(score) >= 3 ? 'var(--color-harvest)' : C.red;
             return (
               <div key={i} className="px-5 py-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shrink-0" style={{ background: '#F0FDF4', color: C.green }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shrink-0" style={{ background: 'var(--color-primary-bg)', color: C.green }}>
                     {s.farmer_name?.[0]?.toUpperCase() ?? '?'}
                   </div>
                   <div>

@@ -41,23 +41,23 @@ export function EscrowFundButton({ offerId, amount, cropType, balance }: Props) 
   }
 
   if (done) {
-    return <p style={{ color: '#059669', fontWeight: 700, fontSize: 12 }}>✓ Escrow funded — deal secured</p>;
+    return <p style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 12 }}>✓ Escrow funded — deal secured</p>;
   }
 
   return (
     <div>
       {!canFund && (
-        <p style={{ color: '#D97706', fontSize: 11, marginBottom: 6 }}>
+        <p style={{ color: 'var(--color-harvest)', fontSize: 11, marginBottom: 6 }}>
           Insufficient balance. Please deposit UGX {(amount - balance).toLocaleString()} more.
         </p>
       )}
-      {error && <p style={{ color: '#DC2626', fontSize: 11, marginBottom: 6 }}>{error}</p>}
+      {error && <p style={{ color: 'var(--color-danger)', fontSize: 11, marginBottom: 6 }}>{error}</p>}
       <button
         onClick={fund}
         disabled={loading || !canFund}
         style={{
           width: '100%', padding: '10px', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: canFund ? 'pointer' : 'not-allowed',
-          background: loading || !canFund ? '#E5E7EB' : C.green,
+          background: loading || !canFund ? 'var(--color-surface-2)' : C.green,
           color: loading || !canFund ? C.muted : '#fff',
         }}
       >

@@ -52,13 +52,13 @@ export default async function TransporterDeliveriesPage({
   const rows = data ?? [];
 
   const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-    open:      { color: '#059669', bg: '#D1FAE5', label: 'Open' },
-    assigned:  { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Assigned' },
-    in_transit:{ color: '#D97706', bg: '#FEF3C7', label: 'In Transit' },
-    delivered: { color: '#7C3AED', bg: '#EDE9FE', label: 'Delivered' },
-    pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Bid Pending' },
-    accepted:  { color: '#059669', bg: '#D1FAE5', label: 'Bid Accepted' },
-    rejected:  { color: '#DC2626', bg: '#FEF2F2', label: 'Bid Rejected' },
+    open:      { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Open' },
+    assigned:  { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Assigned' },
+    in_transit:{ color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'In Transit' },
+    delivered: { color: '#7C3AED',              bg: '#EDE9FE',                 label: 'Delivered' },
+    pending:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Bid Pending' },
+    accepted:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Bid Accepted' },
+    rejected:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Bid Rejected' },
   };
 
   return (
@@ -74,7 +74,7 @@ export default async function TransporterDeliveriesPage({
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {tabs.map(t => (
           <a key={t} href={`/transporter/deliveries?tab=${t}`}
-            style={{ padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, textDecoration: 'none', textTransform: 'capitalize', background: tab === t ? C.green : '#F3F4F6', color: tab === t ? '#fff' : C.muted }}>
+            style={{ padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, textDecoration: 'none', textTransform: 'capitalize', background: tab === t ? C.green : 'var(--color-surface-2)', color: tab === t ? '#fff' : C.muted }}>
             {t.replace('_', ' ')}
           </a>
         ))}

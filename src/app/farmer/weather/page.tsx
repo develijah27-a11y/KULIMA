@@ -1,4 +1,5 @@
 ﻿import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import { fetchWeatherForDistrict } from '@/lib/weather-server';
 import { DISTRICT_NAMES } from '@/lib/districts';
@@ -21,16 +22,16 @@ const WEATHER_ICON: Record<string, string> = {
 };
 
 const PHASE_COLOR: Record<string, { bg: string; color: string; label: string }> = {
-  planting: { bg: '#D1FAE5', color: '#059669', label: 'Planting Season' },
-  growing:  { bg: 'var(--color-sky-bg)', color: 'var(--color-info)', label: 'Growing Season' },
-  harvest:  { bg: '#FEF3C7', color: '#D97706', label: 'Harvest Season' },
-  dry:      { bg: '#F3F4F6', color: '#6B7280', label: 'Dry Season' },
+  planting: { bg: 'var(--color-success-bg)', color: 'var(--color-success)', label: 'Planting Season' },
+  growing:  { bg: 'var(--color-sky-bg)',     color: 'var(--color-sky)',     label: 'Growing Season' },
+  harvest:  { bg: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', label: 'Harvest Season' },
+  dry:      { bg: 'var(--color-surface-2)',  color: 'var(--color-text-muted)', label: 'Dry Season' },
 };
 
 const URGENCY_COLOR: Record<string, { bg: string; color: string }> = {
-  high:   { bg: '#FEE2E2', color: 'var(--color-danger)' },
-  medium: { bg: '#FEF3C7', color: '#D97706' },
-  low:    { bg: '#F0FDF4', color: '#059669' },
+  high:   { bg: 'var(--color-danger-bg)',  color: 'var(--color-danger)'  },
+  medium: { bg: 'var(--color-warning-bg)', color: 'var(--color-warning)' },
+  low:    { bg: 'var(--color-success-bg)', color: 'var(--color-success)' },
 };
 
 function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -194,9 +195,9 @@ export default async function WeatherPage({
                     );
                   })}
                   {plantingAlerts.length > 3 && (
-                    <a href="/farmer/planting" style={{ fontSize: '12px', fontWeight: 600, color: C.greenMed, textDecoration: 'none', textAlign: 'center', paddingTop: '4px' }}>
+                    <Link href="/farmer/planting" prefetch={true} style={{ fontSize: '12px', fontWeight: 600, color: C.greenMed, textDecoration: 'none', textAlign: 'center', paddingTop: '4px' }}>
                       +{plantingAlerts.length - 3} more alerts →
-                    </a>
+                    </Link>
                   )}
                 </div>
               )}
@@ -291,8 +292,9 @@ export default async function WeatherPage({
                 </div>
               ))}
             </div>
-            <a
+            <Link
               href="/farmer/planting"
+              prefetch={true}
               style={{
                 display: 'inline-block', marginTop: '16px', padding: '8px 16px',
                 background: 'var(--color-primary-muted)', color: 'var(--color-primary)', borderRadius: '8px',
@@ -300,7 +302,7 @@ export default async function WeatherPage({
               }}
             >
               View Full Planting Calendar →
-            </a>
+            </Link>
           </div>
         </Card>
 

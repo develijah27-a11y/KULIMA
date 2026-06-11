@@ -82,7 +82,7 @@ export function WalletActions({ balance }: Props) {
               key={p} type="button" onClick={() => setProvider(p)}
               style={{
                 flex: 1, padding: '8px', borderRadius: 8, border: `2px solid ${provider === p ? C.green : C.border}`,
-                background: provider === p ? '#F0FDF4' : '#fff', fontWeight: 700, fontSize: 12,
+                background: provider === p ? 'var(--color-primary-bg)' : 'var(--d-input-bg)', fontWeight: 700, fontSize: 12,
                 color: provider === p ? C.green : C.muted, cursor: 'pointer', textTransform: 'uppercase',
               }}
             >
@@ -107,15 +107,15 @@ export function WalletActions({ balance }: Props) {
           />
         </div>
 
-        {error && <p style={{ color: '#DC2626', fontSize: 12, margin: 0 }}>{error}</p>}
+        {error && <p style={{ color: 'var(--color-danger)', fontSize: 12, margin: 0 }}>{error}</p>}
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="button" onClick={reset}
-            style={{ flex: 1, padding: '10px', background: '#F3F4F6', color: C.muted, border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            style={{ flex: 1, padding: '10px', background: 'var(--color-surface-2)', color: C.muted, border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
             Cancel
           </button>
           <button type="submit" disabled={loading}
-            style={{ flex: 2, padding: '10px', background: loading ? '#E5E7EB' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer' }}>
+            style={{ flex: 2, padding: '10px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer' }}>
             {loading ? 'Processing...' : isDeposit ? 'Send Payment Prompt' : 'Withdraw Now'}
           </button>
         </div>
@@ -134,7 +134,7 @@ export function WalletActions({ balance }: Props) {
       <button
         onClick={() => setMode('withdraw')}
         disabled={balance <= 0}
-        style={{ flex: 1, padding: '11px', background: balance > 0 ? '#F0FDF4' : '#F3F4F6', color: balance > 0 ? C.greenMed : C.muted, border: `1px solid ${balance > 0 ? '#A7F3D0' : C.border}`, borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: balance > 0 ? 'pointer' : 'not-allowed' }}
+        style={{ flex: 1, padding: '11px', background: balance > 0 ? 'var(--color-primary-bg)' : 'var(--color-surface-2)', color: balance > 0 ? C.greenMed : C.muted, border: `1px solid ${balance > 0 ? 'var(--color-primary-muted)' : C.border}`, borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: balance > 0 ? 'pointer' : 'not-allowed' }}
       >
         Withdraw
       </button>

@@ -18,7 +18,7 @@ const ACTION_COLOR: Record<string, string> = {
   update:  'var(--color-sky)',
   delete:  'var(--color-danger)',
   login:   'var(--color-primary)',
-  logout:  '#6B7280',
+  logout:  'var(--d-muted)',
   approve: 'var(--color-success)',
   reject:  'var(--color-danger)',
   suspend: 'var(--color-warning)',
@@ -84,7 +84,7 @@ export default async function AdminAuditLogsPage({
 
       {/* Logs table */}
       {error ? (
-        <div style={{ background: '#FEF2F2', borderRadius: 12, padding: '16px 18px' }}>
+        <div style={{ background: 'var(--color-danger-bg)', borderRadius: 12, padding: '16px 18px' }}>
           <p style={{ color: C.red, fontSize: 13 }}>Error loading audit logs. The table may not exist yet.</p>
         </div>
       ) : rows.length === 0 ? (

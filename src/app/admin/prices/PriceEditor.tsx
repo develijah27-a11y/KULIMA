@@ -70,22 +70,22 @@ export function PriceEditor({ districts }: Props) {
   }
 
   const inputStyle: React.CSSProperties = {
-    background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: '8px',
-    padding: '7px 10px', fontSize: '13px', color: '#1A1A1A', width: '100%',
+    background: 'var(--d-input-bg)', border: '1.5px solid var(--d-border)', borderRadius: '8px',
+    padding: '7px 10px', fontSize: '13px', color: 'var(--d-text)', width: '100%',
     outline: 'none',
   };
 
   return (
     <div
       style={{
-        background: '#FFFFFF', borderRadius: '12px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
+        background: 'var(--d-card)', borderRadius: '12px',
+        boxShadow: 'var(--d-shadow-card)',
         overflow: 'hidden',
       }}
     >
-      <div style={{ padding: '16px 20px', borderBottom: '1px solid #E5E7EB' }}>
-        <p style={{ fontSize: '14px', fontWeight: 700, color: '#1A1A1A' }}>Add / Update Prices</p>
-        <p style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>
+      <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--d-border)' }}>
+        <p style={{ fontSize: '14px', fontWeight: 700, color: 'var(--d-text)' }}>Add / Update Prices</p>
+        <p style={{ fontSize: '12px', color: 'var(--d-muted)', marginTop: '2px' }}>
           Upload current market prices by district
         </p>
       </div>
@@ -99,7 +99,7 @@ export function PriceEditor({ districts }: Props) {
           }}
         >
           {['Crop', 'District', 'Market Name', 'Price UGX/kg', ''].map((h) => (
-            <p key={h} style={{ fontSize: '11px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <p key={h} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--d-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {h}
             </p>
           ))}
@@ -145,8 +145,8 @@ export function PriceEditor({ districts }: Props) {
                 disabled={entries.length === 1}
                 style={{
                   width: '32px', height: '32px', borderRadius: '8px',
-                  background: entries.length === 1 ? '#F3F4F6' : '#FEE2E2',
-                  color: entries.length === 1 ? '#D1D5DB' : 'var(--color-danger)',
+                  background: entries.length === 1 ? 'var(--color-surface-2)' : 'var(--color-danger-bg)',
+                  color: entries.length === 1 ? 'var(--d-muted)' : 'var(--color-danger)',
                   border: 'none', cursor: entries.length === 1 ? 'not-allowed' : 'pointer',
                   fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
@@ -162,8 +162,8 @@ export function PriceEditor({ districts }: Props) {
             type="button"
             onClick={addRow}
             style={{
-              padding: '7px 14px', background: '#F0FDF4', color: 'var(--color-primary)',
-              border: '1.5px solid #BBF7D0', borderRadius: '8px',
+              padding: '7px 14px', background: 'var(--color-primary-bg)', color: 'var(--color-primary)',
+              border: '1.5px solid var(--color-primary-muted)', borderRadius: '8px',
               fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             }}
           >
@@ -173,7 +173,7 @@ export function PriceEditor({ districts }: Props) {
             type="submit"
             disabled={loading}
             style={{
-              padding: '8px 20px', background: loading ? '#9CA3AF' : 'var(--color-primary)',
+              padding: '8px 20px', background: loading ? 'var(--color-surface-2)' : 'var(--color-primary)',
               color: '#FFFFFF', border: 'none', borderRadius: '8px',
               fontSize: '13px', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
             }}
@@ -184,7 +184,7 @@ export function PriceEditor({ districts }: Props) {
             <p
               style={{
                 fontSize: '13px', fontWeight: 600,
-                color: result.ok ? '#059669' : 'var(--color-danger)',
+                color: result.ok ? 'var(--color-success)' : 'var(--color-danger)',
               }}
             >
               {result.ok ? '✓' : '✗'} {result.msg}

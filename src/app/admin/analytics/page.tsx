@@ -57,7 +57,7 @@ async function UserGrowthChart() {
                 style={{
                   width: '100%', minHeight: 2,
                   height: `${Math.round((count / max) * 88) + 2}px`,
-                  background: count > 0 ? `linear-gradient(180deg, ${C.greenBright}, ${C.greenMed})` : '#F3F4F6',
+                  background: count > 0 ? `linear-gradient(180deg, ${C.greenBright}, ${C.greenMed})` : 'var(--color-surface-2)',
                   borderRadius: '2px 2px 0 0',
                 }}
               />
@@ -121,7 +121,7 @@ async function GmvChart() {
                 style={{
                   width: '100%', minHeight: 2,
                   height: `${Math.round((gmv / max) * 88) + 2}px`,
-                  background: gmv > 0 ? `linear-gradient(180deg, #60A5FA, ${C.blue})` : '#F3F4F6',
+                  background: gmv > 0 ? `linear-gradient(180deg, #60A5FA, ${C.blue})` : 'var(--color-surface-2)',
                   borderRadius: '3px 3px 0 0',
                 }}
               />
@@ -179,7 +179,7 @@ async function CropDemand() {
                   <span className="text-[10px] ml-2" style={{ color: C.muted }}>{d.count} listings</span>
                 </div>
               </div>
-              <div style={{ height: 5, background: '#F3F4F6', borderRadius: 999 }}>
+              <div style={{ height: 5, background: 'var(--color-surface-2)', borderRadius: 999 }}>
                 <div style={{ height: 5, width: `${Math.round((d.totalKg/maxKg)*100)}%`, background: i === 0 ? `linear-gradient(90deg, ${C.greenMed}, ${C.greenBright})` : `linear-gradient(90deg, #60A5FA, #0077B6)`, borderRadius: 999 }} />
               </div>
               <p className="text-[10px] mt-0.5 text-right" style={{ color: C.muted }}>Avg UGX {Math.round(d.avgPrice).toLocaleString()}/kg</p>
@@ -229,7 +229,7 @@ async function PlatformFunnel() {
                 <span className="text-[10px] ml-1" style={{ color: C.muted }}>({pct}%)</span>
               </div>
             </div>
-            <div style={{ height: 8, background: '#F3F4F6', borderRadius: 999 }}>
+            <div style={{ height: 8, background: 'var(--color-surface-2)', borderRadius: 999 }}>
               <div style={{ height: 8, width: `${pct}%`, background: color, borderRadius: 999, transition: 'width 0.5s ease' }} />
             </div>
           </div>

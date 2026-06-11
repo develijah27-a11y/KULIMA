@@ -6,14 +6,14 @@ const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  red: 'var(--color-danger)', amber: '#D97706',
+  red: 'var(--color-danger)', amber: 'var(--color-harvest)',
 };
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Pending' },
-  countered: { color: '#7C3AED', bg: '#EDE9FE', label: 'Countered' },
-  accepted:  { color: '#059669', bg: '#D1FAE5', label: 'Accepted' },
-  rejected:  { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
+  pending:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Pending'   },
+  countered: { color: '#7C3AED',              bg: '#EDE9FE',                label: 'Countered' },
+  accepted:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Accepted'  },
+  rejected:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Rejected'  },
   completed: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Completed' },
 };
 

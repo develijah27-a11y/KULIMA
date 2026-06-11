@@ -1,5 +1,6 @@
 ﻿import { redirect } from 'next/navigation';
 import { getAuthSession } from '@/lib/supabase/auth-cache';
+import { SignOutButton } from './SignOutButton';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -30,12 +31,6 @@ const SECTIONS = [
     items: [
       { label: 'Language', desc: 'English / Luganda / Runyankole', icon: '🌍', href: '#' },
       { label: 'Currency & Units', desc: 'UGX · Hectares · Kilograms', icon: '⚖️', href: '#' },
-    ],
-  },
-  {
-    title: 'Danger Zone',
-    items: [
-      { label: 'Sign Out', desc: 'Log out of your Kulima account', icon: '🚪', href: '/auth/signout', danger: true },
     ],
   },
 ];
@@ -70,7 +65,7 @@ export default async function SettingsPage() {
               >
                 <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: item.danger ? '#DC2626' : C.text, marginBottom: 1 }}>{item.label}</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 1 }}>{item.label}</p>
                   <p style={{ fontSize: 12, color: C.muted }}>{item.desc}</p>
                 </div>
                 <span style={{ color: C.muted, fontSize: 16 }}>›</span>
@@ -79,6 +74,16 @@ export default async function SettingsPage() {
           </div>
         </div>
       ))}
+
+      {/* Danger Zone — Sign Out */}
+      <div>
+        <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+          Danger Zone
+        </p>
+        <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
+          <SignOutButton borderTop={false} />
+        </div>
+      </div>
     </div>
   );
 }

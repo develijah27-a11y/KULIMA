@@ -10,16 +10,16 @@ import {
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: '#D97706', red: 'var(--color-danger)', blue: 'var(--color-sky)',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)',
   cardBg: 'var(--d-card)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 
 const VERDICT_CFG = {
-  highly_profitable: { bg: '#F0FDF4', border: '#34D399', color: '#059669', icon: '🚀', label: 'Highly Profitable' },
-  profitable:        { bg: '#F0FDF4', border: '#86EFAC', color: '#16A34A', icon: '✅', label: 'Profitable' },
-  marginal:          { bg: '#FFFBEB', border: '#FCD34D', color: '#D97706', icon: '⚠️', label: 'Marginal' },
-  loss:              { bg: '#FEF2F2', border: '#FCA5A5', color: '#DC2626', icon: '❌', label: 'Likely a Loss' },
+  highly_profitable: { bg: 'var(--color-primary-bg)',  border: 'var(--color-primary-muted)', color: 'var(--color-success)', icon: '🚀', label: 'Highly Profitable' },
+  profitable:        { bg: 'var(--color-success-bg)',  border: 'var(--color-success)',        color: 'var(--color-success)', icon: '✅', label: 'Profitable'        },
+  marginal:          { bg: 'var(--color-harvest-bg)',  border: 'var(--color-harvest)',        color: 'var(--color-harvest)', icon: '⚠️', label: 'Marginal'          },
+  loss:              { bg: 'var(--color-danger-bg)',   border: 'var(--color-danger)',         color: 'var(--color-danger)',  icon: '❌', label: 'Likely a Loss'     },
 };
 
 const NUM_INPUTS: Record<string, string> = {
@@ -133,7 +133,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
 
   const inp: React.CSSProperties = {
     width: '100%', padding: '8px 12px',
-    background: '#F9FAFB', border: `1.5px solid ${C.border}`, borderRadius: '8px',
+    background: 'var(--d-input-bg)', border: `1.5px solid ${C.border}`, borderRadius: '8px',
     fontSize: '13px', color: C.text, outline: 'none', boxSizing: 'border-box',
   };
 
@@ -147,7 +147,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
 
         {/* ── Crop & Farm Setup ── */}
         <section style={{ background: C.cardBg, borderRadius: '16px', boxShadow: C.shadow, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, background: '#F0FDF4' }}>
+          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-primary-bg)' }}>
             <p style={{ fontSize: '14px', fontWeight: 800, color: C.green }}>🌾 Step 1 — Crop & Farm Setup</p>
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -168,7 +168,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                       style={{
                         padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600,
                         border: `1.5px solid ${cropType === key ? C.green : C.border}`,
-                        background: cropType === key ? '#F0FDF4' : '#FFFFFF',
+                        background: cropType === key ? 'var(--color-primary-bg)' : 'var(--d-input-bg)',
                         color: cropType === key ? C.green : C.muted,
                         cursor: 'pointer',
                       }}
@@ -219,7 +219,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
             </div>
 
             {/* Seed info */}
-            <div style={{ background: '#F8FAF9', borderRadius: '10px', padding: '12px 16px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div style={{ background: 'var(--d-subtle)', borderRadius: '10px', padding: '12px 16px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               {profile.seedRateKgPerHa > 0 ? (
                 <>
                   <div>
@@ -260,7 +260,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                   style={{
                     padding: '8px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
                     border: `1.5px solid ${irrigated ? C.blue : C.border}`,
-                    background: irrigated ? '#EFF6FF' : '#FFFFFF',
+                    background: irrigated ? 'var(--color-sky-bg)' : 'var(--d-input-bg)',
                     color: irrigated ? C.blue : C.muted,
                     cursor: 'pointer',
                   }}
@@ -271,16 +271,16 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
             </div>
 
             {/* Agronomy tip */}
-            <div style={{ background: '#FFFBEB', borderRadius: '10px', padding: '10px 14px', display: 'flex', gap: '8px' }}>
+            <div style={{ background: 'var(--color-harvest-bg)', borderRadius: '10px', padding: '10px 14px', display: 'flex', gap: '8px' }}>
               <span style={{ fontSize: '16px', flexShrink: 0 }}>💡</span>
-              <p style={{ fontSize: '12px', color: '#92400E', lineHeight: '1.5' }}>{profile.agronomy}</p>
+              <p style={{ fontSize: '12px', color: 'var(--color-harvest)', lineHeight: '1.5' }}>{profile.agronomy}</p>
             </div>
           </div>
         </section>
 
         {/* ── Input Costs ── */}
         <section style={{ background: C.cardBg, borderRadius: '16px', boxShadow: C.shadow, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, background: '#EFF6FF' }}>
+          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-sky-bg)' }}>
             <p style={{ fontSize: '14px', fontWeight: 800, color: C.blue }}>💸 Step 2 — Input Costs</p>
             <p style={{ fontSize: '12px', color: C.muted, marginTop: '2px' }}>
               Pre-filled with Uganda averages for {ha} ha · Edit to match your actual costs
@@ -318,7 +318,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                 <button
                   type="button"
                   onClick={() => setCustomCosts(prev => prev.filter((_, idx) => idx !== i))}
-                  style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#FEE2E2', color: C.red, border: 'none', cursor: 'pointer', fontSize: '18px' }}
+                  style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--color-danger-bg)', color: C.red, border: 'none', cursor: 'pointer', fontSize: '18px' }}
                 >×</button>
               </div>
             ))}
@@ -328,8 +328,8 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                 type="button"
                 onClick={() => setCustomCosts(prev => [...prev, { label: '', amount: '' }])}
                 style={{
-                  padding: '7px 14px', background: '#F0FDF4', color: C.green,
-                  border: `1.5px solid #A7F3D0`, borderRadius: '8px',
+                  padding: '7px 14px', background: 'var(--color-primary-bg)', color: C.green,
+                  border: `1.5px solid var(--color-primary-muted)`, borderRadius: '8px',
                   fontSize: '12px', fontWeight: 700, cursor: 'pointer',
                 }}
               >
@@ -344,7 +344,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
 
         {/* ── Market price input ── */}
         <section style={{ background: C.cardBg, borderRadius: '16px', boxShadow: C.shadow, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, background: '#FFFBEB' }}>
+          <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-harvest-bg)' }}>
             <p style={{ fontSize: '14px', fontWeight: 800, color: C.amber }}>📊 Step 3 — Market & Selling Price</p>
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -367,7 +367,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                   {marketPrices[cropType] ? `Live market: UGX ${fmt(marketPrices[cropType])}/kg` : 'Check Prices page for live data'}
                 </p>
               </div>
-              <div style={{ padding: '14px', background: '#F8FAF9', borderRadius: '10px' }}>
+              <div style={{ padding: '14px', background: 'var(--d-subtle)', borderRadius: '10px' }}>
                 <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, marginBottom: '6px' }}>Market Tip</p>
                 <p style={{ fontSize: '12px', color: C.text, lineHeight: '1.5' }}>{profile.marketPriceTip}</p>
               </div>

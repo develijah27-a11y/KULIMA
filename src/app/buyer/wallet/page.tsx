@@ -10,13 +10,13 @@ const C = {
 };
 
 const TXN_TYPE_CFG: Record<string, { label: string; color: string; sign: '+' | '-' }> = {
-  deposit:         { label: 'Deposit',          color: '#059669', sign: '+' },
-  withdrawal:      { label: 'Withdrawal',        color: '#DC2626', sign: '-' },
-  escrow_lock:     { label: 'Escrow Funded',     color: '#D97706', sign: '-' },
-  escrow_release:  { label: 'Escrow Released',   color: '#6B7280', sign: '-' },
-  escrow_refund:   { label: 'Escrow Refund',     color: '#059669', sign: '+' },
-  transfer_in:     { label: 'Transfer In',       color: '#059669', sign: '+' },
-  transfer_out:    { label: 'Transfer Out',      color: '#DC2626', sign: '-' },
+  deposit:         { label: 'Deposit',          color: 'var(--color-success)', sign: '+' },
+  withdrawal:      { label: 'Withdrawal',        color: 'var(--color-danger)',  sign: '-' },
+  escrow_lock:     { label: 'Escrow Funded',     color: 'var(--color-harvest)', sign: '-' },
+  escrow_release:  { label: 'Escrow Released',   color: 'var(--d-muted)',       sign: '-' },
+  escrow_refund:   { label: 'Escrow Refund',     color: 'var(--color-success)', sign: '+' },
+  transfer_in:     { label: 'Transfer In',       color: 'var(--color-success)', sign: '+' },
+  transfer_out:    { label: 'Transfer Out',      color: 'var(--color-danger)',  sign: '-' },
 };
 
 function fmtDate(iso: string) {
@@ -105,7 +105,7 @@ export default async function BuyerWalletPage() {
       {/* Unfunded accepted deals */}
       {unfundedDeals.length > 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 20 }}>
-          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#D97706' }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-harvest)' }}>
             Action Required
           </p>
           <p className="text-sm font-bold mb-3" style={{ color: C.text }}>Fund Escrow for Accepted Deals</p>
@@ -119,13 +119,13 @@ export default async function BuyerWalletPage() {
               const price   = o.counter_price ?? o.offered_price;
               const total   = Math.round(price * qty);
               return (
-                <div key={o.id} style={{ padding: '14px', background: '#FFFBEB', borderRadius: 10, border: '1px solid #FDE68A' }}>
+                <div key={o.id} style={{ padding: '14px', background: 'var(--color-harvest-bg)', borderRadius: 10, border: '1px solid var(--color-warning-border)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                     <div>
                       <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, textTransform: 'capitalize' }}>{crop}</p>
                       <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{qty} kg · UGX {Math.round(price).toLocaleString()}/kg</p>
                     </div>
-                    <p style={{ fontSize: 15, fontWeight: 800, color: '#D97706', margin: 0 }}>
+                    <p style={{ fontSize: 15, fontWeight: 800, color: 'var(--color-harvest)', margin: 0 }}>
                       UGX {total.toLocaleString()}
                     </p>
                   </div>
@@ -153,12 +153,12 @@ export default async function BuyerWalletPage() {
               const crop = e.offer?.listing?.crop_type ?? 'Crop';
               const qty  = e.offer?.listing?.quantity_kg ?? 0;
               return (
-                <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#EFF6FF', borderRadius: 10, border: '1px solid #BFDBFE' }}>
+                <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: 'var(--color-sky-bg)', borderRadius: 10, border: '1px solid var(--color-sky)' }}>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0, textTransform: 'capitalize' }}>{crop} · {qty} kg</p>
-                    <p style={{ fontSize: 11, color: '#0284C7', margin: '2px 0 0', fontWeight: 600 }}>Secured — awaiting delivery</p>
+                    <p style={{ fontSize: 11, color: 'var(--color-sky)', margin: '2px 0 0', fontWeight: 600 }}>Secured — awaiting delivery</p>
                   </div>
-                  <p style={{ fontSize: 14, fontWeight: 800, color: '#0284C7', margin: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-sky)', margin: 0 }}>
                     UGX {Math.round(e.amount).toLocaleString()}
                   </p>
                 </div>
@@ -188,10 +188,10 @@ export default async function BuyerWalletPage() {
               return (
                 <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 20px', borderBottom: `1px solid ${C.border}` }}>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: failed ? '#DC2626' : C.text, margin: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: failed ? 'var(--color-danger)' : C.text, margin: 0 }}>
                       {cfg.label}
-                      {pending && <span style={{ fontSize: 10, color: '#D97706', fontWeight: 700, marginLeft: 6 }}>PENDING</span>}
-                      {failed  && <span style={{ fontSize: 10, color: '#DC2626', fontWeight: 700, marginLeft: 6 }}>FAILED</span>}
+                      {pending && <span style={{ fontSize: 10, color: 'var(--color-harvest)', fontWeight: 700, marginLeft: 6 }}>PENDING</span>}
+                      {failed  && <span style={{ fontSize: 10, color: 'var(--color-danger)', fontWeight: 700, marginLeft: 6 }}>FAILED</span>}
                     </p>
                     {t.description && <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{t.description}</p>}
                     <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>{fmtDate(t.created_at)}</p>

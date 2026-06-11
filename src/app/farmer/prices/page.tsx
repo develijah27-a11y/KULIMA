@@ -229,7 +229,7 @@ async function UgandaLocalPrices({
             </select>
           </div>
           <button type="submit" style={{ padding: '8px 18px', background: C.green, color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Filter</button>
-          {(district || cropFilter) && <a href="/farmer/prices?tab=uganda" style={{ padding: '8px 14px', background: '#F3F4F6', color: C.muted, borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Clear</a>}
+          {(district || cropFilter) && <Link href="/farmer/prices?tab=uganda" style={{ padding: '8px 14px', background: 'var(--color-surface-2)', color: C.muted, borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>Clear</Link>}
         </form>
       </div>
 

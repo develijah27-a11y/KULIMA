@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import {
   LayoutDashboard, ShoppingBag, TrendingUp, Cloud, Microscope, Leaf, User,
   ShoppingCart, MessageSquare, Package, Users, Bell, UserCheck, BarChart3,
@@ -10,7 +11,7 @@ import {
   Navigation, Thermometer, Stethoscope, AlertCircle, ClipboardCheck,
   CheckSquare, AlertTriangle, GitMerge, Star, PieChart, Shield,
   AlertOctagon, MessageCircle, Receipt, UserPlus, CalendarDays, HardHat,
-  Map, Users2, Truck, CheckCircle2, DollarSign, LineChart,
+  Map, Users2, Truck, CheckCircle2, DollarSign, LineChart, LogOut,
 } from 'lucide-react';
 
 type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
@@ -98,6 +99,12 @@ const DASHBOARD_ROOTS = [
 
 export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
   const pathname = usePathname();
+
+  async function handleSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = '/auth/signin';
+  }
 
   return (
     <aside
@@ -228,7 +235,14 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
                 {profile.role}
               </p>
             </div>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'rgba(255,255,255,0.5)', flexShrink: 0 }} />
+            <button
+              onClick={handleSignOut}
+              title="Sign out"
+              className="shrink-0 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10 active:scale-95"
+              style={{ width: 28, height: 28, color: 'rgba(255,255,255,0.5)', minHeight: 'unset', minWidth: 'unset' }}
+            >
+              <LogOut size={13} />
+            </button>
           </div>
         </div>
       )}

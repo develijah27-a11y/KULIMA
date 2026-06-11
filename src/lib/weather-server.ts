@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { unstable_cache } from 'next/cache';
 import { getDistrict, getDefaultDistrict } from '@/lib/districts';
 
 export interface WeatherNow {
@@ -231,41 +231,23 @@ function ugandaFallbackWeather(district = 'Kampala'): ServerWeatherData {
   };
 }
 
+// Cache weather per location for 30 minutes using Next.js data cache.
+// This is faster than a Supabase roundtrip — data lives in the Node.js
+// process memory and survives across requests within the same deployment.
+const fetchWeatherCached = unstable_cache(
+  async (lat: number, lon: number): Promise<ServerWeatherData> => {
+    const apiKey = process.env.OPENWEATHER_API_KEY;
+    let data: ServerWeatherData | null = null;
+    if (apiKey) data = await fetchOpenWeatherMap(lat, lon, apiKey);
+    if (!data)  data = await fetchOpenMeteo(lat, lon);
+    return data ?? ugandaFallbackWeather();
+  },
+  ['weather-location'],
+  { revalidate: 1800, tags: ['weather'] }
+);
+
 export async function fetchWeatherForFarmer(lat: number, lon: number): Promise<ServerWeatherData> {
-  const supabase = await createClient();
-  const locKey = `${lat.toFixed(2)},${lon.toFixed(2)}`;
-
-  const { data: cached } = await supabase
-    .from('weather_cache')
-    .select('*')
-    .eq('location_key', locKey)
-    .gte('cached_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
-    .single();
-
-  if (cached?.data) return cached.data as unknown as ServerWeatherData;
-
-  const apiKey = process.env.OPENWEATHER_API_KEY;
-
-  let data: ServerWeatherData | null = null;
-
-  // Try OpenWeatherMap first if key exists, then Open-Meteo (free)
-  if (apiKey) {
-    data = await fetchOpenWeatherMap(lat, lon, apiKey);
-  }
-  if (!data) {
-    data = await fetchOpenMeteo(lat, lon);
-  }
-  if (!data) {
-    return ugandaFallbackWeather();
-  }
-
-  await supabase.from('weather_cache').upsert({
-    location_key: locKey,
-    data: data as any,
-    cached_at: new Date().toISOString(),
-  });
-
-  return data;
+  return fetchWeatherCached(lat, lon);
 }
 
 export async function fetchWeatherForDistrict(districtName: string): Promise<ServerWeatherData> {

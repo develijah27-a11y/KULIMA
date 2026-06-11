@@ -1,7 +1,7 @@
 export function initTheme() {
   const saved = localStorage.getItem('kulima-theme');
-  const sysDark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const isDark = saved ? saved === 'dark' : sysDark;
+  // Default to light unless the user explicitly chose dark
+  const isDark = saved === 'dark';
   document.documentElement.classList.toggle('dark', isDark);
 }
 

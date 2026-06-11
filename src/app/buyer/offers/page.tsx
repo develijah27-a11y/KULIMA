@@ -9,11 +9,11 @@ const C = {
 };
 
 const STATUS_CFG = {
-  pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Pending Review' },
-  countered: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Farmer Countered' },
-  accepted:  { color: '#059669', bg: '#D1FAE5', label: 'Accepted' },
-  rejected:  { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
-  completed: { color: '#7C3AED', bg: '#EDE9FE', label: 'Completed' },
+  pending:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Pending Review' },
+  countered: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Farmer Countered' },
+  accepted:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Accepted' },
+  rejected:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Rejected' },
+  completed: { color: '#7C3AED',              bg: '#EDE9FE',                 label: 'Completed' },
 } as const;
 
 const CROP_EMOJI: Record<string, string> = {
@@ -75,13 +75,13 @@ export default async function BuyerOffersPage({
 
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div style={{ background: '#FEF3C7', borderRadius: 12, padding: '14px 16px' }}>
-          <p className="text-2xl font-black" style={{ color: '#D97706', letterSpacing: '-0.03em' }}>{stats.active}</p>
-          <p className="text-xs font-semibold mt-0.5" style={{ color: '#D97706' }}>Active Negotiations</p>
+        <div style={{ background: 'var(--color-harvest-bg)', borderRadius: 12, padding: '14px 16px' }}>
+          <p className="text-2xl font-black" style={{ color: 'var(--color-harvest)', letterSpacing: '-0.03em' }}>{stats.active}</p>
+          <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--color-harvest)' }}>Active Negotiations</p>
         </div>
-        <div style={{ background: '#D1FAE5', borderRadius: 12, padding: '14px 16px' }}>
-          <p className="text-2xl font-black" style={{ color: '#059669', letterSpacing: '-0.03em' }}>{stats.accepted}</p>
-          <p className="text-xs font-semibold mt-0.5" style={{ color: '#059669' }}>Accepted Deals</p>
+        <div style={{ background: 'var(--color-success-bg)', borderRadius: 12, padding: '14px 16px' }}>
+          <p className="text-2xl font-black" style={{ color: 'var(--color-success)', letterSpacing: '-0.03em' }}>{stats.accepted}</p>
+          <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--color-success)' }}>Accepted Deals</p>
         </div>
       </div>
 
@@ -94,7 +94,7 @@ export default async function BuyerOffersPage({
             style={{
               padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600,
               textDecoration: 'none', textTransform: 'capitalize',
-              background: tab === t ? C.green : '#F3F4F6',
+              background: tab === t ? C.green : 'var(--color-surface-2)',
               color: tab === t ? '#fff' : C.muted,
             }}
           >
@@ -151,8 +151,8 @@ export default async function BuyerOffersPage({
                         </div>
                         {offer.counter_price && (
                           <div>
-                            <p style={{ fontSize: 9, color: '#0284C7', fontWeight: 600, textTransform: 'uppercase', margin: 0 }}>Counter</p>
-                            <p style={{ fontSize: 14, fontWeight: 800, color: '#0284C7', margin: 0, letterSpacing: '-0.01em' }}>
+                            <p style={{ fontSize: 9, color: 'var(--color-sky)', fontWeight: 600, textTransform: 'uppercase', margin: 0 }}>Counter</p>
+                            <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-sky)', margin: 0, letterSpacing: '-0.01em' }}>
                               UGX {Math.round(offer.counter_price).toLocaleString()}
                             </p>
                           </div>
@@ -167,7 +167,7 @@ export default async function BuyerOffersPage({
                         <div style={{ marginTop: 10 }}>
                           <Link
                             href={`/buyer/listings/${listing.id}`}
-                            style={{ display: 'inline-block', padding: '7px 14px', background: 'var(--color-sky-bg)', color: '#0284C7', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}
+                            style={{ display: 'inline-block', padding: '7px 14px', background: 'var(--color-sky-bg)', color: 'var(--color-sky)', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}
                           >
                             Review Counter Offer →
                           </Link>

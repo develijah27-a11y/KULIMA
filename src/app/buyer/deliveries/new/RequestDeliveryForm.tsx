@@ -62,8 +62,8 @@ export function RequestDeliveryForm({ prefilledOffer }: Props) {
   return (
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       {prefilledOffer && (
-        <div style={{ padding: '12px 14px', background: '#F0FDF4', borderRadius: 10, border: '1px solid #A7F3D0' }}>
-          <p style={{ fontSize: 12, fontWeight: 600, color: '#059669', margin: 0 }}>
+        <div style={{ padding: '12px 14px', background: 'var(--color-primary-bg)', borderRadius: 10, border: '1px solid var(--color-primary-muted)' }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success)', margin: 0 }}>
             ✓ Linked to accepted deal: {prefilledOffer.crop_type} · {prefilledOffer.quantity_kg} kg
           </p>
         </div>
@@ -73,7 +73,7 @@ export function RequestDeliveryForm({ prefilledOffer }: Props) {
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Pickup District *</label>
           <select value={pickupDistrict} onChange={e => setPickupDistrict(e.target.value)}
-            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: pickupDistrict ? C.text : C.muted, background: '#fff' }}>
+            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: pickupDistrict ? C.text : C.muted, background: 'var(--d-input-bg)' }}>
             <option value="">Select...</option>
             {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
@@ -81,7 +81,7 @@ export function RequestDeliveryForm({ prefilledOffer }: Props) {
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Dropoff District *</label>
           <select value={dropoffDistrict} onChange={e => setDropoffDistrict(e.target.value)}
-            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: dropoffDistrict ? C.text : C.muted, background: '#fff' }}>
+            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: dropoffDistrict ? C.text : C.muted, background: 'var(--d-input-bg)' }}>
             <option value="">Select...</option>
             {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
@@ -128,10 +128,10 @@ export function RequestDeliveryForm({ prefilledOffer }: Props) {
           rows={2} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
       </div>
 
-      {error && <p style={{ color: '#DC2626', fontSize: 13 }}>⚠ {error}</p>}
+      {error && <p style={{ color: 'var(--color-danger)', fontSize: 13 }}>⚠ {error}</p>}
 
       <button type="submit" disabled={loading}
-        style={{ padding: '13px', background: loading ? '#E5E7EB' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}>
+        style={{ padding: '13px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}>
         {loading ? 'Posting...' : 'Post Delivery Request →'}
       </button>
     </form>

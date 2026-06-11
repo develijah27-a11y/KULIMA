@@ -43,7 +43,7 @@ export default async function FarmerFarmPage() {
         <div style={{ display: 'flex', gap: 8 }}>
           <Link
             href="/farmer/farm/workers"
-            style={{ padding: '9px 18px', background: '#F0FDF4', border: '1.5px solid #A7F3D0', color: C.greenMed, borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+            style={{ padding: '9px 18px', background: 'var(--color-primary-bg)', border: '1.5px solid var(--color-primary-muted)', color: C.greenMed, borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
           >
             👷 Workers
           </Link>
@@ -78,7 +78,7 @@ export default async function FarmerFarmPage() {
           <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p className="text-sm font-bold" style={{ color: C.text }}>Farm Map</p>
             {farmsWithBoundary < farmList.length && (
-              <p style={{ fontSize: 11, color: '#D97706', fontWeight: 600 }}>
+              <p style={{ fontSize: 11, color: 'var(--color-harvest)', fontWeight: 600 }}>
                 {farmList.length - farmsWithBoundary} farm{farmList.length - farmsWithBoundary > 1 ? 's' : ''} without boundary — map them below
               </p>
             )}
@@ -111,19 +111,19 @@ export default async function FarmerFarmPage() {
               const crops = (farm.crop_types ?? []) as string[];
               return (
                 <div key={farm.id} style={{ padding: '16px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
                     🌿
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                       <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>{farm.name}</p>
                       {!farm.boundary && (
-                        <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#FEF3C7', color: '#D97706' }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-harvest-bg)', color: 'var(--color-harvest)' }}>
                           NO BOUNDARY
                         </span>
                       )}
                       {farm.boundary && (
-                        <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: '#D1FAE5', color: '#059669' }}>
+                        <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-success-bg)', color: 'var(--color-success)' }}>
                           MAPPED
                         </span>
                       )}
@@ -134,7 +134,7 @@ export default async function FarmerFarmPage() {
                     {crops.length > 0 && (
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                         {crops.slice(0, 4).map((c: string) => (
-                          <span key={c} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 999, background: '#F0FDF4', color: C.greenMed, fontWeight: 600 }}>
+                          <span key={c} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, fontWeight: 600 }}>
                             {CROP_EMOJI[c] ?? '🌾'} {c.replace(/_/g, ' ')}
                           </span>
                         ))}

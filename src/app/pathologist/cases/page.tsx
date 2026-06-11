@@ -5,22 +5,22 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
-  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', red: 'var(--color-danger)', amber: '#D97706',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', red: 'var(--color-danger)', amber: 'var(--color-harvest)',
 };
 
 const SEV_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  low:      { color: '#059669', bg: '#D1FAE5', label: 'Low' },
-  medium:   { color: '#D97706', bg: '#FEF3C7', label: 'Medium' },
-  high:     { color: '#DC2626', bg: '#FEE2E2', label: 'High' },
-  critical: { color: '#7F1D1D', bg: '#FEE2E2', label: 'Critical' },
-  unknown:  { color: '#6B7280', bg: '#F3F4F6', label: 'Unknown' },
+  low:      { color: 'var(--color-success)', bg: 'var(--color-success-bg)',  label: 'Low' },
+  medium:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Medium' },
+  high:     { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'High' },
+  critical: { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Critical' },
+  unknown:  { color: 'var(--d-muted)',        bg: 'var(--color-surface-2)',  label: 'Unknown' },
 };
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  open:      { color: '#DC2626', bg: '#FEE2E2', label: 'Open' },
-  assigned:  { color: '#D97706', bg: '#FEF3C7', label: 'Assigned' },
-  diagnosed: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Diagnosed' },
-  closed:    { color: '#059669', bg: '#D1FAE5', label: 'Closed' },
+  open:      { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Open' },
+  assigned:  { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Assigned' },
+  diagnosed: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Diagnosed' },
+  closed:    { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Closed' },
 };
 
 const CROP_EMOJI: Record<string, string> = {
@@ -89,7 +89,7 @@ export default async function PathologistCasesPage({
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>{rows.length} cases · {counts.open} open · {counts.critical} high/critical</p>
         </div>
         {counts.open > 0 && (
-          <div style={{ padding: '6px 14px', borderRadius: 10, background: '#FEE2E2' }}>
+          <div style={{ padding: '6px 14px', borderRadius: 10, background: 'var(--color-danger-bg)' }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: C.red, margin: 0 }}>⚠ {counts.open} pending triage</p>
           </div>
         )}
@@ -135,7 +135,7 @@ export default async function PathologistCasesPage({
 
       {/* Case list */}
       {error ? (
-        <div style={{ background: '#FEF2F2', borderRadius: 12, padding: '16px 18px' }}>
+        <div style={{ background: 'var(--color-danger-bg)', borderRadius: 12, padding: '16px 18px' }}>
           <p style={{ color: C.red, fontSize: 13 }}>Error loading disease reports: {String(error)}</p>
         </div>
       ) : rows.length === 0 ? (
@@ -168,7 +168,7 @@ export default async function PathologistCasesPage({
                     </p>
                     <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: sev.bg, color: sev.color }}>{sev.label}</span>
                     <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: st.bg, color: st.color }}>{st.label}</span>
-                    {isAssignedToMe && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: '#D1FAE5', color: '#059669' }}>Mine</span>}
+                    {isAssignedToMe && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--color-success-bg)', color: 'var(--color-success)' }}>Mine</span>}
                   </div>
                   <p style={{ fontSize: 12, color: C.muted, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {c.symptoms ?? 'No symptoms described'}

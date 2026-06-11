@@ -76,11 +76,11 @@ async function PathologistStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Triage Case', href: '/pathologist/case-queue', emoji: '🩺', bg: '#FEF2F2', color: C.red },
-    { label: 'File Report', href: '/pathologist/my-cases/new', emoji: '📝', bg: '#EFF6FF', color: C.blue },
+    { label: 'Triage Case', href: '/pathologist/case-queue', emoji: '🩺', bg: 'var(--color-danger-bg)', color: C.red },
+    { label: 'File Report', href: '/pathologist/my-cases/new', emoji: '📝', bg: 'var(--color-sky-bg)', color: C.blue },
     { label: 'Disease Library', href: '/pathologist/disease-alerts', emoji: '📚', bg: '#F5F3FF', color: C.purple },
-    { label: 'Outbreak Map', href: '/pathologist/geo-map', emoji: '🗺️', bg: '#FFFBEB', color: '#D97706' },
-    { label: 'My Cases', href: '/pathologist/my-cases', emoji: '📁', bg: '#F0FDF4', color: C.green },
+    { label: 'Outbreak Map', href: '/pathologist/geo-map', emoji: '🗺️', bg: 'var(--color-harvest-bg)', color: C.amber },
+    { label: 'My Cases', href: '/pathologist/my-cases', emoji: '📁', bg: 'var(--color-primary-bg)', color: C.green },
   ];
 
   return (
@@ -115,9 +115,9 @@ async function CaseQueue() {
   const rows = error ? [] : (cases ?? []);
 
   const URGENCY: Record<string, { label: string; color: string; bg: string; border: string }> = {
-    high:   { label: 'URGENT', color: C.red, bg: '#FEE2E2', border: '#FECACA' },
-    medium: { label: 'MEDIUM', color: '#D97706', bg: '#FEF3C7', border: '#FDE68A' },
-    low:    { label: 'LOW',    color: '#059669', bg: '#D1FAE5', border: '#BBF7D0' },
+    high:   { label: 'URGENT', color: C.red,                   bg: 'var(--color-danger-bg)',  border: 'var(--color-danger)'  },
+    medium: { label: 'MEDIUM', color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)', border: 'var(--color-harvest)' },
+    low:    { label: 'LOW',    color: 'var(--color-success)',  bg: 'var(--color-success-bg)', border: 'var(--color-success)' },
   };
 
   const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾' };
@@ -186,9 +186,9 @@ function DiseaseAlertPanel() {
   ].filter(a => a.months.includes(month));
 
   const RISK: Record<string, { color: string; bg: string }> = {
-    high:   { color: C.red, bg: '#FEE2E2' },
-    medium: { color: '#D97706', bg: '#FEF3C7' },
-    low:    { color: '#059669', bg: '#D1FAE5' },
+    high:   { color: C.red,                  bg: 'var(--color-danger-bg)'  },
+    medium: { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+    low:    { color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
   };
 
   return (
@@ -254,11 +254,11 @@ async function RecentScans() {
         <div className="divide-y" style={{ borderColor: C.border }}>
           {rows.map((s: any) => {
             const conf = s.confidence_score ?? 0;
-            const color = conf >= 80 ? C.red : conf >= 50 ? '#D97706' : '#059669';
+            const color = conf >= 80 ? C.red : conf >= 50 ? 'var(--color-harvest)' : 'var(--color-success)';
             return (
               <div key={s.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: '#F5F3FF' }}>🔬</div>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-surface-2)' }}>🔬</div>
                   <div>
                     <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>{s.crop_type} — {s.disease_detected ?? 'Pending review'}</p>
                     <p className="text-[11px]" style={{ color: C.muted }}>{timeAgo(s.created_at)}</p>
@@ -289,8 +289,8 @@ function OutbreakSummary() {
   ].filter(h => h.active);
 
   const SEVERITY: Record<string, { color: string; bg: string }> = {
-    high:   { color: C.red, bg: '#FEE2E2' },
-    medium: { color: '#D97706', bg: '#FEF3C7' },
+    high:   { color: C.red,                  bg: 'var(--color-danger-bg)'  },
+    medium: { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   };
 
   return (

@@ -11,9 +11,9 @@ const C = {
 };
 
 const STATUS_CFG = {
-  pending:  { color: '#D97706', bg: '#FEF3C7', label: 'Pending' },
-  approved: { color: '#059669', bg: '#D1FAE5', label: 'Approved' },
-  rejected: { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
+  pending:  { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Pending' },
+  approved: { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Approved' },
+  rejected: { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Rejected' },
 };
 
 async function VerificationQueue({ filter }: { filter: string }) {
@@ -64,7 +64,7 @@ async function VerificationQueue({ filter }: { filter: string }) {
                 {profile.phone_number ?? '—'} · {profile.location ?? '—'} · {v.role} · submitted {timeAgo(v.submitted_at)}
               </p>
               {v.rejection_reason && (
-                <p className="text-xs mt-1" style={{ color: '#DC2626' }}>Rejected: {v.rejection_reason}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>Rejected: {v.rejection_reason}</p>
               )}
             </div>
             {v.status === 'pending' && (
@@ -85,9 +85,9 @@ async function QueueStats() {
     (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
   ]);
   const stats = [
-    { label: 'Pending Review', value: pendingRes.count ?? 0, color: '#D97706', bg: '#FEF3C7' },
-    { label: 'Approved',       value: approvedRes.count ?? 0, color: '#059669', bg: '#D1FAE5' },
-    { label: 'Rejected',       value: rejectedRes.count ?? 0, color: '#DC2626', bg: '#FEF2F2' },
+    { label: 'Pending Review', value: pendingRes.count ?? 0, color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+    { label: 'Approved',       value: approvedRes.count ?? 0, color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+    { label: 'Rejected',       value: rejectedRes.count ?? 0, color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)' },
   ];
   return (
     <div className="grid grid-cols-3 gap-4">
@@ -137,7 +137,7 @@ export default async function AdminVerificationPage({
               style={{
                 padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600,
                 textDecoration: 'none', textTransform: 'capitalize',
-                background: filter === f ? C.green : '#F3F4F6',
+                background: filter === f ? C.green : 'var(--color-surface-2)',
                 color: filter === f ? '#fff' : C.muted,
               }}
             >

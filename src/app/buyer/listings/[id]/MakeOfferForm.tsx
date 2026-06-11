@@ -77,10 +77,10 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
   // Existing offer states
   if (existingOffer) {
     const OFFER_CFG: Record<string, { color: string; bg: string; label: string }> = {
-      pending:   { color: '#D97706', bg: '#FEF3C7', label: 'Under Review' },
-      countered: { color: '#0284C7', bg: 'var(--color-sky-bg)', label: 'Farmer Countered' },
-      accepted:  { color: '#059669', bg: '#D1FAE5', label: 'Accepted!' },
-      rejected:  { color: '#DC2626', bg: '#FEF2F2', label: 'Rejected' },
+      pending:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Under Review' },
+      countered: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Farmer Countered' },
+      accepted:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Accepted!' },
+      rejected:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Rejected' },
     };
     const cfg = OFFER_CFG[existingOffer.status] ?? OFFER_CFG.pending;
 
@@ -98,7 +98,7 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
             <p style={{ fontSize: 13, color: C.muted, marginBottom: 8 }}>
               Farmer proposes: <strong style={{ color: C.text }}>UGX {Math.round(existingOffer.counter_price).toLocaleString()}/kg</strong>
             </p>
-            {error && <p style={{ color: '#DC2626', fontSize: 12, marginBottom: 8 }}>{error}</p>}
+            {error && <p style={{ color: 'var(--color-danger)', fontSize: 12, marginBottom: 8 }}>{error}</p>}
             <div style={{ display: 'flex', gap: 8 }}>
               <button
                 onClick={acceptCounter}
@@ -108,7 +108,7 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
                 {acceptingCounter ? '...' : `✓ Accept UGX ${Math.round(existingOffer.counter_price).toLocaleString()}`}
               </button>
               <button
-                style={{ padding: '10px 14px', background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+                style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger-bg)', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
               >
                 Decline
               </button>
@@ -123,16 +123,16 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
     <form onSubmit={submitOffer} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* Price context */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 4 }}>
-        <div style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 14px' }}>
+        <div style={{ background: 'var(--color-surface-2)', borderRadius: 10, padding: '10px 14px' }}>
           <p style={{ fontSize: 10, color: C.muted, fontWeight: 600, margin: '0 0 2px', textTransform: 'uppercase' }}>Asking Price</p>
           <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-0.02em' }}>
             UGX {askingPrice.toLocaleString()}
           </p>
         </div>
         {marketPrice && (
-          <div style={{ background: '#F0FDF4', borderRadius: 10, padding: '10px 14px' }}>
-            <p style={{ fontSize: 10, color: '#059669', fontWeight: 600, margin: '0 0 2px', textTransform: 'uppercase' }}>Market Avg</p>
-            <p style={{ fontSize: 16, fontWeight: 800, color: '#059669', margin: 0, letterSpacing: '-0.02em' }}>
+          <div style={{ background: 'var(--color-primary-bg)', borderRadius: 10, padding: '10px 14px' }}>
+            <p style={{ fontSize: 10, color: 'var(--color-success)', fontWeight: 600, margin: '0 0 2px', textTransform: 'uppercase' }}>Market Avg</p>
+            <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-success)', margin: 0, letterSpacing: '-0.02em' }}>
               UGX {marketPrice.toLocaleString()}
             </p>
           </div>
@@ -151,17 +151,17 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
           required
           style={{
             width: '100%', padding: '12px 14px', borderRadius: 10, fontSize: 15, fontWeight: 600,
-            border: `2px solid ${below70 ? '#FECACA' : price && !below70 ? '#A7F3D0' : C.border}`,
+            border: `2px solid ${below70 ? 'var(--color-danger-bg)' : price && !below70 ? 'var(--color-primary-muted)' : C.border}`,
             color: C.text, outline: 'none', boxSizing: 'border-box', letterSpacing: '-0.01em',
           }}
         />
         {price && delta !== null && !below70 && (
-          <p style={{ fontSize: 11, marginTop: 4, color: delta >= 0 ? '#059669' : '#D97706', fontWeight: 600 }}>
+          <p style={{ fontSize: 11, marginTop: 4, color: delta >= 0 ? 'var(--color-success)' : 'var(--color-harvest)', fontWeight: 600 }}>
             {delta >= 0 ? `✓ +${delta}% above asking` : `${delta}% below asking — fair offer`}
           </p>
         )}
         {below70 && (
-          <p style={{ fontSize: 11, marginTop: 4, color: '#DC2626', fontWeight: 600 }}>
+          <p style={{ fontSize: 11, marginTop: 4, color: 'var(--color-danger)', fontWeight: 600 }}>
             ⚠ Below minimum — must be at least UGX {minAllowed.toLocaleString()}
           </p>
         )}
@@ -181,8 +181,8 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
       </div>
 
       {error && (
-        <div style={{ padding: '10px 14px', background: '#FEF2F2', borderRadius: 10, border: '1px solid #FECACA' }}>
-          <p style={{ color: '#DC2626', fontSize: 13, margin: 0 }}>⚠ {error}</p>
+        <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, border: '1px solid var(--color-danger-bg)' }}>
+          <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>⚠ {error}</p>
         </div>
       )}
 
@@ -190,7 +190,7 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
         type="submit"
         disabled={loading || !!below70}
         style={{
-          padding: '13px', background: (loading || below70) ? '#E5E7EB' : C.green,
+          padding: '13px', background: (loading || below70) ? 'var(--color-surface-2)' : C.green,
           color: (loading || below70) ? C.muted : '#fff',
           border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15,
           cursor: (loading || below70) ? 'not-allowed' : 'pointer',

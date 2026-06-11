@@ -19,18 +19,18 @@ const CROPS = [
 const PARTS = ['Leaf', 'Stem', 'Root', 'Fruit / Pod', 'Whole Plant', 'Soil'];
 
 const SEVERITY_CFG = {
-  high:   { label: 'HIGH SEVERITY',   bg: '#FEE2E2', color: '#DC2626', dot: '#DC2626' },
-  medium: { label: 'MEDIUM SEVERITY', bg: '#FEF3C7', color: '#D97706', dot: '#D97706' },
-  low:    { label: 'LOW SEVERITY',    bg: '#D1FAE5', color: '#059669', dot: '#059669' },
+  high:   { label: 'HIGH SEVERITY',   bg: 'var(--color-danger-bg)',  color: 'var(--color-danger)',  dot: 'var(--color-danger)'  },
+  medium: { label: 'MEDIUM SEVERITY', bg: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', dot: 'var(--color-harvest)' },
+  low:    { label: 'LOW SEVERITY',    bg: 'var(--color-success-bg)', color: 'var(--color-success)', dot: 'var(--color-success)' },
 };
 
 const COMMON_DISEASES = [
-  { name: 'Fall Armyworm',     crop: 'Maize',    icon: '🐛', color: 'var(--color-danger)', bg: '#FEF2F2' },
-  { name: 'Northern Leaf Blight', crop: 'Maize', icon: '🍂', color: '#D97706', bg: '#FFFBEB' },
-  { name: 'Bacterial Wilt',    crop: 'Tomato',   icon: '🥀', color: '#7C3AED', bg: '#F5F3FF' },
-  { name: 'Mosaic Virus',      crop: 'Cassava',  icon: '🟡', color: '#0284C7', bg: '#EFF6FF' },
-  { name: 'Coffee Berry Disease', crop: 'Coffee',icon: '☕', color: '#92400E', bg: '#FEF3C7' },
-  { name: 'Bean Anthracnose',  crop: 'Beans',    icon: '🫘', color: '#059669', bg: '#F0FDF4' },
+  { name: 'Fall Armyworm',     crop: 'Maize',    icon: '🐛', color: 'var(--color-danger)', bg: 'var(--color-danger-bg)' },
+  { name: 'Northern Leaf Blight',  crop: 'Maize',   icon: '🍂', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { name: 'Bacterial Wilt',        crop: 'Tomato',  icon: '🥀', color: '#7C3AED',              bg: '#F5F3FF'                 },
+  { name: 'Mosaic Virus',          crop: 'Cassava', icon: '🟡', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
+  { name: 'Coffee Berry Disease',  crop: 'Coffee',  icon: '☕', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { name: 'Bean Anthracnose',      crop: 'Beans',   icon: '🫘', color: 'var(--color-success)', bg: 'var(--color-primary-bg)' },
 ];
 
 type DiagnosisResult = {
@@ -48,7 +48,7 @@ type DiagnosisResult = {
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  red: 'var(--color-danger)', amber: '#D97706',
+  red: 'var(--color-danger)', amber: 'var(--color-harvest)',
   cardBg: 'var(--d-card)', pageBg: 'var(--d-page)',
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
@@ -121,7 +121,7 @@ export function PathologistClient() {
             onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files[0]); }}
             style={{
               minHeight: '240px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: dragOver ? '#F0FDF4' : preview ? '#000' : '#F8FAF9',
+              background: dragOver ? 'var(--color-primary-bg)' : preview ? '#000' : 'var(--d-subtle)',
               border: dragOver ? `2px dashed ${C.greenBright}` : `2px dashed ${C.border}`,
               borderRadius: '0',
               cursor: preview ? 'default' : 'pointer',
@@ -155,7 +155,7 @@ export function PathologistClient() {
                 <div
                   style={{
                     width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto 16px',
-                    background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '28px',
                   }}
                 >
@@ -202,7 +202,7 @@ export function PathologistClient() {
                     style={{
                       padding: '5px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
                       border: `1.5px solid ${crop === c.value ? C.green : C.border}`,
-                      background: crop === c.value ? '#F0FDF4' : '#FFFFFF',
+                      background: crop === c.value ? 'var(--color-primary-bg)' : 'var(--d-card)',
                       color: crop === c.value ? C.green : C.muted,
                       cursor: 'pointer',
                     }}
@@ -227,7 +227,7 @@ export function PathologistClient() {
                     style={{
                       padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
                       border: `1.5px solid ${part === p ? C.green : C.border}`,
-                      background: part === p ? '#F0FDF4' : '#FFFFFF',
+                      background: part === p ? 'var(--color-primary-bg)' : 'var(--d-card)',
                       color: part === p ? C.green : C.muted,
                       cursor: 'pointer',
                     }}
@@ -239,7 +239,7 @@ export function PathologistClient() {
             </div>
 
             {error && (
-              <p style={{ fontSize: '13px', color: C.red, background: '#FEF2F2', padding: '10px 14px', borderRadius: '8px' }}>
+              <p style={{ fontSize: '13px', color: C.red, background: 'var(--color-danger-bg)', padding: '10px 14px', borderRadius: '8px' }}>
                 ⚠ {error}
               </p>
             )}
@@ -249,7 +249,7 @@ export function PathologistClient() {
               disabled={!preview || loading}
               style={{
                 padding: '12px 20px',
-                background: !preview || loading ? '#D1D5DB' : `linear-gradient(135deg, ${C.green} 0%, #2D6A4F 100%)`,
+                background: !preview || loading ? 'var(--color-surface-2)' : `linear-gradient(135deg, ${C.green} 0%, #2D6A4F 100%)`,
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '12px',
@@ -296,11 +296,11 @@ export function PathologistClient() {
               <div
                 style={{
                   marginTop: '24px', padding: '12px 20px',
-                  background: '#F0FDF4', borderRadius: '10px',
-                  border: '1px solid #A7F3D0',
+                  background: 'var(--color-primary-bg)', borderRadius: '10px',
+                  border: '1px solid var(--color-primary-muted)',
                 }}
               >
-                <p style={{ fontSize: '12px', color: '#065F46', fontWeight: 600 }}>
+                <p style={{ fontSize: '12px', color: 'var(--color-primary-hover)', fontWeight: 600 }}>
                   💡 Best results: photograph in good daylight, focus on the most affected leaf or part
                 </p>
               </div>
@@ -348,12 +348,12 @@ export function PathologistClient() {
                       {result.confidence}%
                     </p>
                   </div>
-                  <div style={{ height: '8px', background: '#E5E7EB', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ height: '8px', background: 'var(--color-surface-2)', borderRadius: '4px', overflow: 'hidden' }}>
                     <div
                       style={{
                         height: '100%', borderRadius: '4px',
                         width: `${result.confidence}%`,
-                        background: result.confidence >= 70 ? sevCfg!.color : result.confidence >= 40 ? C.amber : '#9CA3AF',
+                        background: result.confidence >= 70 ? sevCfg!.color : result.confidence >= 40 ? C.amber : 'var(--d-muted)',
                         transition: 'width 0.6s ease',
                       }}
                     />
@@ -366,7 +366,7 @@ export function PathologistClient() {
 
                 {/* Urgency notice */}
                 {result.urgency && (
-                  <div style={{ padding: '12px 20px', background: '#FFFBEB', borderBottom: `1px solid ${C.border}` }}>
+                  <div style={{ padding: '12px 20px', background: 'var(--color-harvest-bg)', borderBottom: `1px solid ${C.border}` }}>
                     <p style={{ fontSize: '12px', fontWeight: 600, color: C.amber }}>
                       ⏱ {result.urgency}
                     </p>
@@ -400,7 +400,7 @@ export function PathologistClient() {
                       <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '13px', color: C.text }}>
                         <span
                           style={{
-                            width: '22px', height: '22px', borderRadius: '50%', background: '#F0FDF4',
+                            width: '22px', height: '22px', borderRadius: '50%', background: 'var(--color-primary-bg)',
                             color: C.green, fontSize: '11px', fontWeight: 800, flexShrink: 0,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             border: `1.5px solid ${C.greenBright}`,

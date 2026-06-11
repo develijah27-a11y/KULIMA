@@ -5,14 +5,14 @@ const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
-  red: 'var(--color-danger)', amber: '#D97706', blue: '#0284C7',
+  red: 'var(--color-danger)', amber: 'var(--color-harvest)', blue: 'var(--color-sky)',
 };
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  open:         { color: '#DC2626', bg: '#FEE2E2', label: 'Open' },
-  under_review: { color: '#D97706', bg: '#FEF3C7', label: 'Under Review' },
-  resolved:     { color: '#059669', bg: '#D1FAE5', label: 'Resolved' },
-  closed:       { color: '#6B7280', bg: '#F3F4F6', label: 'Closed' },
+  open:         { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Open' },
+  under_review: { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Under Review' },
+  resolved:     { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Resolved' },
+  closed:       { color: 'var(--d-muted)',        bg: 'var(--color-surface-2)',  label: 'Closed' },
 };
 
 export default async function AdminDisputesPage({
@@ -78,7 +78,7 @@ export default async function AdminDisputesPage({
 
       {/* Disputes list */}
       {error ? (
-        <div style={{ background: '#FEF2F2', borderRadius: 12, padding: '16px 18px' }}>
+        <div style={{ background: 'var(--color-danger-bg)', borderRadius: 12, padding: '16px 18px' }}>
           <p style={{ color: C.red, fontSize: 13 }}>
             Error loading disputes table. It may have a different schema — check the database.
           </p>

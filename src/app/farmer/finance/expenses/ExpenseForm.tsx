@@ -150,7 +150,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
           onClick={() => setShowForm(v => !v)}
           style={{
             padding: '10px 20px', borderRadius: '10px', border: 'none',
-            background: showForm ? '#F3F4F6' : C.green, color: showForm ? C.text : '#fff',
+            background: showForm ? 'var(--color-surface-2)' : C.green, color: showForm ? C.text : '#fff',
             fontSize: '14px', fontWeight: 700, cursor: 'pointer',
           }}
         >
@@ -170,7 +170,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
         >
           <p style={{ fontSize: '15px', fontWeight: 800, color: C.text, marginBottom: '20px' }}>Log a New Expense</p>
           {error && (
-            <div style={{ background: '#FEF2F2', border: `1px solid #FCA5A5`, borderRadius: '8px', padding: '10px 14px', marginBottom: '16px' }}>
+            <div style={{ background: 'var(--color-danger-bg)', border: `1px solid var(--color-danger)`, borderRadius: '8px', padding: '10px 14px', marginBottom: '16px' }}>
               <p style={{ fontSize: '13px', color: C.red }}>{error}</p>
             </div>
           )}
@@ -267,7 +267,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
               disabled={saving}
               style={{
                 padding: '12px 28px', borderRadius: '10px', border: 'none',
-                background: saving ? '#9CA3AF' : C.green, color: '#fff',
+                background: saving ? 'var(--color-surface-2)' : C.green, color: '#fff',
                 fontSize: '14px', fontWeight: 700, cursor: saving ? 'default' : 'pointer',
               }}
             >
@@ -321,7 +321,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
               <div
                 style={{
                   width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
-                  background: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: '18px',
                 }}
               >
@@ -352,7 +352,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
                 disabled={deleting === expense.id}
                 style={{
                   width: '30px', height: '30px', borderRadius: '8px', border: 'none',
-                  background: deleting === expense.id ? '#F3F4F6' : '#FEF2F2',
+                  background: deleting === expense.id ? 'var(--color-surface-2)' : 'var(--color-danger-bg)',
                   color: deleting === expense.id ? C.muted : C.red,
                   cursor: deleting === expense.id ? 'default' : 'pointer',
                   fontSize: '14px', flexShrink: 0,
