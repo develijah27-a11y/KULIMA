@@ -17,18 +17,28 @@ const serwist = new Serwist({
       }),
     },
     {
-      matcher: ({ url }) => url.pathname.startsWith('/api/prices'),
+      matcher: ({ url }) => (
+        url.pathname.startsWith('/api/prices') ||
+        url.pathname.startsWith('/api/market-prices') ||
+        url.pathname.startsWith('/api/cash-crop-prices')
+      ),
       handler: new StaleWhileRevalidate({
         cacheName: 'kulima-prices',
         plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 300 })],
       }),
     },
     {
-      matcher: ({ url }) => url.pathname.startsWith('/api/farmer'),
+      matcher: ({ url }) => (
+        url.pathname.startsWith('/api/farms') ||
+        url.pathname.startsWith('/api/farm-') ||
+        url.pathname.startsWith('/api/inventory') ||
+        url.pathname.startsWith('/api/listings') ||
+        url.pathname.startsWith('/api/planting')
+      ),
       handler: new NetworkFirst({
         cacheName: 'kulima-farmer',
         networkTimeoutSeconds: 5,
-        plugins: [new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 86400 })],
+        plugins: [new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 86400 })],
       }),
     },
     {
