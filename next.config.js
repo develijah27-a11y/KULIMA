@@ -1,11 +1,14 @@
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
-const withSerwist = require('@serwist/next').default;
+
+const isDev = process.env.NODE_ENV === 'development';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   compress: true,
+  // Suppress Turbopack warning when no turbopack config is needed
+  turbopack: {},
   experimental: {
     optimizePackageImports: [
       'lucide-react',
@@ -44,10 +47,9 @@ const nextConfig = {
   },
 };
 
-const serwistConfig = withSerwist({
-  swSrc: 'src/app/sw.ts',
-  swDest: 'public/sw.js',
-  disable: process.env.NODE_ENV === 'development',
-});
+// Only apply serwist webpack plugin in production — avoids Turbopack conflict in dev
+const applySerwist = isDev
+  ? (cfg) => cfg
+  : require('@serwist/next').default({ swSrc: 'src/app/sw.ts', swDest: 'public/sw.js' });
 
-module.exports = withBundleAnalyzer(serwistConfig(nextConfig));
+module.exports = withBundleAnalyzer(applySerwist(nextConfig));
