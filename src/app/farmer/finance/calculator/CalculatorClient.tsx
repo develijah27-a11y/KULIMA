@@ -75,13 +75,12 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
   const profile = CROP_PROFILES[cropType];
   const ha = parseFloat(areaHa) || 1;
 
-  const parsedCosts: Record<string, number> = {};
-  COST_CATEGORIES.forEach(cat => {
-    parsedCosts[cat.key] = parseNum(costs[cat.key] ?? '');
-  });
-  customCosts.forEach((item, i) => {
-    parsedCosts[`custom_${i}`] = parseNum(item.amount);
-  });
+  const parsedCosts = useMemo(() => {
+    const out: Record<string, number> = {};
+    COST_CATEGORIES.forEach(cat => { out[cat.key] = parseNum(costs[cat.key] ?? ''); });
+    customCosts.forEach((item, i) => { out[`custom_${i}`] = parseNum(item.amount); });
+    return out;
+  }, [costs, customCosts]);
 
   const result: FarmCalcResult | null = useMemo(() => {
     if (!profile) return null;
@@ -97,8 +96,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
     } catch {
       return null;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cropType, areaHa, irrigated, JSON.stringify(parsedCosts), marketPriceInput, targetMargin]);
+  }, [cropType, areaHa, irrigated, parsedCosts, marketPriceInput, targetMargin, profile, ha]);
 
   const totalCosts = Object.values(parsedCosts).reduce((s, v) => s + v, 0);
   const marketPriceNum = parseNum(marketPriceInput);
