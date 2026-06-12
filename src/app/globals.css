@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -41,11 +40,11 @@
   --color-soil:          #0D1F12;   /* deep forest — used by landing page */
   --color-soil-mid:      #1A3120;
 
-  /* ── Sidebar — Forest green ── */
-  --color-sidebar:       #1B4332;
-  --color-sidebar-hover: #2D6A4F;
-  --color-sidebar-text:  rgba(255, 255, 255, 0.88);
-  --color-sidebar-muted: rgba(255, 255, 255, 0.45);
+  /* ── Sidebar — Harvest orange ── */
+  --color-sidebar:       #C2410C;
+  --color-sidebar-hover: #EA580C;
+  --color-sidebar-text:  #000000;
+  --color-sidebar-muted: rgba(0, 0, 0, 0.55);
 
   /* ── Text ── */
   --color-text:          #111827;   /* near-black for maximum legibility */
@@ -150,10 +149,10 @@
   --color-soil:          #060F08;
   --color-soil-mid:      #0D1F12;
 
-  --color-sidebar:       #071009;
-  --color-sidebar-hover: #122017;
-  --color-sidebar-text:  rgba(255, 255, 255, 0.90);
-  --color-sidebar-muted: rgba(255, 255, 255, 0.40);
+  --color-sidebar:       #7C2D12;
+  --color-sidebar-hover: #9A3412;
+  --color-sidebar-text:  rgba(255, 255, 255, 0.92);
+  --color-sidebar-muted: rgba(255, 255, 255, 0.45);
 
   --color-text:          #F0FDF4;
   --color-text-muted:    #A3B8A7;
@@ -229,9 +228,13 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 html {
-  scroll-behavior: smooth;
   overflow-x: hidden;
   max-width: 100vw;
+}
+
+/* Only enable smooth scrolling for users who haven't opted out */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
 }
 
 body {
@@ -250,7 +253,8 @@ a, button, [role="button"], input, select, textarea, label {
   touch-action: manipulation;
 }
 
-button, a, [role="button"] {
+/* Touch targets: apply only to interactive elements, not all anchors */
+button:not(.no-min-touch), [role="button"] {
   min-height: 44px;
   min-width: 44px;
 }
@@ -319,6 +323,15 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97); }
   100% { background-position:  200% 0; }
 }
 
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 .skeleton {
   background: linear-gradient(90deg, #E9EDF0 0%, #F3F6F4 40%, #FFFFFF 50%, #F3F6F4 60%, #E9EDF0 100%);
   background-size: 200% 100%;
@@ -343,6 +356,13 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97); }
   background: linear-gradient(90deg, #0D1F12 0%, #132416 40%, #1C3420 50%, #132416 60%, #0D1F12 100%);
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
+}
+
+.orange-skeleton {
+  background: linear-gradient(90deg, #1A0800 0%, #2A1000 40%, #3A1800 50%, #2A1000 60%, #1A0800 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 12px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -517,34 +537,45 @@ input:focus, select:focus, textarea:focus {
   outline: none;
 }
 
-/* ── Auth form — dark themed card on soil background ── */
+/* ── Auth form — white card ── */
 .auth-input {
   width: 100%;
-  min-height: 48px;
+  min-height: 50px;
   padding: 0.75rem 1rem;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1.5px solid rgba(255, 255, 255, 0.14);
-  color: #F9FAFB;
+  background: #FFFFFF;
+  border: 2px solid #D1D5DB;
+  color: #000000;
   font-family: var(--font-body);
   font-size: 0.9375rem;
+  font-weight: 700;
   transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
   outline: none;
 }
-.auth-input::placeholder { color: rgba(249, 250, 251, 0.35); }
+.auth-input::placeholder { color: #9CA3AF; font-weight: 500; }
 .auth-input:focus {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+  background: #FFFFFF;
+  border-color: #F97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
 }
 .auth-input:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Force black bold text even when browser autofills the field */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus,
+.auth-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #000000 !important;
+  -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+  font-weight: 700 !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
 
 .auth-btn {
   width: 100%;
   min-height: 50px;
   padding: 0.875rem 1.5rem;
   border-radius: 12px;
-  background: var(--color-primary);
+  background: #F97316;
   color: #FFFFFF;
   font-family: var(--font-body);
   font-size: 0.9375rem;
@@ -553,9 +584,9 @@ input:focus, select:focus, textarea:focus {
   transition: background 80ms ease, opacity 80ms ease, transform 80ms ease, box-shadow 80ms ease;
   cursor: pointer;
   border: none;
-  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.30);
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
 }
-.auth-btn:hover:not(:disabled)  { background: var(--color-primary-hover); box-shadow: 0 4px 18px rgba(34, 197, 94, 0.40); }
+.auth-btn:hover:not(:disabled)  { background: #EA580C; box-shadow: 0 4px 18px rgba(249, 115, 22, 0.45); }
 .auth-btn:active:not(:disabled) { transform: scale(0.99); }
 .auth-btn:disabled              { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
@@ -569,17 +600,17 @@ input:focus, select:focus, textarea:focus {
   border-radius: 12px;
   font-size: 0.9375rem;
   font-weight: 700;
-  background: var(--color-primary);
+  background: #F97316;
   color: #FFFFFF;
   transition: background 0.15s, box-shadow 0.15s, transform 80ms ease;
   letter-spacing: -0.01em;
   border: none;
   text-decoration: none;
 }
-.landing-btn-primary:hover { background: var(--color-primary-hover); }
+.landing-btn-primary:hover  { background: #EA580C; }
 .landing-btn-primary:active { transform: scale(0.97); }
 
-.glow-green { box-shadow: 0 4px 24px rgba(34, 197, 94, 0.35); }
+.glow-orange { box-shadow: 0 4px 24px rgba(249, 115, 22, 0.40); }
 
 .landing-btn-outline {
   display: inline-flex;
@@ -589,17 +620,17 @@ input:focus, select:focus, textarea:focus {
   border-radius: 12px;
   font-size: 0.9375rem;
   font-weight: 600;
-  border: 1.5px solid rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.75);
+  border: 1.5px solid rgba(255, 247, 237, 0.22);
+  color: rgba(255, 247, 237, 0.75);
   transition: background 0.15s, border-color 0.15s;
   letter-spacing: -0.01em;
   text-decoration: none;
   background: transparent;
 }
 .landing-btn-outline:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.30);
-  color: #FFFFFF;
+  background: rgba(255, 247, 237, 0.08);
+  border-color: rgba(255, 247, 237, 0.35);
+  color: #FFF7ED;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
