@@ -1,470 +1,369 @@
-# Database Migration Guide
+# Database Migrations Guide
 
 ## Overview
 
-This document describes the database migration system for the Kulima AgriTech platform. All database schema changes must go through versioned migrations to ensure safety, traceability, and the ability to rollback changes if needed.
-
-## Migration System Architecture
-
-The migration system uses Supabase's built-in migration functionality with the following components:
-
-- **Migration Files**: SQL files in `supabase/migrations/` directory
-- **Migration Tracking**: `schema_migrations` table tracks applied migrations
-- **Naming Convention**: `YYYYMMDDHHMMSS_description.sql` format
-- **Rollback Plans**: Documented procedures to reverse each migration
+All database schema changes must go through versioned migrations. This ensures consistency across environments and provides rollback capabilities.
 
 ## Migration Naming Convention
 
-All migration files must follow this naming pattern:
+Format: `YYYYMMDDHHMMSS_description.sql`
 
+Example: `20240115103000_add_email_verification.sql`
+
+## Creating Migrations
+
+```bash
+# Create new migration file
+supabase migration new add_email_verification
+
+# This creates: supabase/migrations/[timestamp]_add_email_verification.sql
 ```
-YYYYMMDDHHMMSS_description.sql
-```
 
-**Components:**
-- `YYYY`: 4-digit year (e.g., 2024)
-- `MM`: 2-digit month (01-12)
-- `DD`: 2-digit day (01-31)
-- `HH`: 2-digit hour in 24-hour format (00-23)
-- `MM`: 2-digit minute (00-59)
-- `SS`: 2-digit second (00-59)
-- `description`: Lowercase with underscores, describes the change
-
-**Examples:**
-- `20240101000000_initial_schema.sql`
-- `20240102000000_add_indexes.sql`
-- `20240115143000_add_crop_status_enum.sql`
-- `20240120091500_add_user_preferences_table.sql`
-
-## Migration File Structure
-
-Each migration file should follow this structure:
+## Migration Template
 
 ```sql
 -- Migration: [Brief description]
 -- Created: [Date]
 -- Author: [Your name]
--- Requirements: [Reference to requirements document]
+--
+-- Description:
+-- [Detailed description of changes]
+--
+-- Rollback Plan:
+-- [SQL commands to undo this migration]
 
--- ============================================================================
--- DESCRIPTION
--- ============================================================================
--- [Detailed description of what this migration does and why]
+-- Your migration SQL here
+ALTER TABLE profiles ADD COLUMN email_verified BOOLEAN DEFAULT FALSE;
 
--- ============================================================================
--- CHANGES
--- ============================================================================
-
--- [Your SQL statements here]
-
--- Example:
-CREATE TABLE example_table (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Enable RLS
-ALTER TABLE example_table ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Users can view own records"
-    ON example_table FOR SELECT
-    USING (auth.uid() = user_id);
-
--- Create indexes
-CREATE INDEX idx_example_table_user_id ON example_table(user_id);
+-- Indexes (use CONCURRENTLY for production)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_profiles_email_verified 
+ON profiles(email_verified);
 ```
 
-## Creating a New Migration
+## Running Migrations
 
-### Step 1: Generate Migration File
-
-Use the Supabase CLI to create a new migration:
-
-```bash
-# Generate a new migration file with timestamp
-supabase migration new description_of_change
-
-# Example:
-supabase migration new add_user_preferences
-```
-
-This creates a file like: `supabase/migrations/20240115143000_add_user_preferences.sql`
-
-### Step 2: Write Migration SQL
-
-Edit the generated file and add your SQL statements:
-
-```sql
--- Add your schema changes
--- Include comments explaining the purpose
--- Follow the file structure template above
-```
-
-### Step 3: Document Rollback Plan
-
-In this document (MIGRATIONS.md), add a rollback section for your migration:
-
-```markdown
-### Migration: 20240115143000_add_user_preferences.sql
-
-**Purpose**: Add user preferences table for storing user settings
-
-**Rollback Plan**:
-```sql
-DROP TABLE IF EXISTS user_preferences CASCADE;
-```
-
-**Verification**:
-- Verify table exists: `SELECT * FROM user_preferences LIMIT 1;`
-- Verify RLS is enabled: `SELECT tablename, rowsecurity FROM pg_tables WHERE tablename = 'user_preferences';`
-```
-
-### Step 4: Test Migration Locally
-
-```bash
-# Reset local database (WARNING: Destroys all local data)
-supabase db reset
-
-# Or apply migrations incrementally
-supabase migration up
-```
-
-### Step 5: Verify Migration
-
-After applying the migration, verify:
-
-1. **Schema Changes**: Check that tables, columns, indexes were created
-2. **RLS Policies**: Verify Row Level Security is enabled and policies work
-3. **Foreign Keys**: Test that relationships are enforced
-4. **Constraints**: Verify CHECK constraints reject invalid data
-5. **Triggers**: Test that triggers fire correctly
-
-## Applying Migrations
-
-### Local Development
+### Locally
 
 ```bash
 # Apply all pending migrations
-supabase migration up
+supabase db push
 
-# Reset database and reapply all migrations (destroys data)
+# Reset database and reapply all migrations
 supabase db reset
+
+# Generate TypeScript types after migration
+npm run generate:types
 ```
 
 ### Production
 
-**IMPORTANT**: Never apply migrations directly to production without testing!
-
-1. **Test in Staging**: Apply migration to staging environment first
-2. **Backup Database**: Create a backup before applying migrations
-3. **Apply Migration**: Use Supabase dashboard or CLI
-4. **Verify**: Check that migration applied successfully
-5. **Monitor**: Watch for errors or performance issues
-
 ```bash
-# Link to production project
+# Connect to production
 supabase link --project-ref your-project-ref
 
-# Apply migrations to production
+# Apply migrations
 supabase db push
+
+# Verify migration applied
+supabase migration list
 ```
 
-## Rolling Back Migrations
+## Rollback Procedures
 
-### When to Rollback
+If a migration causes issues:
 
-Rollback a migration if:
-- Migration causes errors or data corruption
-- Migration breaks application functionality
-- Migration causes severe performance degradation
-- Migration was applied to wrong environment
+### 1. Immediate Rollback
 
-### Rollback Procedure
+```sql
+-- Run the rollback SQL from migration comments
+-- Example from above:
+ALTER TABLE profiles DROP COLUMN email_verified;
+```
 
-1. **Identify the Migration**: Find the migration version to rollback
-2. **Find Rollback Plan**: Locate the rollback SQL in this document
-3. **Create Rollback Migration**: Create a new migration with rollback SQL
-4. **Test Rollback**: Test in local/staging environment first
-5. **Apply Rollback**: Apply to production if needed
-
-**Example Rollback Migration**:
+### 2. Create Rollback Migration
 
 ```bash
-# Create rollback migration
-supabase migration new rollback_add_user_preferences
+# Create new migration to undo changes
+supabase migration new rollback_email_verification
 ```
 
 ```sql
--- Rollback Migration: Revert 20240115143000_add_user_preferences.sql
--- This migration removes the user_preferences table
+-- Migration: Rollback email verification feature
+-- Rollback of: 20240115103000_add_email_verification.sql
 
-DROP TABLE IF EXISTS user_preferences CASCADE;
+DROP INDEX IF EXISTS idx_profiles_email_verified;
+ALTER TABLE profiles DROP COLUMN IF EXISTS email_verified;
 ```
 
-### Important Rollback Notes
+## Best Practices
 
-- **Never edit existing migration files** - Always create a new migration to rollback
-- **Test rollbacks** - Always test rollback procedures in staging first
-- **Data loss** - Some rollbacks may cause data loss (e.g., dropping tables)
-- **Dependencies** - Consider dependencies when rolling back (foreign keys, views, etc.)
+### 1. Atomic Changes
+✅ **DO**: One logical change per migration
+❌ **DON'T**: Bundle unrelated changes
 
-## Migration Tracking
-
-The `schema_migrations` table tracks which migrations have been applied:
-
+### 2. Safety Checks
 ```sql
-CREATE TABLE IF NOT EXISTS schema_migrations (
-    version TEXT PRIMARY KEY,
-    applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    description TEXT
-);
+-- Always use IF EXISTS / IF NOT EXISTS
+ALTER TABLE IF EXISTS profiles ADD COLUMN IF NOT EXISTS email_verified BOOLEAN;
+CREATE INDEX IF NOT EXISTS idx_name ON table(column);
+DROP TABLE IF EXISTS old_table;
 ```
 
-**Query Applied Migrations**:
+### 3. Non-Breaking Changes
+When possible, make changes backward compatible:
 
 ```sql
--- View all applied migrations
-SELECT version, applied_at, description 
-FROM schema_migrations 
-ORDER BY version;
+-- ✅ Add nullable column (non-breaking)
+ALTER TABLE profiles ADD COLUMN phone_verified BOOLEAN;
 
--- Check if specific migration is applied
-SELECT EXISTS (
-    SELECT 1 FROM schema_migrations 
-    WHERE version = '20240101000000'
-);
+-- ✅ Add column with default (non-breaking)
+ALTER TABLE profiles ADD COLUMN status TEXT DEFAULT 'active';
+
+-- ❌ Add NOT NULL column without default (BREAKING)
+-- ALTER TABLE profiles ADD COLUMN required_field TEXT NOT NULL;
+
+-- ✅ Instead, do it in steps:
+ALTER TABLE profiles ADD COLUMN required_field TEXT DEFAULT 'default_value';
+-- Wait for app deployment
+ALTER TABLE profiles ALTER COLUMN required_field SET NOT NULL;
 ```
 
-## Migration Best Practices
-
-### Safety First
-
-1. **Never drop tables** without explicit user approval and backup
-2. **Never truncate data** in production migrations
-3. **Never disable RLS** on user-facing tables
-4. **Always use transactions** for complex migrations
-5. **Always test locally** before applying to production
-
-### Performance
-
-1. **Use `CREATE INDEX CONCURRENTLY`** to avoid locking tables in production
-2. **Add indexes in separate migrations** from table creation for large tables
-3. **Batch large data migrations** to avoid long-running transactions
-4. **Monitor query performance** after adding indexes
-
-### Maintainability
-
-1. **Keep migrations focused** - One logical change per migration
-2. **Document thoroughly** - Explain why, not just what
-3. **Reference requirements** - Link migrations to requirements document
-4. **Version control** - Commit migrations with related code changes
-
-### RLS and Security
-
-1. **Always enable RLS** on tables containing user data
-2. **Define explicit policies** for SELECT, INSERT, UPDATE, DELETE
-3. **Test RLS policies** by attempting unauthorized access
-4. **Use `auth.uid()`** to match authenticated user in policies
-
-### Foreign Keys and Constraints
-
-1. **Define ON DELETE behavior** explicitly (CASCADE or RESTRICT)
-2. **Add CHECK constraints** for data validation
-3. **Use NOT NULL** where appropriate
-4. **Create indexes on foreign keys** for query performance
-
-## Common Migration Patterns
-
-### Adding a New Table
+### 4. Production-Safe Indexes
 
 ```sql
--- Create table
-CREATE TABLE table_name (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+-- ❌ Don't use blocking index creation
+-- CREATE INDEX idx_name ON table(column);
 
--- Enable RLS
-ALTER TABLE table_name ENABLE ROW LEVEL SECURITY;
-
--- Create RLS policies
-CREATE POLICY "Users can view own records"
-    ON table_name FOR SELECT
-    USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own records"
-    ON table_name FOR INSERT
-    WITH CHECK (auth.uid() = user_id);
-
--- Create indexes
-CREATE INDEX idx_table_name_user_id ON table_name(user_id);
-
--- Create updated_at trigger
-CREATE TRIGGER update_table_name_updated_at
-    BEFORE UPDATE ON table_name
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- ✅ Use CONCURRENTLY (doesn't lock table)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_name ON table(column);
 ```
 
-### Adding a Column
+### 5. Data Migrations
+
+For data transformations:
 
 ```sql
--- Add column with default value
-ALTER TABLE table_name 
-ADD COLUMN new_column TEXT DEFAULT 'default_value';
+-- Wrap in transaction
+BEGIN;
 
--- Add NOT NULL constraint after backfilling data
-ALTER TABLE table_name 
-ALTER COLUMN new_column SET NOT NULL;
+-- Update data
+UPDATE profiles SET status = 'active' WHERE status IS NULL;
+
+-- Verify
+DO $$
+DECLARE
+  null_count INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO null_count FROM profiles WHERE status IS NULL;
+  IF null_count > 0 THEN
+    RAISE EXCEPTION 'Data migration failed: % rows still null', null_count;
+  END IF;
+END $$;
+
+COMMIT;
 ```
 
-### Adding an Index
+## RLS Policy Migrations
+
+### Adding Policies
 
 ```sql
--- For production, use CONCURRENTLY to avoid locking
-CREATE INDEX CONCURRENTLY idx_table_name_column 
-ON table_name(column_name);
+-- Enable RLS if not already enabled
+ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
 
--- For local development, regular index is fine
-CREATE INDEX idx_table_name_column 
-ON table_name(column_name);
+-- Create policy
+CREATE POLICY "Users can view own farms"
+ON farms FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+
+-- Rollback:
+-- DROP POLICY IF EXISTS "Users can view own farms" ON farms;
 ```
 
-### Modifying RLS Policies
+### Modifying Policies
 
 ```sql
--- Drop existing policy
+-- Drop old policy
 DROP POLICY IF EXISTS "old_policy_name" ON table_name;
 
 -- Create new policy
 CREATE POLICY "new_policy_name"
-    ON table_name FOR SELECT
-    USING (auth.uid() = user_id);
+ON table_name FOR SELECT
+TO authenticated
+USING (new_condition);
 ```
 
-### Adding Foreign Key
+## Testing Migrations
+
+### Checklist
+
+- [ ] Migration runs without errors
+- [ ] Rollback SQL tested and works
+- [ ] No data loss occurs
+- [ ] Application still works after migration
+- [ ] RLS policies still enforce security
+- [ ] Indexes created successfully
+- [ ] Foreign keys maintained
+- [ ] Types regenerated: `npm run generate:types`
+
+### Testing Locally
+
+```bash
+# 1. Backup current state
+supabase db dump -f backup.sql
+
+# 2. Apply migration
+supabase db push
+
+# 3. Test application
+npm run dev
+# Manually test affected features
+
+# 4. Test rollback
+# Run rollback SQL from migration
+
+# 5. Verify rollback worked
+# Check database state
+
+# 6. Reapply migration
+supabase db push
+
+# 7. Generate types
+npm run generate:types
+```
+
+## Common Migration Patterns
+
+### Add Column
 
 ```sql
--- Add foreign key constraint
-ALTER TABLE child_table
-ADD CONSTRAINT fk_child_parent
-FOREIGN KEY (parent_id)
-REFERENCES parent_table(id)
-ON DELETE CASCADE;
+-- Add nullable column
+ALTER TABLE profiles ADD COLUMN bio TEXT;
 
--- Create index on foreign key
-CREATE INDEX idx_child_table_parent_id 
-ON child_table(parent_id);
+-- Add column with default
+ALTER TABLE profiles ADD COLUMN created_by TEXT DEFAULT 'system';
+
+-- Add NOT NULL column (two-step process)
+-- Step 1: Add with default
+ALTER TABLE profiles ADD COLUMN role TEXT DEFAULT 'user';
+-- Step 2: After deployment, make NOT NULL
+ALTER TABLE profiles ALTER COLUMN role SET NOT NULL;
+```
+
+### Rename Column
+
+```sql
+-- Rename column
+ALTER TABLE profiles RENAME COLUMN full_name TO display_name;
+
+-- Update dependent objects (views, functions, etc.)
+-- Add them here
+```
+
+### Add Foreign Key
+
+```sql
+-- Add foreign key
+ALTER TABLE crops 
+ADD CONSTRAINT fk_crops_farm 
+FOREIGN KEY (farm_id) 
+REFERENCES farms(id) 
+ON DELETE CASCADE;
+```
+
+### Create Table
+
+```sql
+CREATE TABLE IF NOT EXISTS email_verifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  verified_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add indexes
+CREATE INDEX idx_email_verifications_token ON email_verifications(token);
+CREATE INDEX idx_email_verifications_user_id ON email_verifications(user_id);
+
+-- Enable RLS
+ALTER TABLE email_verifications ENABLE ROW LEVEL SECURITY;
+
+-- Add RLS policies
+CREATE POLICY "Users can view own verifications"
+ON email_verifications FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
+```
+
+## Migration History
+
+Track applied migrations:
+
+```bash
+# List all migrations
+supabase migration list
+
+# Check migration status
+supabase migration list --database postgres://...
 ```
 
 ## Troubleshooting
 
-### Migration Fails to Apply
+### Migration Failed
 
-1. **Check syntax errors**: Review SQL for typos or syntax issues
-2. **Check dependencies**: Ensure referenced tables/columns exist
-3. **Check constraints**: Verify existing data satisfies new constraints
-4. **Check permissions**: Ensure database user has required permissions
+1. Check error message for specific issue
+2. Fix SQL in migration file
+3. Reset local database: `supabase db reset`
+4. Reapply: `supabase db push`
 
-### RLS Policies Not Working
+### Type Generation Fails
 
-1. **Verify RLS is enabled**: `SELECT tablename, rowsecurity FROM pg_tables WHERE tablename = 'your_table';`
-2. **Check policy definitions**: Ensure policies cover all operations (SELECT, INSERT, UPDATE, DELETE)
-3. **Test with different users**: Verify policies work for different user contexts
-4. **Check auth.uid()**: Ensure user is authenticated and auth.uid() returns correct value
-
-### Performance Issues After Migration
-
-1. **Check query plans**: Use `EXPLAIN ANALYZE` to identify slow queries
-2. **Verify indexes**: Ensure indexes were created successfully
-3. **Monitor table locks**: Check for long-running locks blocking queries
-4. **Review RLS policies**: Complex RLS policies can impact performance
-
-## Migration History and Rollback Plans
-
-### 20240101000000_initial_schema.sql
-
-**Purpose**: Create initial database schema with all core tables (profiles, farms, crops, soil_reports, disease_scans, weather_logs)
-
-**Tables Created**:
-- `profiles`: User profile information
-- `farms`: Farm records owned by users
-- `crops`: Crop records associated with farms
-- `soil_reports`: Soil analysis reports for farms
-- `disease_scans`: Disease detection scans for crops
-- `weather_logs`: Weather data logs for farms
-
-**Indexes Created**:
-- All foreign key columns (user_id, farm_id) for efficient JOIN operations
-- All timestamp columns (created_at, recorded_at, planting_date) for time-based queries
-- Total of 12 indexes across all tables for optimal query performance
-
-**Note**: All required performance indexes (Requirements R5.1-R5.6) are included in this initial migration. No separate index migration is needed. See `TASK_2.4_INDEX_VERIFICATION.md` for detailed index documentation.
-
-**Rollback Plan**:
-```sql
--- WARNING: This will destroy all data in these tables
-DROP TABLE IF EXISTS weather_logs CASCADE;
-DROP TABLE IF EXISTS disease_scans CASCADE;
-DROP TABLE IF EXISTS soil_reports CASCADE;
-DROP TABLE IF EXISTS crops CASCADE;
-DROP TABLE IF EXISTS farms CASCADE;
-DROP TABLE IF EXISTS profiles CASCADE;
-DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+```bash
+# Manually regenerate types
+supabase gen types typescript --local > src/lib/database.types.ts
 ```
 
-**Verification**:
+### RLS Policy Errors
+
 ```sql
--- Verify all tables exist
-SELECT tablename FROM pg_tables 
-WHERE schemaname = 'public' 
-AND tablename IN ('profiles', 'farms', 'crops', 'soil_reports', 'disease_scans', 'weather_logs');
+-- Check existing policies
+SELECT * FROM pg_policies WHERE tablename = 'your_table';
 
--- Verify RLS is enabled on all tables
-SELECT tablename, rowsecurity 
-FROM pg_tables 
-WHERE schemaname = 'public' 
-AND tablename IN ('profiles', 'farms', 'crops', 'soil_reports', 'disease_scans', 'weather_logs');
-
--- Verify foreign keys exist
-SELECT
-    tc.table_name, 
-    kcu.column_name,
-    ccu.table_name AS foreign_table_name,
-    ccu.column_name AS foreign_column_name
-FROM information_schema.table_constraints AS tc
-JOIN information_schema.key_column_usage AS kcu
-    ON tc.constraint_name = kcu.constraint_name
-JOIN information_schema.constraint_column_usage AS ccu
-    ON ccu.constraint_name = tc.constraint_name
-WHERE tc.constraint_type = 'FOREIGN KEY';
+-- Drop all policies on table
+DROP POLICY IF EXISTS "policy_name" ON table_name;
 ```
 
----
+## Emergency Procedures
 
-## Additional Resources
+### Critical Production Issue
 
-- [Supabase Migration Documentation](https://supabase.com/docs/guides/cli/local-development#database-migrations)
-- [PostgreSQL ALTER TABLE Documentation](https://www.postgresql.org/docs/current/sql-altertable.html)
-- [PostgreSQL Row Level Security](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
-- [PostgreSQL Indexes](https://www.postgresql.org/docs/current/indexes.html)
+1. **Assess impact** - How many users affected?
+2. **Rollback immediately** if data integrity at risk
+3. **Communicate** with team
+4. **Execute rollback** SQL
+5. **Verify** application works
+6. **Post-mortem** - Document what happened
 
-## Questions or Issues?
+### Rollback Steps
 
-If you encounter issues with migrations or need help:
+```bash
+# 1. Connect to production
+supabase link --project-ref your-project-ref
 
-1. Check this documentation first
-2. Review the Supabase CLI documentation
-3. Test in local environment before production
-4. Create a backup before applying risky migrations
-5. Ask for help from the team if unsure
+# 2. Run rollback SQL via SQL Editor or CLI
+supabase db execute "ALTER TABLE profiles DROP COLUMN problematic_column;"
 
----
+# 3. Verify
+supabase db execute "SELECT * FROM profiles LIMIT 1;"
 
-**Last Updated**: 2024-01-01
-**Maintained By**: Kulima Development Team
+# 4. Document incident
+```
+
+## Resources
+
+- [Supabase Migration Docs](https://supabase.com/docs/guides/cli/local-development#database-migrations)
+- [PostgreSQL ALTER TABLE](https://www.postgresql.org/docs/current/sql-altertable.html)
+- [PostgreSQL RLS](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)

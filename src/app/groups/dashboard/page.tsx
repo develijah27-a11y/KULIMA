@@ -25,17 +25,15 @@ const getProfile = cache(async (userId: string) => {
 async function GroupStats({ userId }: { userId: string }) {
   const supabase = await createClient();
 
-  const [membersRes, listingsRes, walletRes, loansRes] = await Promise.all([
+  const [membersRes, listingsRes, walletRes, loansRes] = await Promise.allSettled([
     (supabase.from as any)('group_members')
       .select('id', { count: 'exact', head: true })
       .eq('admin_id', userId)
-      .eq('status', 'active')
-      .catch(() => ({ count: 0 })),
+      .eq('status', 'active'),
     (supabase.from as any)('group_listings')
       .select('id', { count: 'exact', head: true })
       .eq('group_admin_id', userId)
-      .eq('status', 'active')
-      .catch(() => ({ count: 0 })),
+      .eq('status', 'active'),
     (supabase.from as any)('wallets')
       .select('balance')
       .eq('user_id', userId)
@@ -43,15 +41,19 @@ async function GroupStats({ userId }: { userId: string }) {
     (supabase.from as any)('group_loans')
       .select('id', { count: 'exact', head: true })
       .eq('group_admin_id', userId)
-      .eq('status', 'pending')
-      .catch(() => ({ count: 0 })),
+      .eq('status', 'pending'),
   ]);
 
+  const membersCount  = membersRes.status  === 'fulfilled' ? (membersRes.value.count   ?? 0) : 0;
+  const listingsCount = listingsRes.status === 'fulfilled' ? (listingsRes.value.count  ?? 0) : 0;
+  const loansCount    = loansRes.status    === 'fulfilled' ? (loansRes.value.count     ?? 0) : 0;
+  const walletBal     = walletRes.status   === 'fulfilled' ? (walletRes.value.data?.balance ?? 0) : 0;
+
   const stats = [
-    { label: 'Group Members', value: membersRes.count ?? 0, icon: '👥', sub: 'Active members', border: C.greenBright },
-    { label: 'Collective Listings', value: listingsRes.count ?? 0, icon: '📦', sub: 'Active on market', border: C.blue },
-    { label: 'Group Balance', value: `UGX ${Math.round(walletRes?.data?.balance ?? 0).toLocaleString()}`, icon: '💵', sub: 'Pooled funds', border: C.amber },
-    { label: 'Loan Applications', value: loansRes.count ?? 0, icon: '🏦', sub: 'Pending review', border: loansRes.count ? C.amber : C.muted },
+    { label: 'Group Members', value: membersCount, icon: '👥', sub: 'Active members', border: C.greenBright },
+    { label: 'Collective Listings', value: listingsCount, icon: '📦', sub: 'Active on market', border: C.blue },
+    { label: 'Group Balance', value: `UGX ${Math.round(walletBal).toLocaleString()}`, icon: '💵', sub: 'Pooled funds', border: C.amber },
+    { label: 'Loan Applications', value: loansCount, icon: '🏦', sub: 'Pending review', border: loansCount ? C.amber : C.muted },
   ];
 
   return (
@@ -116,8 +118,7 @@ async function SeasonBanner({ userId }: { userId: string }) {
     .eq('group_admin_id', userId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .maybeSingle()
-    .catch(() => ({ data: null }));
+    .maybeSingle();
 
   return (
     <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)' }}>
@@ -279,26 +280,25 @@ async function FinancialSummary({ userId }: { userId: string }) {
 
   const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
 
-  const [contribRes, loanRes] = await Promise.all([
+  const [contribRes, loanRes] = await Promise.allSettled([
     (supabase.from as any)('group_contributions')
       .select('amount')
       .eq('admin_id', userId)
-      .gte('contributed_at', weekAgo)
-      .catch(() => ({ data: [] })),
+      .gte('contributed_at', weekAgo),
     (supabase.from as any)('group_loans')
       .select('amount, status')
-      .eq('group_admin_id', userId)
-      .catch(() => ({ data: [] })),
+      .eq('group_admin_id', userId),
   ]);
 
-  const weeklyContrib = ((contribRes.data ?? []) as any[]).reduce((s: number, c: any) => s + (c.amount ?? 0), 0);
-  const activeLoans = ((loanRes.data ?? []) as any[]).filter((l: any) => l.status === 'active');
+  const weeklyContrib = ((contribRes.status === 'fulfilled' ? contribRes.value.data : null) ?? [] as any[]).reduce((s: number, c: any) => s + (c.amount ?? 0), 0);
+  const allLoans = ((loanRes.status === 'fulfilled' ? loanRes.value.data : null) ?? [] as any[]);
+  const activeLoans = allLoans.filter((l: any) => l.status === 'active');
   const loanTotal = activeLoans.reduce((s: number, l: any) => s + (l.amount ?? 0), 0);
 
   const items = [
     { label: 'Contributions this week', value: `UGX ${Math.round(weeklyContrib).toLocaleString()}`, icon: '💵', color: C.greenMed },
     { label: 'Active loans outstanding', value: `UGX ${Math.round(loanTotal).toLocaleString()}`, icon: '🏦', color: loanTotal > 0 ? C.amber : C.muted },
-    { label: 'Loan applications pending', value: ((loanRes.data ?? []) as any[]).filter((l: any) => l.status === 'pending').length, icon: '📋', color: C.blue },
+    { label: 'Loan applications pending', value: allLoans.filter((l: any) => l.status === 'pending').length, icon: '📋', color: C.blue },
   ];
 
   return (

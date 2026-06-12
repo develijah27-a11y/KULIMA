@@ -17,8 +17,7 @@ export default async function SupplierScorecardPage() {
     .select('*')
     .eq('offtaker_id', user.id)
     .order('reliability_score', { ascending: false })
-    .limit(50)
-    .catch(() => ({ data: [] }));
+    .limit(50);
 
   const rows = (scorecards ?? []) as any[];
 

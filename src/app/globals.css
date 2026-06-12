@@ -224,7 +224,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   BASE
+   BASE - Performance optimized
    ═══════════════════════════════════════════════════════════════════ */
 
 html {
@@ -247,8 +247,14 @@ body {
   min-height: 100vh;
 }
 
+/* Performance: Use CSS containment for isolated components */
+.dash-card, .card, .modal-sheet {
+  contain: layout style paint;
+}
+
 * { -webkit-tap-highlight-color: transparent; }
 
+/* Consolidated interactive element rules */
 a, button, [role="button"], input, select, textarea, label {
   touch-action: manipulation;
 }
@@ -279,48 +285,53 @@ button:not(.no-min-touch), [role="button"] {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   INTERACTIVE STATES
+   INTERACTIVE STATES - GPU accelerated
    ═══════════════════════════════════════════════════════════════════ */
 
 .sidebar-item {
   transition: background 80ms ease, transform 80ms ease;
   -webkit-user-select: none; user-select: none;
+  will-change: transform;
 }
 .sidebar-item:hover  { background: rgba(255,255,255,0.10) !important; }
-.sidebar-item:active { background: rgba(255,255,255,0.24) !important; transform: scale(0.97); }
+.sidebar-item:active { background: rgba(255,255,255,0.24) !important; transform: scale(0.97) translateZ(0); }
 
 .mobile-nav-item {
   transition: transform 80ms ease, opacity 80ms ease;
   -webkit-user-select: none; user-select: none;
+  will-change: transform;
 }
-.mobile-nav-item:active { transform: scale(0.88); opacity: 0.6; }
+.mobile-nav-item:active { transform: scale(0.88) translateZ(0); opacity: 0.6; }
 
 .topbar-btn {
   transition: background 80ms ease, transform 80ms ease;
   cursor: pointer;
+  will-change: transform;
 }
 .topbar-btn:hover  { background: var(--color-surface-2) !important; }
-.topbar-btn:active { transform: scale(0.93); }
+.topbar-btn:active { transform: scale(0.93) translateZ(0); }
 
 button:not(:disabled) {
   cursor: pointer;
   transition: opacity 80ms ease, transform 80ms ease, background 80ms ease;
+  will-change: transform;
 }
-button:not(:disabled):active { opacity: 0.75; transform: scale(0.97); }
+button:not(:disabled):active { opacity: 0.75; transform: scale(0.97) translateZ(0); }
 button.no-press:active        { transform: none; opacity: 1; }
 
 a.press-link {
   transition: opacity 80ms ease, transform 80ms ease;
+  will-change: transform;
 }
-a.press-link:active { opacity: 0.65; transform: scale(0.97); }
+a.press-link:active { opacity: 0.65; transform: scale(0.97) translateZ(0); }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SKELETON LOADER
+   SKELETON LOADER - GPU accelerated
    ═══════════════════════════════════════════════════════════════════ */
 
 @keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position:  200% 0; }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* Disable animations for users who prefer reduced motion */
@@ -333,36 +344,70 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97); }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #E9EDF0 0%, #F3F6F4 40%, #FFFFFF 50%, #F3F6F4 60%, #E9EDF0 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
+  background: #E9EDF0;
+  position: relative;
+  overflow: hidden;
   border-radius: 8px;
 }
 
-.dark .skeleton {
-  background: linear-gradient(90deg, #132416 0%, #1C3420 40%, #243D28 50%, #1C3420 60%, #132416 100%);
-  background-size: 200% 100%;
+.skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
   animation: shimmer 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+.dark .skeleton {
+  background: #132416;
+}
+
+.dark .skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
 }
 
 .dash-skeleton {
-  background: linear-gradient(90deg, #E9EDF0 0%, #F3F6F4 40%, #FFFFFF 50%, #F3F6F4 60%, #E9EDF0 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
+  background: #E9EDF0;
+  position: relative;
+  overflow: hidden;
   border-radius: 12px;
+}
+
+.dash-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  animation: shimmer 1.6s ease-in-out infinite;
+  will-change: transform;
 }
 
 .dark .dash-skeleton {
-  background: linear-gradient(90deg, #0D1F12 0%, #132416 40%, #1C3420 50%, #132416 60%, #0D1F12 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
+  background: #0D1F12;
+}
+
+.dark .dash-skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
 }
 
 .orange-skeleton {
-  background: linear-gradient(90deg, #1A0800 0%, #2A1000 40%, #3A1800 50%, #2A1000 60%, #1A0800 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.6s ease-in-out infinite;
+  background: #1A0800;
+  position: relative;
+  overflow: hidden;
   border-radius: 12px;
+}
+
+.orange-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: shimmer 1.6s ease-in-out infinite;
+  will-change: transform;
 }
 
 /* ═══════════════════════════════════════════════════════════════════

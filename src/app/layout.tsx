@@ -41,23 +41,28 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-        <meta name="theme-color" content="#22C55E" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+        <meta name="theme-color" content="#22C55E" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0D1F12" media="(prefers-color-scheme: dark)" />
         {/* Preconnect to external origins — reduces DNS lookup time */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://hjvnkintvjogwljchwcq.supabase.co" />
         <link rel="dns-prefetch" href="https://api.openweathermap.org" />
-        {/* Non-blocking font loading with display=swap to eliminate invisible-text flash */}
-        <link
-          rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
-        />
+        {/* Optimized font loading: critical weights only, swap for instant render */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=DM+Mono:wght@400&display=swap"
+          media="print"
+          // @ts-ignore
+          onLoad="this.media='all'"
         />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=DM+Mono:wght@400&display=swap"
+          />
+        </noscript>
       </head>
       <body
         className={cn("min-h-screen antialiased")}

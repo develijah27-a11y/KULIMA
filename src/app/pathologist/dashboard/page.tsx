@@ -29,33 +29,34 @@ async function PathologistStats({ userId }: { userId: string }) {
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
 
   // Try disease_scans table (from existing disease detection feature)
-  const [pendingRes, urgentRes, resolvedRes, scansRes] = await Promise.all([
+  const [pendingRes, urgentRes, resolvedRes, scansRes] = await Promise.allSettled([
+    (supabase.from as any)('disease_reports')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending'),
     (supabase.from as any)('disease_reports')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'pending')
-      .catch(() => ({ count: 0 })),
-    (supabase.from as any)('disease_reports')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending')
-      .eq('urgency', 'high')
-      .catch(() => ({ count: 0 })),
+      .eq('urgency', 'high'),
     (supabase.from as any)('disease_reports')
       .select('id', { count: 'exact', head: true })
       .eq('pathologist_id', userId)
       .eq('status', 'resolved')
-      .gte('updated_at', weekAgo)
-      .catch(() => ({ count: 0 })),
+      .gte('updated_at', weekAgo),
     (supabase.from as any)('disease_scans')
       .select('id', { count: 'exact', head: true })
-      .gte('created_at', todayStart.toISOString())
-      .catch(() => ({ count: 0 })),
+      .gte('created_at', todayStart.toISOString()),
   ]);
 
+  const pendingCount  = pendingRes.status  === 'fulfilled' ? (pendingRes.value.count  ?? 0) : 0;
+  const urgentCount   = urgentRes.status   === 'fulfilled' ? (urgentRes.value.count   ?? 0) : 0;
+  const resolvedCount = resolvedRes.status === 'fulfilled' ? (resolvedRes.value.count ?? 0) : 0;
+  const scansCount    = scansRes.status    === 'fulfilled' ? (scansRes.value.count    ?? 0) : 0;
+
   const stats = [
-    { label: 'Pending Cases', value: pendingRes.count ?? 0, icon: '📋', sub: 'Awaiting triage', border: pendingRes.count ? C.amber : C.muted },
-    { label: 'Urgent Cases', value: urgentRes.count ?? 0, icon: '🚨', sub: 'High severity', border: urgentRes.count ? C.red : C.muted },
-    { label: 'Resolved This Week', value: resolvedRes.count ?? 0, icon: '✅', sub: 'Closed by you', border: C.greenBright },
-    { label: 'Scans Today', value: scansRes.count ?? 0, icon: '🔬', sub: 'AI diagnoses run', border: C.blue },
+    { label: 'Pending Cases', value: pendingCount, icon: '📋', sub: 'Awaiting triage', border: pendingCount ? C.amber : C.muted },
+    { label: 'Urgent Cases', value: urgentCount, icon: '🚨', sub: 'High severity', border: urgentCount ? C.red : C.muted },
+    { label: 'Resolved This Week', value: resolvedCount, icon: '✅', sub: 'Closed by you', border: C.greenBright },
+    { label: 'Scans Today', value: scansCount, icon: '🔬', sub: 'AI diagnoses run', border: C.blue },
   ];
 
   return (

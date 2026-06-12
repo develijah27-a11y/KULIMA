@@ -14,15 +14,15 @@ export default async function GroupsWalletPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const [walletRes, txnsRes, contribRes] = await Promise.all([
+  const [walletRes, txnsRes, contribRes] = await Promise.allSettled([
     (supabase.from as any)('wallets').select('*').eq('user_id', user.id).maybeSingle(),
     (supabase.from as any)('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(30),
-    (supabase.from as any)('group_contributions').select('amount, contributed_at, name').eq('admin_id', user.id).order('contributed_at', { ascending: false }).limit(10).catch(() => ({ data: [] })),
+    (supabase.from as any)('group_contributions').select('amount, contributed_at, name').eq('admin_id', user.id).order('contributed_at', { ascending: false }).limit(10),
   ]);
 
-  const wallet = walletRes.data;
-  const txns = txnsRes.data ?? [];
-  const contribs = (contribRes.data ?? []) as any[];
+  const wallet = walletRes.status === 'fulfilled' ? walletRes.value.data : null;
+  const txns = (txnsRes.status === 'fulfilled' ? txnsRes.value.data : null) ?? [];
+  const contribs = ((contribRes.status === 'fulfilled' ? contribRes.value.data : null) ?? []) as any[];
   const balance = wallet?.balance ?? 0;
   const escrowBalance = wallet?.escrow_balance ?? 0;
   const totalContribs = contribs.reduce((s: number, c: any) => s + Number(c.amount), 0);

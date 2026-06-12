@@ -24,8 +24,7 @@ export default async function GroupLoansPage() {
     .select('id, member_name, amount, purpose, status, repayment_date')
     .eq('admin_id', user.id)
     .order('status')
-    .limit(20)
-    .catch(() => ({ data: [] }));
+    .limit(20);
 
   const rows = (loans ?? []) as any[];
   const outstanding = rows.filter((l: any) => l.status === 'active').reduce((s: number, l: any) => s + (l.amount ?? 0), 0);

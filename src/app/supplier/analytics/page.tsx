@@ -16,15 +16,15 @@ export default async function SupplierAnalyticsPage() {
   const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
   const profileId = (profile as any)?.id ?? '';
 
-  const [ordersRes, productsRes, walletRes] = await Promise.all([
-    (supabase.from as any)('supplier_orders').select('amount, status, created_at').eq('supplier_id', profileId).order('created_at', { ascending: false }).limit(100).catch(() => ({ data: [] })),
-    (supabase.from as any)('supplier_products').select('id, name, stock_qty', { count: 'exact' }).eq('supplier_id', profileId).catch(() => ({ data: [], count: 0 })),
+  const [ordersRes, productsRes, walletRes] = await Promise.allSettled([
+    (supabase.from as any)('supplier_orders').select('amount, status, created_at').eq('supplier_id', profileId).order('created_at', { ascending: false }).limit(100),
+    (supabase.from as any)('supplier_products').select('id, name, stock_qty', { count: 'exact' }).eq('supplier_id', profileId),
     (supabase.from as any)('wallets').select('balance').eq('user_id', user.id).maybeSingle(),
   ]);
 
-  const orders = (ordersRes.data ?? []) as any[];
-  const products = (productsRes.data ?? []) as any[];
-  const balance = walletRes.data?.balance ?? 0;
+  const orders   = ((ordersRes.status   === 'fulfilled' ? ordersRes.value.data   : null) ?? []) as any[];
+  const products = ((productsRes.status === 'fulfilled' ? productsRes.value.data : null) ?? []) as any[];
+  const balance  = walletRes.status === 'fulfilled' ? (walletRes.value.data?.balance ?? 0) : 0;
 
   const completedOrders = orders.filter((o: any) => o.status === 'delivered');
   const totalRevenue = completedOrders.reduce((s: number, o: any) => s + Number(o.amount ?? 0), 0);

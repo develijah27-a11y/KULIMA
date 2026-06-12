@@ -1,33 +1,26 @@
+/**
+ * POST /api/auth/logout
+ * User logout endpoint
+ * Requirements: 10.6, 23.3, 23.4
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { env } from '@/config/env';
+import { logout } from '@/features/auth/services/auth.service';
+import { handleError } from '@/utils/error-handler';
 
 export async function POST(request: NextRequest) {
-  const anonKey =
-    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string);
+  try {
+    await logout();
 
-  // Revoke the refresh token at Supabase (server-side)
-  const supabase = createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, anonKey, {
-    cookies: {
-      getAll() { return request.cookies.getAll(); },
-      setAll() {},
-    },
-  });
-  await supabase.auth.signOut();
-
-  // Return success and expire every sb-* cookie the browser holds
-  const response = NextResponse.json({ ok: true });
-  request.cookies.getAll().forEach(({ name }) => {
-    if (name.startsWith('sb-')) {
-      response.cookies.set(name, '', {
-        path: '/',
-        maxAge: 0,
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      });
-    }
-  });
-
-  return response;
+    return NextResponse.json({
+      success: true,
+      data: { message: 'Logged out successfully' },
+    });
+  } catch (error) {
+    const { response, statusCode } = handleError(error, {
+      endpoint: '/api/auth/logout',
+      method: 'POST',
+    });
+    return NextResponse.json(response, { status: statusCode });
+  }
 }

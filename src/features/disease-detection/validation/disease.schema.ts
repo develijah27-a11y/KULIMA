@@ -106,4 +106,4 @@ export const getDiseaseScansQuerySchema = z.object({
 /**
  * TypeScript type inferred from the query schema
  */
-export type GetDiseaseScansQuery = z.infer<typeof getDisease ScansQuerySchema>;
+export type GetDiseaseScansQuery = z.infer<typeof getDiseaseScansQuerySchema>;

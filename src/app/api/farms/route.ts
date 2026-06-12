@@ -1,73 +1,79 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+/**
+ * GET/POST /api/farms
+ * Requirements: 14.1, 14.2, 14.6, 23.2, 23.3, 23.4, 23.5, 23.6, 23.7
+ */
 
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+import { NextRequest, NextResponse } from 'next/server';
+import { createFarmSchema, farmQuerySchema } from '@/features/farms/validation/farm.schema';
+import { createFarm, getFarmsByUser } from '@/features/farms/services/farm.service';
+import { getCurrentUser } from '@/features/auth/services/auth.service';
+import { handleError, AuthenticationError } from '@/utils/error-handler';
+import { buildPaginatedResponse } from '@/utils/pagination';
 
-  const { data, error } = await (supabase.from as any)('farms')
-    .select('*')
-    .eq('user_id', user.id)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
-    .limit(50);
+export async function GET(request: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new AuthenticationError();
+    }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(
-    { farms: data },
-    { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=300' } }
-  );
-}
+    const searchParams = request.nextUrl.searchParams;
+    const queryData = {
+      page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1,
+      limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 20,
+      sortBy: (searchParams.get('sortBy') || 'created_at') as 'created_at' | 'name',
+      order: (searchParams.get('order') || 'desc') as 'asc' | 'desc',
+    };
 
-export async function POST(req: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const validation = farmQuerySchema.safeParse(queryData);
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: { message: 'Invalid query parameters' } },
+        { status: 400 }
+      );
+    }
 
-  const body = await req.json();
-  const { name, district, location, size_hectares, farm_type, crop_types, description, boundary } = body;
+    const { page, limit, sortBy, order } = validation.data;
+    const { farms, total } = await getFarmsByUser(user.id, page, limit, sortBy, order);
 
-  if (!name?.trim()) return NextResponse.json({ error: 'Farm name required' }, { status: 400 });
-  if (!location && !district) return NextResponse.json({ error: 'Location required' }, { status: 400 });
-
-  const { data, error } = await (supabase.from as any)('farms').insert({
-    user_id: user.id,
-    name: name.trim(),
-    location: location ?? district,
-    district: district ?? location,
-    size_hectares: size_hectares ?? null,
-    farm_type: farm_type ?? null,
-    crop_types: crop_types ?? null,
-    description: description ?? null,
-    boundary: boundary ?? null,
-    is_active: true,
-  }).select('id').single();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, farmId: data.id });
-}
-
-export async function PATCH(req: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const body = await req.json();
-  const { id, ...updates } = body;
-  if (!id) return NextResponse.json({ error: 'Farm id required' }, { status: 400 });
-
-  const allowed = ['name', 'district', 'location', 'size_hectares', 'farm_type', 'crop_types', 'description', 'boundary', 'is_active'];
-  const safeUpdates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  for (const key of allowed) {
-    if (key in updates) safeUpdates[key] = updates[key];
+    return NextResponse.json({
+      success: true,
+      data: buildPaginatedResponse(farms, page, limit, total),
+    });
+  } catch (error) {
+    const { response, statusCode } = handleError(error);
+    return NextResponse.json(response, { status: statusCode });
   }
+}
 
-  const { error } = await (supabase.from as any)('farms')
-    .update(safeUpdates)
-    .eq('id', id)
-    .eq('user_id', user.id);
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new AuthenticationError();
+    }
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true });
+    const body = await request.json();
+    const validation = createFarmSchema.safeParse(body);
+
+    if (!validation.success) {
+      const fieldErrors: Record<string, string[]> = {};
+      validation.error.issues.forEach((issue) => {
+        const path = issue.path.join('.');
+        if (!fieldErrors[path]) fieldErrors[path] = [];
+        fieldErrors[path].push(issue.message);
+      });
+      return NextResponse.json(
+        { success: false, error: { message: 'Validation failed', fields: fieldErrors } },
+        { status: 400 }
+      );
+    }
+
+    const farm = await createFarm({ userId: user.id, ...validation.data });
+
+    return NextResponse.json({ success: true, data: { farm } }, { status: 201 });
+  } catch (error) {
+    const { response, statusCode } = handleError(error);
+    return NextResponse.json(response, { status: statusCode });
+  }
 }

@@ -23,8 +23,7 @@ export default async function AnnouncementsPage() {
     .select('id, title, body, priority, created_at, emoji')
     .eq('admin_id', user.id)
     .order('created_at', { ascending: false })
-    .limit(20)
-    .catch(() => ({ data: [] }));
+    .limit(20);
 
   const rows = (announcements ?? []) as any[];
   const displayRows = rows.length > 0 ? rows : SAMPLE_ANNOUNCEMENTS;

@@ -9,6 +9,8 @@ const nextConfig = {
   compress: true,
   // Suppress Turbopack warning when no turbopack config is needed
   turbopack: {},
+  reactStrictMode: true,
+  poweredByHeader: false,
   experimental: {
     optimizePackageImports: [
       'lucide-react',
@@ -18,6 +20,8 @@ const nextConfig = {
       '@supabase/ssr',
       '@supabase/supabase-js',
     ],
+    optimizeCss: true,
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],

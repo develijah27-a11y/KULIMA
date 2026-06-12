@@ -13,13 +13,12 @@ export default async function InventoryPage() {
     .eq('user_id', user.id)
     .single();
 
-  const items: InventoryItem[] = await (supabase.from as any)('farm_inventory')
+  const { data: inventoryData } = await (supabase.from as any)('farm_inventory')
     .select('*')
     .eq('farmer_id', profile?.id)
     .order('category')
-    .order('name')
-    .then((res: any) => res.data ?? [])
-    .catch(() => []);
+    .order('name');
+  const items: InventoryItem[] = inventoryData ?? [];
 
   return (
     <InventoryClient

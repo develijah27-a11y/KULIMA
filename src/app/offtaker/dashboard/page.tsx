@@ -25,17 +25,15 @@ const getProfile = cache(async (userId: string) => {
 async function OfftakerStats({ userId }: { userId: string }) {
   const supabase = await createClient();
 
-  const [contractsRes, suppliersRes, walletRes, pendingPayRes] = await Promise.all([
+  const [contractsRes, suppliersRes, walletRes, pendingPayRes] = await Promise.allSettled([
     (supabase.from as any)('offtaker_contracts')
       .select('id', { count: 'exact', head: true })
       .eq('offtaker_id', userId)
-      .eq('status', 'active')
-      .catch(() => ({ count: 0 })),
+      .eq('status', 'active'),
     (supabase.from as any)('offtaker_contracts')
       .select('farmer_id')
       .eq('offtaker_id', userId)
-      .eq('status', 'active')
-      .catch(() => ({ data: [] })),
+      .eq('status', 'active'),
     (supabase.from as any)('wallets')
       .select('balance')
       .eq('user_id', userId)
@@ -43,18 +41,20 @@ async function OfftakerStats({ userId }: { userId: string }) {
     (supabase.from as any)('offtaker_contracts')
       .select('id', { count: 'exact', head: true })
       .eq('offtaker_id', userId)
-      .eq('payment_status', 'pending')
-      .catch(() => ({ count: 0 })),
+      .eq('payment_status', 'pending'),
   ]);
 
-  // Count unique suppliers
-  const uniqueSuppliers = new Set((suppliersRes.data ?? []).map((r: any) => r.farmer_id)).size;
+  const contractsCount  = contractsRes.status   === 'fulfilled' ? (contractsRes.value.count   ?? 0) : 0;
+  const suppliersData   = suppliersRes.status    === 'fulfilled' ? (suppliersRes.value.data    ?? []) : [];
+  const walletBal       = walletRes.status       === 'fulfilled' ? (walletRes.value.data?.balance ?? 0) : 0;
+  const pendingPayCount = pendingPayRes.status   === 'fulfilled' ? (pendingPayRes.value.count  ?? 0) : 0;
+  const uniqueSuppliers = new Set(suppliersData.map((r: any) => r.farmer_id)).size;
 
   const stats = [
-    { label: 'Active Contracts', value: contractsRes.count ?? 0, icon: '📄', sub: 'Current agreements', border: C.greenBright },
+    { label: 'Active Contracts', value: contractsCount, icon: '📄', sub: 'Current agreements', border: C.greenBright },
     { label: 'Suppliers', value: uniqueSuppliers, icon: '🧑‍🌾', sub: 'Active farmers supplying', border: C.blue },
-    { label: 'Pending Payments', value: pendingPayRes.count ?? 0, icon: '💳', sub: 'Awaiting settlement', border: pendingPayRes.count ? C.amber : C.muted },
-    { label: 'Wallet Balance', value: `UGX ${Math.round(walletRes?.data?.balance ?? 0).toLocaleString()}`, icon: '💰', sub: 'Available funds', border: C.purple },
+    { label: 'Pending Payments', value: pendingPayCount, icon: '💳', sub: 'Awaiting settlement', border: pendingPayCount ? C.amber : C.muted },
+    { label: 'Wallet Balance', value: `UGX ${Math.round(walletBal).toLocaleString()}`, icon: '💰', sub: 'Available funds', border: C.purple },
   ];
 
   return (

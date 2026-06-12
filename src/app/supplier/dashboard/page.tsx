@@ -30,28 +30,28 @@ async function SupplierStats({ profileId, userId }: { profileId: string; userId:
     (supabase.from as any)('wallets').select('balance').eq('user_id', userId).maybeSingle(),
   ]);
 
-  // Try supplier-specific tables safely
-  const productsRes = await (supabase.from as any)('supplier_products')
-    .select('id', { count: 'exact', head: true })
-    .eq('supplier_id', profileId)
-    .catch(() => ({ count: 0 }));
+  const [productsRes, ordersRes, lowStockRes] = await Promise.allSettled([
+    (supabase.from as any)('supplier_products')
+      .select('id', { count: 'exact', head: true })
+      .eq('supplier_id', profileId),
+    (supabase.from as any)('supplier_orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('supplier_id', profileId)
+      .eq('status', 'pending'),
+    (supabase.from as any)('supplier_products')
+      .select('id', { count: 'exact', head: true })
+      .eq('supplier_id', profileId)
+      .lt('stock_qty', 10),
+  ]);
 
-  const ordersRes = await (supabase.from as any)('supplier_orders')
-    .select('id', { count: 'exact', head: true })
-    .eq('supplier_id', profileId)
-    .eq('status', 'pending')
-    .catch(() => ({ count: 0 }));
-
-  const lowStockRes = await (supabase.from as any)('supplier_products')
-    .select('id', { count: 'exact', head: true })
-    .eq('supplier_id', profileId)
-    .lt('stock_qty', 10)
-    .catch(() => ({ count: 0 }));
+  const productsCount = productsRes.status === 'fulfilled' ? (productsRes.value.count ?? 0) : 0;
+  const ordersCount   = ordersRes.status === 'fulfilled'   ? (ordersRes.value.count   ?? 0) : 0;
+  const lowStockCount = lowStockRes.status === 'fulfilled' ? (lowStockRes.value.count ?? 0) : 0;
 
   const stats = [
-    { label: 'Products Listed', value: productsRes.count ?? 0, icon: '📦', sub: 'In your catalogue', border: C.greenBright },
-    { label: 'Pending Orders', value: ordersRes.count ?? 0, icon: '🛒', sub: 'Awaiting processing', border: C.amber },
-    { label: 'Low Stock Alerts', value: lowStockRes.count ?? 0, icon: '⚠️', sub: 'Need restocking', border: lowStockRes.count ? C.red : C.muted },
+    { label: 'Products Listed', value: productsCount, icon: '📦', sub: 'In your catalogue', border: C.greenBright },
+    { label: 'Pending Orders', value: ordersCount, icon: '🛒', sub: 'Awaiting processing', border: C.amber },
+    { label: 'Low Stock Alerts', value: lowStockCount, icon: '⚠️', sub: 'Need restocking', border: lowStockCount ? C.red : C.muted },
     { label: 'Wallet Balance', value: `UGX ${Math.round(walletRes?.data?.balance ?? 0).toLocaleString()}`, icon: '💳', sub: 'Available balance', border: C.blue },
   ];
 

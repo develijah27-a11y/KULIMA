@@ -64,25 +64,29 @@ async function PlatformKPIs() {
   const [
     totalRes, newWeekRes, activeListRes, gmvRes,
     kycRes, walletRes, openJobsRes, scansRes,
-  ] = await Promise.all([
+  ] = await Promise.allSettled([
     (supabase.from as any)('profiles').select('id', { count: 'exact', head: true }),
     (supabase.from as any)('profiles').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo),
     (supabase.from as any)('listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     (supabase.from as any)('offers').select('offered_price, listing:listings(quantity_kg)').eq('status', 'completed').gte('created_at', monthStart),
-    (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending').catch(() => ({ count: 0 })),
-    (supabase.from as any)('wallets').select('balance').catch(() => ({ data: [] })),
-    (supabase.from as any)('delivery_requests').select('id', { count: 'exact', head: true }).eq('status', 'open').catch(() => ({ count: 0 })),
-    (supabase.from as any)('disease_scans').select('id', { count: 'exact', head: true }).gte('created_at', todayStart.toISOString()).catch(() => ({ count: 0 })),
+    (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    (supabase.from as any)('wallets').select('balance'),
+    (supabase.from as any)('delivery_requests').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+    (supabase.from as any)('disease_scans').select('id', { count: 'exact', head: true }).gte('created_at', todayStart.toISOString()),
   ]);
 
-  const gmv = (gmvRes.data ?? []).reduce((s: number, o: any) => s + ((o?.listing?.quantity_kg ?? 0) * (o.offered_price ?? 0)), 0);
-  const tvl = ((walletRes.data ?? []) as any[]).reduce((s: number, w: any) => s + (w.balance ?? 0), 0);
-  const kycPending = kycRes.count ?? 0;
+  const gmv = ((gmvRes.status === 'fulfilled' ? gmvRes.value.data : null) ?? []).reduce((s: number, o: any) => s + ((o?.listing?.quantity_kg ?? 0) * (o.offered_price ?? 0)), 0);
+  const tvl = (((walletRes.status === 'fulfilled' ? walletRes.value.data : null) ?? []) as any[]).reduce((s: number, w: any) => s + (w.balance ?? 0), 0);
+  const kycPending = kycRes.status === 'fulfilled' ? (kycRes.value.count ?? 0) : 0;
+
+  const totalCount      = totalRes.status      === 'fulfilled' ? (totalRes.value.count      ?? 0) : 0;
+  const newWeekCount    = newWeekRes.status    === 'fulfilled' ? (newWeekRes.value.count    ?? 0) : 0;
+  const activeListCount = activeListRes.status === 'fulfilled' ? (activeListRes.value.count ?? 0) : 0;
 
   const kpis = [
-    { label: 'Total Users', value: (totalRes.count ?? 0).toLocaleString(), sub: 'All roles registered', icon: '👥', border: C.violet, color: C.violet },
-    { label: 'New This Week', value: `+${(newWeekRes.count ?? 0).toLocaleString()}`, sub: '7-day growth', icon: '📈', border: C.greenBright, color: C.greenMed },
-    { label: 'Active Listings', value: (activeListRes.count ?? 0).toLocaleString(), sub: 'Live on marketplace', icon: '📦', border: C.amber, color: C.amber },
+    { label: 'Total Users', value: totalCount.toLocaleString(), sub: 'All roles registered', icon: '👥', border: C.violet, color: C.violet },
+    { label: 'New This Week', value: `+${newWeekCount.toLocaleString()}`, sub: '7-day growth', icon: '📈', border: C.greenBright, color: C.greenMed },
+    { label: 'Active Listings', value: activeListCount.toLocaleString(), sub: 'Live on marketplace', icon: '📦', border: C.amber, color: C.amber },
     { label: 'GMV This Month', value: gmv >= 1e9 ? `${(gmv/1e9).toFixed(1)}B` : gmv >= 1e6 ? `${(gmv/1e6).toFixed(1)}M` : gmv > 0 ? `${Math.round(gmv/1000)}K` : '—', sub: 'UGX gross market value', icon: '💰', border: C.blue, color: C.blue },
     { label: 'Pending KYC', value: kycPending.toString(), sub: kycPending ? 'Awaiting review' : 'All clear', icon: kycPending ? '⚠️' : '✅', border: kycPending ? C.red : C.greenBright, color: kycPending ? C.red : C.greenMed, alert: kycPending > 0 },
     { label: 'Wallet TVL', value: tvl >= 1e9 ? `${(tvl/1e9).toFixed(1)}B` : tvl >= 1e6 ? `${(tvl/1e6).toFixed(1)}M` : tvl > 0 ? `${Math.round(tvl/1000)}K` : '—', sub: 'UGX total in wallets', icon: '🏦', border: C.indigo, color: C.indigo },
@@ -256,18 +260,23 @@ async function RecentRegistrations() {
 // ─── Pending Actions ──────────────────────────────────────────────────────────
 async function PendingActions() {
   const supabase = await createClient();
-  const [kycRes, offersRes, reportsRes, deliveriesRes] = await Promise.all([
-    (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending').catch(() => ({ count: 0 })),
-    (supabase.from as any)('offers').select('id', { count: 'exact', head: true }).eq('status', 'pending').catch(() => ({ count: 0 })),
-    (supabase.from as any)('disease_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending').catch(() => ({ count: 0 })),
-    (supabase.from as any)('delivery_requests').select('id', { count: 'exact', head: true }).eq('status', 'open').catch(() => ({ count: 0 })),
+  const [kycRes, offersRes, reportsRes, deliveriesRes] = await Promise.allSettled([
+    (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    (supabase.from as any)('offers').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    (supabase.from as any)('disease_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    (supabase.from as any)('delivery_requests').select('id', { count: 'exact', head: true }).eq('status', 'open'),
   ]);
 
+  const kycCount        = kycRes.status        === 'fulfilled' ? (kycRes.value.count        ?? 0) : 0;
+  const offersCount     = offersRes.status     === 'fulfilled' ? (offersRes.value.count     ?? 0) : 0;
+  const reportsCount    = reportsRes.status    === 'fulfilled' ? (reportsRes.value.count    ?? 0) : 0;
+  const deliveriesCount = deliveriesRes.status === 'fulfilled' ? (deliveriesRes.value.count ?? 0) : 0;
+
   const items = [
-    { label: 'KYC Verifications', count: kycRes.count ?? 0, href: '/admin/verification', icon: '🪪', urgency: (kycRes.count ?? 0) > 5 },
-    { label: 'Open Buyer Offers', count: offersRes.count ?? 0, href: '/admin/buyers', icon: '💬', urgency: false },
-    { label: 'Disease Reports', count: reportsRes.count ?? 0, href: '/admin/dashboard', icon: '🔬', urgency: (reportsRes.count ?? 0) > 0 },
-    { label: 'Open Delivery Jobs', count: deliveriesRes.count ?? 0, href: '/admin/dashboard', icon: '🚛', urgency: false },
+    { label: 'KYC Verifications', count: kycCount, href: '/admin/verification', icon: '🪪', urgency: kycCount > 5 },
+    { label: 'Open Buyer Offers', count: offersCount, href: '/admin/buyers', icon: '💬', urgency: false },
+    { label: 'Disease Reports', count: reportsCount, href: '/admin/dashboard', icon: '🔬', urgency: reportsCount > 0 },
+    { label: 'Open Delivery Jobs', count: deliveriesCount, href: '/admin/dashboard', icon: '🚛', urgency: false },
   ];
 
   return (
@@ -523,8 +532,7 @@ async function AlertBanner() {
   const supabase = await createClient();
   const { count } = await (supabase.from as any)('verifications')
     .select('id', { count: 'exact', head: true })
-    .eq('status', 'pending')
-    .catch(() => ({ count: 0 }));
+    .eq('status', 'pending');
 
   if (!count || count === 0) return null;
 
