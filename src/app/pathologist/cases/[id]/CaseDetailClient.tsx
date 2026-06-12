@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -122,8 +123,16 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
             <p style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: 'uppercase', margin: '0 0 8px' }}>Photos</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {c.image_urls.map((url: string, i: number) => (
-                <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                  <img src={url} alt={`Photo ${i + 1}`} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--d-border)' }} />
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', flexShrink: 0 }}>
+                  <Image
+                    src={url}
+                    alt={`Photo ${i + 1}`}
+                    width={80}
+                    height={80}
+                    style={{ objectFit: 'cover', borderRadius: 8, border: '1px solid var(--d-border)', display: 'block' }}
+                    loading="lazy"
+                    unoptimized={!url.includes('supabase.co')}
+                  />
                 </a>
               ))}
             </div>

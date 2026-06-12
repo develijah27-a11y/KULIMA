@@ -56,7 +56,8 @@ export function CropPhoto({ crop, width = 600, height = 400, className = '', sty
         fill
         className="object-cover"
         onError={() => setImgError(true)}
-        sizes={`${width}px`}
+        sizes={`(max-width: 640px) 100vw, ${width}px`}
+        loading="lazy"
       />
       {showEmoji && (
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 60%)' }} />
@@ -82,7 +83,7 @@ export function CropPhotoCard({
       <div style={{ position: 'relative', height: 140, overflow: 'hidden' }}>
         {photoUrl && !imgError ? (
           <>
-            <Image src={photoUrl} alt={crop} fill className="object-cover" onError={() => setImgError(true)} sizes="400px" />
+            <Image src={photoUrl} alt={crop} fill className="object-cover" onError={() => setImgError(true)} sizes="(max-width: 640px) 100vw, 400px" loading="lazy" />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.45) 0%, transparent 55%)' }} />
           </>
         ) : (

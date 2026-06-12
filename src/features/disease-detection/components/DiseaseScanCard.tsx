@@ -26,6 +26,8 @@ export function DiseaseScanCard({ scan }: DiseaseScanCardProps) {
             alt={scan.crop_type}
             fill
             className="object-cover"
+            sizes="(max-width: 640px) 100vw, 400px"
+            loading="lazy"
           />
         </div>
       )}
