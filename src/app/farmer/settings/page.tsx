@@ -1,6 +1,7 @@
 ﻿import { redirect } from 'next/navigation';
 import { getAuthSession } from '@/lib/supabase/auth-cache';
 import { SignOutButton } from './SignOutButton';
+import { DeleteAccountButton } from './DeleteAccountButton';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -82,6 +83,7 @@ export default async function SettingsPage() {
         </p>
         <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
           <SignOutButton borderTop={false} />
+          <DeleteAccountButton />
         </div>
       </div>
     </div>

@@ -15,43 +15,43 @@ export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProp
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-10"
-      style={{ background: 'var(--color-soil)' }}
+      style={{ background: 'linear-gradient(160deg, #FFF7ED 0%, #FFEDD5 50%, #FED7AA 100%)' }}
     >
       {/* Card */}
       <div
         className="w-full max-w-[420px]"
         style={{
-          background: '#132416',
-          border: '1px solid rgba(74,222,128,0.12)',
-          borderRadius: 'var(--radius-card)',
-          boxShadow: '0 8px 48px rgba(0,0,0,0.50)',
+          background: '#FFFFFF',
+          border: '2px solid #FED7AA',
+          borderRadius: 20,
+          boxShadow: '0 8px 40px rgba(249,115,22,0.18)',
         }}
       >
-        {/* Header strip */}
+        {/* Header */}
         <div
           className="px-8 pt-8 pb-6"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ borderBottom: '1.5px solid #FEE2C8' }}
         >
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 mb-6"
-          >
+          <Link href="/" className="inline-flex items-center gap-2 mb-6">
             <span
-              className="text-xl font-bold tracking-tight"
-              style={{ color: 'var(--color-sprout)' }}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-base font-black"
+              style={{ background: '#F97316', color: '#fff' }}
             >
+              K
+            </span>
+            <span className="text-xl font-black" style={{ color: '#EA580C', letterSpacing: '-0.03em' }}>
               Kulima
             </span>
           </Link>
 
           <h1
-            className="text-2xl font-bold leading-tight"
-            style={{ color: 'var(--color-cream)', letterSpacing: '-0.02em' }}
+            className="text-2xl leading-tight"
+            style={{ color: '#000000', letterSpacing: '-0.025em', fontWeight: 900 }}
           >
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-1.5 text-sm" style={{ color: 'rgba(249,250,251,0.5)' }}>
+            <p className="mt-2 text-sm" style={{ color: '#374151', fontWeight: 700 }}>
               {subtitle}
             </p>
           )}
@@ -67,8 +67,9 @@ export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProp
           <div
             className="px-8 py-4 text-center text-sm"
             style={{
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              color: 'rgba(249,250,251,0.45)',
+              borderTop: '1.5px solid #FEE2C8',
+              color: '#374151',
+              fontWeight: 700,
             }}
           >
             {footer}

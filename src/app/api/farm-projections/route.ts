@@ -16,9 +16,12 @@ export async function GET(req: Request) {
 
   if (season) q = q.eq('season', season);
 
-  const { data, error } = await q;
+  const { data, error } = await q.limit(100);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ projections: data ?? [] });
+  return NextResponse.json(
+    { projections: data ?? [] },
+    { headers: { 'Cache-Control': 'private, max-age=120, stale-while-revalidate=300' } },
+  );
 }
 
 export async function POST(req: Request) {

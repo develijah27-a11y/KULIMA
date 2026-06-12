@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Polyline, Polygon } from 'leaflet';
@@ -9,12 +9,10 @@ interface Props {
 
 function computeAreaHa(points: [number, number][]): number {
   if (points.length < 3) return 0;
-  // Shoelace formula with approximate meters conversion
-  const R = 6371000; // Earth radius in meters
+  const R = 6371000;
   const toRad = (deg: number) => (deg * Math.PI) / 180;
   const lat0 = toRad(points[0][0]);
   const lng0 = toRad(points[0][1]);
-
   let area = 0;
   for (let i = 0; i < points.length; i++) {
     const j = (i + 1) % points.length;
@@ -24,54 +22,68 @@ function computeAreaHa(points: [number, number][]): number {
     const y2 = (toRad(points[j][0]) - lat0) * R;
     area += x1 * y2 - x2 * y1;
   }
-
-  return Math.abs(area / 2) / 10000; // m² → hectares
+  return Math.abs(area / 2) / 10000;
 }
 
 export function GPSWalkMap({ onBoundaryChange }: Props) {
   const containerRef   = useRef<HTMLDivElement>(null);
   const mapRef         = useRef<LMap | null>(null);
+  const leafletRef     = useRef<typeof import('leaflet') | null>(null);
   const trackLayerRef  = useRef<Polyline | null>(null);
   const polygonRef     = useRef<Polygon | null>(null);
   const watchIdRef     = useRef<number | null>(null);
   const pointsRef      = useRef<[number, number][]>([]);
 
-  const [walking, setWalking]     = useState(false);
-  const [points, setPoints]       = useState<[number, number][]>([]);
-  const [areaHa, setAreaHa]       = useState(0);
-  const [error, setError]         = useState('');
-  const [status, setStatus]       = useState('');
+  const [walking, setWalking] = useState(false);
+  const [points, setPoints]   = useState<[number, number][]>([]);
+  const [areaHa, setAreaHa]   = useState(0);
+  const [error, setError]     = useState('');
+  const [status, setStatus]   = useState('');
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    let mounted = true;
 
-    const L = require('leaflet');
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    // Async import — does NOT block the main thread
+    import('leaflet').then(L => {
+      if (!mounted || !containerRef.current || mapRef.current) return;
+      leafletRef.current = L;
+
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+      });
+
+      const map = L.map(containerRef.current!).setView([1.3733, 32.2903], 13);
+      mapRef.current = map;
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+          map.setView([pos.coords.latitude, pos.coords.longitude], 16);
+        }, () => {});
+      }
+
+      setMapReady(true);
     });
 
-    const map = L.map(containerRef.current).setView([1.3733, 32.2903], 13);
-    mapRef.current = map;
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(map);
-
-    // Try to center on user's location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        map.setView([pos.coords.latitude, pos.coords.longitude], 16);
-      }, () => {});
-    }
-
-    return () => { map.remove(); mapRef.current = null; };
+    return () => {
+      mounted = false;
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
   }, []);
 
   const startWalk = useCallback(() => {
+    const L = leafletRef.current;
+    if (!L) return;
     if (!navigator.geolocation) { setError('Geolocation not supported on this device'); return; }
 
     setError('');
@@ -81,10 +93,8 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
     setPoints([]);
     setAreaHa(0);
 
-    // Clear previous layers
-    const L = require('leaflet');
     if (trackLayerRef.current) { trackLayerRef.current.remove(); trackLayerRef.current = null; }
-    if (polygonRef.current)    { polygonRef.current.remove();    polygonRef.current    = null; }
+    if (polygonRef.current)    { polygonRef.current.remove();    polygonRef.current = null; }
 
     if (mapRef.current) {
       trackLayerRef.current = L.polyline([], { color: 'var(--color-primary)', weight: 3, dashArray: '6 4' }).addTo(mapRef.current);
@@ -93,12 +103,11 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
     watchIdRef.current = navigator.geolocation.watchPosition(
       pos => {
         const { latitude: lat, longitude: lng, accuracy } = pos.coords;
-        if (accuracy > 30) return; // skip low-accuracy readings
+        if (accuracy > 30) return;
 
         const newPt: [number, number] = [lat, lng];
         const prev = pointsRef.current;
 
-        // Skip if too close to last point (< 2m)
         if (prev.length > 0) {
           const dlat = lat - prev[prev.length - 1][0];
           const dlng = lng - prev[prev.length - 1][1];
@@ -123,6 +132,7 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
   }, []);
 
   const stopWalk = useCallback(() => {
+    const L = leafletRef.current;
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -135,11 +145,13 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
       return;
     }
 
-    const L = require('leaflet');
     if (trackLayerRef.current) { trackLayerRef.current.remove(); trackLayerRef.current = null; }
 
-    if (mapRef.current) {
-      polygonRef.current = L.polygon(pts, { color: 'var(--color-primary)', fillColor: 'var(--color-primary-muted)', fillOpacity: 0.3, weight: 2 }).addTo(mapRef.current);
+    if (L && mapRef.current) {
+      polygonRef.current = L.polygon(pts, {
+        color: 'var(--color-primary)', fillColor: 'var(--color-primary-muted)',
+        fillOpacity: 0.3, weight: 2,
+      }).addTo(mapRef.current);
       mapRef.current.fitBounds(pts, { padding: [30, 30] });
     }
 
@@ -151,7 +163,7 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
 
   const clearBoundary = useCallback(() => {
     if (trackLayerRef.current) { trackLayerRef.current.remove(); trackLayerRef.current = null; }
-    if (polygonRef.current)    { polygonRef.current.remove();    polygonRef.current = null;    }
+    if (polygonRef.current)    { polygonRef.current.remove();    polygonRef.current = null; }
     pointsRef.current = [];
     setPoints([]);
     setAreaHa(0);
@@ -163,12 +175,11 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
     <div>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-      {/* Controls */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         {!walking ? (
-          <button type="button" onClick={startWalk}
-            style={{ padding: '9px 16px', background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
-            📍 Start GPS Walk
+          <button type="button" onClick={startWalk} disabled={!mapReady}
+            style={{ padding: '9px 16px', background: mapReady ? 'var(--color-primary)' : 'var(--color-surface-2)', color: mapReady ? '#fff' : 'var(--d-muted)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: mapReady ? 'pointer' : 'not-allowed' }}>
+            📍 {mapReady ? 'Start GPS Walk' : 'Loading map…'}
           </button>
         ) : (
           <button type="button" onClick={stopWalk}

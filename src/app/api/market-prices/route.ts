@@ -20,7 +20,7 @@ export async function GET(req: Request) {
 
   const [pricesRes, demandRes] = await Promise.all([
     priceQuery,
-    (supabase.from as any)('crop_demand_signals').select('*'),
+    (supabase.from as any)('crop_demand_signals').select('crop_type, offer_count_30d, bids_per_listing').limit(50),
   ]);
 
   const prices = pricesRes.data ?? [];
@@ -57,11 +57,10 @@ export async function GET(req: Request) {
     averages[crop] = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   }
 
-  return NextResponse.json({
-    prices: Object.values(grouped),
-    averages,
-    demandSignals: demand,
-  });
+  return NextResponse.json(
+    { prices: Object.values(grouped), averages, demandSignals: demand },
+    { headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' } },
+  );
 }
 
 export async function POST(req: Request) {

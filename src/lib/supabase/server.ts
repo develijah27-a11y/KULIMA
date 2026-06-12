@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import type { Database } from '../database.types';
 import { env } from '@/config/env';
@@ -23,21 +23,17 @@ export const createClient = async () => {
     anonKey,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: CookieOptions) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // Handle cookie setting errors
-          }
-        },
-        remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options });
-          } catch (error) {
-            // Handle cookie removal errors
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Called from a Server Component (read-only context).
+            // The middleware handles token refresh so this is safe to ignore.
           }
         },
       },
@@ -59,9 +55,8 @@ export const createServiceRoleClient = () => {
     env.SUPABASE_SERVICE_ROLE_KEY,
     {
       cookies: {
-        get() { return undefined; },
-        set() {},
-        remove() {},
+        getAll() { return []; },
+        setAll() {},
       },
     }
   );

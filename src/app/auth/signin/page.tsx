@@ -19,7 +19,7 @@ function SignInContent() {
           Don&apos;t have an account?{' '}
           <Link
             href="/auth/signup"
-            style={{ color: 'var(--color-sprout)', fontWeight: 600 }}
+            style={{ color: '#F97316', fontWeight: 700 }}
           >
             Create one
           </Link>
@@ -30,9 +30,9 @@ function SignInContent() {
         <div
           className="rounded-xl px-4 py-3 text-sm mb-4 whitespace-pre-line"
           style={{
-            background: 'rgba(22,163,74,0.08)',
-            border: '1px solid rgba(22,163,74,0.3)',
-            color: '#BBF7D0',
+            background: 'rgba(239,68,68,0.12)',
+            border: '1px solid rgba(239,68,68,0.35)',
+            color: '#FCA5A5',
           }}
           role="alert"
         >

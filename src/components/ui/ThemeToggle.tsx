@@ -5,7 +5,8 @@ import { toggleTheme, getTheme } from '@/lib/theme';
 import { Sun, Moon } from 'lucide-react';
 
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false);
+  // Start undefined — render nothing until mounted to avoid hydration mismatch
+  const [isDark, setIsDark] = useState<boolean | null>(null);
 
   useEffect(() => {
     setIsDark(getTheme() === 'dark');
@@ -32,10 +33,12 @@ export function ThemeToggle() {
         justifyContent: 'center',
         minHeight: 'unset',
         minWidth: 'unset',
+        // Reserve space while loading to prevent layout shift
+        visibility: isDark === null ? 'hidden' : 'visible',
       }}
     >
       {isDark
-        ? <Sun size={15} style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+        ? <Sun  size={15} style={{ color: 'var(--color-accent)' }}    aria-hidden="true" />
         : <Moon size={15} style={{ color: 'var(--color-text-muted)' }} aria-hidden="true" />
       }
     </button>

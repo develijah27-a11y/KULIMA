@@ -17,7 +17,10 @@ export const GET = async (request: Request) => {
     .gte('cached_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
     .single();
 
-  if (cached) return NextResponse.json({ success: true, data: cached.data });
+  if (cached) return NextResponse.json(
+    { success: true, data: cached.data },
+    { headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600' } }
+  );
 
   const apiKey = process.env.OPENWEATHER_API_KEY;
   if (!apiKey) return NextResponse.json({ success: true, data: devWeather(lat, lon) });
@@ -35,7 +38,10 @@ export const GET = async (request: Request) => {
     location_key: locKey, data: transformed, cached_at: new Date().toISOString(),
   });
 
-  return NextResponse.json({ success: true, data: transformed });
+  return NextResponse.json(
+    { success: true, data: transformed },
+    { headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=3600' } }
+  );
 };
 
 function devWeather(_lat: number, _lon: number) {

@@ -16,10 +16,14 @@ export interface Database {
           full_name: string
           phone_number: string | null
           location: string | null
+          district: string | null
           role: string
+          roles: string[]
           latitude: number | null
           longitude: number | null
           primary_crop: string | null
+          verification_level: string | null
+          trust_score: number | null
           created_at: string
           updated_at: string
         }
@@ -29,10 +33,14 @@ export interface Database {
           full_name: string
           phone_number?: string | null
           location?: string | null
+          district?: string | null
           role?: string
+          roles?: string[]
           latitude?: number | null
           longitude?: number | null
           primary_crop?: string | null
+          verification_level?: string | null
+          trust_score?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -42,10 +50,14 @@ export interface Database {
           full_name?: string
           phone_number?: string | null
           location?: string | null
+          district?: string | null
           role?: string
+          roles?: string[]
           latitude?: number | null
           longitude?: number | null
           primary_crop?: string | null
+          verification_level?: string | null
+          trust_score?: number | null
           created_at?: string
           updated_at?: string
         }

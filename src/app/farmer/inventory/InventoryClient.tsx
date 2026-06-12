@@ -87,8 +87,11 @@ export function InventoryClient({ initialItems, profile }: Props) {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 250);
 
-  const totalValue = items.reduce((s, i) => s + i.quantity * (i.cost_per_unit ?? 0), 0);
-  const lowStockCount = items.filter(i => i.low_stock_threshold != null && i.quantity <= i.low_stock_threshold).length;
+  const { totalValue, lowStockCount } = useMemo(() => ({
+    totalValue:    items.reduce((s, i) => s + i.quantity * (i.cost_per_unit ?? 0), 0),
+    lowStockCount: items.filter(i => i.low_stock_threshold != null && i.quantity <= i.low_stock_threshold).length,
+  }), [items]);
+
   const categoryCounts = useMemo(() => {
     const m: Record<string, number> = {};
     items.forEach(i => { m[i.category] = (m[i.category] ?? 0) + 1; });

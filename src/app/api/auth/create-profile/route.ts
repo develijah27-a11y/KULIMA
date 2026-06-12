@@ -13,10 +13,12 @@ export async function POST(req: Request) {
 
   const { error } = await supabase.from('profiles').upsert(
     {
-      user_id: userId,
-      full_name: fullName,
+      user_id:      userId,
+      full_name:    fullName,
       phone_number: phoneNumber ?? null,
-      location: location ?? null,
+      location:     location ?? null,
+      role:         'pending',
+      roles:        ['pending'],
     },
     { onConflict: 'user_id' }
   );

@@ -25,9 +25,12 @@ export async function GET(req: Request) {
 
   if (status && status !== 'all') query = query.eq('status', status);
 
-  const { data, error } = await query;
+  const { data, error } = await query.limit(100);
   if (error) return NextResponse.json({ orders: [] });
-  return NextResponse.json({ orders: data ?? [] });
+  return NextResponse.json(
+    { orders: data ?? [] },
+    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } },
+  );
 }
 
 export async function PATCH(req: Request) {

@@ -1,19 +1,13 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-
 interface SignOutButtonProps {
   borderTop?: boolean;
 }
 
 export function SignOutButton({ borderTop = true }: SignOutButtonProps) {
-  const router = useRouter();
-
   async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.href = '/auth/signin';
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.replace('/auth/signin');
   }
 
   return (

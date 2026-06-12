@@ -18,10 +18,14 @@ export async function GET() {
   const { data, error } = await (supabase.from as any)('supplier_products')
     .select('*')
     .eq('supplier_id', profile.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(200);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ data: data ?? [] });
+  return NextResponse.json(
+    { data: data ?? [] },
+    { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } },
+  );
 }
 
 export async function POST(req: Request) {

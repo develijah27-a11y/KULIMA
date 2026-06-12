@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ICON_MAP } from './Sidebar';
@@ -9,6 +10,18 @@ import { LayoutDashboard } from 'lucide-react';
 export function MobileNav({ navItems }: { navItems: NavItem[] }) {
   const pathname = usePathname();
   const visibleItems = navItems.slice(0, 5);
+
+  // Precompute active flags once per pathname change
+  const activeSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const { href } of visibleItems) {
+      const isDashboardRoot = href.endsWith('/dashboard');
+      if (pathname === href || (!isDashboardRoot && href.length > 1 && pathname.startsWith(href + '/'))) {
+        set.add(href);
+      }
+    }
+    return set;
+  }, [visibleItems, pathname]);
 
   return (
     <nav
@@ -22,7 +35,7 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
     >
       {visibleItems.map(({ href, icon, label, badge }) => {
         const Icon = ICON_MAP[icon] ?? LayoutDashboard;
-        const active = pathname === href || (href.length > 1 && pathname.startsWith(href + '/'));
+        const active = activeSet.has(href);
 
         return (
           <Link

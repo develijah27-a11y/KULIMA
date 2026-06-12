@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getOrCreateProfile } from '@/lib/supabase/get-profile';
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -9,13 +10,29 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
   let q = (supabase.from as any)('offers').select('*');
-  if (listingId) q = q.eq('listing_id', listingId);
-  else           q = q.eq('buyer_id', user.id);
-  q = q.order('created_at', { ascending: false });
+  if (listingId) {
+    // Only the listing's farmer may view all offers on that listing
+    const profile = await getOrCreateProfile(supabase, user);
+    if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 500 });
+    const { data: listing } = await (supabase.from as any)('listings')
+      .select('farmer_id')
+      .eq('id', listingId)
+      .single();
+    if (!listing || listing.farmer_id !== profile.id) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+    q = q.eq('listing_id', listingId);
+  } else {
+    q = q.eq('buyer_id', user.id);
+  }
+  q = q.order('created_at', { ascending: false }).limit(50);
 
   const { data, error } = await q;
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, data: data ?? [] });
+  return NextResponse.json(
+    { success: true, data: data ?? [] },
+    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } },
+  );
 }
 
 export async function POST(req: Request) {
@@ -77,6 +94,24 @@ export async function PATCH(req: Request) {
     .eq('id', id)
     .single();
   if (!offer) return NextResponse.json({ success: false, error: 'Offer not found' }, { status: 404 });
+
+  if (action === 'accept' || action === 'reject' || action === 'counter') {
+    // Farmer-only actions — verify caller owns the listing
+    const profile = await getOrCreateProfile(supabase, user);
+    if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 500 });
+    const { data: listing } = await (supabase.from as any)('listings')
+      .select('farmer_id')
+      .eq('id', offer.listing_id)
+      .single();
+    if (!listing || listing.farmer_id !== profile.id) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+  } else if (action === 'accept-counter') {
+    // Buyer action — verify caller owns this offer
+    if (offer.buyer_id !== user.id) {
+      return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    }
+  }
 
   if (action === 'accept') {
     // Mark this offer accepted, reject all others on same listing

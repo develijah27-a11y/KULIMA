@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState, useCallback, type FormEvent } from 'react';
+import { useState, useCallback, useMemo, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
@@ -36,9 +36,9 @@ export function NewFarmForm() {
     if (ha > 0) setSizeHa(ha.toFixed(2));
   }, []);
 
-  function toggleCrop(crop: string) {
+  const toggleCrop = useCallback((crop: string) => {
     setSelectedCrops(prev => prev.includes(crop) ? prev.filter(c => c !== crop) : [...prev, crop]);
-  }
+  }, []);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -83,7 +83,7 @@ export function NewFarmForm() {
         <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Farm Name *</label>
         <input
           type="text" value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Nakaseke North Plot"
-          style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text }}
+          style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: 'var(--d-input-bg)' }}
         />
       </div>
 
@@ -121,7 +121,7 @@ export function NewFarmForm() {
           </label>
           <input
             type="number" value={sizeHa} onChange={e => setSizeHa(e.target.value)} placeholder="e.g. 2.5" step="0.01" min="0"
-            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${areaHa > 0 ? 'var(--color-primary-muted)' : C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text }}
+            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${areaHa > 0 ? 'var(--color-primary-muted)' : C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: 'var(--d-input-bg)' }}
           />
         </div>
       </div>
@@ -166,7 +166,7 @@ export function NewFarmForm() {
           value={description} onChange={e => setDescription(e.target.value)}
           placeholder="Soil type, irrigation, notable features..."
           rows={2}
-          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', color: C.text }}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', color: C.text, background: 'var(--d-input-bg)' }}
         />
       </div>
 

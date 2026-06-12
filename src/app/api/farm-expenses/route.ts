@@ -18,7 +18,7 @@ export async function GET(req: Request) {
   if (season) q = q.eq('season', season);
   if (cropType) q = q.eq('crop_type', cropType);
 
-  const { data, error } = await q;
+  const { data, error } = await q.limit(1000);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Aggregate summary
@@ -29,7 +29,10 @@ export async function GET(req: Request) {
     byCat[e.category] = (byCat[e.category] ?? 0) + Number(e.amount_ugx);
   });
 
-  return NextResponse.json({ expenses, totalSpent, byCat });
+  return NextResponse.json(
+    { expenses, totalSpent, byCat },
+    { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } },
+  );
 }
 
 export async function POST(req: Request) {

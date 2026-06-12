@@ -17,10 +17,13 @@ export async function GET(req: Request) {
   if (district) q = q.eq('district', district);
   if (search)   q = q.ilike('crop_type', `%${search}%`);
 
-  q = q.order('created_at', { ascending: false });
+  q = q.order('created_at', { ascending: false }).limit(60);
   const { data, error } = await q;
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  return NextResponse.json({ success: true, data: data ?? [] });
+  return NextResponse.json(
+    { success: true, data: data ?? [] },
+    { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
+  );
 }
 
 export async function POST(req: Request) {
@@ -61,7 +64,13 @@ export async function PATCH(req: Request) {
   const { id, status } = await req.json();
   if (!id || !status) return NextResponse.json({ success: false, error: 'Missing fields' }, { status: 400 });
 
-  const { error } = await (supabase.from as any)('listings').update({ status }).eq('id', id);
+  const profile = await getOrCreateProfile(supabase, user);
+  if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 500 });
+
+  const { error } = await (supabase.from as any)('listings')
+    .update({ status })
+    .eq('id', id)
+    .eq('farmer_id', profile.id);
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

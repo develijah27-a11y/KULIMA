@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 
 const TRANSPORTER_NAV = [
   { href: '/transporter/dashboard',  icon: 'dashboard',    label: 'Dashboard' },
@@ -25,18 +26,19 @@ export default async function TransporterLayout({ children }: { children: React.
   let profile: { name: string; role: string } | null = null;
   let unreadCount = 0;
   let location = '';
+  let roles: string[] = [];
 
   if (user) {
     const [profileRes, unreadRes] = await Promise.all([
-      supabase.from('profiles').select('full_name, location').eq('user_id', user.id).single(),
+      supabase.from('profiles').select('full_name, location, roles').eq('user_id', user.id).single(),
       supabase.from('notifications')
         .select('id', { count: 'exact', head: true })
-        .eq('farmer_id', user.id)
         .eq('read', false),
     ]);
     if (profileRes.data) {
       profile = { name: profileRes.data.full_name ?? 'Driver', role: 'Delivery Agent' };
       location = profileRes.data.location ?? '';
+      roles = profileRes.data.roles ?? [];
     }
     unreadCount = unreadRes.count ?? 0;
   }
@@ -53,7 +55,7 @@ export default async function TransporterLayout({ children }: { children: React.
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>
-      <Sidebar navItems={navWithBadge} profile={profile} />
+      <Sidebar navItems={navWithBadge} profile={profile} roleSwitcher={roles.length > 1 ? <RoleSwitcher currentRole="transporter" allRoles={roles} /> : undefined} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/transporter/notifications" />
         <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6">

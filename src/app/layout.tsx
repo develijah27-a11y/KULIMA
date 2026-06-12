@@ -43,13 +43,25 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#22C55E" />
-        {/* Preload fonts */}
+        {/* Preconnect to external origins — reduces DNS lookup time */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://hjvnkintvjogwljchwcq.supabase.co" />
+        <link rel="dns-prefetch" href="https://api.openweathermap.org" />
+        {/* Non-blocking font loading with display=swap to eliminate invisible-text flash */}
+        <link
+          rel="preload"
+          as="style"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap"
+        />
       </head>
       <body
         className={cn("min-h-screen antialiased")}
-        style={{ background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
+        style={{ background: '#1A0800', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
       >
         <AuthProvider>{children}</AuthProvider>
         <ToastContainer />

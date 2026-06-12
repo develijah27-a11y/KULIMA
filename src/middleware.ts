@@ -1,22 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/middleware';
 
-export async function middleware(request: NextRequest) {
-  const { response, user } = await createClient(request);
+const PROTECTED = [
+  '/dashboard', '/onboarding', '/farmer', '/buyer', '/admin', '/transporter',
+  '/supplier', '/pathologist', '/offtaker', '/groups',
+  '/farms', '/soil', '/disease', '/weather',
+];
 
+// Routes where we redirect logged-in users away
+const AUTH_ONLY = ['/auth/signin'];
+
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  const protectedRoutes = ['/dashboard', '/farmer', '/buyer', '/admin', '/transporter', '/supplier', '/pathologist', '/offtaker', '/groups', '/farms', '/soil', '/disease', '/weather'];
-  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));
+  const isProtected = PROTECTED.some(r => pathname.startsWith(r));
+  const isAuthOnly  = AUTH_ONLY.some(r => pathname === r);
+
+  // Public routes (landing, /auth/signup, static pages):
+  // skip Supabase entirely — no cookie refresh needed for unauthenticated pages.
+  if (!isProtected && !isAuthOnly) {
+    return NextResponse.next({ request });
+  }
+
+  // createClient refreshes the session and returns a response with updated cookies
+  const { response, user } = await createClient(request);
 
   if (isProtected && !user) {
     const redirectUrl = new URL('/auth/signin', request.url);
     redirectUrl.searchParams.set('next', pathname);
-    return NextResponse.redirect(redirectUrl);
+    const redirectRes = NextResponse.redirect(redirectUrl);
+    response.cookies.getAll().forEach((cookie) => {
+      redirectRes.cookies.set(cookie.name, cookie.value, cookie as any);
+    });
+    return redirectRes;
   }
 
-  if (user && (pathname === '/auth/signin' || pathname === '/auth/signup')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Redirect logged-in users away from /auth/signin only
+  if (user && isAuthOnly) {
+    const redirectRes = NextResponse.redirect(new URL('/dashboard', request.url));
+    response.cookies.getAll().forEach((cookie) => {
+      redirectRes.cookies.set(cookie.name, cookie.value, cookie as any);
+    });
+    return redirectRes;
   }
 
   return response;

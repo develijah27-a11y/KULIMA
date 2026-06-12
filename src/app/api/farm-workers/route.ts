@@ -18,9 +18,12 @@ export async function GET(req: Request) {
   if (farmId) q = q.eq('farm_id', farmId);
   if (activeOnly) q = q.eq('is_active', true);
 
-  const { data, error } = await q;
+  const { data, error } = await q.limit(100);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ workers: data ?? [] });
+  return NextResponse.json(
+    { workers: data ?? [] },
+    { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } },
+  );
 }
 
 export async function POST(req: Request) {

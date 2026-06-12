@@ -6,8 +6,11 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ success: false, error: { message: 'Not authenticated' } }, { status: 401 });
 
-  const { data } = await supabase.from('notifications').select('*').eq('farmer_id', user.id).order('sent_at', { ascending: false }).limit(20);
-  return NextResponse.json({ success: true, data: (data ?? []).map(normalizeNotif) });
+  const { data } = await supabase.from('notifications').select('*').order('sent_at', { ascending: false }).limit(20);
+  return NextResponse.json(
+    { success: true, data: (data ?? []).map(normalizeNotif) },
+    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } }
+  );
 }
 
 export async function PATCH(req: Request) {
@@ -15,7 +18,7 @@ export async function PATCH(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ success: false }, { status: 401 });
 
-  await supabase.from('notifications').update({ read: true }).eq('farmer_id', user.id).eq('read', false);
+  await supabase.from('notifications').update({ read: true }).eq('read', false);
   return NextResponse.json({ success: true });
 }
 
@@ -27,7 +30,9 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ success: false }, { status: 401 });
 
-    await supabase.from('notifications').insert({ farmer_id: user.id, type, title: t ?? '', body: m ?? '', sent_at: new Date().toISOString(), read: false });
+    const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
+    if (!profile) return NextResponse.json({ success: false }, { status: 404 });
+    await supabase.from('notifications').insert({ farmer_id: profile.id, type, title: t ?? '', body: m ?? '', sent_at: new Date().toISOString(), read: false });
     return NextResponse.json({ success: true });
   } catch { return NextResponse.json({ success: false }, { status: 500 }); }
 }

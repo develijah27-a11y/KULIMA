@@ -190,7 +190,7 @@ async function QuickStats({ userId }: { userId: string }) {
       .order('recorded_at', { ascending: false }).limit(2),
     (supabase.from as any)('notifications')
       .select('id', { count: 'exact', head: true })
-      .eq('farmer_id', userId).eq('read', false),
+      .eq('read', false),
   ]);
 
   const priceData = priceRes.data ?? [];
@@ -653,7 +653,7 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Create Listing', href: '/farmer/marketplace/create', emoji: '✏️', bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
+    { label: 'Create Listing', href: '/farmer/marketplace/new', emoji: '✏️', bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
     { label: 'Add Record',     href: '/farmer/farm',               emoji: '📋', bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
     { label: 'Check Weather',  href: '/farmer/weather',            emoji: '🌤',  bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
     { label: 'Scan Disease',   href: '/farmer/doctor',             emoji: '🔍', bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },

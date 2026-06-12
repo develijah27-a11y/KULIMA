@@ -1,191 +1,104 @@
 import Link from 'next/link';
 
-const SKY   = '#38BDF8';
-const GOLD  = '#FCD34D';
-const GREEN = '#4ADE80';
-const AMBER = '#FCA74A';
-
-const FEATURES = [
-  { icon: '🌦️', title: 'Weather Intelligence',  desc: 'Hyper-local rainfall forecasts, drought alerts, and planting readiness scores updated every hour.', color: SKY,   bg: 'rgba(56,189,248,0.08)',  border: 'rgba(56,189,248,0.15)'  },
-  { icon: '📈', title: 'Live Market Prices',     desc: 'Real-time crop prices from 50+ markets. Know the best place to sell before you leave the farm.',  color: GOLD,  bg: 'rgba(252,211,77,0.08)',  border: 'rgba(252,211,77,0.15)'  },
-  { icon: '🤝', title: 'Buyer Marketplace',      desc: 'List produce and get direct offers from verified buyers. Negotiate and close deals in-app.',        color: GREEN, bg: 'rgba(74,222,128,0.08)',  border: 'rgba(74,222,128,0.15)'  },
-  { icon: '🔬', title: 'AI Crop Doctor',         desc: 'Photograph a sick crop. Get instant disease diagnosis and step-by-step treatment advice.',          color: AMBER, bg: 'rgba(252,167,74,0.08)',  border: 'rgba(252,167,74,0.15)'  },
-  { icon: '🔔', title: 'Smart Alerts',           desc: 'Price spikes, rain warnings, and buyer offers sent to your phone the moment they happen.',          color: GOLD,  bg: 'rgba(252,211,77,0.07)',  border: 'rgba(252,211,77,0.13)'  },
-  { icon: '📊', title: 'Farm Analytics',         desc: 'Track earnings, yield history, and activity across all your farms at a glance.',                    color: GREEN, bg: 'rgba(74,222,128,0.07)',  border: 'rgba(74,222,128,0.13)'  },
-] as const;
-
-const ROLES = [
-  {
-    emoji: '🌾', role: 'Farmers', accent: GREEN,
-    bg: 'rgba(74,222,128,0.07)', border: 'rgba(74,222,128,0.18)',
-    points: ['Weather & planting guide', 'Live crop prices daily', 'Sell directly to buyers', 'AI disease detection', 'AgriScore credit identity'],
-  },
-  {
-    emoji: '🛒', role: 'Buyers', accent: GOLD,
-    bg: 'rgba(252,211,77,0.07)', border: 'rgba(252,211,77,0.18)',
-    points: ['Browse verified listings', 'Make direct crop offers', 'Track your order pipeline', 'Market trend data', 'Escrow-protected payments'],
-  },
-  {
-    emoji: '🚚', role: 'Suppliers', accent: SKY,
-    bg: 'rgba(56,189,248,0.07)', border: 'rgba(56,189,248,0.18)',
-    points: ['Reach farmers directly', 'Post product catalogue', 'Manage orders & delivery', 'Verified business profile', 'Transaction history'],
-  },
-] as const;
-
-const STATS = [
-  { value: '10,000+', label: 'Farmers',   color: GREEN },
-  { value: '50+',     label: 'Markets',   color: GOLD  },
-  { value: '30+',     label: 'Districts', color: SKY   },
-  { value: '99%',     label: 'Uptime',    color: GREEN },
-] as const;
-
-const STEPS = [
-  { step: '01', title: 'Create your account',    desc: 'Sign up with your email and choose your role — farmer, buyer, or supplier.', color: GREEN },
-  { step: '02', title: 'Set up your profile',    desc: 'Add your farm details, crops, and location to unlock all platform features.', color: SKY  },
-  { step: '03', title: 'Start trading & growing', desc: 'Access live prices, list produce, connect with buyers, and track your farm.', color: GOLD },
-] as const;
-
-const S = {
-  dark:  '#0D1F12',
-  mid:   '#132416',
-  deep:  '#1A3120',
-  muted: 'rgba(240,253,244,0.45)',
-  dim:   'rgba(240,253,244,0.28)',
-  faint: 'rgba(240,253,244,0.08)',
-};
-
 export default function Home() {
   return (
-    <div className="min-h-screen" style={{ background: S.dark, color: '#F0FDF4' }}>
+    <div style={{ background: '#FFF7ED', color: '#1A0800', minHeight: '100vh', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-      {/* ── Nav ── */}
-      <nav className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black"
-            style={{ background: GREEN, color: '#052E16' }}
-          >
-            K
-          </div>
-          <span className="text-lg font-black" style={{ color: GREEN, letterSpacing: '-0.03em' }}>Kulima</span>
+      {/* Nav */}
+      <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: '#F97316', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 16 }}>K</div>
+          <span style={{ fontSize: 20, fontWeight: 900, color: '#EA580C', letterSpacing: '-0.03em' }}>Kulima</span>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/auth/signin" className="landing-btn-outline" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>
-            Sign in
-          </Link>
-          <Link href="/auth/signup" className="landing-btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.875rem' }}>
-            Get started
-          </Link>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Link href="/auth/signin" style={{ padding: '9px 22px', borderRadius: 10, border: '2px solid #F97316', color: '#EA580C', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Sign in</Link>
+          <Link href="/auth/signup" style={{ padding: '9px 22px', borderRadius: 10, background: '#F97316', color: '#fff', fontWeight: 800, fontSize: 14, textDecoration: 'none', boxShadow: '0 4px 14px rgba(249,115,22,0.35)' }}>Get started</Link>
         </div>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="max-w-4xl mx-auto px-6 pt-12 pb-20 text-center">
-        <div
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-8 text-xs font-bold tracking-widest uppercase"
-          style={{ background: 'rgba(74,222,128,0.10)', border: '1px solid rgba(74,222,128,0.22)', color: GREEN }}
-        >
-          🌍 Agricultural operating system for Africa
+      {/* Hero */}
+      <section style={{ maxWidth: 760, margin: '0 auto', padding: '32px 24px 72px', textAlign: 'center' }}>
+
+        {/* Orange badge */}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 16px', borderRadius: 99, background: '#FFEDD5', border: '1.5px solid #FED7AA', color: '#EA580C', fontSize: 12, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 28 }}>
+          🌍 Smart Farming for Africa
         </div>
 
-        <h1 className="font-black leading-none mb-6" style={{ fontSize: 'clamp(2.75rem, 8vw, 5.5rem)', letterSpacing: '-0.045em' }}>
+        {/* Big headline */}
+        <h1 style={{ fontSize: 'clamp(3rem,9vw,5.5rem)', fontWeight: 900, letterSpacing: '-0.05em', lineHeight: 0.95, marginBottom: 24, color: '#1A0800' }}>
           Grow smarter.<br />
-          <span style={{ color: GREEN }}>Sell better.</span>
+          <span style={{ color: '#F97316' }}>Sell better.</span>
         </h1>
 
-        <p className="text-lg sm:text-xl max-w-xl mx-auto mb-10 leading-relaxed" style={{ color: S.muted }}>
-          Weather forecasts, live market prices, crop disease detection, and direct buyer connections — one platform for every farm role.
+        <p style={{ fontSize: 18, color: '#6B3A1F', fontWeight: 600, marginBottom: 36, maxWidth: 420, margin: '0 auto 36px', lineHeight: 1.5 }}>
+          Weather, prices, buyers, and AI disease detection — all in one app.
         </p>
 
-        <div className="flex gap-3 justify-center flex-wrap">
-          <Link href="/auth/signup" className="landing-btn-primary glow-green" style={{ fontSize: '1rem', padding: '0.9rem 2rem' }}>
+        {/* CTAs */}
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 64 }}>
+          <Link href="/auth/signup" style={{ padding: '16px 36px', borderRadius: 14, background: '#F97316', color: '#fff', fontWeight: 800, fontSize: 17, textDecoration: 'none', boxShadow: '0 6px 20px rgba(249,115,22,0.40)', letterSpacing: '-0.01em' }}>
             Create free account
           </Link>
-          <Link href="/auth/signin" className="landing-btn-outline" style={{ fontSize: '1rem', padding: '0.9rem 2rem' }}>
-            Sign in
+          <Link href="/auth/signin" style={{ padding: '16px 36px', borderRadius: 14, border: '2.5px solid #F97316', color: '#EA580C', fontWeight: 800, fontSize: 17, textDecoration: 'none', background: 'transparent' }}>
+            Sign in →
           </Link>
         </div>
 
-        {/* Stats */}
-        <div className="flex gap-8 sm:gap-14 justify-center mt-16 flex-wrap">
-          {STATS.map(({ value, label, color }) => (
-            <div key={label} className="text-center">
-              <p className="text-3xl font-black" style={{ color, letterSpacing: '-0.04em' }}>{value}</p>
-              <p className="text-xs mt-1" style={{ color: S.dim }}>{label}</p>
+        {/* Stats row */}
+        <div style={{ display: 'flex', gap: 40, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {[
+            { value: '10,000+', label: 'Farmers', color: '#F97316' },
+            { value: '50+',     label: 'Markets',  color: '#D97706' },
+            { value: '30+',     label: 'Districts', color: '#0EA5E9' },
+          ].map(({ value, label, color }) => (
+            <div key={label} style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: 30, fontWeight: 900, color, letterSpacing: '-0.04em', margin: 0 }}>{value}</p>
+              <p style={{ fontSize: 12, color: '#92400E', fontWeight: 700, marginTop: 2 }}>{label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section className="py-20" style={{ background: S.mid }}>
-        <div className="max-w-5xl mx-auto px-6">
-          <p className="text-center text-xs font-bold tracking-widest uppercase mb-4" style={{ color: S.dim }}>
-            Platform capabilities
-          </p>
-          <h2 className="text-3xl sm:text-4xl font-black text-center mb-14" style={{ letterSpacing: '-0.03em' }}>
-            Everything your farm needs
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {FEATURES.map(({ icon, title, desc, color, bg, border }) => (
-              <div key={title} className="p-6 rounded-2xl" style={{ background: bg, border: `1px solid ${border}` }}>
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-4"
-                  style={{ background: `${color}18` }}
-                >
-                  {icon}
-                </div>
-                <h3 className="font-bold mb-2" style={{ color }}>{title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: S.muted }}>{desc}</p>
+      {/* Features — orange band */}
+      <section style={{ background: 'linear-gradient(135deg, #F97316 0%, #EA580C 100%)', padding: '56px 0' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+            {[
+              { icon: '🌦️', title: 'Weather Alerts' },
+              { icon: '📈', title: 'Live Crop Prices' },
+              { icon: '🤝', title: 'Buyer Marketplace' },
+              { icon: '🔬', title: 'AI Crop Doctor' },
+              { icon: '📦', title: 'Farm Inputs' },
+              { icon: '📊', title: 'Farm Analytics' },
+            ].map(({ icon, title }) => (
+              <div key={title} style={{ padding: '18px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 22 }}>{icon}</span>
+                <p style={{ fontWeight: 800, color: '#fff', fontSize: 14, margin: 0 }}>{title}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── How it works ── */}
-      <section className="py-20 max-w-4xl mx-auto px-6">
-        <p className="text-center text-xs font-bold tracking-widest uppercase mb-4" style={{ color: S.dim }}>
-          Get started in minutes
-        </p>
-        <h2 className="text-3xl sm:text-4xl font-black text-center mb-14" style={{ letterSpacing: '-0.03em' }}>
-          How Kulima works
-        </h2>
-        <div className="grid sm:grid-cols-3 gap-6">
-          {STEPS.map(({ step, title, desc, color }) => (
-            <div key={step} className="relative p-6 rounded-2xl" style={{ background: S.deep, border: `1px solid ${S.faint}` }}>
-              <div
-                className="text-4xl font-black mb-4 leading-none"
-                style={{ color, opacity: 0.40, letterSpacing: '-0.04em', fontVariantNumeric: 'tabular-nums' }}
-              >
-                {step}
-              </div>
-              <h3 className="font-bold mb-2">{title}</h3>
-              <p className="text-sm leading-relaxed" style={{ color: S.muted }}>{desc}</p>
-              <div className="absolute top-6 right-6 w-2 h-2 rounded-full" style={{ background: color }} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Roles ── */}
-      <section className="py-20" style={{ background: S.mid }}>
-        <div className="max-w-5xl mx-auto px-6">
-          <p className="text-center text-xs font-bold tracking-widest uppercase mb-4" style={{ color: S.dim }}>
-            Built for everyone
-          </p>
-          <h2 className="text-3xl sm:text-4xl font-black text-center mb-14" style={{ letterSpacing: '-0.03em' }}>
+      {/* Roles */}
+      <section style={{ background: '#FFFBF5', padding: '64px 0' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px' }}>
+          <h2 style={{ fontSize: 'clamp(1.75rem,4vw,2.5rem)', fontWeight: 900, textAlign: 'center', letterSpacing: '-0.04em', marginBottom: 36, color: '#1A0800' }}>
             One platform. Every role.
           </h2>
-          <div className="grid sm:grid-cols-3 gap-5">
-            {ROLES.map(({ emoji, role, accent, bg, border, points }) => (
-              <div key={role} className="p-6 rounded-2xl" style={{ background: bg, border: `1px solid ${border}` }}>
-                <div className="text-4xl mb-4">{emoji}</div>
-                <h3 className="text-xl font-black mb-4" style={{ color: accent, letterSpacing: '-0.02em' }}>{role}</h3>
-                <ul className="space-y-2.5">
-                  {points.map((p) => (
-                    <li key={p} className="flex items-start gap-2.5 text-sm" style={{ color: S.muted }}>
-                      <span className="shrink-0 mt-0.5 font-bold text-xs" style={{ color: accent }}>✓</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
+            {[
+              { emoji: '🌾', role: 'Farmers',   accent: '#F97316', bg: '#FFF7ED', border: '#FED7AA', points: ['Weather & planting guides', 'Live prices & buyer offers', 'AI disease detection'] },
+              { emoji: '🛒', role: 'Buyers',    accent: '#D97706', bg: '#FFFBEB', border: '#FDE68A', points: ['Browse verified listings', 'Direct crop offers', 'Escrow payments'] },
+              { emoji: '🚚', role: 'Suppliers', accent: '#0284C7', bg: '#F0F9FF', border: '#BAE6FD', points: ['Reach farmers directly', 'Manage orders', 'Verified profile'] },
+            ].map(({ emoji, role, accent, bg, border, points }) => (
+              <div key={role} style={{ padding: '24px', borderRadius: 18, background: bg, border: `2px solid ${border}` }}>
+                <span style={{ fontSize: 32, display: 'block', marginBottom: 12 }}>{emoji}</span>
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: accent, letterSpacing: '-0.02em', marginBottom: 14, margin: '0 0 14px' }}>{role}</h3>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {points.map(p => (
+                    <li key={p} style={{ display: 'flex', gap: 8, fontSize: 13, color: '#374151', fontWeight: 600 }}>
+                      <span style={{ color: accent, fontWeight: 900 }}>✓</span>
                       {p}
                     </li>
                   ))}
@@ -196,31 +109,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section className="py-24 text-center max-w-2xl mx-auto px-6">
-        <h2 className="text-4xl sm:text-5xl font-black mb-5" style={{ letterSpacing: '-0.04em' }}>
-          Ready to grow <span style={{ color: GREEN }}>smarter?</span>
+      {/* CTA */}
+      <section style={{ background: '#1A0800', padding: '72px 24px', textAlign: 'center' }}>
+        <h2 style={{ fontSize: 'clamp(2rem,5vw,3.5rem)', fontWeight: 900, letterSpacing: '-0.04em', marginBottom: 28, color: '#FFF7ED' }}>
+          Ready to grow <span style={{ color: '#F97316' }}>smarter?</span>
         </h2>
-        <p className="mb-10 leading-relaxed" style={{ color: S.muted }}>
-          Join thousands of farmers already using Kulima across Uganda and East Africa.
-        </p>
-        <div className="flex gap-4 justify-center flex-wrap">
-          <Link href="/auth/signup" className="landing-btn-primary glow-green" style={{ fontSize: '1rem', padding: '1rem 2.25rem' }}>
-            Get started free
-          </Link>
-          <Link href="/auth/signin" className="landing-btn-outline" style={{ fontSize: '1rem', padding: '1rem 2.25rem' }}>
-            Sign in
-          </Link>
-        </div>
+        <Link href="/auth/signup" style={{ display: 'inline-block', padding: '16px 44px', borderRadius: 14, background: '#F97316', color: '#fff', fontWeight: 900, fontSize: 18, textDecoration: 'none', boxShadow: '0 6px 24px rgba(249,115,22,0.45)', letterSpacing: '-0.02em' }}>
+          Get started free →
+        </Link>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="py-8 text-center text-xs" style={{ borderTop: `1px solid ${S.faint}`, color: S.dim }}>
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-5 h-5 rounded-md flex items-center justify-center text-xs font-black" style={{ background: GREEN, color: '#052E16' }}>K</div>
-          <span className="font-bold" style={{ color: GREEN }}>Kulima</span>
+      {/* Footer */}
+      <footer style={{ background: '#1A0800', borderTop: '1px solid rgba(255,247,237,0.06)', padding: '20px 24px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 4 }}>
+          <div style={{ width: 20, height: 20, borderRadius: 6, background: '#F97316', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900 }}>K</div>
+          <span style={{ fontWeight: 800, color: '#F97316', fontSize: 13 }}>Kulima</span>
         </div>
-        <p>© 2026 Kulima — Smart Farm Management for Africa</p>
+        <p style={{ color: 'rgba(255,247,237,0.35)', fontSize: 12, margin: 0 }}>© 2026 Kulima — Smart Farm Management for Africa</p>
       </footer>
 
     </div>

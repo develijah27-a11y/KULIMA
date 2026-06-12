@@ -42,10 +42,14 @@ export async function GET() {
     .select('*')
     .eq('farmer_id', profile.id)
     .order('category')
-    .order('name');
+    .order('name')
+    .limit(500);
 
   if (error) return NextResponse.json({ items: [] });
-  return NextResponse.json({ items: data ?? [] });
+  return NextResponse.json(
+    { items: data ?? [] },
+    { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } },
+  );
 }
 
 export async function POST(req: Request) {

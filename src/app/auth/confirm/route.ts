@@ -23,8 +23,6 @@ export async function GET(request: NextRequest) {
     (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string) ??
     '';
 
-  const cookieStore: Record<string, string> = {};
-
   const response = NextResponse.redirect(new URL(next, origin));
 
   const supabase = createServerClient(
@@ -32,14 +30,13 @@ export async function GET(request: NextRequest) {
     anonKey,
     {
       cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return request.cookies.getAll();
         },
-        set(name, value, options) {
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name, options) {
-          response.cookies.set({ name, value: '', ...options });
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
         },
       },
     }

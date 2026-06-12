@@ -30,7 +30,7 @@ export function DoctorUploadClient() {
       const res = await fetch('/api/doctor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64: preview, farmerId: 'demo' }),
+        body: JSON.stringify({ imageBase64: preview }),
       });
       const data = await res.json();
       setResult(data.data ?? data);

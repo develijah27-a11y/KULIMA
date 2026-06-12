@@ -10,10 +10,14 @@ export async function GET() {
     .select('*')
     .eq('user_id', user.id)
     .eq('is_active', true)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(50);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ farms: data });
+  return NextResponse.json(
+    { farms: data },
+    { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=300' } }
+  );
 }
 
 export async function POST(req: Request) {
