@@ -129,15 +129,18 @@ export function AuthForm({ mode }: AuthFormProps) {
       isSigningUpRef.current = false;
       const msg = err instanceof Error ? err.message : 'Something went wrong';
 
-      if (msg === 'Failed to fetch' || msg.includes('NetworkError') || msg.includes('fetch')) {
+      const lower = msg.toLowerCase();
+      if (err instanceof TypeError || lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('fetch')) {
         setError(
           'Network error — cannot reach Supabase.\n\n' +
           '1. Check your internet connection\n' +
           '2. Visit supabase.com/dashboard — free tier pauses after 7 days of inactivity\n' +
           '3. Restart the dev server after editing .env.local'
         );
-      } else if (msg.toLowerCase().includes('invalid login credentials')) {
+      } else if (lower.includes('invalid login credentials')) {
         setError('Wrong email or password. Please try again.');
+      } else if (lower.includes('email not confirmed')) {
+        setError('Your email address is not confirmed yet. Please check your inbox and click the confirmation link, then try signing in again.');
       } else {
         // Only log errors that aren't expected auth failures
         console.error('[Kulima Auth] Unexpected error during', mode, ':', err);
