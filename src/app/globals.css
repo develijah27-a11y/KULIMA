@@ -538,32 +538,38 @@ input:focus, select:focus, textarea:focus {
 }
 
 /* ── Auth form — white card ── */
-.auth-input {
+/* Use `input.auth-input` (specificity 0,1,1) to beat the global
+   input[type="email"] rule above which also sits at 0,1,1 but
+   comes earlier — same specificity = last declaration wins.      */
+input.auth-input, select.auth-input, textarea.auth-input {
   width: 100%;
   min-height: 50px;
   padding: 0.75rem 1rem;
   border-radius: 10px;
-  background: #FFFFFF;
+  background: #FFFFFF !important;
   border: 2px solid #D1D5DB;
-  color: #000000;
+  color: #000000 !important;
   font-family: var(--font-body);
   font-size: 0.9375rem;
-  font-weight: 700;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  font-weight: 700 !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
   outline: none;
 }
-.auth-input::placeholder { color: #9CA3AF; font-weight: 500; }
-.auth-input:focus {
-  background: #FFFFFF;
-  border-color: #F97316;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+input.auth-input::placeholder,
+textarea.auth-input::placeholder { color: #9CA3AF; font-weight: 500; }
+input.auth-input:focus,
+select.auth-input:focus,
+textarea.auth-input:focus {
+  background: #FFFFFF !important;
+  border-color: #F97316 !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15) !important;
 }
-.auth-input:disabled { opacity: 0.5; cursor: not-allowed; }
+input.auth-input:disabled { opacity: 0.5; cursor: not-allowed; }
 /* Force black bold text even when browser autofills the field */
-.auth-input:-webkit-autofill,
-.auth-input:-webkit-autofill:hover,
-.auth-input:-webkit-autofill:focus,
-.auth-input:-webkit-autofill:active {
+input.auth-input:-webkit-autofill,
+input.auth-input:-webkit-autofill:hover,
+input.auth-input:-webkit-autofill:focus,
+input.auth-input:-webkit-autofill:active {
   -webkit-text-fill-color: #000000 !important;
   -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset !important;
   font-weight: 700 !important;
