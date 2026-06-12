@@ -1,10 +1,20 @@
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   compress: true,
   experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns', 'clsx', 'tailwind-merge'],
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'clsx',
+      'tailwind-merge',
+      '@supabase/ssr',
+      '@supabase/supabase-js',
+    ],
   },
-  cacheComponents: true,
   images: {
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [390, 640, 828, 1080],
@@ -17,9 +27,20 @@ const nextConfig = {
   },
   async headers() {
     return [
-      { source: '/:all*(svg|jpg|png|webp|avif|woff2)', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+      {
+        source: '/:all*(svg|jpg|png|webp|avif|woff2)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        // Add security + performance headers to all pages
+        source: '/(.*)',
+        headers: [
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+        ],
+      },
     ];
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

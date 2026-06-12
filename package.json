@@ -10,7 +10,8 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "analyze": "ANALYZE=true next build"
   },
   "keywords": [
     "agritech",
@@ -38,7 +39,6 @@
     "postcss": "^8.5.15",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "recharts": "^2.15.2",
     "serwist": "^9.0.30",
     "tailwind-merge": "^3.0.1",
     "tailwindcss": "^4.3.0",
@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",
+    "@next/bundle-analyzer": "^16.2.9",
     "@types/jest": "^30.0.0",
     "dotenv": "^17.4.2",
     "jest": "^30.4.2",
