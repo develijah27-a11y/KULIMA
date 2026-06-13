@@ -32,15 +32,15 @@ async function PathologistStats({ userId }: { userId: string }) {
   const [pendingRes, urgentRes, resolvedRes, scansRes] = await Promise.allSettled([
     (supabase.from as any)('disease_reports')
       .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending'),
+      .eq('status', 'reported'),
     (supabase.from as any)('disease_reports')
       .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending')
+      .eq('status', 'reported')
       .eq('urgency', 'high'),
     (supabase.from as any)('disease_reports')
       .select('id', { count: 'exact', head: true })
       .eq('pathologist_id', userId)
-      .eq('status', 'resolved')
+      .eq('status', 'closed')
       .gte('updated_at', weekAgo),
     (supabase.from as any)('disease_scans')
       .select('id', { count: 'exact', head: true })
@@ -108,7 +108,7 @@ async function CaseQueue() {
   const supabase = await createClient();
   const { data: cases, error } = await (supabase.from as any)('disease_reports')
     .select('id, crop_type, symptoms, district, urgency, farmer_name, created_at, status')
-    .eq('status', 'pending')
+    .eq('status', 'reported')
     .order('urgency', { ascending: false })
     .order('created_at', { ascending: true })
     .limit(6);

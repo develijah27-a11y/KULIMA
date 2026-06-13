@@ -32,7 +32,7 @@ async function GroupStats({ userId }: { userId: string }) {
       .eq('status', 'active'),
     (supabase.from as any)('group_listings')
       .select('id', { count: 'exact', head: true })
-      .eq('group_admin_id', userId)
+      .eq('admin_id', userId)
       .eq('status', 'active'),
     (supabase.from as any)('wallets')
       .select('balance')
@@ -40,7 +40,7 @@ async function GroupStats({ userId }: { userId: string }) {
       .maybeSingle(),
     (supabase.from as any)('group_loans')
       .select('id', { count: 'exact', head: true })
-      .eq('group_admin_id', userId)
+      .eq('admin_id', userId)
       .eq('status', 'pending'),
   ]);
 
@@ -115,7 +115,7 @@ async function SeasonBanner({ userId }: { userId: string }) {
 
   const { data: announcement } = await (supabase.from as any)('group_announcements')
     .select('title, body, created_at')
-    .eq('group_admin_id', userId)
+    .eq('admin_id', userId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -149,7 +149,7 @@ async function SeasonBanner({ userId }: { userId: string }) {
 async function MembersList({ userId }: { userId: string }) {
   const supabase = await createClient();
   const { data: members, error } = await (supabase.from as any)('group_members')
-    .select('id, name, phone, village, primary_crop, acres, status, joined_at')
+    .select('id, full_name, phone_number, village, crop_type, acres, status, joined_at')
     .eq('admin_id', userId)
     .order('joined_at', { ascending: false })
     .limit(6);
@@ -189,12 +189,12 @@ async function MembersList({ userId }: { userId: string }) {
             <div key={m.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0" style={{ background: 'var(--color-primary-bg)', color: C.green }}>
-                  {m.name?.[0]?.toUpperCase() ?? '?'}
+                  {m.full_name?.[0]?.toUpperCase() ?? '?'}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold" style={{ color: C.text }}>{m.name}</p>
+                  <p className="text-sm font-semibold" style={{ color: C.text }}>{m.full_name}</p>
                   <p className="text-[11px]" style={{ color: C.muted }}>
-                    {m.village ?? 'Unknown'} · {m.acres ?? '?'} ac · {CROP_EMOJI[m.primary_crop?.toLowerCase()] ?? '🌱'} {m.primary_crop ?? 'Mixed'}
+                    {m.village ?? 'Unknown'} · {m.acres ?? '?'} ac · {CROP_EMOJI[m.crop_type?.toLowerCase()] ?? '🌱'} {m.crop_type ?? 'Mixed'}
                   </p>
                 </div>
               </div>
@@ -212,7 +212,7 @@ async function GroupListings({ userId }: { userId: string }) {
   const supabase = await createClient();
   const { data: listings, error } = await (supabase.from as any)('group_listings')
     .select('id, crop_type, total_quantity_kg, asking_price, district, member_count, status, created_at')
-    .eq('group_admin_id', userId)
+    .eq('admin_id', userId)
     .order('created_at', { ascending: false })
     .limit(4);
 
@@ -287,7 +287,7 @@ async function FinancialSummary({ userId }: { userId: string }) {
       .gte('contributed_at', weekAgo),
     (supabase.from as any)('group_loans')
       .select('amount, status')
-      .eq('group_admin_id', userId),
+      .eq('admin_id', userId),
   ]);
 
   const weeklyContrib = ((contribRes.status === 'fulfilled' ? contribRes.value.data : null) ?? [] as any[]).reduce((s: number, c: any) => s + (c.amount ?? 0), 0);

@@ -72,7 +72,7 @@ export default async function CaseDetailPage({ params }: { params: { id: string 
         </div>
       </div>
 
-      {c.status === 'pending' && (
+      {c.status === 'reported' && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px' }}>
           <p className="text-sm font-bold mb-4" style={{ color: C.text }}>Submit Diagnosis & Treatment</p>
           <p style={{ fontSize: 12, color: C.muted }}>

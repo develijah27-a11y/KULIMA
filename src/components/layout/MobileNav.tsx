@@ -25,13 +25,8 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex"
-      style={{
-        background: 'var(--color-surface)',
-        borderTop: '1px solid var(--color-border)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-        boxShadow: '0 -4px 20px rgba(0,0,0,0.08)',
-      }}
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex glass-nav"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       {visibleItems.map(({ href, icon, label, badge }) => {
         const Icon = ICON_MAP[icon] ?? LayoutDashboard;

@@ -58,7 +58,7 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>
       <Sidebar navItems={navWithBadge} profile={profile} roleSwitcher={roles.length > 1 ? <RoleSwitcher currentRole="buyer" allRoles={roles} /> : undefined} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/buyer/notifications" />
+        <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/buyer/notifications" currentRole="buyer" allRoles={roles} />
         <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6">
           {children}
         </main>

@@ -2,6 +2,7 @@
 import { getAuthSession } from '@/lib/supabase/auth-cache';
 import { SignOutButton } from './SignOutButton';
 import { DeleteAccountButton } from './DeleteAccountButton';
+import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -46,6 +47,8 @@ export default async function SettingsPage() {
         <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.03em', marginBottom: 4 }}>Settings</h1>
         <p style={{ fontSize: 13, color: C.muted }}>Manage your account, notifications, and preferences</p>
       </div>
+
+      <SettingsRoleSwitcher />
 
       {SECTIONS.map(section => (
         <div key={section.title}>

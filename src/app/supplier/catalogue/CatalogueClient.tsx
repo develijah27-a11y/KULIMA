@@ -193,6 +193,16 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
         </div>
       )}
 
+      {/* Mobile FAB – visible only on mobile where header button is small */}
+      <button
+        className="fab fab-primary md:hidden no-min-touch"
+        onClick={() => { setModal({ ...EMPTY }); setError(''); }}
+        aria-label="Add product"
+        style={{ fontSize: 24, fontWeight: 700 }}
+      >
+        +
+      </button>
+
       {/* Add/Edit modal */}
       {modal !== null && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '32px 16px' }}>

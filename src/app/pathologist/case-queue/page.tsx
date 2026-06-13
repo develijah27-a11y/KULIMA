@@ -30,7 +30,7 @@ export default async function CaseQueuePage() {
 
   const { data: cases } = await (supabase.from as any)('disease_reports')
     .select('id, crop_type, symptoms, district, urgency, farmer_name, created_at, status')
-    .eq('status', 'pending')
+    .eq('status', 'reported')
     .order('urgency', { ascending: false })
     .order('created_at', { ascending: true })
     .limit(50);

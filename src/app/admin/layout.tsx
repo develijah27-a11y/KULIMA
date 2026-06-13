@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 
 const ADMIN_NAV = [
   { href: '/admin/dashboard',    icon: 'dashboard',    label: 'Overview' },
@@ -22,21 +23,35 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data: { user } } = await supabase.auth.getUser();
 
   let profile: { name: string; role: string } | null = null;
+  let location = '';
+  let roles: string[] = [];
 
   if (user) {
-    const { data } = await supabase.from('profiles').select('full_name').eq('user_id', user.id).single();
-    if (data) profile = { name: data.full_name ?? 'Admin', role: 'Admin' };
+    const { data } = await supabase
+      .from('profiles')
+      .select('full_name, location, roles')
+      .eq('user_id', user.id)
+      .single();
+    if (data) {
+      profile = { name: data.full_name ?? 'Admin', role: 'Admin' };
+      location = data.location ?? '';
+      roles = data.roles ?? [];
+    }
   }
 
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'Admin';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
+  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first} 👋`;
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>
-      <Sidebar navItems={ADMIN_NAV} profile={profile} />
+      <Sidebar
+        navItems={ADMIN_NAV}
+        profile={profile}
+        roleSwitcher={roles.length > 1 ? <RoleSwitcher currentRole="admin" allRoles={roles} /> : undefined}
+      />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar greeting={greeting} />
+        <TopBar greeting={greeting} location={location} currentRole="admin" allRoles={roles} />
         <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6">
           {children}
         </main>

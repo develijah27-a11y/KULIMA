@@ -13,7 +13,7 @@ export default async function GeoMapPage() {
 
   const { data: reports } = await (supabase.from as any)('disease_reports')
     .select('district, crop_type, urgency, status')
-    .in('status', ['pending', 'in_review'])
+    .in('status', ['reported', 'assigned'])
     .limit(100);
 
   const rows = (reports ?? []) as any[];

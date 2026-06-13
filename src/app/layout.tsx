@@ -3,6 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/features/auth";
 import { ToastContainer } from "@/components/ui/Toast";
+import { PagePrefetcher } from "@/components/ui/PagePrefetcher";
 
 export const metadata: Metadata = {
   title: "Kulima — Smart Farm Management for Uganda",
@@ -61,6 +62,7 @@ export default function RootLayout({
       >
         <AuthProvider>{children}</AuthProvider>
         <ToastContainer />
+        <PagePrefetcher />
       </body>
     </html>
   );

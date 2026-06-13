@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const ROLE_META: Record<string, { icon: string; label: string; href: string }> = {
+export const ROLE_META: Record<string, { icon: string; label: string; href: string }> = {
+  admin:       { icon: '⚙️', label: 'Admin',          href: '/admin/dashboard' },
   farmer:      { icon: '🌾', label: 'Farmer',         href: '/farmer/dashboard' },
   buyer:       { icon: '🛒', label: 'Buyer',          href: '/buyer/dashboard' },
   transporter: { icon: '🚚', label: 'Transporter',    href: '/transporter/dashboard' },

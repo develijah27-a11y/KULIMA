@@ -36,20 +36,28 @@ export async function POST(req: Request) {
   if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 500 });
 
   const body = await req.json();
-  const { cropType, quantityKg, askingPrice, availableFrom, district, notes } = body;
+  // Accept both camelCase (farmer form) and snake_case (group create page)
+  const cropType      = body.cropType      ?? body.crop_type;
+  const quantityKg    = body.quantityKg    ?? body.quantity_kg;
+  const askingPrice   = body.askingPrice   ?? body.asking_price;
+  const availableFrom = body.availableFrom ?? body.available_from;
+  const { district, notes, is_group_listing } = body;
+
   if (!cropType || !quantityKg || !askingPrice || !district) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
   }
 
   const { data, error } = await (supabase.from as any)('listings').insert({
-    farmer_id:      profile.id,
-    crop_type:      cropType,
-    quantity_kg:    +quantityKg,
-    asking_price:   +askingPrice,
-    available_from: availableFrom ?? new Date().toISOString().slice(0, 10),
+    farmer_id:        profile.id,
+    crop_type:        cropType,
+    quantity_kg:      +quantityKg,
+    asking_price:     +askingPrice,
+    available_from:   availableFrom ?? new Date().toISOString().slice(0, 10),
     district,
-    notes:          notes ?? null,
-    status:         'active',
+    notes:            notes ?? null,
+    status:           'active',
+    is_group_listing: is_group_listing ?? false,
+    group_id:         is_group_listing ? user.id : null,
   }).select().single();
 
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });

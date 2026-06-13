@@ -1,5 +1,7 @@
 'use client';
 
+import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
+
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
 const SECTIONS = [
@@ -57,6 +59,7 @@ export default function SupplierSettingsPage() {
         <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.03em', marginBottom: 4 }}>Settings</h1>
         <p style={{ fontSize: 13, color: C.muted }}>Manage your supplier account and preferences</p>
       </div>
+      <SettingsRoleSwitcher />
       {SECTIONS.map(section => (
         <div key={section.title}>
           <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{section.title}</p>
