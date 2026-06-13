@@ -10,7 +10,7 @@ const PROTECTED = [
 // Routes where we redirect logged-in users away
 const AUTH_ONLY = ['/auth/signin'];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const isProtected = PROTECTED.some(r => pathname.startsWith(r));
