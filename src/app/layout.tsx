@@ -49,20 +49,11 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://hjvnkintvjogwljchwcq.supabase.co" />
         <link rel="dns-prefetch" href="https://api.openweathermap.org" />
-        {/* Optimized font loading: critical weights only, swap for instant render */}
+        {/* display=swap in the URL prevents font from blocking render */}
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=DM+Mono:wght@400&display=swap"
-          media="print"
-          // @ts-ignore
-          onLoad="this.media='all'"
         />
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=DM+Mono:wght@400&display=swap"
-          />
-        </noscript>
       </head>
       <body
         className={cn("min-h-screen antialiased")}
