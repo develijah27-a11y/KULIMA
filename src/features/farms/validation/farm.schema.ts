@@ -33,15 +33,15 @@ const farmTypeSchema = z
   .optional();
 
 const sortBySchema = z
-  .enum(['created_at', 'name'], {
-    errorMap: () => ({ message: "Sort field must be either 'created_at' or 'name'" }),
+  .enum(['created_at', 'name'] as const, {
+    message: "Sort field must be either 'created_at' or 'name'",
   })
   .optional()
   .default('created_at');
 
 const orderSchema = z
-  .enum(['asc', 'desc'], {
-    errorMap: () => ({ message: "Sort order must be either 'asc' or 'desc'" }),
+  .enum(['asc', 'desc'] as const, {
+    message: "Sort order must be either 'asc' or 'desc'",
   })
   .optional()
   .default('desc');
