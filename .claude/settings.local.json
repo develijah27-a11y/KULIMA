@@ -130,7 +130,8 @@
       "Bash(Start-Sleep -Seconds 8)",
       "Bash(Get-Content \"C:\\\\Users\\\\PWEZAC~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-PwezaCore-Desktop-KULIMA\\\\c127b80c-ad47-4a01-8d6a-f0e9da294334\\\\tasks\\\\b1i922ge7.output\" -ErrorAction SilentlyContinue)",
       "Bash(curl -s https://hjvnkintvjogwljchwcq.supabase.co/auth/v1/admin/users -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqdm5raW50dmpvZ3dsamNod2NxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTMwOTczOCwiZXhwIjoyMDk0ODg1NzM4fQ.ET7eyeHjz8a0SPxsmJMqfFjisPX4eojJrS53Inoi28A' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhqdm5raW50dmpvZ3dsamNod2NxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTMwOTczOCwiZXhwIjoyMDk0ODg1NzM4fQ.ET7eyeHjz8a0SPxsmJMqfFjisPX4eojJrS53Inoi28A')",
-      "Bash(node -e \"const d=[];process.stdin.on\\('data',c=>d.push\\(c\\)\\);process.stdin.on\\('end',\\(\\)=>{const data=JSON.parse\\(d.join\\(''\\)\\);console.log\\('Remaining accounts:',data.users?.length??0\\);}\\)\")"
+      "Bash(node -e \"const d=[];process.stdin.on\\('data',c=>d.push\\(c\\)\\);process.stdin.on\\('end',\\(\\)=>{const data=JSON.parse\\(d.join\\(''\\)\\);console.log\\('Remaining accounts:',data.users?.length??0\\);}\\)\")",
+      "PowerShell(\\(Get-Item \"C:\\\\Users\\\\PWEZAC~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-PwezaCore-Desktop-KULIMA\\\\c127b80c-ad47-4a01-8d6a-f0e9da294334\\\\tasks\\\\bdtuashbq.output\"\\).Length)"
     ],
     "additionalDirectories": [
       "C:\\Users\\PwezaCore\\Desktop\\KULIMA\\src\\app\\auth"
