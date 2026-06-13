@@ -8,12 +8,13 @@ import { getWeatherLogById } from '@/features/weather/services/weather.service';
 import { getCurrentUser } from '@/features/auth/services/auth.service';
 import { handleError, AuthenticationError } from '@/utils/error-handler';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) throw new AuthenticationError();
 
-    const weatherLog = await getWeatherLogById(params.id, user.id);
+    const weatherLog = await getWeatherLogById(id, user.id);
     return NextResponse.json({ success: true, data: { weatherLog } });
   } catch (error) {
     const { response, statusCode } = handleError(error);

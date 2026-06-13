@@ -8,12 +8,13 @@ import { getDiseaseScanById } from '@/features/disease-detection/services/diseas
 import { getCurrentUser } from '@/features/auth/services/auth.service';
 import { handleError, AuthenticationError } from '@/utils/error-handler';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) throw new AuthenticationError();
 
-    const diseaseScan = await getDiseaseScanById(params.id, user.id);
+    const diseaseScan = await getDiseaseScanById(id, user.id);
     return NextResponse.json({ success: true, data: { diseaseScan } });
   } catch (error) {
     const { response, statusCode } = handleError(error);

@@ -9,12 +9,13 @@ import { getFarmById, updateFarm, deleteFarm } from '@/features/farms/services/f
 import { getCurrentUser } from '@/features/auth/services/auth.service';
 import { handleError, AuthenticationError } from '@/utils/error-handler';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) throw new AuthenticationError();
 
-    const farm = await getFarmById(params.id, user.id);
+    const farm = await getFarmById(id, user.id);
     return NextResponse.json({ success: true, data: { farm } });
   } catch (error) {
     const { response, statusCode } = handleError(error);
@@ -22,8 +23,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) throw new AuthenticationError();
 
@@ -43,7 +45,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       );
     }
 
-    const farm = await updateFarm(params.id, user.id, validation.data);
+    const farm = await updateFarm(id, user.id, validation.data);
     return NextResponse.json({ success: true, data: { farm } });
   } catch (error) {
     const { response, statusCode } = handleError(error);
@@ -51,12 +53,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await getCurrentUser();
     if (!user) throw new AuthenticationError();
 
-    await deleteFarm(params.id, user.id);
+    await deleteFarm(id, user.id);
     return NextResponse.json({ success: true, data: { message: 'Farm deleted successfully' } });
   } catch (error) {
     const { response, statusCode } = handleError(error);
