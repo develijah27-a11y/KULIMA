@@ -10,7 +10,7 @@ export default async function SupplierNotificationsPage() {
 
   const { data } = await supabase.from('notifications')
     .select('*')
-    .eq('farmer_id', user.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -18,7 +18,7 @@ export default async function SupplierNotificationsPage() {
 
   await supabase.from('notifications')
     .update({ read: true })
-    .eq('farmer_id', user.id)
+    .eq('user_id', user.id)
     .eq('read', false);
 
   return (

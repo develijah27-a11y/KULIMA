@@ -31,7 +31,7 @@ export default async function SupplierLayout({ children }: { children: React.Rea
   if (user) {
     const [profileRes, unreadRes] = await Promise.all([
       supabase.from('profiles').select('full_name, location, roles').eq('user_id', user.id).single(),
-      supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false),
+      supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false),
     ]);
     if (profileRes.data) {
       profile = { name: profileRes.data.full_name ?? 'Supplier', role: 'Input Supplier' };
