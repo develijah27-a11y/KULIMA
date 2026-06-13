@@ -170,7 +170,7 @@ function handleZodError(error: ZodError): ApiErrorResponse {
   const fieldErrors: Record<string, string[]> = {};
 
   // Get issues from ZodError
-  const issues = error.issues || error.errors || [];
+  const issues = error.issues || [];
   
   issues.forEach((err) => {
     const path = err.path.join('.');
