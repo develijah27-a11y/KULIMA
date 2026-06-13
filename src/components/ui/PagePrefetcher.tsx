@@ -3,11 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-// All navigable pages in the app — prefetched silently after first paint.
-// Grouped by role so we can prioritise the current user's routes first.
 const ALL_ROUTES = [
-  // Core auth
-  '/auth/signin', '/auth/signup',
   // Farmer
   '/farmer/dashboard', '/farmer/listings', '/farmer/marketplace',
   '/farmer/wallet', '/farmer/disease-detection', '/farmer/alerts',
@@ -38,17 +34,34 @@ export function PagePrefetcher() {
   const router = useRouter();
 
   useEffect(() => {
-    // Wait 1.5 s so the current page finishes rendering before we hit the network.
-    const timer = setTimeout(() => {
-      ALL_ROUTES.forEach((route, i) => {
-        // Space prefetches 80 ms apart — smooth, doesn't saturate the connection.
-        setTimeout(() => {
-          try { router.prefetch(route); } catch { /* ignore */ }
-        }, i * 80);
-      });
-    }, 1500);
+    // Phase 1 — browser-level <link rel="prefetch"> hints fired immediately.
+    // These queue low-priority fetches of the HTML for each route so the
+    // browser has them ready before the user even hovers.
+    const injected: HTMLLinkElement[] = [];
+    ALL_ROUTES.forEach(route => {
+      const el = document.createElement('link');
+      el.rel = 'prefetch';
+      el.href = route;
+      el.as = 'document';
+      document.head.appendChild(el);
+      injected.push(el);
+    });
 
-    return () => clearTimeout(timer);
+    // Phase 2 — Next.js router.prefetch() downloads the JS chunks + RSC payload
+    // for each route so clicking any link is instant (no network wait).
+    // Staggered 60 ms apart to avoid saturating the connection on page load.
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    ALL_ROUTES.forEach((route, i) => {
+      const t = setTimeout(() => {
+        try { router.prefetch(route); } catch { /* ignore */ }
+      }, 800 + i * 60);          // start at 800 ms, done in ~3 s total
+      timers.push(t);
+    });
+
+    return () => {
+      timers.forEach(clearTimeout);
+      injected.forEach(el => el.parentNode?.removeChild(el));
+    };
   }, [router]);
 
   return null;

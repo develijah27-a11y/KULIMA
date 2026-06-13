@@ -188,6 +188,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
               )}
               <Link
                 href={href}
+                prefetch
                 className="sidebar-item flex items-center gap-2.5 rounded-lg"
                 style={{
                   padding: '8px 10px',

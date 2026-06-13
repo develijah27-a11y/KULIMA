@@ -36,6 +36,7 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
           <Link
             key={href}
             href={href}
+            prefetch
             className="mobile-nav-item flex-1 flex flex-col items-center justify-center gap-0.5"
             style={{
               color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
