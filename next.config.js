@@ -17,11 +17,7 @@ const nextConfig = {
       'date-fns',
       'clsx',
       'tailwind-merge',
-      '@supabase/ssr',
-      '@supabase/supabase-js',
     ],
-    optimizeCss: true,
-    serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
