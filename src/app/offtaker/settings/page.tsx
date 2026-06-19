@@ -8,23 +8,25 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Company Profile', desc: 'Update your company name and registration details', icon: '🏢', href: '#' },
-      { label: 'Change Phone / MoMo', desc: 'Update your linked mobile money number', icon: '📱', href: '#' },
-      { label: 'Change Password', desc: 'Update your login password', icon: '🔑', href: '#' },
+      { label: 'Company Profile', desc: 'Update your name, phone, and contact details', icon: '🏢', href: '/farmer/profile' },
+      { label: 'Wallet & Payments', desc: 'Manage your balance and payment history', icon: '💳', href: '/offtaker/wallet' },
+      { label: 'Notifications', desc: 'Contract alerts and delivery updates', icon: '🔔', href: '/offtaker/notifications' },
     ],
   },
   {
     title: 'Procurement',
     items: [
-      { label: 'Default Contract Terms', desc: 'Set standard terms for new contracts', icon: '📄', href: '#' },
-      { label: 'Quality Standards', desc: 'Define minimum quality specs for your produce', icon: '✅', href: '#' },
+      { label: 'My Contracts', desc: 'View and manage forward purchase agreements', icon: '📄', href: '/offtaker/contracts' },
+      { label: 'Supply Pipeline', desc: 'Track committed volumes from farmers', icon: '🌾', href: '/offtaker/pipeline' },
+      { label: 'Supplier Scorecard', desc: 'Rate and review your farmer suppliers', icon: '⭐', href: '/offtaker/scorecard' },
     ],
   },
   {
-    title: 'Notifications',
+    title: 'Analytics',
     items: [
-      { label: 'Contract Alerts', desc: 'Delivery reminders and contract updates', icon: '🔔', href: '#' },
-      { label: 'Price Movement Alerts', desc: 'Alerts when key crop prices move significantly', icon: '📈', href: '#' },
+      { label: 'Spend Analytics', desc: 'Breakdown of spend by crop and time period', icon: '📊', href: '/offtaker/spend' },
+      { label: 'Quality & Compliance', desc: 'Fulfilment rates and quality standards tracking', icon: '✅', href: '/offtaker/quality' },
+      { label: 'Risk Alerts', desc: 'Supply risk flags and early warnings', icon: '⚠️', href: '/offtaker/risk' },
     ],
   },
 ];

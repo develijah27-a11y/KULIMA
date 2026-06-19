@@ -9,6 +9,21 @@ const serwist = new Serwist({
   navigationPreload: true,
 
   runtimeCaching: [
+    // ── RSC payloads ──────────────────────────────────────────────────────────
+    // Both prefetch (Next-Router-Prefetch: 1) and navigation (no prefetch header)
+    // RSC requests go to the same URLs — unify them in one cache so the prefetched
+    // payload is served immediately when the user actually navigates.
+    // StaleWhileRevalidate: respond from cache instantly, then refresh in background.
+    // 200 entries covers every route across all roles; 5 min TTL.
+    {
+      matcher: ({ request }) => request.headers.get('RSC') === '1',
+      handler: new StaleWhileRevalidate({
+        cacheName: 'kulima-rsc',
+        plugins: [new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 300 })],
+      }),
+    },
+
+    // ── API data ──────────────────────────────────────────────────────────────
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/weather'),
       handler: new StaleWhileRevalidate({
@@ -41,6 +56,8 @@ const serwist = new Serwist({
         plugins: [new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 86400 })],
       }),
     },
+
+    // ── Static assets ─────────────────────────────────────────────────────────
     {
       matcher: ({ request }) => request.destination === 'image',
       handler: new CacheFirst({
@@ -55,6 +72,9 @@ const serwist = new Serwist({
         plugins: [new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 31536000 })],
       }),
     },
+
+    // ── Full-page HTML navigation ─────────────────────────────────────────────
+    // Only fires for hard refreshes (when the Next.js router isn't active yet).
     {
       matcher: ({ request }) => request.mode === 'navigate',
       handler: new NetworkFirst({

@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { ShoppingBag } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
@@ -31,17 +33,15 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
 
   if (user) {
     const [profileRes, unreadRes] = await Promise.all([
-      supabase.from('profiles').select('full_name, location, roles').eq('user_id', user.id).single(),
-      supabase.from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('read', false),
+      supabase.from('profiles').select('id, full_name, location, roles').eq('user_id', user.id).single(),
+      supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false),
     ]);
     if (profileRes.data) {
       profile = { name: profileRes.data.full_name ?? 'Buyer', role: 'Buyer' };
       location = profileRes.data.location ?? '';
       roles = profileRes.data.roles ?? [];
+      unreadCount = unreadRes.count ?? 0;
     }
-    unreadCount = unreadRes.count ?? 0;
   }
 
   const h = new Date().getHours();
@@ -64,6 +64,9 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
         </main>
       </div>
       <MobileNav navItems={navWithBadge} />
+      <Link href="/buyer/listings" className="fab fab-primary" aria-label="Browse marketplace" style={{ textDecoration: 'none' }}>
+        <ShoppingBag size={21} strokeWidth={2.5} color="#fff" />
+      </Link>
     </div>
   );
 }

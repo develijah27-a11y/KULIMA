@@ -1,59 +1,88 @@
-﻿import { redirect } from 'next/navigation';
-import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
+import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 
-const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
+const C = {
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
+  cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
+  green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
+};
 
-export default async function NotificationsPage() {
-  const session = await getAuthSession();
-  if (!session?.user) redirect('/auth/signin');
+const TYPE_ICON: Record<string, string> = {
+  delivery: '🚛', price: '📈', offer: '🤝', loan: '💰', system: '⚙️',
+  rain: '🌧️', pest: '🐛', disease: '🔬', payment: '💳',
+};
 
-  const supabase = await getSupabase();
-  const { data } = await supabase.from('notifications')
+export default async function FarmerNotificationsPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
+
+  // notifications.farmer_id references profiles.id, not auth.users.id
+  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
+  if (!profile) redirect('/auth/signin');
+
+  const { data } = await supabase
+    .from('notifications')
     .select('*')
-    .eq('farmer_id', session.user.id)
+    .eq('farmer_id', profile.id)
     .order('created_at', { ascending: false })
-    .limit(50);
+    .limit(60);
 
-  const notifications = data ?? [];
+  const notifications = (data ?? []) as any[];
+  const unread = notifications.filter(n => !n.read).length;
 
-  // mark all as read
-  await supabase.from('notifications')
-    .update({ read: true })
-    .eq('farmer_id', session.user.id)
-    .eq('read', false);
+  // Mark all as read
+  if (unread > 0) {
+    await supabase.from('notifications').update({ read: true }).eq('farmer_id', profile.id).eq('read', false);
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.03em', marginBottom: 4 }}>Notifications</h1>
-        <p style={{ fontSize: 13, color: C.muted }}>{notifications.length} notification{notifications.length !== 1 ? 's' : ''}</p>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Notifications
+        </h1>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>
+          {unread > 0 ? `${unread} unread` : `${notifications.length} total`}
+        </p>
       </div>
 
       {notifications.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.shadow }}>
+        <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
           <p style={{ fontSize: 40, marginBottom: 12 }}>🔔</p>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>All clear</p>
-          <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>You have no notifications right now.</p>
+          <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>
+            Offer updates, weather alerts, and price changes will appear here.
+          </p>
         </div>
       ) : (
-        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.shadow, overflow: 'hidden' }}>
-          {notifications.map((n: any, i: number) => (
-            <div key={n.id} style={{
-              padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-start',
-              borderBottom: i < notifications.length - 1 ? `1px solid ${C.border}` : 'none',
-              background: n.read ? C.cardBg : 'var(--color-primary-bg)',
-            }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: n.read ? 'transparent' : C.greenMed, marginTop: 6, flexShrink: 0 }} />
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, fontWeight: n.read ? 400 : 700, color: C.text, marginBottom: 2 }}>
-                  {n.message ?? n.title ?? 'Notification'}
-                </p>
-                <p style={{ fontSize: 12, color: C.muted }}>
-                  {new Date(n.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </p>
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
+          {notifications.map((n: any, i: number) => {
+            const icon = TYPE_ICON[n.type] ?? '🔔';
+            return (
+              <div key={n.id} style={{
+                padding: '15px 20px', display: 'flex', gap: 13, alignItems: 'flex-start',
+                borderBottom: i < notifications.length - 1 ? `1px solid ${C.border}` : 'none',
+                background: n.read ? C.cardBg : 'var(--color-primary-bg)',
+              }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--color-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+                  {icon}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: n.read ? 500 : 700, color: C.text, margin: '0 0 2px' }}>
+                    {n.title ?? n.message ?? 'Notification'}
+                  </p>
+                  {n.body && <p style={{ fontSize: 12, color: C.muted, margin: '0 0 3px', lineHeight: 1.4 }}>{n.body}</p>}
+                  <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
+                    {new Date(n.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                {!n.read && (
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: C.green, marginTop: 5, flexShrink: 0 }} />
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

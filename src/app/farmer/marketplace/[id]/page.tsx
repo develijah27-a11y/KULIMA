@@ -1,209 +1,132 @@
-﻿import { redirect, notFound } from 'next/navigation';
+import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { VerificationBadge } from '@/components/trust/VerificationBadge';
-import { TrustScore } from '@/components/trust/TrustScore';
-import { OfferActions } from './OfferActions';
-import { type VerificationLevel } from '@/lib/trust';
+import { OfferManager } from './OfferManager';
+import { getOrCreateProfile } from '@/lib/supabase/get-profile';
 
 const C = {
-  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
-  cardShadow: 'var(--d-shadow-card)',
-  green: 'var(--color-primary)', amber: 'var(--color-harvest)',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
+  cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
+  green: 'var(--color-primary)', greenBg: 'var(--color-primary-bg)', greenMed: 'var(--color-primary-hover)',
+  amber: 'var(--color-harvest)', amberBg: 'var(--color-harvest-bg)',
+};
+const CROP_EMOJI: Record<string, string> = {
+  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
+  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
+  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
 };
 
-const STATUS_CFG = {
-  active:   { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Active' },
-  sold:     { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Sold' },
-  expired:  { color: 'var(--d-muted)',       bg: 'var(--color-surface-2)',  label: 'Expired' },
-};
-const OFFER_STATUS_CFG = {
-  pending:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Pending' },
-  countered: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Countered' },
-  accepted:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Accepted' },
-  rejected:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Rejected' },
-  completed: { color: '#7C3AED', bg: '#EDE9FE', label: 'Completed' },
-};
+type Params = { params: Promise<{ id: string }> };
 
-function timeAgo(iso: string) {
-  const d = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (d < 60) return `${d}m ago`;
-  if (d < 1440) return `${Math.floor(d / 60)}h ago`;
-  return `${Math.floor(d / 1440)}d ago`;
-}
-
-export default async function FarmerListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function FarmerListingDetailPage({ params }: Params) {
   const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
+  const profile = await getOrCreateProfile(supabase, user);
   if (!profile) redirect('/auth/signin');
 
+  // Load listing — must belong to this farmer
   const { data: listing } = await (supabase.from as any)('listings')
-    .select('*')
+    .select('id, crop_type, quantity_kg, asking_price, district, status, notes, created_at')
     .eq('id', id)
-    .eq('farmer_id', profile.id)
+    .eq('farmer_id', (profile as any).id)
     .single();
+
   if (!listing) notFound();
 
-  const { data: offers } = await (supabase.from as any)('offers')
-    .select('id, offered_price, counter_price, status, message, farmer_note, buyer_id, created_at')
+  // Load all offers on this listing
+  const { data: rawOffers } = await (supabase.from as any)('offers')
+    .select('id, buyer_id, offered_price, counter_price, status, message, farmer_note, created_at')
     .eq('listing_id', id)
     .order('created_at', { ascending: false });
 
-  const rows = offers ?? [];
+  const offers = rawOffers ?? [];
 
-  // Fetch buyer profiles by user_id
-  const buyerIds = [...new Set(rows.map((o: any) => o.buyer_id))] as string[];
-  let buyerMap: Record<string, any> = {};
+  // Enrich with buyer names
+  const buyerIds = [...new Set(offers.map((o: any) => o.buyer_id))] as string[];
+  let buyerNames: Record<string, string> = {};
   if (buyerIds.length > 0) {
-    const { data: buyers } = await (supabase.from as any)('profiles')
-      .select('user_id, full_name, phone_number, verification_level, trust_score, completed_deals')
-      .in('user_id', buyerIds);
-    (buyers ?? []).forEach((b: any) => { buyerMap[b.user_id] = b; });
+    const { data: buyers } = await supabase
+      .from('profiles').select('user_id, full_name').in('user_id', buyerIds);
+    (buyers ?? []).forEach((b: any) => { buyerNames[b.user_id] = b.full_name; });
   }
 
-  const status = STATUS_CFG[listing.status as keyof typeof STATUS_CFG] ?? STATUS_CFG.active;
-  const pendingCount = rows.filter((o: any) => o.status === 'pending').length;
+  const enrichedOffers = offers.map((o: any) => ({ ...o, buyer_name: buyerNames[o.buyer_id] ?? 'Buyer' }));
+  const pendingCount   = offers.filter((o: any) => ['pending','countered'].includes(o.status)).length;
+  const emoji          = CROP_EMOJI[listing.crop_type?.toLowerCase()] ?? '🌾';
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
-      <div className="flex items-center justify-between">
-        <Link href="/farmer/marketplace" style={{ color: C.muted, fontSize: 13, textDecoration: 'none' }}>
-          ← My Listings
-        </Link>
-        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: status.bg, color: status.color }}>
-          {status.label}
-        </span>
-      </div>
+      {/* Back */}
+      <Link href="/farmer/marketplace" style={{ fontSize: 13, color: C.muted, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        ← My Listings
+      </Link>
 
-      {/* Listing details */}
-      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div>
-            <h1 className="text-2xl font-black capitalize" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-              {listing.crop_type}
-            </h1>
-            <p className="text-sm mt-1" style={{ color: C.muted }}>{listing.district} · posted {timeAgo(listing.created_at)}</p>
+      {/* Listing summary card */}
+      <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: '20px 22px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
+            {emoji}
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-black" style={{ color: C.green, letterSpacing: '-0.03em' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
+              <h1 style={{ fontSize: 18, fontWeight: 900, color: C.text, margin: 0, textTransform: 'capitalize', letterSpacing: '-0.02em' }}>
+                {listing.crop_type}
+              </h1>
+              <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
+                background: listing.status === 'active' ? 'var(--color-success-bg)' : 'var(--color-surface-2)',
+                color: listing.status === 'active' ? 'var(--color-success)' : C.muted,
+              }}>
+                {listing.status}
+              </span>
+              {pendingCount > 0 && (
+                <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: C.amberBg, color: C.amber }}>
+                  {pendingCount} need response
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{listing.quantity_kg} kg · {listing.district}</p>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <p style={{ fontSize: 18, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
               UGX {Math.round(listing.asking_price).toLocaleString()}
             </p>
-            <p className="text-xs" style={{ color: C.muted }}>per kg</p>
+            <p style={{ fontSize: 10, color: C.muted, margin: '1px 0 0' }}>per kg</p>
           </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 py-4" style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
-          {[
-            { label: 'Quantity', value: `${listing.quantity_kg} kg` },
-            { label: 'Available', value: listing.available_from },
-            { label: 'Offers', value: `${rows.length} (${pendingCount} pending)` },
-          ].map(({ label, value }) => (
-            <div key={label} className="text-center">
-              <p className="text-xs" style={{ color: C.muted }}>{label}</p>
-              <p className="text-sm font-bold mt-0.5" style={{ color: C.text }}>{value}</p>
-            </div>
-          ))}
         </div>
 
         {listing.notes && (
-          <p className="text-sm mt-4" style={{ color: C.muted }}>{listing.notes}</p>
-        )}
-      </div>
-
-      {/* Offers */}
-      <div>
-        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>
-          Incoming Offers ({rows.length})
-        </p>
-        {rows.length === 0 ? (
-          <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '32px', textAlign: 'center' }}>
-            <p style={{ fontSize: 36, marginBottom: 8 }}>📭</p>
-            <p style={{ color: C.muted, fontSize: 14 }}>No offers yet. Share your listing to attract buyers.</p>
+          <div style={{ marginTop: 14, padding: '10px 14px', background: C.greenBg, borderRadius: 10 }}>
+            <p style={{ fontSize: 12, color: C.greenMed, margin: 0 }}>{listing.notes}</p>
           </div>
-        ) : (
-          <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
-            <div className="divide-y" style={{ borderColor: C.border }}>
-              {rows.map((offer: any) => {
-                const buyer = buyerMap[offer.buyer_id];
-                const offerStatus = OFFER_STATUS_CFG[offer.status as keyof typeof OFFER_STATUS_CFG] ?? OFFER_STATUS_CFG.pending;
-                const isPending = offer.status === 'pending';
-                const priceDiff = Math.round(((offer.offered_price - listing.asking_price) / listing.asking_price) * 100);
+        )}
 
-                return (
-                  <div key={offer.id} className="p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shrink-0"
-                          style={{ background: 'var(--color-primary-bg)', color: C.green }}
-                        >
-                          {buyer?.full_name?.[0]?.toUpperCase() ?? '?'}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-bold" style={{ color: C.text }}>{buyer?.full_name ?? 'Unknown Buyer'}</p>
-                            {buyer?.verification_level && (
-                              <VerificationBadge level={buyer.verification_level as VerificationLevel} size="xs" />
-                            )}
-                          </div>
-                          <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                            {buyer?.phone_number ?? '—'} · {timeAgo(offer.created_at)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-lg font-black" style={{ color: isPending ? C.green : C.muted, letterSpacing: '-0.02em' }}>
-                          UGX {Math.round(offer.offered_price).toLocaleString()}
-                        </p>
-                        <p className="text-xs font-semibold" style={{ color: priceDiff >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                          {priceDiff >= 0 ? '+' : ''}{priceDiff}% vs asking
-                        </p>
-                      </div>
-                    </div>
-
-                    {buyer && (
-                      <div className="mt-2 ml-13">
-                        <TrustScore score={buyer.trust_score ?? 50} deals={buyer.completed_deals ?? 0} size="sm" />
-                      </div>
-                    )}
-
-                    {offer.message && (
-                      <p className="text-xs mt-2 ml-13 italic" style={{ color: C.muted }}>"{offer.message}"</p>
-                    )}
-
-                    {offer.counter_price && (
-                      <div className="mt-2 ml-13 flex items-center gap-2">
-                        <span style={{ fontSize: 11, background: 'var(--color-sky-bg)', color: '#0284C7', padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>
-                          Your counter: UGX {Math.round(offer.counter_price).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between mt-2">
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: offerStatus.bg, color: offerStatus.color }}>
-                        {offerStatus.label}
-                      </span>
-                    </div>
-
-                    {isPending && (
-                      <OfferActions
-                        offerId={offer.id}
-                        askingPrice={listing.asking_price}
-                        offeredPrice={offer.offered_price}
-                        onDone={() => { /* page will need refresh — handled client-side */ }}
-                      />
-                    )}
-                  </div>
-                );
-              })}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
+          {[
+            { label: 'Total Offers', value: offers.length },
+            { label: 'Pending',      value: pendingCount, hi: pendingCount > 0 },
+            { label: 'Accepted',     value: offers.filter((o: any) => o.status === 'accepted').length },
+          ].map(s => (
+            <div key={s.label} style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: 20, fontWeight: 900, color: (s as any).hi ? C.amber : C.text, margin: 0 }}>{s.value}</p>
+              <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>{s.label}</p>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
+
+      <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 12px', letterSpacing: '-0.02em' }}>
+        Offers Received
+      </h2>
+
+      <OfferManager
+        listingId={id}
+        askingPrice={listing.asking_price}
+        cropType={listing.crop_type}
+        initialOffers={enrichedOffers}
+      />
     </div>
   );
 }

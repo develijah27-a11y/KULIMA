@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
@@ -10,6 +11,7 @@ const ADMIN_NAV = [
   { href: '/admin/verification', icon: 'verify',       label: 'KYC Queue' },
   { href: '/admin/buyers',       icon: 'marketplace',  label: 'Buyers' },
   { href: '/admin/disputes',     icon: 'dispute',      label: 'Disputes' },
+  { href: '/admin/deliveries',   icon: 'deliveries',   label: 'Deliveries' },
   { href: '/admin/wallets',      icon: 'finance',      label: 'Wallets' },
   { href: '/admin/fraud',        icon: 'alert',        label: 'Fraud Flags' },
   { href: '/admin/prices',       icon: 'prices',       label: 'Prices',     divider: true, sectionLabel: 'Content' },
@@ -22,21 +24,25 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  if (!user) redirect('/auth/signin');
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('full_name, role, location, roles')
+    .eq('user_id', user.id)
+    .single();
+
+  // Hard block — only role='admin' may enter any /admin route
+  if ((data as any)?.role !== 'admin') redirect('/dashboard');
+
   let profile: { name: string; role: string } | null = null;
   let location = '';
   let roles: string[] = [];
 
-  if (user) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('full_name, location, roles')
-      .eq('user_id', user.id)
-      .single();
-    if (data) {
-      profile = { name: data.full_name ?? 'Admin', role: 'Admin' };
-      location = data.location ?? '';
-      roles = data.roles ?? [];
-    }
+  if (data) {
+    profile = { name: (data as any).full_name ?? 'Admin', role: 'Admin' };
+    location = (data as any).location ?? '';
+    roles = (data as any).roles ?? [];
   }
 
   const h = new Date().getHours();

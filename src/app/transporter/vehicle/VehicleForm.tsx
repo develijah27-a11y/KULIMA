@@ -30,7 +30,8 @@ export function VehicleForm({ existing }: Props) {
   const [makeModel, setMakeModel] = useState(existing?.make_model ?? '');
   const [year, setYear]           = useState(existing?.year?.toString() ?? '');
   const [availDist, setAvailDist] = useState<string[]>(existing?.districts ?? []);
-  const [isAvailable, setIsAvailable] = useState(existing?.is_available ?? true);
+  const [isAvailable, setIsAvailable]     = useState(existing?.is_available ?? true);
+  const [isColdCapable, setIsColdCapable] = useState((existing as any)?.is_cold_capable ?? false);
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState('');
 
@@ -54,6 +55,7 @@ export function VehicleForm({ existing }: Props) {
         year: year ? parseInt(year) : null,
         districts: availDist.length > 0 ? availDist : null,
         is_available: isAvailable,
+        is_cold_capable: isColdCapable,
         ...(existing ? { id: existing.id } : {}),
       };
       const res  = await fetch('/api/vehicles', { method: existing ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -124,12 +126,21 @@ export function VehicleForm({ existing }: Props) {
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <input type="checkbox" id="available" checked={isAvailable} onChange={e => setIsAvailable(e.target.checked)}
-          style={{ width: 16, height: 16, accentColor: C.green }} />
-        <label htmlFor="available" style={{ fontSize: 13, fontWeight: 600, color: C.text, cursor: 'pointer' }}>
-          Available for deliveries
-        </label>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <input type="checkbox" id="available" checked={isAvailable} onChange={e => setIsAvailable(e.target.checked)}
+            style={{ width: 16, height: 16, accentColor: C.green }} />
+          <label htmlFor="available" style={{ fontSize: 13, fontWeight: 600, color: C.text, cursor: 'pointer' }}>
+            Available for deliveries
+          </label>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <input type="checkbox" id="cold_capable" checked={isColdCapable} onChange={e => setIsColdCapable(e.target.checked)}
+            style={{ width: 16, height: 16, marginTop: 1, accentColor: '#0EA5E9' }} />
+          <label htmlFor="cold_capable" style={{ fontSize: 13, fontWeight: 600, color: C.text, cursor: 'pointer', lineHeight: 1.4 }}>
+            Cold chain capable <span style={{ fontWeight: 400, fontSize: 11, color: C.muted }}>(refrigerated — can carry perishables)</span>
+          </label>
+        </div>
       </div>
 
       {error && <p style={{ color: 'var(--color-danger)', fontSize: 13 }}>{error}</p>}

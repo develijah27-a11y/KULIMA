@@ -11,12 +11,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <Link href="/dashboard" className="text-xl font-bold text-green-600">
+              <Link href="/dashboard" prefetch className="text-xl font-bold text-green-600">
                 Kulima
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard/farms">
+              <Link href="/dashboard/farms" prefetch>
                 <Button variant="ghost">Farms</Button>
               </Link>
               <form action="/api/auth/logout" method="post">

@@ -17,18 +17,19 @@ export default async function VerifyPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await (supabase.from as any)('profiles')
-    .select('id, role, verification_level, trust_score, reliability_score, completed_deals')
-    .eq('user_id', user.id)
-    .single();
-
-  const { data: pending } = await (supabase.from as any)('verifications')
-    .select('id, level, status, submitted_at')
-    .eq('user_id', user.id)
-    .eq('status', 'pending')
-    .order('submitted_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: profile }, { data: pending }] = await Promise.all([
+    (supabase.from as any)('profiles')
+      .select('id, role, verification_level, trust_score, reliability_score, completed_deals')
+      .eq('user_id', user.id)
+      .single(),
+    (supabase.from as any)('verifications')
+      .select('id, level, status, submitted_at')
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   const currentLevel: VerificationLevel = (profile as any)?.verification_level ?? 'grey';
   const trustScore   = (profile as any)?.trust_score ?? 50;

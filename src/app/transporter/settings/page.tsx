@@ -11,22 +11,24 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Driver Profile', desc: 'Update your name and contact details', icon: '🚚', href: '#' },
-      { label: 'Change Phone / MoMo', desc: 'Update your linked mobile money number', icon: '📱', href: '#' },
-      { label: 'Change Password', desc: 'Update your login password', icon: '🔑', href: '#' },
+      { label: 'Driver Profile', desc: 'Update your name, photo and contact details', icon: '🚚', href: '/farmer/profile' },
+      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and withdraw earnings', icon: '💰', href: '/transporter/wallet' },
+      { label: 'Notifications', desc: 'Job alerts, payment notifications and updates', icon: '🔔', href: '/transporter/notifications' },
     ],
   },
   {
-    title: 'Vehicle & Coverage',
+    title: 'Vehicle & Fleet',
     items: [
-      { label: 'Vehicle Details', desc: 'Update your truck type and registration', icon: '🔧', href: '#' },
-      { label: 'Coverage Zones', desc: 'Set the districts you serve', icon: '📍', href: '#' },
+      { label: 'My Vehicle', desc: 'Update truck type, plate, capacity and cold chain status', icon: '🚛', href: '/transporter/vehicle' },
+      { label: 'Cold Chain Logs', desc: 'Temperature compliance records for perishable loads', icon: '❄️', href: '/transporter/cold-chain' },
     ],
   },
   {
-    title: 'Notifications',
+    title: 'Jobs',
     items: [
-      { label: 'Job Alerts', desc: 'Get notified on new delivery requests near you', icon: '🔔', href: '#' },
+      { label: 'Job Queue', desc: 'Browse and filter open delivery requests', icon: '📬', href: '/transporter/job-queue' },
+      { label: 'Active Jobs', desc: 'Manage current assignments and update status', icon: '🗺️', href: '/transporter/active' },
+      { label: 'Completed Deliveries', desc: 'View your full delivery history', icon: '✅', href: '/transporter/deliveries' },
     ],
   },
 ];

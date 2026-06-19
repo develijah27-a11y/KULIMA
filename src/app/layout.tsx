@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/features/auth";
 import { ToastContainer } from "@/components/ui/Toast";
 import { PagePrefetcher } from "@/components/ui/PagePrefetcher";
+import { NavigationProgress } from "@/components/ui/NavigationProgress";
+import { ServiceWorkerRegistrar } from "@/components/shared/ServiceWorkerRegistrar";
 
 export const metadata: Metadata = {
   title: "Kulima — Smart Farm Management for Uganda",
@@ -62,7 +64,9 @@ export default function RootLayout({
       >
         <AuthProvider>{children}</AuthProvider>
         <ToastContainer />
+        <NavigationProgress />
         <PagePrefetcher />
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   );

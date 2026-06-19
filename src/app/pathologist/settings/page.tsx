@@ -8,23 +8,23 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Professional Profile', desc: 'Update your credentials and specialisation', icon: '🩺', href: '/pathologist/profile' },
-      { label: 'Change Phone / MoMo', desc: 'Update your linked mobile money number', icon: '📱', href: '#' },
-      { label: 'Change Password', desc: 'Update your login password', icon: '🔑', href: '#' },
+      { label: 'Professional Profile', desc: 'Update your name, credentials, and specialisation', icon: '🩺', href: '/farmer/profile' },
+      { label: 'Wallet & Earnings', desc: 'Manage consultation payments and withdrawals', icon: '💰', href: '/pathologist/wallet' },
+      { label: 'Notifications', desc: 'Case alerts and outbreak warnings', icon: '🔔', href: '/pathologist/notifications' },
     ],
   },
   {
-    title: 'Notifications',
+    title: 'Cases',
     items: [
-      { label: 'Case Alerts', desc: 'Get notified on new urgent disease cases', icon: '🔔', href: '#' },
-      { label: 'Outbreak Alerts', desc: 'District-level disease outbreak warnings', icon: '🚨', href: '#' },
+      { label: 'My Cases', desc: 'View and manage your assigned diagnoses', icon: '🔬', href: '/pathologist/my-cases' },
+      { label: 'Case Queue', desc: 'Browse unassigned disease reports needing review', icon: '📋', href: '/pathologist/case-queue' },
+      { label: 'Disease Alerts', desc: 'Active outbreak warnings across all districts', icon: '🚨', href: '/pathologist/disease-alerts' },
     ],
   },
   {
-    title: 'Coverage',
+    title: 'Intelligence',
     items: [
-      { label: 'Service Districts', desc: 'Set districts you cover for consultations', icon: '📍', href: '#' },
-      { label: 'Consultation Fee', desc: 'Set your per-diagnosis consultation fee', icon: '💰', href: '#' },
+      { label: 'Geo Disease Map', desc: 'Geographic distribution of reported outbreaks', icon: '🗺️', href: '/pathologist/geo-map' },
     ],
   },
 ];

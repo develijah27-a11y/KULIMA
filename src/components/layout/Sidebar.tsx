@@ -118,13 +118,8 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
 
   return (
     <aside
-      className="hidden md:flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto"
-      style={{
-        width: 220,
-        minWidth: 220,
-        background: 'var(--color-sidebar)',
-        borderRight: '1px solid rgba(0,0,0,0.08)',
-      }}
+      className="hidden md:flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto glass-sidebar"
+      style={{ width: 220, minWidth: 220 }}
     >
       {/* Logo */}
       <div
@@ -137,7 +132,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
         <div
           style={{
             width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            background: 'rgba(0,0,0,0.15)',
+            background: 'rgba(255,255,255,0.30)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 13, fontWeight: 900, color: '#000',
             fontFamily: 'var(--font-display)',
@@ -192,8 +187,8 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
                 className="sidebar-item flex items-center gap-2.5 rounded-lg"
                 style={{
                   padding: '8px 10px',
-                  background: active ? 'rgba(0,0,0,0.15)' : 'transparent',
-                  color: active ? '#000000' : 'rgba(0,0,0,0.70)',
+                  background: active ? 'rgba(255,255,255,0.28)' : 'transparent',
+                  color: active ? '#000000' : 'rgba(0,0,0,0.72)',
                   textDecoration: 'none',
                   minHeight: 40,
                 }}
@@ -229,7 +224,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
             <div
               style={{
                 width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                background: 'rgba(0,0,0,0.15)',
+                background: 'rgba(255,255,255,0.30)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 12, fontWeight: 800, color: '#000',
               }}

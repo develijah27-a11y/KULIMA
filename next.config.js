@@ -18,6 +18,16 @@ const nextConfig = {
       'clsx',
       'tailwind-merge',
     ],
+    // How long the client-side router cache holds prefetched RSC payloads.
+    // Default in Next.js 15+ is 0 for dynamic pages (pages that use cookies/headers),
+    // which means every navigation re-fetches even if the page was just prefetched.
+    // Setting dynamic to 60 s means clicking any prefetched nav link within 60 s is
+    // instant (no network round-trip, no loading skeleton). Mutations already call
+    // router.refresh() which invalidates the affected entry immediately.
+    staleTimes: {
+      dynamic: 180,  // 3 min — keeps prefetched RSC payloads alive for a full browsing session
+      static: 300,   // 5 min for fully-static pages
+    },
   },
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -32,11 +42,17 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Static media — immutable, 1 year
         source: '/:all*(svg|jpg|png|webp|avif|woff2)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
-        // Add security + performance headers to all pages
+        // Next.js content-hashed JS/CSS chunks — immutable, 1 year
+        source: '/_next/static/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        // Security + DNS prefetch enabled for all pages
         source: '/(.*)',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },

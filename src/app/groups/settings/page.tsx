@@ -8,23 +8,24 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Leader Profile', desc: 'Update your name and contact details', icon: '👤', href: '#' },
-      { label: 'Change Phone / MoMo', desc: 'Update your linked mobile money number', icon: '📱', href: '#' },
-      { label: 'Change Password', desc: 'Update your login password', icon: '🔑', href: '#' },
+      { label: 'Leader Profile', desc: 'Update your name, phone, and contact details', icon: '👤', href: '/farmer/profile' },
+      { label: 'Group Wallet', desc: 'Manage group savings and transaction history', icon: '💰', href: '/groups/wallet' },
+      { label: 'Notifications', desc: 'Member alerts and market updates', icon: '🔔', href: '/groups/notifications' },
     ],
   },
   {
-    title: 'Group Settings',
+    title: 'Group Management',
     items: [
-      { label: 'Group Name & Info', desc: 'Update your group name and description', icon: '👥', href: '#' },
-      { label: 'Membership Rules', desc: 'Set contribution requirements and join conditions', icon: '📋', href: '#' },
+      { label: 'Members', desc: 'View and manage group members', icon: '👥', href: '/groups/members' },
+      { label: 'Announcements', desc: 'Post updates and notices to your group', icon: '📢', href: '/groups/announcements' },
+      { label: 'Group Chat', desc: 'Send messages and updates to members', icon: '💬', href: '/groups/chat' },
     ],
   },
   {
-    title: 'Notifications',
+    title: 'Finance & Planning',
     items: [
-      { label: 'Member Alerts', desc: 'Notifications when members join or contribute', icon: '🔔', href: '#' },
-      { label: 'Market Alerts', desc: 'Price movement alerts for your group crops', icon: '📈', href: '#' },
+      { label: 'Group Finance', desc: 'Track savings, loans, and contributions', icon: '📊', href: '/groups/finance' },
+      { label: 'Season Planning', desc: 'Coordinate planting and harvest schedules', icon: '📅', href: '/groups/season' },
     ],
   },
 ];

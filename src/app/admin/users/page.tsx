@@ -57,12 +57,13 @@ export default async function AdminUsersPage({
   if (role) query = query.eq('role', role);
   if (q)    query = query.or(`full_name.ilike.%${q}%,phone_number.ilike.%${q}%,location.ilike.%${q}%`);
 
-  const { data: users, count } = await query;
+  const [{ data: users, count }, { data: roleCounts }] = await Promise.all([
+    query,
+    (supabase.from as any)('profiles').select('role'),
+  ]);
   const rows = users ?? [];
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
 
-  // Role counts for filter bar
-  const { data: roleCounts } = await (supabase.from as any)('profiles').select('role');
   const countMap: Record<string, number> = {};
   (roleCounts ?? []).forEach((p: any) => { countMap[p.role ?? 'farmer'] = (countMap[p.role ?? 'farmer'] ?? 0) + 1; });
 

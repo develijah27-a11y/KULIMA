@@ -14,7 +14,7 @@ export default async function AdminPricesPage() {
   if (!user) redirect('/auth/signin');
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('user_id', user.id).single();
-  if (profile?.role !== 'admin') redirect('/farmer/dashboard');
+  if (profile?.role !== 'admin') redirect('/dashboard');
 
   const sinceDate = new Date(Date.now() - 7 * 86400000).toISOString();
   const { data: rawPrices } = await (supabase.from as any)('market_prices')

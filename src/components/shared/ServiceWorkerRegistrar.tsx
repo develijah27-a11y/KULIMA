@@ -1,39 +1,44 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect } from 'react';
 
 export function ServiceWorkerRegistrar() {
-  const router = useRouter();
-  const registered = useRef(false);
-
   useEffect(() => {
     if (
       typeof window === 'undefined' ||
       !('serviceWorker' in navigator) ||
-      process.env.NODE_ENV === 'development' ||
-      registered.current
-    ) {
-      return;
-    }
+      process.env.NODE_ENV === 'development'
+    ) return;
 
-    registered.current = true;
-
-    if ('serviceWorker' in navigator) {
+    // Register after load so SW registration never blocks the critical path
+    const register = () => {
       navigator.serviceWorker
         .register('/sw.js', { scope: '/' })
-        .then((registration) => {
-          // SW registered
-          if (registration.waiting && registration.waiting.postMessage) {
-            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        .then(reg => {
+          // If a new SW is waiting, activate it immediately
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
           }
+          // Handle future updates
+          reg.addEventListener('updatefound', () => {
+            const incoming = reg.installing;
+            if (!incoming) return;
+            incoming.addEventListener('statechange', () => {
+              if (incoming.state === 'installed' && navigator.serviceWorker.controller) {
+                incoming.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
+          });
         })
-        .catch(() => {
-          // SW registration failed in dev — silent
-        });
+        .catch(() => { /* SW not supported or blocked — silent */ });
+    };
+
+    if (document.readyState === 'complete') {
+      register();
+    } else {
+      window.addEventListener('load', register, { once: true });
     }
-  }, [router]);
+  }, []);
 
   return null;
 }

@@ -51,13 +51,6 @@ export default async function PathologistCasesPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await (supabase.from as any)('profiles')
-    .select('id, role')
-    .eq('user_id', user.id)
-    .single();
-
-  if (!profile) redirect('/auth/signin');
-
   const { status = '', severity = '' } = await searchParams;
 
   let q = (supabase.from as any)('disease_reports')
@@ -69,7 +62,12 @@ export default async function PathologistCasesPage({
   if (status)   q = q.eq('status', status);
   if (severity) q = q.eq('severity', severity);
 
-  const { data: cases, error } = await q;
+  const [{ data: profile }, { data: cases, error }] = await Promise.all([
+    (supabase.from as any)('profiles').select('id, role').eq('user_id', user.id).single(),
+    q,
+  ]);
+
+  if (!profile) redirect('/auth/signin');
   const rows: any[] = cases ?? [];
 
   const counts = {

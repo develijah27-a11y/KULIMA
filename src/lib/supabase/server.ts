@@ -1,16 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 import type { Database } from '../database.types';
 import { env } from '@/config/env';
 
-/**
- * Creates a Supabase client for server-side operations
- * Uses the publishable key with cookie-based session management
- * For operations requiring RLS bypass, use createServiceRoleClient instead
- * 
- * @returns Supabase server client with type-safe database schema
- */
-export const createClient = async () => {
+export const createClient = cache(async () => {
   const cookieStore = await cookies();
 
   const anonKey =
@@ -33,22 +27,13 @@ export const createClient = async () => {
             );
           } catch {
             // Called from a Server Component (read-only context).
-            // The middleware handles token refresh so this is safe to ignore.
           }
         },
       },
     }
   );
-};
+});
 
-/**
- * Creates a Supabase client with service role key for server-side operations
- * WARNING: This client bypasses Row Level Security (RLS)
- * Only use when RLS bypass is necessary and safe (e.g., admin operations, system tasks)
- * NEVER expose this client or its key to client-side code
- * 
- * @returns Supabase server client with service role privileges
- */
 export const createServiceRoleClient = () => {
   return createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,

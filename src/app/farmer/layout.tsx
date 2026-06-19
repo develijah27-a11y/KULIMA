@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
@@ -9,6 +11,7 @@ const FARMER_NAV = [
   // ── Market
   { href: '/farmer/marketplace', icon: 'my-listings',  label: 'My Listings',  divider: true, sectionLabel: 'Market' },
   { href: '/farmer/orders',      icon: 'orders',       label: 'My Orders' },
+  { href: '/farmer/deliveries',  icon: 'deliveries',   label: 'Deliveries' },
   { href: '/farmer/inventory',   icon: 'inventory',    label: 'Inventory' },
   { href: '/farmer/prices',      icon: 'prices',       label: 'Live Prices' },
   // ── Farm
@@ -38,18 +41,17 @@ export default async function FarmerLayout({ children }: { children: React.React
   let roles: string[] = [];
 
   if (user) {
+    // Parallel: profile + unread count. RLS on notifications filters by auth.uid() automatically.
     const [profileRes, unreadRes] = await Promise.all([
-      supabase.from('profiles').select('full_name, location, roles').eq('user_id', user.id).single(),
-      supabase.from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('read', false),
+      supabase.from('profiles').select('id, full_name, location, roles').eq('user_id', user.id).single(),
+      supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false),
     ]);
     if (profileRes.data) {
       profile = { name: profileRes.data.full_name ?? 'Farmer', role: 'Farmer' };
       location = profileRes.data.location ?? '';
       roles = profileRes.data.roles ?? [];
+      unreadCount = unreadRes.count ?? 0;
     }
-    unreadCount = unreadRes.count ?? 0;
   }
 
   const h = new Date().getHours();
@@ -73,6 +75,14 @@ export default async function FarmerLayout({ children }: { children: React.React
         </main>
       </div>
       <MobileNav navItems={navWithBadge} />
+      <Link
+        href="/farmer/marketplace/new"
+        className="fab fab-primary"
+        aria-label="New listing"
+        style={{ textDecoration: 'none' }}
+      >
+        <Plus size={22} strokeWidth={2.5} color="#fff" />
+      </Link>
     </div>
   );
 }

@@ -11,22 +11,23 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Edit Profile', desc: 'Update your name and contact details', icon: '👤', href: '#' },
-      { label: 'Change Phone / MoMo', desc: 'Update your linked mobile money number', icon: '📱', href: '#' },
-      { label: 'Change Password', desc: 'Update your login password', icon: '🔑', href: '#' },
+      { label: 'Edit Profile', desc: 'Update your name, contact details and location', icon: '👤', href: '/farmer/profile' },
+      { label: 'Wallet & Payments', desc: 'Manage your mobile money and Kulima Pay balance', icon: '💳', href: '/buyer/wallet' },
+      { label: 'Notifications', desc: 'View and manage your alerts and updates', icon: '🔔', href: '/buyer/notifications' },
     ],
   },
   {
-    title: 'Notifications',
+    title: 'Sourcing',
     items: [
-      { label: 'Order Updates', desc: 'Get notified when your orders change status', icon: '🔔', href: '#' },
-      { label: 'Price Alerts', desc: 'Alerts when watched produce prices drop', icon: '📉', href: '#' },
+      { label: 'My Orders', desc: 'Track all your purchases from farmers', icon: '📦', href: '/buyer/orders' },
+      { label: 'Contracts', desc: 'Manage forward purchase agreements', icon: '📄', href: '/buyer/contracts' },
+      { label: 'Deliveries', desc: 'Track your transport and delivery requests', icon: '🚛', href: '/buyer/deliveries' },
     ],
   },
   {
-    title: 'Payment',
+    title: 'Cold Chain',
     items: [
-      { label: 'Linked Mobile Money', desc: 'Manage your mobile money accounts', icon: '💳', href: '#' },
+      { label: 'Cold Chain Storage', desc: 'Refrigerated delivery history and bookings', icon: '🧊', href: '/buyer/cold-chain' },
     ],
   },
 ];

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { TrustScore } from '@/components/trust/TrustScore';
 import { type VerificationLevel } from '@/lib/trust';
+import { ProfileEditForm } from './ProfileEditForm';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -55,11 +56,21 @@ export default async function FarmerProfilePage() {
     planted:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   };
 
+  const editInitial = {
+    full_name:    p.full_name    ?? '',
+    phone_number: p.phone_number ?? '',
+    location:     p.location     ?? '',
+    primary_crop: p.primary_crop ?? '',
+  };
+
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
-      <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-        My Profile
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          My Profile
+        </h1>
+        <ProfileEditForm initial={editInitial} />
+      </div>
 
       {/* Identity card */}
       <Card>

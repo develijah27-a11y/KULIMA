@@ -112,15 +112,17 @@ async function PlatformKPIs() {
 // ─── User Role Breakdown ──────────────────────────────────────────────────────
 async function RoleBreakdown() {
   const supabase = await createClient();
-  const { data: profiles } = await (supabase.from as any)('profiles').select('role');
-  const rows = profiles ?? [];
-  const counts: Record<string, number> = {};
-  rows.forEach((p: any) => { counts[p.role ?? 'farmer'] = (counts[p.role ?? 'farmer'] ?? 0) + 1; });
-  const total = rows.length || 1;
+  const ROLES = ['farmer', 'buyer', 'transporter', 'supplier', 'pathologist', 'offtaker', 'groups'] as const;
+  // Parallel count queries — never downloads full rows
+  const results = await Promise.all(
+    ROLES.map(r => (supabase.from as any)('profiles').select('id', { count: 'exact', head: true }).eq('role', r))
+  );
+  const counts = Object.fromEntries(ROLES.map((r, i) => [r, results[i].count ?? 0])) as Record<string, number>;
+  const total = ROLES.reduce((s, r) => s + counts[r], 0) || 1;
 
   const sorted = Object.entries(counts)
     .sort((a, b) => b[1] - a[1])
-    .filter(([r]) => r !== 'admin');
+    .filter(([, v]) => v > 0);
 
   return (
     <Card>
@@ -154,26 +156,27 @@ async function RoleBreakdown() {
 // ─── 7-Day User Registration Sparkline ───────────────────────────────────────
 async function GrowthSparkline() {
   const supabase = await createClient();
-  const days: { label: string; date: string }[] = [];
+  const days: { label: string; from: string; to: string }[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(Date.now() - i * 864e5);
+    const from = new Date(d); from.setHours(0, 0, 0, 0);
+    const to   = new Date(d); to.setHours(23, 59, 59, 999);
     days.push({
       label: d.toLocaleDateString('en-UG', { weekday: 'short' }),
-      date: d.toISOString().slice(0, 10),
+      from: from.toISOString(),
+      to:   to.toISOString(),
     });
   }
 
-  const { data: profiles } = await (supabase.from as any)('profiles')
-    .select('created_at')
-    .gte('created_at', new Date(Date.now() - 7 * 864e5).toISOString());
+  // 7 parallel count queries — no row data downloaded
+  const results = await Promise.all(
+    days.map(d => (supabase.from as any)('profiles')
+      .select('id', { count: 'exact', head: true })
+      .gte('created_at', d.from)
+      .lte('created_at', d.to))
+  );
 
-  const counts: Record<string, number> = {};
-  (profiles ?? []).forEach((p: any) => {
-    const k = p.created_at?.slice(0, 10);
-    if (k) counts[k] = (counts[k] ?? 0) + 1;
-  });
-
-  const data = days.map(d => ({ label: d.label, count: counts[d.date] ?? 0 }));
+  const data = days.map((d, i) => ({ label: d.label, count: results[i].count ?? 0 }));
   const max = Math.max(...data.map(d => d.count), 1);
 
   return (
@@ -276,7 +279,7 @@ async function PendingActions() {
     { label: 'KYC Verifications', count: kycCount, href: '/admin/verification', icon: '🪪', urgency: kycCount > 5 },
     { label: 'Open Buyer Offers', count: offersCount, href: '/admin/buyers', icon: '💬', urgency: false },
     { label: 'Disease Reports', count: reportsCount, href: '/admin/dashboard', icon: '🔬', urgency: reportsCount > 0 },
-    { label: 'Open Delivery Jobs', count: deliveriesCount, href: '/admin/dashboard', icon: '🚛', urgency: false },
+    { label: 'Open Delivery Jobs', count: deliveriesCount, href: '/admin/deliveries', icon: '🚛', urgency: false },
   ];
 
   return (
@@ -362,7 +365,8 @@ async function DistrictActivity() {
   const supabase = await createClient();
   const { data: listings } = await (supabase.from as any)('listings')
     .select('district')
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .limit(2000);
 
   const counts: Record<string, number> = {};
   (listings ?? []).forEach((l: any) => {
@@ -506,6 +510,7 @@ function AdminTools() {
     { href: '/admin/prices',       emoji: '📊', label: 'Market Prices',   sub: 'Update crop price data',            bg: 'var(--color-success-bg)',    color: C.greenMed },
     { href: '/admin/alert',        emoji: '📢', label: 'Send Alert',      sub: 'Broadcast notifications',           bg: 'var(--color-sky-bg)',        color: C.blue },
     { href: '/admin/buyers',       emoji: '🛒', label: 'Buyer Accounts',  sub: 'Review buyer registrations',        bg: 'var(--color-harvest-bg)',    color: C.amber },
+    { href: '/admin/deliveries',   emoji: '🚛', label: 'Deliveries',     sub: 'Uber-style delivery tracking',       bg: '#EDE9FE',                   color: '#7C3AED' },
     { href: '/admin/analytics',    emoji: '📈', label: 'Analytics',       sub: 'Growth, revenue & trends',          bg: '#CFFAFE',                   color: '#0891B2' },
   ];
 
@@ -553,7 +558,7 @@ async function AlertBanner() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default async function AdminDashboardPage() {
   const profile = await getAdminProfile();
-  if (!profile) redirect('/auth/signin');
+  if (!profile) redirect('/dashboard');
 
   const now = new Date();
   const dayLabel = now.toLocaleDateString('en-UG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });

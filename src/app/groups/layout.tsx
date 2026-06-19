@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { MessageSquare } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
@@ -30,15 +32,15 @@ export default async function GroupsLayout({ children }: { children: React.React
 
   if (user) {
     const [profileRes, unreadRes] = await Promise.all([
-      supabase.from('profiles').select('full_name, location, roles').eq('user_id', user.id).single(),
+      supabase.from('profiles').select('id, full_name, location, roles').eq('user_id', user.id).single(),
       supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false),
     ]);
     if (profileRes.data) {
       profile = { name: profileRes.data.full_name ?? 'Group Lead', role: 'Farmer Group' };
       location = profileRes.data.location ?? '';
       roles = profileRes.data.roles ?? [];
+      unreadCount = unreadRes.count ?? 0;
     }
-    unreadCount = unreadRes.count ?? 0;
   }
 
   const h = new Date().getHours();
@@ -57,6 +59,9 @@ export default async function GroupsLayout({ children }: { children: React.React
         <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6">{children}</main>
       </div>
       <MobileNav navItems={navWithBadge} />
+      <Link href="/groups/chat" className="fab fab-primary" aria-label="Group chat" style={{ textDecoration: 'none' }}>
+        <MessageSquare size={21} strokeWidth={2.5} color="#fff" />
+      </Link>
     </div>
   );
 }

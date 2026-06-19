@@ -8,29 +8,25 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Business Profile', desc: 'Update your company name and contact details', icon: '🏪', href: '#' },
-      { label: 'Change Phone / MoMo', desc: 'Update your linked mobile money number', icon: '📱', href: '#' },
-      { label: 'Change Password', desc: 'Update your login password', icon: '🔑', href: '#' },
+      { label: 'Business Profile', desc: 'Update your company name and contact details', icon: '🏪', href: '/farmer/profile' },
+      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and Kulima Pay balance', icon: '💳', href: '/supplier/wallet' },
+      { label: 'Notifications', desc: 'Order alerts and low-stock warnings', icon: '🔔', href: '/supplier/notifications' },
     ],
   },
   {
-    title: 'Notifications',
+    title: 'Products',
     items: [
-      { label: 'Order Alerts', desc: 'Get notified when farmers place new orders', icon: '🔔', href: '#' },
-      { label: 'Low Stock Alerts', desc: 'Alert when product stock falls below threshold', icon: '⚠️', href: '#' },
+      { label: 'Product Catalogue', desc: 'Add, edit, and update stock for your products', icon: '📦', href: '/supplier/catalogue' },
+      { label: 'Flash Deals', desc: 'Create time-limited discounts to move stock fast', icon: '⚡', href: '/supplier/flash-deals' },
+      { label: 'Pending Orders', desc: 'View and fulfil incoming farmer orders', icon: '🛒', href: '/supplier/orders' },
     ],
   },
   {
-    title: 'Coverage & Delivery',
+    title: 'Coverage & Analytics',
     items: [
-      { label: 'Coverage Zones', desc: 'Set districts where you deliver', icon: '📍', href: '/supplier/coverage' },
-      { label: 'Delivery Pricing', desc: 'Set delivery fees by distance or district', icon: '💰', href: '#' },
-    ],
-  },
-  {
-    title: 'Verification',
-    items: [
-      { label: 'Business Verification', desc: 'Upload certificates to get a verified badge', icon: '✅', href: '#' },
+      { label: 'Coverage Zones', desc: 'Set the districts where you supply products', icon: '📍', href: '/supplier/coverage' },
+      { label: 'Demand Map', desc: 'See where farmers are looking for your products', icon: '🗺️', href: '/supplier/demand' },
+      { label: 'Analytics', desc: 'Sales performance and revenue trends', icon: '📊', href: '/supplier/analytics' },
     ],
   },
 ];

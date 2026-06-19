@@ -34,7 +34,7 @@ export default async function AdminWalletsPage({
   if (!user) redirect('/auth/signin');
 
   const { data: admin } = await (supabase.from as any)('profiles').select('role').eq('user_id', user.id).single();
-  if ((admin as any)?.role !== 'admin') redirect('/auth/signin');
+  if ((admin as any)?.role !== 'admin') redirect('/dashboard');
 
   const { q = '' } = await searchParams;
 
