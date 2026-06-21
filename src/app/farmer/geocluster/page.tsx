@@ -19,13 +19,13 @@ export default async function GeoClusterPage() {
 
   const [{ data: diseaseData }, { data: priceData }] = await Promise.all([
     (supabase.from as any)('disease_scans')
-      .select('district, disease_detected, confidence, created_at')
+      .select('district, disease_detected, confidence_score, created_at')
       .not('disease_detected', 'is', null)
       .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString())
       .order('created_at', { ascending: false })
       .limit(200),
     (supabase.from as any)('market_prices')
-      .select('district, crop_type, price_ugx, created_at')
+      .select('district, crop_type, price_per_kg, created_at')
       .order('created_at', { ascending: false })
       .limit(100),
   ]);
@@ -43,8 +43,8 @@ export default async function GeoClusterPage() {
   const districtTopCrop: Record<string, { crop: string; price: number }> = {};
   prices.forEach((p: any) => {
     if (!p.district) return;
-    if (!districtTopCrop[p.district] || p.price_ugx > districtTopCrop[p.district].price) {
-      districtTopCrop[p.district] = { crop: p.crop_type, price: p.price_ugx };
+    if (!districtTopCrop[p.district] || p.price_per_kg > districtTopCrop[p.district].price) {
+      districtTopCrop[p.district] = { crop: p.crop_type, price: p.price_per_kg };
     }
   });
 

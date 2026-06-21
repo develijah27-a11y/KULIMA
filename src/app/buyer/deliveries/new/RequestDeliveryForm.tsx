@@ -36,11 +36,12 @@ const DELIVERY_TYPES: { type: DeliveryType; icon: string; label: string; subtitl
 interface Props {
   prefilledOffer: { id: string; crop_type: string; quantity_kg: number; district: string } | null;
   successRedirect?: string;
+  userDistrict?: string;
 }
 
-export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/deliveries' }: Props) {
+export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/deliveries', userDistrict }: Props) {
   const router = useRouter();
-  const [pickupDistrict, setPickupDistrict]   = useState(prefilledOffer?.district ?? '');
+  const [pickupDistrict, setPickupDistrict]   = useState(prefilledOffer?.district ?? userDistrict ?? '');
   const [pickupLocation, setPickupLocation]   = useState('');
   const [dropoffDistrict, setDropoffDistrict] = useState('');
   const [dropoffLocation, setDropoffLocation] = useState('');
@@ -54,6 +55,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   const [loading, setLoading]                 = useState(false);
   const [error, setError]                     = useState('');
   const [submitted, setSubmitted]             = useState(false);
+  const [driversNotified, setDriversNotified] = useState<number | null>(null);
 
   // Live fare estimate — re-fetches whenever route, cargo, or type changes
   const fetchFare = useCallback(async () => {
@@ -100,8 +102,9 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Failed to post delivery');
+      setDriversNotified(json.driversNotified ?? 0);
       setSubmitted(true);
-      setTimeout(() => { router.push(successRedirect); router.refresh(); }, 1500);
+      setTimeout(() => { router.push(successRedirect); router.refresh(); }, 3000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -110,11 +113,25 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   }
 
   if (submitted) {
+    const hasDrivers = driversNotified !== null && driversNotified > 0;
     return (
       <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-        <p style={{ fontSize: 40, marginBottom: 12 }}>✅</p>
+        <p style={{ fontSize: 40, marginBottom: 12 }}>{hasDrivers ? '✅' : '📢'}</p>
         <p style={{ fontWeight: 800, fontSize: 17, color: C.text, marginBottom: 6 }}>Delivery Posted!</p>
-        <p style={{ fontSize: 13, color: C.muted }}>Finding available drivers near you…</p>
+        {hasDrivers ? (
+          <p style={{ fontSize: 13, color: 'var(--color-success)', fontWeight: 600 }}>
+            {driversNotified} driver{driversNotified === 1 ? '' : 's'} in {pickupDistrict} notified — you'll hear back soon.
+          </p>
+        ) : (
+          <>
+            <p style={{ fontSize: 13, color: 'var(--color-harvest)', fontWeight: 600, marginBottom: 6 }}>
+              No drivers currently available in {pickupDistrict || 'your area'}.
+            </p>
+            <p style={{ fontSize: 12, color: C.muted }}>
+              Your request is live — any transporter can still browse and bid on it.
+            </p>
+          </>
+        )}
       </div>
     );
   }

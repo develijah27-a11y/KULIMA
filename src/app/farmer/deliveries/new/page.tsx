@@ -12,6 +12,12 @@ export default async function FarmerRequestDeliveryPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('location')
+    .eq('user_id', user.id)
+    .single();
+
   return (
     <div className="max-w-xl mx-auto space-y-5">
       <div>
@@ -23,7 +29,11 @@ export default async function FarmerRequestDeliveryPage() {
       </div>
 
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
-        <RequestDeliveryForm prefilledOffer={null} successRedirect="/farmer/deliveries" />
+        <RequestDeliveryForm
+          prefilledOffer={null}
+          successRedirect="/farmer/deliveries"
+          userDistrict={profile?.location ?? undefined}
+        />
       </div>
     </div>
   );

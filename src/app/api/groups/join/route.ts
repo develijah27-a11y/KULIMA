@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   const { groupId } = await req.json();
   if (!groupId) return NextResponse.json({ error: 'groupId required' }, { status: 400 });
 
-  const { error } = await (supabase.from as any)('group_members').insert({
+  const { error } = await (supabase.from as any)('farmer_group_members').insert({
     group_id:  groupId,
     farmer_id: (profile as any).id,
     role:      'member',

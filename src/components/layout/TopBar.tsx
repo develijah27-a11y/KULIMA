@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { OfflineStatusPill } from '@/components/ui/OfflineStatusPill';
 import { ROLE_META } from '@/components/layout/RoleSwitcher';
+import { NotificationBell } from '@/components/ui/NotificationBell';
+import { Breadcrumb } from '@/components/layout/Breadcrumb';
 
 interface TopBarProps {
   greeting: string;
@@ -61,6 +62,9 @@ export function TopBar({
             📍 {location}, Uganda
           </p>
         )}
+        <div className="hidden sm:block mt-0.5">
+          <Breadcrumb />
+        </div>
       </div>
 
       {/* Right actions */}
@@ -171,39 +175,7 @@ export function TopBar({
           </div>
         )}
 
-        {notificationsHref ? (
-          <Link
-            href={notificationsHref}
-            className="topbar-btn relative flex items-center justify-center rounded-lg"
-            style={{
-              width: 36, height: 36,
-              background: 'var(--color-surface-2)',
-              border: '1px solid var(--color-border-mid)',
-            }}
-            aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
-          >
-            <Bell size={17} style={{ color: unreadCount > 0 ? 'var(--color-primary)' : 'var(--color-text-muted)' }} />
-            {unreadCount > 0 && (
-              <span
-                className="absolute -top-1 -right-1 flex items-center justify-center rounded-full font-black text-white"
-                style={{ width: 16, height: 16, fontSize: 9, background: 'var(--color-danger)' }}
-              >
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </Link>
-        ) : (
-          <div
-            className="relative flex items-center justify-center rounded-lg"
-            style={{
-              width: 36, height: 36,
-              background: 'var(--color-surface-2)',
-              border: '1px solid var(--color-border-mid)',
-            }}
-          >
-            <Bell size={17} style={{ color: 'var(--color-text-muted)' }} />
-          </div>
-        )}
+        <NotificationBell initialUnreadCount={unreadCount} />
       </div>
     </header>
   );

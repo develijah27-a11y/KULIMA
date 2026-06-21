@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
 
 const C = {
@@ -36,6 +36,8 @@ type Order = {
   delivered_at: string | null;
   completed_at: string | null;
   cancelled_at: string | null;
+  disputed_at: string | null;
+  return_requested_at: string | null;
   created_at: string;
   farmer: { full_name: string; location: string } | null;
 };
@@ -50,8 +52,37 @@ const STEPS = [
 ];
 
 const STEP_IDX: Record<string, number> = {
-  pending: 0, confirmed: 1, dispatched: 2, in_transit: 3, delivered: 4, completed: 5, cancelled: -1,
+  pending: 0, confirmed: 1, dispatched: 2, in_transit: 3, delivered: 4, completed: 5,
+  cancelled: -1, disputed: 4,
 };
+
+function returnWindowMs(deliveredAt: string | null): number {
+  if (!deliveredAt) return Infinity;
+  return 48 * 60 * 60 * 1000 - (Date.now() - new Date(deliveredAt).getTime());
+}
+
+function ReturnCountdown({ deliveredAt }: { deliveredAt: string | null }) {
+  const [ms, setMs] = React.useState(() => returnWindowMs(deliveredAt));
+  React.useEffect(() => {
+    const t = setInterval(() => setMs(returnWindowMs(deliveredAt)), 60_000);
+    return () => clearInterval(t);
+  }, [deliveredAt]);
+
+  if (!deliveredAt || ms <= 0) {
+    return (
+      <p style={{ fontSize: 11, color: C.red, margin: 0, fontWeight: 600 }}>
+        Return window expired
+      </p>
+    );
+  }
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  return (
+    <p style={{ fontSize: 11, color: C.amber, margin: 0, fontWeight: 600 }}>
+      Return window: {h}h {m}m left
+    </p>
+  );
+}
 
 function Pipeline({ status }: { status: string }) {
   const cur = STEP_IDX[status] ?? 0;
@@ -145,8 +176,25 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
     });
   }
 
+  async function raiseDispute() {
+    startT(async () => {
+      const res = await fetch(`/api/orders/${order.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'dispute' }),
+      });
+      const json = await res.json();
+      if (json.success) { showToast('Dispute raised — admin will review within 24 hours', true); onAction(); }
+      else showToast(json.error ?? 'Failed', false);
+    });
+  }
+
   const canCancel   = ['pending', 'confirmed'].includes(order.status);
   const canComplete = order.status === 'delivered';
+  const withinReturnWindow = order.delivered_at
+    ? Date.now() - new Date(order.delivered_at).getTime() < 48 * 60 * 60 * 1000
+    : false;
+  const canDispute  = order.status === 'delivered' && withinReturnWindow;
 
   return (
     <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, overflow: 'hidden', marginBottom: 14 }}>
@@ -189,6 +237,16 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
       {/* Pipeline */}
       <div style={{ padding: '0 20px' }}>
         <Pipeline status={order.status} />
+        {order.status === 'delivered' && (
+          <div style={{ paddingBottom: 8 }}>
+            <ReturnCountdown deliveredAt={order.delivered_at} />
+          </div>
+        )}
+        {order.status === 'disputed' && (
+          <p style={{ fontSize: 11, color: C.red, fontWeight: 600, paddingBottom: 8, margin: 0 }}>
+            Dispute in review — admin will resolve within 24 hours
+          </p>
+        )}
       </div>
 
       {/* Notes */}
@@ -204,15 +262,32 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
         </div>
       )}
 
+      {/* Receipt link for completed orders */}
+      {order.status === 'completed' && (
+        <div style={{ padding: '0 20px 14px' }}>
+          <Link
+            href={`/buyer/orders/${order.id}/receipt`}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              width: '100%', padding: '10px', borderRadius: 12,
+              border: `1px solid ${C.border}`, background: C.greenBg,
+              color: C.green, fontSize: 13, fontWeight: 700, textDecoration: 'none',
+            }}
+          >
+            🧾 Download Receipt / Invoice
+          </Link>
+        </div>
+      )}
+
       {/* Actions */}
-      {(canComplete || canCancel) && (
-        <div style={{ padding: '0 20px 18px', display: 'flex', gap: 10 }}>
+      {(canComplete || canCancel || canDispute) && (
+        <div style={{ padding: '0 20px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {canComplete && (
             <button
               onClick={confirmReceipt}
               disabled={pending}
               style={{
-                flex: 1, padding: '12px', borderRadius: 12, border: 'none',
+                width: '100%', padding: '12px', borderRadius: 12, border: 'none',
                 background: pending ? C.amberBg : C.amber, color: pending ? C.amber : '#fff',
                 fontSize: 13, fontWeight: 700, cursor: pending ? 'wait' : 'pointer',
               }}
@@ -220,17 +295,30 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
               {pending ? '⏳ Confirming…' : '✅ Confirm Receipt — Release Payment'}
             </button>
           )}
+          {canDispute && (
+            <button
+              onClick={raiseDispute}
+              disabled={pending}
+              style={{
+                width: '100%', padding: '10px', borderRadius: 12, border: `1.5px solid ${C.red}`,
+                background: 'transparent', color: C.red, fontSize: 13, fontWeight: 600,
+                cursor: pending ? 'wait' : 'pointer',
+              }}
+            >
+              {pending ? '⏳…' : '⚠️ There is a problem — Raise Dispute'}
+            </button>
+          )}
           {canCancel && (
             <button
               onClick={cancelOrder}
               disabled={pending}
               style={{
-                padding: '12px 16px', borderRadius: 12, border: `1px solid ${C.border}`,
+                padding: '10px 16px', borderRadius: 12, border: `1px solid ${C.border}`,
                 background: 'transparent', color: C.red, fontSize: 13, fontWeight: 600,
                 cursor: pending ? 'wait' : 'pointer',
               }}
             >
-              Cancel
+              Cancel Order
             </button>
           )}
         </div>
@@ -244,6 +332,7 @@ const STATUS_TABS = [
   { label: 'Active',    filter: ['pending','confirmed','dispatched','in_transit'] },
   { label: 'Delivered', filter: ['delivered'] },
   { label: 'Done',      filter: ['completed'] },
+  { label: 'Disputed',  filter: ['disputed'] },
   { label: 'Cancelled', filter: ['cancelled'] },
 ];
 

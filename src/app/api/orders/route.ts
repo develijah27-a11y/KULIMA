@@ -35,7 +35,8 @@ export async function GET(req: Request) {
     .select(`
       id, crop_type, quantity_kg, unit_price, total_amount, status,
       buyer_note, farmer_note, pickup_district, dropoff_district,
-      confirmed_at, dispatched_at, in_transit_at, delivered_at, completed_at, cancelled_at, created_at,
+      confirmed_at, dispatched_at, in_transit_at, delivered_at, completed_at,
+      cancelled_at, disputed_at, return_requested_at, created_at,
       listing:listings(id, crop_type, district),
       farmer:profiles!farmer_profile_id(full_name, location)
     `)
@@ -55,9 +56,85 @@ export async function POST(req: Request) {
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
 
-  const { listingId, quantityKg, note } = body;
-  if (!listingId || !quantityKg || isNaN(+quantityKg) || +quantityKg <= 0) {
-    return NextResponse.json({ error: 'listingId and quantityKg are required' }, { status: 400 });
+  const { listingId, groupListingId, quantityKg, note } = body;
+
+  if (!quantityKg || isNaN(+quantityKg) || +quantityKg <= 0) {
+    return NextResponse.json({ error: 'quantityKg is required' }, { status: 400 });
+  }
+  if (!listingId && !groupListingId) {
+    return NextResponse.json({ error: 'listingId or groupListingId is required' }, { status: 400 });
+  }
+
+  // Get buyer profile
+  const { data: buyerProfile } = await supabase
+    .from('profiles').select('id, full_name, location').eq('user_id', user.id).single();
+
+  // ── GROUP LISTING ORDER ──────────────────────────────────────────────────────
+  if (groupListingId) {
+    const { data: gl } = await (supabase.from as any)('group_listings')
+      .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, status')
+      .eq('id', groupListingId)
+      .single();
+
+    if (!gl || gl.status !== 'active') {
+      return NextResponse.json({ error: 'Group listing is not available' }, { status: 404 });
+    }
+    if (+quantityKg > gl.total_quantity_kg) {
+      return NextResponse.json({
+        error: `Only ${gl.total_quantity_kg} kg available in this group lot`,
+      }, { status: 400 });
+    }
+
+    // Prevent duplicate active order from same buyer on same group listing
+    const { data: existingGl } = await (supabase.from as any)('orders')
+      .select('id')
+      .eq('group_listing_id', groupListingId)
+      .eq('buyer_id', user.id)
+      .in('status', ['pending','confirmed','dispatched','in_transit','delivered'])
+      .maybeSingle();
+    if (existingGl) {
+      return NextResponse.json({ error: 'You already have an active order for this group listing' }, { status: 409 });
+    }
+
+    const total = Math.round(+quantityKg * gl.asking_price);
+
+    // Resolve group admin's profile id for farmer_profile_id
+    const { data: adminProfile } = await supabase
+      .from('profiles').select('id, user_id').eq('user_id', gl.admin_id).single();
+
+    const { data: order, error: orderErr } = await (supabase.from as any)('orders').insert({
+      group_listing_id:  groupListingId,
+      buyer_id:          user.id,
+      farmer_profile_id: adminProfile?.id ?? null,
+      crop_type:         gl.crop_type,
+      quantity_kg:       +quantityKg,
+      unit_price:        gl.asking_price,
+      total_amount:      total,
+      status:            'pending',
+      buyer_note:        note ?? null,
+      pickup_district:   gl.district,
+      dropoff_district:  (buyerProfile as any)?.location ?? null,
+    }).select().single();
+
+    if (orderErr) return NextResponse.json({ error: orderErr.message }, { status: 500 });
+
+    // Notify group admin
+    if (adminProfile) {
+      await (supabase.from as any)('notifications').insert({
+        user_id: adminProfile.user_id,
+        type:    'order',
+        title:   `New group order: ${gl.crop_type} · ${+quantityKg} kg`,
+        body:    `${(buyerProfile as any)?.full_name ?? 'A buyer'} placed a bulk order for UGX ${total.toLocaleString()} from your group listing.`,
+        data:    { order_id: (order as any).id, group_listing_id: groupListingId },
+      });
+    }
+
+    return NextResponse.json({ success: true, data: order }, { status: 201 });
+  }
+
+  // ── REGULAR LISTING ORDER ────────────────────────────────────────────────────
+  if (!listingId) {
+    return NextResponse.json({ error: 'listingId is required' }, { status: 400 });
   }
 
   // Load listing
@@ -85,10 +162,6 @@ export async function POST(req: Request) {
   if (existing) {
     return NextResponse.json({ error: 'You already have an active order for this listing' }, { status: 409 });
   }
-
-  // Get buyer profile for dropoff district
-  const { data: buyerProfile } = await supabase
-    .from('profiles').select('full_name, location').eq('user_id', user.id).single();
 
   const total = Math.round(+quantityKg * listing.asking_price);
 

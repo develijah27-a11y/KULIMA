@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
@@ -5,6 +6,8 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
+import { PageTransition } from '@/components/ui/PageTransition';
+import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 
 const OFFTAKER_NAV = [
   { href: '/offtaker/dashboard',    icon: 'dashboard',    label: 'Dashboard' },
@@ -29,22 +32,29 @@ export default async function OfftakerLayout({ children }: { children: React.Rea
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  if (!user) redirect('/auth/signin');
+
   let profile: { name: string; role: string } | null = null;
   let unreadCount = 0;
   let location = '';
   let roles: string[] = [];
 
-  if (user) {
-    const [profileRes, unreadRes] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, location, roles').eq('user_id', user.id).single(),
-      supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false),
-    ]);
-    if (profileRes.data) {
-      profile = { name: profileRes.data.full_name ?? 'Offtaker', role: 'Offtaker' };
-      location = profileRes.data.location ?? '';
-      roles = profileRes.data.roles ?? [];
-      unreadCount = unreadRes.count ?? 0;
-    }
+  const [profileRes, unreadRes] = await Promise.all([
+    supabase.from('profiles').select('id, full_name, location, role, roles').eq('user_id', user.id).single(),
+    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false),
+  ]);
+
+  if (profileRes.data) {
+    const userRoles: string[] = profileRes.data.roles ?? [];
+    const primaryRole: string = (profileRes.data as any).role ?? '';
+    if (!userRoles.includes('offtaker') && primaryRole !== 'offtaker' && primaryRole !== 'admin') redirect('/dashboard');
+
+    profile = { name: profileRes.data.full_name ?? 'Offtaker', role: 'Offtaker' };
+    location = profileRes.data.location ?? '';
+    roles = userRoles;
+    unreadCount = unreadRes.count ?? 0;
+  } else {
+    redirect('/onboarding/role');
   }
 
   const h = new Date().getHours();
@@ -57,15 +67,16 @@ export default async function OfftakerLayout({ children }: { children: React.Rea
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>
-      <Sidebar navItems={navWithBadge} profile={profile} roleSwitcher={roles.length > 1 ? <RoleSwitcher currentRole="offtaker" allRoles={roles} /> : undefined} />
+      <Sidebar navItems={navWithBadge} profile={profile} roleSwitcher={<RoleSwitcher currentRole="offtaker" allRoles={roles} />} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/offtaker/notifications" currentRole="offtaker" allRoles={roles} />
-        <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6"><PageTransition>{children}</PageTransition></main>
       </div>
       <MobileNav navItems={navWithBadge} />
       <Link href="/offtaker/contracts" className="fab fab-primary" aria-label="Contracts" style={{ textDecoration: 'none' }}>
         <FileText size={21} strokeWidth={2.5} color="#fff" />
       </Link>
+      <NavCommandPalette items={navWithBadge} />
     </div>
   );
 }

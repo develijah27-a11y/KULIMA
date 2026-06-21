@@ -1,153 +1,368 @@
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
+'use client';
+
+import React, { useState, useEffect, useTransition } from 'react';
 
 const C = {
-  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
-  cardShadow: 'var(--d-shadow-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
+  text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
+  cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
+  green: 'var(--color-primary)', greenBg: 'var(--color-primary-bg)', greenMed: 'var(--color-primary-hover)',
+  amber: 'var(--color-harvest)', amberBg: 'var(--color-harvest-bg)',
+  red: 'var(--color-danger)', redBg: 'var(--color-danger-bg)',
 };
 
 const CATEGORY_EMOJI: Record<string, string> = {
   seed: '🌱', fertiliser: '🧪', pesticide: '🪣', tool: '🔧', equipment: '⚙️', other: '📦',
 };
 
-export default async function FlashDealsPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
+type Product = {
+  id: string;
+  name: string;
+  category: string;
+  price_per_unit: number;
+  unit: string;
+  stock_qty: number;
+  min_order_qty: number;
+  is_flash_deal: boolean;
+  flash_price_ugx: number | null;
+  flash_starts_at: string | null;
+  flash_ends_at: string | null;
+};
 
-  const { data: profile } = await (supabase.from as any)('profiles')
-    .select('id')
-    .eq('user_id', user.id)
-    .single();
+function Toast({ msg, ok }: { msg: string; ok: boolean }) {
+  return (
+    <div style={{
+      position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)',
+      zIndex: 1000, minWidth: 260, background: ok ? '#065F46' : '#991B1B',
+      color: '#fff', borderRadius: 14, padding: '14px 20px',
+    }}>
+      <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{ok ? '✅ ' : '❌ '}{msg}</p>
+    </div>
+  );
+}
 
-  if (!profile) redirect('/auth/signin');
+function useCountdown(endsAt: string | null) {
+  const [ms, setMs] = React.useState(() =>
+    endsAt ? new Date(endsAt).getTime() - Date.now() : 0
+  );
+  useEffect(() => {
+    if (!endsAt) return;
+    const t = setInterval(() => setMs(new Date(endsAt).getTime() - Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [endsAt]);
+  if (ms <= 0) return null;
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  const s = Math.floor((ms % 60_000) / 1000);
+  return `${h}h ${m}m ${s}s`;
+}
 
-  const { data: products } = await (supabase.from as any)('supplier_products')
-    .select('id, name, category, price_per_unit, unit, stock_qty, min_order_qty, district, is_available, created_at')
-    .eq('supplier_id', profile.id)
-    .eq('is_available', true)
-    .order('created_at', { ascending: false })
-    .limit(20);
+function CountdownBadge({ endsAt }: { endsAt: string | null }) {
+  const t = useCountdown(endsAt);
+  if (!t) return <span style={{ fontSize: 10, color: C.red, fontWeight: 700 }}>Expired</span>;
+  return (
+    <span style={{
+      fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 999,
+      background: C.amberBg, color: C.amber, fontVariantNumeric: 'tabular-nums',
+    }}>
+      ⚡ {t} left
+    </span>
+  );
+}
 
-  const rows = (products ?? []) as any[];
+export default function FlashDealsPage() {
+  const [products, setProducts]         = useState<Product[]>([]);
+  const [loading, setLoading]           = useState(true);
+  const [showForm, setShowForm]         = useState(false);
+  const [selectedId, setSelectedId]     = useState('');
+  const [discountPct, setDiscountPct]   = useState(15);
+  const [durationHrs, setDurationHrs]   = useState(24);
+  const [toast, setToast]               = useState<{ msg: string; ok: boolean } | null>(null);
+  const [pending, start]                = useTransition();
 
-  // Products with stock > min_order_qty * 3 are good flash deal candidates
-  const flashCandidates = rows.filter(p => (p.stock_qty ?? 0) >= ((p.min_order_qty ?? 1) * 3));
-  const lowStock = rows.filter(p => (p.stock_qty ?? 0) < ((p.min_order_qty ?? 1) * 3) && p.stock_qty > 0);
+  function showToast(msg: string, ok: boolean) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 3500);
+  }
+
+  async function load() {
+    setLoading(true);
+    try {
+      const res  = await fetch('/api/supplier-products');
+      const json = await res.json();
+      setProducts(json.data ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => { load(); }, []);
+
+  const activeDeals  = products.filter(p =>
+    p.is_flash_deal && p.flash_ends_at && new Date(p.flash_ends_at) > new Date()
+  );
+  const candidates   = products.filter(p =>
+    !p.is_flash_deal && (p.stock_qty ?? 0) >= ((p.min_order_qty ?? 1) * 2)
+  );
+  const selected     = products.find(p => p.id === selectedId);
+  const flashPrice   = selected
+    ? Math.round(Number(selected.price_per_unit) * (1 - discountPct / 100))
+    : 0;
+
+  async function startDeal() {
+    if (!selectedId) { showToast('Select a product first', false); return; }
+    start(async () => {
+      const res  = await fetch(`/api/supplier-products/${selectedId}/flash`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ discountPct, durationHrs }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast('Flash deal started!', true);
+        setShowForm(false);
+        setSelectedId('');
+        load();
+      } else showToast(json.error ?? 'Failed', false);
+    });
+  }
+
+  async function endDeal(id: string) {
+    start(async () => {
+      const res  = await fetch(`/api/supplier-products/${id}/flash`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) { showToast('Flash deal ended', true); load(); }
+      else showToast(json.error ?? 'Failed', false);
+    });
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
-      <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Flash Deals
-        </h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Promote your products with time-limited discounts to move stock fast</p>
-      </div>
+      {toast && <Toast msg={toast.msg} ok={toast.ok} />}
 
-      {/* Coming soon header card */}
-      <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 16, padding: '20px 22px', display: 'flex', gap: 16, alignItems: 'center' }}>
-        <span style={{ fontSize: 36, flexShrink: 0 }}>⚡</span>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
         <div>
-          <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: '0 0 5px' }}>Flash Deal Campaigns — Coming Soon</p>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', margin: 0, lineHeight: 1.5 }}>
-            Set a discount and duration. Farmers near you see your deal highlighted at the top of the marketplace for up to 48 hours.
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, margin: 0, letterSpacing: '-0.03em' }}>Flash Deals</h1>
+          <p style={{ fontSize: 13, color: C.muted, margin: '4px 0 0' }}>
+            Time-limited discounts to move stock fast — highlighted to farmers near you
           </p>
         </div>
+        {candidates.length > 0 && (
+          <button
+            onClick={() => setShowForm(v => !v)}
+            style={{
+              padding: '10px 20px', borderRadius: 12, border: 'none',
+              background: showForm ? 'var(--color-surface-2)' : C.green,
+              color: showForm ? C.muted : '#fff',
+              fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+            }}
+          >
+            {showForm ? '✕ Cancel' : '⚡ New Deal'}
+          </button>
+        )}
       </div>
 
-      {/* Flash deal candidates — high-stock products */}
-      {flashCandidates.length > 0 && (
-        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
-          <div style={{ padding: '12px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Create deal form */}
+      {showForm && candidates.length > 0 && (
+        <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: 24 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 18px' }}>Start a Flash Deal</p>
+
+          {/* Product selector */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 8 }}>
+              Select Product
+            </label>
+            <select
+              value={selectedId}
+              onChange={e => setSelectedId(e.target.value)}
+              style={{
+                width: '100%', padding: '11px 12px', borderRadius: 10,
+                border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text,
+                background: 'var(--d-input-bg)', boxSizing: 'border-box',
+              }}
+            >
+              <option value="">— Choose a product —</option>
+              {candidates.map(p => (
+                <option key={p.id} value={p.id}>
+                  {CATEGORY_EMOJI[p.category?.toLowerCase()] ?? '📦'} {p.name} · UGX {Number(p.price_per_unit).toLocaleString()}/{p.unit} · {p.stock_qty} in stock
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+            {/* Discount */}
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Ready to Flash</p>
-              <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>High-stock products — ideal for a flash deal to move units</p>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 8 }}>
+                Discount — {discountPct}% off
+              </label>
+              <input
+                type="range" min={5} max={50} step={5}
+                value={discountPct}
+                onChange={e => setDiscountPct(Number(e.target.value))}
+                style={{ width: '100%', accentColor: C.amber, cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                <span style={{ fontSize: 10, color: C.muted }}>5%</span>
+                <span style={{ fontSize: 10, color: C.muted }}>50%</span>
+              </div>
             </div>
-            <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.green }}>
-              {flashCandidates.length} products
+
+            {/* Duration */}
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 8 }}>
+                Duration — {durationHrs}h
+              </label>
+              <input
+                type="range" min={1} max={48} step={1}
+                value={durationHrs}
+                onChange={e => setDurationHrs(Number(e.target.value))}
+                style={{ width: '100%', accentColor: C.green, cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                <span style={{ fontSize: 10, color: C.muted }}>1h</span>
+                <span style={{ fontSize: 10, color: C.muted }}>48h</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Price preview */}
+          {selected && (
+            <div style={{ background: C.amberBg, borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <p style={{ fontSize: 11, color: C.amber, margin: 0, fontWeight: 600 }}>Flash price</p>
+                <p style={{ fontSize: 22, fontWeight: 900, color: C.amber, margin: '2px 0 0', letterSpacing: '-0.02em' }}>
+                  UGX {flashPrice.toLocaleString()}/{selected.unit}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: 11, color: C.amber, margin: 0 }}>Was</p>
+                <p style={{ fontSize: 15, fontWeight: 700, color: C.amber, margin: '2px 0 0', textDecoration: 'line-through', opacity: 0.7 }}>
+                  UGX {Number(selected.price_per_unit).toLocaleString()}
+                </p>
+                <p style={{ fontSize: 11, color: C.amber, margin: '2px 0 0' }}>
+                  Ends {new Date(Date.now() + durationHrs * 3_600_000).toLocaleString('en-UG', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                </p>
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={startDeal}
+            disabled={pending || !selectedId}
+            style={{
+              width: '100%', padding: '13px', borderRadius: 12, border: 'none',
+              background: !selectedId ? 'var(--color-surface-2)' : pending ? C.amberBg : C.amber,
+              color: !selectedId ? C.muted : pending ? C.amber : '#fff',
+              fontSize: 14, fontWeight: 800, cursor: !selectedId || pending ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {pending ? '⏳ Starting…' : `⚡ Start ${durationHrs}h Flash Deal`}
+          </button>
+        </div>
+      )}
+
+      {/* Active deals */}
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[1,2].map(i => <div key={i} style={{ background: C.cardBg, borderRadius: 16, height: 90, boxShadow: C.cardShadow }} className="dash-skeleton" />)}
+        </div>
+      ) : activeDeals.length > 0 ? (
+        <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>Active Flash Deals</p>
+            <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: C.amberBg, color: C.amber }}>
+              {activeDeals.length} live
             </span>
           </div>
-          {flashCandidates.map((p: any, i: number) => {
+          {activeDeals.map((p, i) => {
+            const emoji = CATEGORY_EMOJI[p.category?.toLowerCase()] ?? '📦';
+            const saving = Math.round(Number(p.price_per_unit) - Number(p.flash_price_ugx ?? p.price_per_unit));
+            const pct    = Math.round((saving / Number(p.price_per_unit)) * 100);
+            return (
+              <div key={p.id} style={{ padding: '16px 20px', borderBottom: i < activeDeals.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: C.amberBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                    {emoji}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>{p.name}</p>
+                      <CountdownBadge endsAt={p.flash_ends_at} />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <p style={{ fontSize: 16, fontWeight: 900, color: C.amber, margin: 0 }}>
+                        UGX {Number(p.flash_price_ugx ?? p.price_per_unit).toLocaleString()}/{p.unit}
+                      </p>
+                      <p style={{ fontSize: 12, color: C.muted, margin: 0, textDecoration: 'line-through' }}>
+                        UGX {Number(p.price_per_unit).toLocaleString()}
+                      </p>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: C.redBg, color: C.red }}>
+                        -{pct}%
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 11, color: C.muted, margin: '3px 0 0' }}>
+                      {p.stock_qty} in stock · ends {p.flash_ends_at ? new Date(p.flash_ends_at).toLocaleString('en-UG', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : ''}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => endDeal(p.id)}
+                    disabled={pending}
+                    style={{
+                      padding: '7px 14px', borderRadius: 10, border: `1px solid ${C.border}`,
+                      background: 'transparent', color: C.muted, fontSize: 12, fontWeight: 600,
+                      cursor: pending ? 'wait' : 'pointer', flexShrink: 0,
+                    }}
+                  >
+                    End early
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: '40px 24px', textAlign: 'center' }}>
+          <p style={{ fontSize: 40, marginBottom: 10 }}>⚡</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6 }}>No active flash deals</p>
+          <p style={{ fontSize: 13, color: C.muted }}>
+            {candidates.length > 0
+              ? 'Click "⚡ New Deal" to launch a time-limited promotion.'
+              : 'Add products to your catalogue and restock before running flash deals.'}
+          </p>
+        </div>
+      )}
+
+      {/* Candidates */}
+      {!showForm && candidates.length > 0 && (
+        <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}` }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>Ready to Flash</p>
+            <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>High-stock products — good candidates for a deal</p>
+          </div>
+          {candidates.slice(0, 5).map((p, i) => {
             const emoji = CATEGORY_EMOJI[p.category?.toLowerCase()] ?? '📦';
             return (
-              <div key={p.id} style={{ padding: '14px 18px', borderBottom: i < flashCandidates.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                  {emoji}
-                </div>
+              <div key={p.id} style={{ padding: '12px 20px', borderBottom: i < Math.min(candidates.length, 5) - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ fontSize: 20, flexShrink: 0 }}>{emoji}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.name}</p>
-                  <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0 }}>{p.name}</p>
+                  <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>
                     UGX {Number(p.price_per_unit).toLocaleString()}/{p.unit} · {p.stock_qty} in stock
-                    {p.district && ` · ${p.district}`}
                   </p>
                 </div>
-                <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: 'var(--color-sky-bg)', color: 'var(--color-sky)', display: 'block', marginBottom: 4 }}>
-                    Flash Ready
-                  </span>
-                  <Link href="/supplier/catalogue"
-                    style={{ fontSize: 11, color: C.green, fontWeight: 700, textDecoration: 'none' }}>
-                    Edit →
-                  </Link>
-                </div>
+                <button
+                  onClick={() => { setSelectedId(p.id); setShowForm(true); }}
+                  style={{
+                    padding: '7px 14px', borderRadius: 10, border: 'none',
+                    background: C.amberBg, color: C.amber, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  ⚡ Flash
+                </button>
               </div>
             );
           })}
-        </div>
-      )}
-
-      {/* Low stock products */}
-      {lowStock.length > 0 && (
-        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
-          <div style={{ padding: '12px 18px', borderBottom: `1px solid ${C.border}` }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Lower Stock Products</p>
-            <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>Restock before running a flash deal on these</p>
-          </div>
-          {lowStock.map((p: any, i: number) => {
-            const emoji = CATEGORY_EMOJI[p.category?.toLowerCase()] ?? '📦';
-            return (
-              <div key={p.id} style={{ padding: '12px 18px', borderBottom: i < lowStock.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', gap: 10, alignItems: 'center', opacity: 0.75 }}>
-                <span style={{ fontSize: 18, flexShrink: 0 }}>{emoji}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: '0 0 1px' }}>{p.name}</p>
-                  <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
-                    {p.stock_qty} left · UGX {Number(p.price_per_unit).toLocaleString()}/{p.unit}
-                  </p>
-                </div>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: 'var(--color-harvest-bg)', color: 'var(--color-harvest)' }}>
-                  Low Stock
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {rows.length === 0 && (
-        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>⚡</p>
-          <p style={{ fontWeight: 700, fontSize: 16, color: C.text, marginBottom: 6 }}>No products listed yet</p>
-          <p style={{ fontSize: 13, color: C.muted, marginBottom: 18 }}>Add products to your catalogue first, then run flash deals to move stock fast.</p>
-          <Link href="/supplier/catalogue"
-            style={{ display: 'inline-block', padding: '10px 20px', background: C.green, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-            Add Products →
-          </Link>
-        </div>
-      )}
-
-      {/* Catalogue link */}
-      {rows.length > 0 && (
-        <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 2px' }}>Keep your catalogue updated</p>
-            <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Accurate stock and pricing increase visibility even without a flash deal.</p>
-          </div>
-          <Link href="/supplier/catalogue"
-            style={{ padding: '9px 16px', background: C.green, color: '#fff', borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0, marginLeft: 12 }}>
-            Catalogue →
-          </Link>
         </div>
       )}
     </div>

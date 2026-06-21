@@ -15,7 +15,29 @@ export async function POST(req: Request) {
   if (!['mtn', 'airtel'].includes(provider)) return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
 
   const flwSecret = process.env.FLUTTERWAVE_SECRET_KEY;
-  if (!flwSecret) return NextResponse.json({ error: 'Payment service not configured' }, { status: 503 });
+
+  // ── Simulation mode for testing (no Flutterwave key configured) ──────────
+  if (!flwSecret) {
+    // Directly credit the wallet — for dev/testing only
+    const { data: wallet, error: wErr } = await (supabase.from as any)('wallets')
+      .select('id, balance')
+      .eq('user_id', user.id)
+      .single();
+
+    if (wErr || !wallet) return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
+
+    const newBalance = Number(wallet.balance) + Number(amount);
+    await (supabase.from as any)('wallets').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', wallet.id);
+    await (supabase.from as any)('wallet_transactions').insert({
+      wallet_id:   wallet.id,
+      user_id:     user.id,
+      type:        'deposit',
+      amount:      Number(amount),
+      status:      'completed',
+      description: `[TEST] Mobile money deposit via ${provider.toUpperCase()} — ${phone}`,
+    });
+    return NextResponse.json({ success: true, message: `[TEST MODE] UGX ${Number(amount).toLocaleString()} deposited directly. Add FLUTTERWAVE_SECRET_KEY for real mobile money.`, simulated: true });
+  }
 
   const txRef = `kulima-dep-${user.id.slice(0, 8)}-${Date.now()}`;
 

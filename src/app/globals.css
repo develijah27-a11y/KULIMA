@@ -40,11 +40,14 @@
   --color-soil:          #0D1F12;   /* deep forest — used by landing page */
   --color-soil-mid:      #1A3120;
 
-  /* ── Sidebar — Growth Green (matches wallet balance card) ── */
-  --color-sidebar:       #22C55E;
-  --color-sidebar-hover: #16A34A;
-  --color-sidebar-text:  #000000;
-  --color-sidebar-muted: rgba(0, 0, 0, 0.55);
+  /* ── Sidebar — Army / Olive Green ── */
+  --color-sidebar:         #4B5320;
+  --color-sidebar-hover:   #3A4119;
+  --color-sidebar-text:    #FFFFFF;
+  --color-sidebar-muted:   rgba(255, 255, 255, 0.60);
+  --color-sidebar-divider: rgba(255, 255, 255, 0.14);
+  --color-sidebar-active:  rgba(255, 255, 255, 0.18);
+  --color-sidebar-badge:   rgba(255, 255, 255, 0.20);
 
   /* ── Text ── */
   --color-text:          #111827;   /* near-black for maximum legibility */
@@ -149,10 +152,14 @@
   --color-soil:          #060F08;
   --color-soil-mid:      #0D1F12;
 
-  --color-sidebar:       #16A34A;
-  --color-sidebar-hover: #22C55E;
-  --color-sidebar-text:  #000000;
-  --color-sidebar-muted: rgba(0, 0, 0, 0.55);
+  /* ── Sidebar dark — near-black forest, army green accents ── */
+  --color-sidebar:         #0F1510;
+  --color-sidebar-hover:   #1A2010;
+  --color-sidebar-text:    rgba(255, 255, 255, 0.88);
+  --color-sidebar-muted:   rgba(255, 255, 255, 0.42);
+  --color-sidebar-divider: rgba(255, 255, 255, 0.07);
+  --color-sidebar-active:  rgba(107, 124, 61, 0.28);
+  --color-sidebar-badge:   rgba(143, 168, 58, 0.28);
 
   --color-text:          #F0FDF4;
   --color-text-muted:    #A3B8A7;
@@ -220,7 +227,7 @@
   --color-sky:      #0EA5E9;   /* weather blue */
   --color-cream:    #F9FAF8;   /* off-white */
   --color-surface2: #F0F7F1;   /* light green surface */
-  --color-sidebar:  #22C55E;   /* wallet green sidebar */
+  --color-sidebar:  #4B5320;   /* army / olive green sidebar */
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -296,12 +303,14 @@ button:not(.no-min-touch), [role="button"] {
    ═══════════════════════════════════════════════════════════════════ */
 
 .sidebar-item {
-  transition: background 80ms ease, transform 80ms ease;
+  transition: background 80ms ease, transform 80ms ease, border-left-color 80ms ease;
   -webkit-user-select: none; user-select: none;
   will-change: transform;
 }
-.sidebar-item:hover  { background: rgba(255,255,255,0.10) !important; }
-.sidebar-item:active { background: rgba(255,255,255,0.24) !important; transform: scale(0.97) translateZ(0); }
+.sidebar-item:hover  { background: rgba(255,255,255,0.09) !important; }
+.sidebar-item:active { background: rgba(255,255,255,0.18) !important; transform: scale(0.97) translateZ(0); }
+.dark .sidebar-item:hover  { background: rgba(107,124,61,0.16) !important; }
+.dark .sidebar-item:active { background: rgba(107,124,61,0.30) !important; }
 
 .mobile-nav-item {
   transition: transform 80ms ease, opacity 80ms ease;
@@ -781,6 +790,12 @@ input.auth-input:-webkit-autofill:active {
 
 .animate-fade-in { animation: fadeIn 0.22s ease forwards; }
 
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-page { animation: pageEnter 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
 /* ═══════════════════════════════════════════════════════════════════
    TAILWIND OVERRIDE CLASSES
    Explicit classes for legacy token names used in JSX files.
@@ -890,18 +905,16 @@ input.auth-input:-webkit-autofill:active {
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* Glassmorphic sidebar — exact wallet green (#22C55E) */
+/* Army green sidebar — light: bold olive, dark: near-black forest with green accents */
 .glass-sidebar {
-  background: #22C55E !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.30) !important;
-  box-shadow: inset -1px 0 0 rgba(255,255,255,0.18), 2px 0 28px rgba(34, 197, 94, 0.22);
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  background: #4B5320 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 2px 0 24px rgba(75, 83, 32, 0.30);
 }
 .dark .glass-sidebar {
-  background: #16A34A !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: inset -1px 0 0 rgba(255,255,255,0.10), 2px 0 28px rgba(22, 163, 74, 0.18);
+  background: #0F1510 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 2px 0 24px rgba(0, 0, 0, 0.45);
 }
 
 /* Glass modal / sheet */

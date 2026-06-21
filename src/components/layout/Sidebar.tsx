@@ -11,7 +11,8 @@ import {
   Navigation, Thermometer, Stethoscope, AlertCircle, ClipboardCheck,
   CheckSquare, AlertTriangle, GitMerge, Star, PieChart, Shield,
   AlertOctagon, MessageCircle, Receipt, UserPlus, CalendarDays, HardHat,
-  Map, Users2, Truck, CheckCircle2, DollarSign, LineChart, LogOut,
+  Map, Users2, Truck, CheckCircle2, DollarSign, LineChart, LogOut, Heart,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react';
 
 type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
@@ -74,6 +75,16 @@ export const ICON_MAP: Record<string, IconComponent> = {
   dispute:          Shield,
   alert:            AlertOctagon,
   history:          ClipboardList,
+  favourites:       Heart,
+  consultations:    CalendarDays,
+  chat:             MessageCircle,
+  'bulk-orders':    Package,
+  risk:             AlertOctagon,
+  active:           Navigation,
+  vehicle:          Truck,
+  'audit-logs':     ClipboardList,
+  verification:     ShieldCheck,
+  fraud:            AlertOctagon,
 };
 
 export interface NavItem {
@@ -97,15 +108,34 @@ const DASHBOARD_ROOTS = [
   '/offtaker/dashboard', '/groups/dashboard',
 ];
 
+const COLLAPSED_KEY = 'kulima-sidebar-collapsed';
+
+function getInitialCollapsed(): boolean {
+  if (typeof window === 'undefined') return false;
+  try { return localStorage.getItem(COLLAPSED_KEY) === 'true'; } catch { return false; }
+}
+
 export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = React.useState(false);
+
+  React.useEffect(() => {
+    setCollapsed(getInitialCollapsed());
+  }, []);
+
+  const toggleCollapsed = React.useCallback(() => {
+    setCollapsed(prev => {
+      const next = !prev;
+      try { localStorage.setItem(COLLAPSED_KEY, String(next)); } catch {}
+      return next;
+    });
+  }, []);
 
   const handleSignOut = React.useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     window.location.replace('/auth/signin');
   }, []);
 
-  // Precompute active state once per pathname change instead of inside the render loop
   const activeSet = React.useMemo(() => {
     const set = new Set<string>();
     for (const { href } of navItems) {
@@ -116,61 +146,78 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
     return set;
   }, [navItems, pathname]);
 
+  const width = collapsed ? 56 : 220;
+
   return (
     <aside
-      className="hidden md:flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto glass-sidebar"
-      style={{ width: 220, minWidth: 220 }}
+      className="glass-sidebar hidden md:flex flex-col shrink-0 h-screen sticky top-0"
+      style={{
+        width,
+        minWidth: width,
+        overflowX: 'hidden',
+        overflowY: 'auto',
+        transition: 'width 200ms cubic-bezier(0.4, 0, 0.2, 1), min-width 200ms cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
     >
       {/* Logo */}
       <div
-        className="px-4 flex items-center gap-2.5 shrink-0"
+        className="flex items-center shrink-0"
         style={{
           height: 56,
-          borderBottom: '1px solid rgba(0,0,0,0.12)',
+          borderBottom: '1px solid var(--color-sidebar-divider)',
+          padding: collapsed ? '0 14px' : '0 16px',
+          gap: collapsed ? 0 : 10,
+          justifyContent: collapsed ? 'center' : 'flex-start',
         }}
       >
         <div
           style={{
             width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            background: 'rgba(255,255,255,0.30)',
+            background: 'rgba(255,255,255,0.16)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 13, fontWeight: 900, color: '#000',
+            fontSize: 13, fontWeight: 900, color: 'var(--color-sidebar-text)',
             fontFamily: 'var(--font-display)',
           }}
         >
           K
         </div>
-        <span
-          style={{
-            fontSize: 16, fontWeight: 800, color: '#000',
-            letterSpacing: '-0.02em', fontFamily: 'var(--font-display)',
-          }}
-        >
-          Kulima
-        </span>
+        {!collapsed && (
+          <span
+            style={{
+              fontSize: 16, fontWeight: 800, color: 'var(--color-sidebar-text)',
+              letterSpacing: '-0.02em', fontFamily: 'var(--font-display)',
+              whiteSpace: 'nowrap', overflow: 'hidden',
+            }}
+          >
+            Kulima
+          </span>
+        )}
       </div>
 
-      {roleSwitcher && (
-        <div className="px-3 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+      {roleSwitcher && !collapsed && (
+        <div className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--color-sidebar-divider)' }}>
           {roleSwitcher}
         </div>
       )}
 
       {/* Navigation */}
-      <nav className="flex-1 px-2.5 py-3 space-y-0.5 overflow-y-auto">
+      <nav
+        className="flex-1 py-3 space-y-0.5 overflow-y-auto"
+        style={{ padding: collapsed ? '12px 6px' : '12px 10px' }}
+      >
         {navItems.map(({ href, icon, label, badge, divider, sectionLabel }, idx) => {
           const Icon = ICON_MAP[icon] ?? LayoutDashboard;
           const active = activeSet.has(href);
 
           return (
             <div key={href}>
-              {divider && (
+              {divider && !collapsed && (
                 <div style={{ marginTop: idx === 0 ? 0 : 10, marginBottom: 6 }}>
-                  <div style={{ height: 1, background: 'rgba(0,0,0,0.12)', marginBottom: sectionLabel ? 6 : 0 }} />
+                  <div style={{ height: 1, background: 'var(--color-sidebar-divider)', marginBottom: sectionLabel ? 6 : 0 }} />
                   {sectionLabel && (
                     <p style={{
                       fontSize: 9, fontWeight: 800,
-                      color: 'rgba(0,0,0,0.45)',
+                      color: 'var(--color-sidebar-muted)',
                       textTransform: 'uppercase',
                       letterSpacing: '0.12em',
                       paddingLeft: 10,
@@ -181,35 +228,56 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
                   )}
                 </div>
               )}
+              {divider && collapsed && idx !== 0 && (
+                <div style={{ height: 1, background: 'var(--color-sidebar-divider)', margin: '8px 4px' }} />
+              )}
               <Link
                 href={href}
                 prefetch
-                className="sidebar-item flex items-center gap-2.5 rounded-lg"
+                className="sidebar-item flex items-center rounded-lg"
+                title={collapsed ? label : undefined}
                 style={{
-                  padding: '8px 10px',
-                  background: active ? 'rgba(255,255,255,0.28)' : 'transparent',
-                  color: active ? '#000000' : 'rgba(0,0,0,0.72)',
+                  padding: collapsed ? '10px 0' : '8px 10px',
+                  justifyContent: collapsed ? 'center' : 'flex-start',
+                  gap: collapsed ? 0 : 10,
+                  background: active ? 'var(--color-sidebar-active)' : 'transparent',
+                  color: active ? 'var(--color-sidebar-text)' : 'var(--color-sidebar-muted)',
                   textDecoration: 'none',
                   minHeight: 40,
+                  borderLeft: active && !collapsed ? '3px solid rgba(255,255,255,0.55)' : '3px solid transparent',
+                  paddingLeft: active && !collapsed ? 7 : (collapsed ? 0 : 10),
                 }}
               >
                 <span className="shrink-0">
                   <Icon size={15} strokeWidth={active ? 2.5 : 2} />
                 </span>
-                <span style={{ fontSize: 13, fontWeight: 700, flex: 1, lineHeight: 1.3 }}>
-                  {label}
-                </span>
-                {badge !== undefined && badge > 0 && (
+                {!collapsed && (
+                  <span style={{ fontSize: 13, fontWeight: 700, flex: 1, lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                    {label}
+                  </span>
+                )}
+                {!collapsed && badge !== undefined && badge > 0 && (
                   <span
                     style={{
                       fontSize: 10, fontWeight: 800,
                       padding: '1px 6px', borderRadius: 99,
-                      background: 'rgba(0,0,0,0.15)',
-                      color: '#000',
+                      background: 'var(--color-sidebar-badge)',
+                      color: 'var(--color-sidebar-text)',
                     }}
                   >
                     {badge > 99 ? '99+' : badge}
                   </span>
+                )}
+                {collapsed && badge !== undefined && badge > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 6, right: 6,
+                      width: 6, height: 6,
+                      borderRadius: '50%',
+                      background: 'var(--color-danger)',
+                    }}
+                  />
                 )}
               </Link>
             </div>
@@ -218,24 +286,24 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
       </nav>
 
       {/* User profile card */}
-      {profile && (
-        <div className="p-3 shrink-0" style={{ borderTop: '1px solid rgba(0,0,0,0.12)' }}>
+      {profile && !collapsed && (
+        <div className="p-3 shrink-0" style={{ borderTop: '1px solid var(--color-sidebar-divider)' }}>
           <div className="flex items-center gap-2.5">
             <div
               style={{
                 width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                background: 'rgba(255,255,255,0.30)',
+                background: 'rgba(255,255,255,0.16)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 12, fontWeight: 800, color: '#000',
+                fontSize: 12, fontWeight: 800, color: 'var(--color-sidebar-text)',
               }}
             >
               {profile.name[0]?.toUpperCase() ?? 'U'}
             </div>
             <div className="min-w-0 flex-1">
-              <p style={{ fontSize: 12, fontWeight: 700, color: '#000', lineHeight: 1.3 }} className="truncate">
+              <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-sidebar-text)', lineHeight: 1.3 }} className="truncate">
                 {profile.name}
               </p>
-              <p style={{ fontSize: 10, fontWeight: 600, color: 'rgba(0,0,0,0.55)', lineHeight: 1.3, textTransform: 'capitalize' }}>
+              <p style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-sidebar-muted)', lineHeight: 1.3, textTransform: 'capitalize' }}>
                 {profile.role}
               </p>
             </div>
@@ -243,13 +311,67 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
               onClick={handleSignOut}
               title="Sign out"
               className="shrink-0 flex items-center justify-center rounded-lg transition-colors active:scale-95"
-              style={{ width: 28, height: 28, color: 'rgba(0,0,0,0.55)', minHeight: 'unset', minWidth: 'unset' }}
+              style={{ width: 28, height: 28, color: 'var(--color-sidebar-muted)', minHeight: 'unset', minWidth: 'unset' }}
             >
               <LogOut size={13} />
             </button>
           </div>
         </div>
       )}
+
+      {/* Collapsed avatar + signout */}
+      {profile && collapsed && (
+        <div
+          className="flex flex-col items-center gap-2 py-3 shrink-0"
+          style={{ borderTop: '1px solid var(--color-sidebar-divider)' }}
+        >
+          <div
+            title={profile.name}
+            style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: 'rgba(255,255,255,0.16)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 12, fontWeight: 800, color: 'var(--color-sidebar-text)',
+            }}
+          >
+            {profile.name[0]?.toUpperCase() ?? 'U'}
+          </div>
+          <button
+            onClick={handleSignOut}
+            title="Sign out"
+            className="flex items-center justify-center rounded-lg active:scale-95"
+            style={{ width: 28, height: 28, color: 'var(--color-sidebar-muted)', minHeight: 'unset', minWidth: 'unset' }}
+          >
+            <LogOut size={13} />
+          </button>
+        </div>
+      )}
+
+      {/* Collapse toggle button */}
+      <button
+        onClick={toggleCollapsed}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        className="no-min-touch shrink-0 flex items-center justify-center"
+        style={{
+          height: 36,
+          width: '100%',
+          background: 'rgba(255,255,255,0.06)',
+          border: 'none',
+          borderTop: '1px solid var(--color-sidebar-divider)',
+          color: 'var(--color-sidebar-muted)',
+          cursor: 'pointer',
+          transition: 'background 80ms ease',
+          minHeight: 'unset',
+          minWidth: 'unset',
+        }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.11)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+      >
+        {collapsed
+          ? <ChevronRight size={13} />
+          : <ChevronLeft size={13} />
+        }
+      </button>
     </aside>
   );
 }

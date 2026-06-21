@@ -30,10 +30,10 @@ export default function CreateGroupListingPage() {
     if (!district) { setError('Select a district'); return; }
     setLoading(true); setError('');
     try {
-      const res = await fetch('/api/listings', {
+      const res = await fetch('/api/group-listings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ crop_type: cropType, quantity_kg: Number(quantityKg), asking_price: Number(askingPrice), district, notes: notes || null, is_group_listing: true }),
+        body: JSON.stringify({ crop_type: cropType, total_quantity_kg: Number(quantityKg), asking_price: Number(askingPrice), district, notes: notes || null }),
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? 'Failed to create listing');
@@ -73,7 +73,7 @@ export default function CreateGroupListingPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Total Quantity (kg) *</label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Total Group Quantity (kg) *</label>
             <input type="number" value={quantityKg} onChange={e => setQuantityKg(e.target.value)} min="1" placeholder="e.g. 2000" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: 'var(--d-input-bg)', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div>

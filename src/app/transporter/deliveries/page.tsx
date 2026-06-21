@@ -17,14 +17,20 @@ export default async function TransporterDeliveriesPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { tab = 'available', district = '' } = await searchParams;
-  const tabs = ['available', 'my_bids', 'active', 'completed'];
+  const { tab = 'assignments', district = '' } = await searchParams;
+  const tabs = ['assignments', 'available', 'active', 'completed'];
 
   let query: any;
 
-  if (tab === 'available') {
+  if (tab === 'assignments') {
+    query = (supabase.from as any)('driver_assignments')
+      .select('id, status, notified_at, delivery:delivery_requests(id, pickup_district, dropoff_district, cargo_kg, cargo_type, pickup_date, status, estimated_fare, driver_earnings, delivery_type)')
+      .eq('driver_id', user.id)
+      .in('status', ['pending', 'accepted'])
+      .order('notified_at', { ascending: false });
+  } else if (tab === 'available') {
     query = (supabase.from as any)('delivery_requests')
-      .select('id, pickup_district, dropoff_district, cargo_kg, cargo_type, pickup_date, notes, created_at')
+      .select('id, pickup_district, dropoff_district, cargo_kg, cargo_type, pickup_date, notes, created_at, estimated_fare, driver_earnings, delivery_type')
       .eq('status', 'open')
       .order('pickup_date', { ascending: true });
     if (district) query = query.eq('pickup_district', district);
@@ -74,8 +80,8 @@ export default async function TransporterDeliveriesPage({
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {tabs.map(t => (
           <a key={t} href={`/transporter/deliveries?tab=${t}`}
-            style={{ padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, textDecoration: 'none', textTransform: 'capitalize', background: tab === t ? C.green : 'var(--color-surface-2)', color: tab === t ? '#fff' : C.muted }}>
-            {t.replace('_', ' ')}
+            style={{ padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: tab === t ? C.green : 'var(--color-surface-2)', color: tab === t ? '#fff' : C.muted }}>
+            {t === 'assignments' ? '🔔 My Jobs' : t === 'available' ? 'Browse' : t === 'active' ? 'Active' : 'Completed'}
           </a>
         ))}
       </div>
@@ -84,19 +90,31 @@ export default async function TransporterDeliveriesPage({
       {rows.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '40px 24px', textAlign: 'center' }}>
           <p style={{ fontSize: 40, marginBottom: 10 }}>🚛</p>
-          <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>No deliveries here</p>
+          <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>
+            {tab === 'assignments'
+              ? 'No jobs assigned to you yet — make sure your vehicle district is set'
+              : 'No deliveries here'}
+          </p>
+          {tab === 'assignments' && (
+            <p style={{ fontSize: 12, color: C.muted, marginTop: 6 }}>
+              Go to <Link href="/transporter/vehicle" style={{ color: C.green }}>My Vehicle</Link> and select your operating districts
+            </p>
+          )}
         </div>
       ) : (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
           <div className="divide-y" style={{ borderColor: C.border }}>
             {rows.map((row: any) => {
-              const d     = tab === 'my_bids' ? row.delivery : row;
-              const st    = STATUS_CFG[tab === 'my_bids' ? row.status : d?.status] ?? STATUS_CFG.open;
-              const price = tab === 'my_bids' ? row.price : d?.agreed_price;
+              const isAssignment = tab === 'assignments';
+              const d     = isAssignment ? row.delivery : (tab === 'my_bids' ? row.delivery : row);
+              const st    = STATUS_CFG[isAssignment ? (row.status === 'accepted' ? 'accepted' : 'open') : (tab === 'my_bids' ? row.status : d?.status)] ?? STATUS_CFG.open;
+              const price = isAssignment ? (d?.driver_earnings ?? d?.estimated_fare) : (tab === 'my_bids' ? row.price : d?.agreed_price);
+              const typeIcon = d?.delivery_type === 'cold' ? '❄️' : d?.delivery_type === 'fast' ? '⚡' : '🚛';
               return (
                 <div key={row.id} style={{ padding: '15px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                      {isAssignment && <span style={{ fontSize: 14 }}>{typeIcon}</span>}
                       <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>
                         {d?.pickup_district ?? '—'} → {d?.dropoff_district ?? '—'}
                       </p>
@@ -107,9 +125,15 @@ export default async function TransporterDeliveriesPage({
                     <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
                       {d?.cargo_kg} kg {d?.cargo_type ?? 'cargo'}
                       {d?.pickup_date && ` · ${new Date(d.pickup_date).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}`}
-                      {price && ` · UGX ${Math.round(price).toLocaleString()}`}
+                      {price && ` · UGX ${Math.round(price).toLocaleString()} earnings`}
                     </p>
                   </div>
+                  {isAssignment && (
+                    <Link href={`/transporter/deliveries/${d?.id}`}
+                      style={{ padding: '6px 14px', background: C.green, color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
+                      Accept →
+                    </Link>
+                  )}
                   {tab === 'available' && (
                     <Link href={`/transporter/deliveries/${row.id}`}
                       style={{ padding: '6px 14px', background: 'var(--color-primary-bg)', color: C.greenMed, borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>

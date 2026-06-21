@@ -35,6 +35,7 @@ type Order = {
   delivered_at: string | null;
   completed_at: string | null;
   cancelled_at: string | null;
+  disputed_at: string | null;
   created_at: string;
   buyer?: { full_name: string; location: string } | null;
 };
@@ -47,6 +48,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> =
   delivered:  { label: 'Delivered',    color: C.green,  bg: C.greenBg  },
   completed:  { label: 'Paid ✓',       color: C.green,  bg: C.greenBg  },
   cancelled:  { label: 'Cancelled',    color: C.red,    bg: C.redBg    },
+  disputed:   { label: 'Disputed ⚠️',  color: C.red,    bg: C.redBg    },
 };
 
 const TABS = [
@@ -54,6 +56,7 @@ const TABS = [
   { label: 'Active',   filter: ['confirmed','dispatched','in_transit'] },
   { label: 'Delivered',filter: ['delivered'] },
   { label: 'Done',     filter: ['completed'] },
+  { label: 'Disputed', filter: ['disputed'] },
   { label: 'All',      filter: null },
 ];
 
@@ -211,8 +214,20 @@ function OrderCard({ order, onAction }: { order: Order; onAction: (id: string, n
         </div>
       )}
 
+      {/* Dispute alert for farmer */}
+      {order.status === 'disputed' && (
+        <div style={{ padding: '0 20px 14px' }}>
+          <div style={{ padding: '12px 14px', background: C.redBg, borderRadius: 12, border: `1px solid ${C.red}` }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.red, margin: '0 0 4px' }}>⚠️ Order Disputed</p>
+            <p style={{ fontSize: 12, color: C.red, margin: 0, opacity: 0.85 }}>
+              The buyer has raised a dispute. An admin is reviewing the case and will contact both parties within 24 hours. Funds are held in escrow.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Status timeline for non-pending */}
-      {order.status !== 'pending' && order.status !== 'cancelled' && (
+      {order.status !== 'pending' && order.status !== 'cancelled' && order.status !== 'disputed' && (
         <div style={{ padding: '0 20px 16px' }}>
           <div style={{ display: 'flex', gap: 16, overflowX: 'auto' }}>
             {[
@@ -251,9 +266,10 @@ export function OrdersClient({ orders: initial }: Props) {
     return f === null ? orders : orders.filter(o => f.includes(o.status));
   })();
 
-  const newCount     = orders.filter(o => o.status === 'pending').length;
-  const activeCount  = orders.filter(o => ['confirmed','dispatched','in_transit'].includes(o.status)).length;
-  const revenue      = orders.filter(o => o.status === 'completed').reduce((s, o) => s + o.total_amount, 0);
+  const newCount      = orders.filter(o => o.status === 'pending').length;
+  const activeCount   = orders.filter(o => ['confirmed','dispatched','in_transit'].includes(o.status)).length;
+  const disputedCount = orders.filter(o => o.status === 'disputed').length;
+  const revenue       = orders.filter(o => o.status === 'completed').reduce((s, o) => s + o.total_amount, 0);
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -274,7 +290,7 @@ export function OrdersClient({ orders: initial }: Props) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
         {[
           { label: 'New Orders',   value: newCount,    color: C.amber,  bg: C.amberBg  },
-          { label: 'In Progress',  value: activeCount, color: C.blue,   bg: C.blueBg   },
+          { label: disputedCount > 0 ? 'Disputed ⚠️' : 'In Progress', value: disputedCount > 0 ? disputedCount : activeCount, color: disputedCount > 0 ? C.red : C.blue, bg: disputedCount > 0 ? C.redBg : C.blueBg },
           { label: 'Revenue',      value: revenue > 0 ? `UGX ${revenue >= 1e6 ? (revenue/1e6).toFixed(1)+'M' : Math.round(revenue/1000)+'K'}` : '—', color: C.green, bg: C.greenBg },
         ].map(s => (
           <div key={s.label} style={{ background: s.bg, borderRadius: 14, padding: '14px 16px' }}>

@@ -16,7 +16,7 @@ export default async function FarmerOrdersPage() {
     .select(`
       id, crop_type, quantity_kg, unit_price, total_amount, status,
       buyer_note, farmer_note, pickup_district, dropoff_district,
-      confirmed_at, dispatched_at, delivered_at, completed_at, cancelled_at, created_at,
+      confirmed_at, dispatched_at, delivered_at, completed_at, cancelled_at, disputed_at, created_at,
       buyer_id
     `)
     .eq('farmer_profile_id', (profile as any).id)

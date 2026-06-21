@@ -1,10 +1,24 @@
 import { redirect } from 'next/navigation';
-import { getAuthSession } from '@/lib/supabase/auth-cache';
+import { createClient } from '@/lib/supabase/server';
 import { PathologistLazy as PathologistClient } from './PathologistLazy';
+import { ConsultationBooking } from './ConsultationBooking';
 
 export default async function PathologistPage() {
-  const session = await getAuthSession();
-  if (!session?.user) redirect('/auth/signin');
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
+
+  const [walletRes, consultationsRes] = await Promise.all([
+    (supabase.from as any)('wallets').select('balance').eq('user_id', user.id).single(),
+    (supabase.from as any)('consultations')
+      .select('id, type, status, fee_ugx, notes, created_at, pathologist:profiles!consultations_pathologist_id_fkey(full_name, location)')
+      .eq('farmer_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5),
+  ]);
+
+  const walletBalance  = Number(walletRes.data?.balance ?? 0);
+  const consultations  = (consultationsRes.data ?? []) as any[];
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
@@ -24,7 +38,7 @@ export default async function PathologistPage() {
             </span>
           </div>
           <p style={{ fontSize: '13px', color: 'var(--d-muted)', margin: 0 }}>
-            Upload a photo of your affected plant for expert disease diagnosis and treatment advice
+            Upload a photo for AI diagnosis, or book a paid consultation with a real pathologist
           </p>
         </div>
         <div style={{
@@ -36,7 +50,12 @@ export default async function PathologistPage() {
         </div>
       </div>
 
+      {/* AI Disease Scanner */}
       <PathologistClient />
+
+      {/* Paid consultation booking */}
+      <ConsultationBooking walletBalance={walletBalance} consultations={consultations} />
+
     </div>
   );
 }

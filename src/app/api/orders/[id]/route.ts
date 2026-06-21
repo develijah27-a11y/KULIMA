@@ -17,7 +17,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   // Load order
   const { data: order } = await (supabase.from as any)('orders')
-    .select('id, buyer_id, farmer_profile_id, status, crop_type, quantity_kg, total_amount, listing_id, pickup_district, dropoff_district')
+    .select('id, buyer_id, farmer_profile_id, status, crop_type, quantity_kg, total_amount, listing_id, pickup_district, dropoff_district, delivered_at, escrow_id, return_requested_at')
     .eq('id', id)
     .single();
 
@@ -134,6 +134,54 @@ export async function PATCH(req: Request, { params }: Params) {
         data:      { order_id: id },
       });
     }
+
+    return NextResponse.json({ success: true });
+  }
+
+  // ── Buyer: raise dispute / request return ─────────────────────────────────
+  if (action === 'dispute') {
+    if (order.buyer_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (order.status !== 'delivered') {
+      return NextResponse.json({ error: 'Can only raise a dispute on a delivered order' }, { status: 400 });
+    }
+
+    // Enforce 48-hour return window from delivery
+    if (order.delivered_at) {
+      const deliveredMs = new Date(order.delivered_at).getTime();
+      const windowMs    = 48 * 60 * 60 * 1000;
+      if (Date.now() - deliveredMs > windowMs) {
+        return NextResponse.json({ error: 'The 48-hour return window has expired. Confirm receipt to release payment.' }, { status: 400 });
+      }
+    }
+
+    await (supabase.from as any)('orders').update({
+      status:              'disputed',
+      disputed_at:         now,
+      return_requested_at: now,
+    }).eq('id', id);
+
+    // Freeze escrow
+    if (order.escrow_id) {
+      await (supabase.from as any)('escrow_accounts').update({ status: 'disputed' }).eq('id', order.escrow_id);
+    }
+
+    // Create dispute record for admin review
+    await (supabase.from as any)('disputes').insert({
+      complainant_id: user.id,
+      respondent_id:  (farmerProfile as any)?.user_id ?? null,
+      order_id:       id,
+      reason:         'return_request',
+      description:    `Buyer raised a dispute on ${order.crop_type} (${order.quantity_kg} kg, UGX ${Math.round(order.total_amount).toLocaleString()}).${note ? ` Note: ${note}` : ''}`,
+      status:         'open',
+    });
+
+    // Alert admin
+    await (supabase.from as any)('notifications').insert({
+      type:  'alert',
+      title: `Return/dispute on order #${id.slice(0, 8)}`,
+      body:  `Buyer raised a dispute on ${order.crop_type} (${order.quantity_kg} kg). Admin review required.`,
+      data:  { order_id: id },
+    });
 
     return NextResponse.json({ success: true });
   }

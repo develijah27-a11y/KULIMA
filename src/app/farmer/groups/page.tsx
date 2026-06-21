@@ -16,7 +16,7 @@ export default async function FarmerGroupsPage() {
 
   const [membershipsRes, allGroupsRes] = await Promise.all([
     // Groups this farmer belongs to
-    (supabase.from as any)('group_members')
+    (supabase.from as any)('farmer_group_members')
       .select('role, group:farmer_groups(id, name, description, district, leader_id, is_active)')
       .eq('farmer_id', profile.id),
     // All active groups
@@ -33,7 +33,7 @@ export default async function FarmerGroupsPage() {
   const allGroupIds = allGroups.map((g: any) => g.id);
   let memberCounts: Record<string, number> = {};
   if (allGroupIds.length > 0) {
-    const { data: counts } = await (supabase.from as any)('group_members')
+    const { data: counts } = await (supabase.from as any)('farmer_group_members')
       .select('group_id')
       .in('group_id', allGroupIds);
     (counts ?? []).forEach((r: any) => {

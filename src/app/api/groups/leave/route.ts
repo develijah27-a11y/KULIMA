@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   if (!groupId) return NextResponse.json({ error: 'groupId required' }, { status: 400 });
 
   // Prevent leader from leaving (they must transfer leadership first)
-  const { data: membership } = await (supabase.from as any)('group_members')
+  const { data: membership } = await (supabase.from as any)('farmer_group_members')
     .select('role')
     .eq('group_id', groupId)
     .eq('farmer_id', (profile as any).id)
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Group leaders cannot leave. Transfer leadership first.' }, { status: 400 });
   }
 
-  const { error } = await (supabase.from as any)('group_members')
+  const { error } = await (supabase.from as any)('farmer_group_members')
     .delete()
     .eq('group_id', groupId)
     .eq('farmer_id', (profile as any).id);

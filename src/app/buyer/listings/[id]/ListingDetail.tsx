@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { type VerificationLevel } from '@/lib/trust';
+import { FavouriteButton } from '@/components/ui/FavouriteButton';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -30,6 +31,8 @@ interface Props {
       trust_score: number | null;
     };
   };
+  farmerId: string;
+  isFavourited: boolean;
   marketPrice: number | null;
   existingOffer: { id: string; offered_price: number; status: string } | null;
   hasActiveOrder: boolean;
@@ -63,7 +66,7 @@ const CROP_EMOJI: Record<string, string> = {
 };
 
 export function ListingDetail({
-  listing, marketPrice, existingOffer, hasActiveOrder,
+  listing, farmerId, isFavourited, marketPrice, existingOffer, hasActiveOrder,
   gradient, photoUrl, cropEmoji, cropColor,
 }: Props) {
   const router = useRouter();
@@ -199,14 +202,17 @@ export function ListingDetail({
               {farmer.trust_score ? ` · ⭐ ${farmer.trust_score.toFixed(1)} trust` : ''}
             </p>
           </div>
-          {listing.available_from && (
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>Available</p>
-              <p style={{ fontSize: 11, fontWeight: 700, color: C.text, margin: '1px 0 0' }}>
-                {new Date(listing.available_from).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}
-              </p>
-            </div>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {listing.available_from && (
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>Available</p>
+                <p style={{ fontSize: 11, fontWeight: 700, color: C.text, margin: '1px 0 0' }}>
+                  {new Date(listing.available_from).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}
+                </p>
+              </div>
+            )}
+            <FavouriteButton farmerId={farmerId} initialFavourited={isFavourited} size={22} />
+          </div>
         </div>
 
         {listing.notes && (

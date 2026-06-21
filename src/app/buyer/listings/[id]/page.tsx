@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { ListingDetail } from './ListingDetail';
 import { getCropPhotoUrl, getCropGradient } from '@/lib/crop-photos';
+import { FavouriteButton } from '@/components/ui/FavouriteButton';
 
 const CROP_EMOJI: Record<string, string> = {
   maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
@@ -26,7 +27,7 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
   const [listingRes, priceRes, offerRes, orderRes] = await Promise.all([
     (supabase.from as any)('listings')
       .select(`
-        id, crop_type, quantity_kg, asking_price, district, available_from, notes, quality_grade,
+        id, farmer_id, crop_type, quantity_kg, asking_price, district, available_from, notes, quality_grade,
         farmer:profiles(full_name, location, verification_level, trust_score)
       `)
       .eq('id', id)
@@ -64,6 +65,16 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
     ? Math.round(cropPrices.reduce((a: number, b: number) => a + b, 0) / cropPrices.length)
     : null;
 
+  const farmerId: string = listing.farmer_id ?? '';
+  const { data: favRow } = farmerId
+    ? await (supabase.from as any)('buyer_favourites')
+        .select('id')
+        .eq('buyer_id', user.id)
+        .eq('farmer_id', farmerId)
+        .maybeSingle()
+    : { data: null };
+  const isFavourited = !!favRow;
+
   return (
     <div>
       <div style={{ marginBottom: 16 }}>
@@ -77,6 +88,8 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
 
       <ListingDetail
         listing={listing}
+        farmerId={farmerId}
+        isFavourited={isFavourited}
         marketPrice={marketPrice}
         existingOffer={(offerRes as any).data ?? null}
         hasActiveOrder={!!(orderRes as any).data}

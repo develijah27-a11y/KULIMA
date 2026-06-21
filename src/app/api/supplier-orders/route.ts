@@ -17,11 +17,18 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status');
+  const role   = searchParams.get('role');
 
+  // Farmer requests their own purchases; supplier requests their incoming orders
   let query = (supabase.from as any)('supplier_orders')
-    .select('*')
-    .eq('supplier_id', profile.id)
+    .select('id, product_name, category, quantity, unit, amount, unit_price, status, notes, buyer_name, district, supplier_id, buyer_id, created_at, updated_at')
     .order('created_at', { ascending: false });
+
+  if (role === 'farmer') {
+    query = query.eq('buyer_id', profile.id);
+  } else {
+    query = query.eq('supplier_id', profile.id);
+  }
 
   if (status && status !== 'all') query = query.eq('status', status);
 

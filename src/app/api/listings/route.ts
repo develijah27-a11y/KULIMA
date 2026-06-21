@@ -47,18 +47,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
   }
 
-  const { data, error } = await (supabase.from as any)('listings').insert({
-    farmer_id:        profile.id,
-    crop_type:        cropType,
-    quantity_kg:      +quantityKg,
-    asking_price:     +askingPrice,
-    available_from:   availableFrom ?? new Date().toISOString().slice(0, 10),
+  const insertPayload: Record<string, unknown> = {
+    farmer_id:      profile.id,
+    crop_type:      cropType,
+    quantity_kg:    +quantityKg,
+    asking_price:   +askingPrice,
+    available_from: availableFrom ?? new Date().toISOString().slice(0, 10),
     district,
-    notes:            notes ?? null,
-    status:           'active',
-    is_group_listing: is_group_listing ?? false,
-    group_id:         is_group_listing ? user.id : null,
-  }).select().single();
+    notes:          notes ?? null,
+    status:         'active',
+  };
+  if (is_group_listing) {
+    insertPayload.is_group_listing = true;
+    insertPayload.group_id = user.id;
+  }
+
+  const { data, error } = await (supabase.from as any)('listings').insert(insertPayload).select().single();
 
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   return NextResponse.json({ success: true, data });

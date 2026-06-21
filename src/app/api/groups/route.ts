@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   if (gErr) return NextResponse.json({ error: gErr.message }, { status: 500 });
 
   // Auto-add creator as leader member
-  await (supabase.from as any)('group_members').insert({
+  await (supabase.from as any)('farmer_group_members').insert({
     group_id:  group.id,
     farmer_id: (profile as any).id,
     role:      'leader',

@@ -26,7 +26,7 @@ const CROP_COLOR: Record<string, string> = {
 export default async function BuyerListingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; crop?: string; district?: string; sort?: string }>;
+  searchParams: Promise<{ q?: string; crop?: string; district?: string; sort?: string; farmer?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -37,15 +37,17 @@ export default async function BuyerListingsPage({
   const crop     = sp.crop ?? '';
   const district = sp.district ?? '';
   const sort     = sp.sort ?? 'newest';
+  const farmer   = sp.farmer ?? '';
 
   // Fetch listings with farmer profile
   let query = (supabase.from as any)('listings')
-    .select('id, crop_type, quantity_kg, asking_price, district, created_at, available_from, farmer:profiles(full_name, location, verification_level, trust_score)')
+    .select('id, crop_type, quantity_kg, asking_price, district, created_at, available_from, farmer_id, farmer:profiles(id, full_name, location, verification_level, trust_score)')
     .eq('status', 'active');
 
   if (crop)     query = query.eq('crop_type', crop);
   if (district) query = query.eq('district', district);
   if (q)        query = query.ilike('crop_type', `%${q}%`);
+  if (farmer)   query = query.eq('farmer_id', farmer);
 
   if (sort === 'price_asc')  query = query.order('asking_price', { ascending: true });
   else if (sort === 'price_desc') query = query.order('asking_price', { ascending: false });
@@ -78,9 +80,12 @@ export default async function BuyerListingsPage({
     <div className="max-w-4xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Browse Listings
+          {farmer ? 'Farmer Listings' : 'Browse Listings'}
         </h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>{listings.length} listings available</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>
+          {listings.length} listing{listings.length !== 1 ? 's' : ''} available
+          {farmer && <a href="/buyer/listings" style={{ marginLeft: 10, color: C.green, fontWeight: 600, textDecoration: 'none' }}>← All listings</a>}
+        </p>
       </div>
 
       {/* Search + filters */}

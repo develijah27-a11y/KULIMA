@@ -14,9 +14,9 @@ export default async function GroupListingsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: listings } = await (supabase.from as any)('listings')
-    .select('id, crop_type, quantity_kg, asking_price, district, status, created_at, verification_level')
-    .eq('group_id', user.id)
+  const { data: listings } = await (supabase.from as any)('group_listings')
+    .select('id, crop_type, total_quantity_kg, asking_price, district, status, created_at, member_count, notes')
+    .eq('admin_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -58,7 +58,7 @@ export default async function GroupListingsPage() {
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px', textTransform: 'capitalize' }}>{l.crop_type}</p>
-                      <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{(l.quantity_kg ?? 0).toLocaleString()} kg · {l.district}</p>
+                      <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{(l.total_quantity_kg ?? 0).toLocaleString()} kg · {l.district} · {l.member_count ?? 1} farmer{(l.member_count ?? 1) !== 1 ? 's' : ''}</p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <p style={{ fontSize: 14, fontWeight: 800, color: C.greenMed, margin: '0 0 2px', letterSpacing: '-0.01em' }}>UGX {Math.round(l.asking_price ?? 0).toLocaleString()}</p>

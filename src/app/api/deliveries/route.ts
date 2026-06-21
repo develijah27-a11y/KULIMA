@@ -87,33 +87,28 @@ export async function POST(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+  let driversNotified = 0;
   try {
     let vehicleQuery = (admin.from as any)('vehicles')
       .select('user_id')
       .eq('is_available', true)
       .contains('districts', [pickup_district]);
 
-    // Cold deliveries require a refrigerated vehicle
-    if (delivery_type === 'cold') {
-      vehicleQuery = vehicleQuery.eq('is_cold_capable', true);
-    }
+    if (delivery_type === 'cold') vehicleQuery = vehicleQuery.eq('is_cold_capable', true);
 
     const { data: matchedVehicles } = await vehicleQuery.limit(10);
 
     if (matchedVehicles && matchedVehicles.length > 0) {
       const driverUserIds: string[] = [...new Set<string>(matchedVehicles.map((v: any) => v.user_id as string))];
+      driversNotified = driverUserIds.length;
 
-      // Create driver_assignment records (one per matched driver)
       const assignments = driverUserIds.map((driverId: string) => ({
         delivery_id: deliveryId,
         driver_id:   driverId,
         status:      'pending',
       }));
-
       await (admin.from as any)('driver_assignments').insert(assignments).select('id');
 
-      // Send in-app notification to each matched driver
-      // notifications.farmer_id references profiles.id (not auth.users.id)
       const { data: driverProfiles } = await (admin.from as any)('profiles')
         .select('id, user_id')
         .in('user_id', driverUserIds);
@@ -132,10 +127,9 @@ export async function POST(req: Request) {
     }
   } catch {
     // Driver matching is non-critical — delivery is already created
-    // Drivers can still browse and bid manually if matching fails
   }
 
-  return NextResponse.json({ success: true, deliveryId, fare });
+  return NextResponse.json({ success: true, deliveryId, fare, driversNotified });
 }
 
 // ─── PATCH: update delivery status ───────────────────────────────────────────
