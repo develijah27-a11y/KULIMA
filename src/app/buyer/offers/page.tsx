@@ -1,4 +1,5 @@
-﻿import { redirect } from 'next/navigation';
+﻿import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
@@ -28,21 +29,12 @@ function timeAgo(iso: string) {
   return `${Math.floor(d / 1440)}d ago`;
 }
 
-export default async function BuyerOffersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string }>;
-}) {
+async function OffersContent({ tab, userId }: { tab: string; userId: string }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
-
-  const { tab = 'active' } = await searchParams;
-  const tabs = ['active', 'accepted', 'rejected', 'all'];
 
   let q = (supabase.from as any)('offers')
     .select('id, offered_price, counter_price, status, message, farmer_note, created_at, listing_id, listing:listings(id, crop_type, quantity_kg, asking_price, district, farmer_id)')
-    .eq('buyer_id', user.id)
+    .eq('buyer_id', userId)
     .order('created_at', { ascending: false });
 
   if (tab === 'active') q = q.in('status', ['pending', 'countered']);
@@ -65,14 +57,7 @@ export default async function BuyerOffersPage({
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-5">
-      <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          My Offers
-        </h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Track your negotiations with farmers</p>
-      </div>
-
+    <div className="space-y-5">
       {/* Quick stats */}
       <div className="grid grid-cols-2 gap-4">
         <div style={{ background: 'var(--color-harvest-bg)', borderRadius: 12, padding: '14px 16px' }}>
@@ -83,24 +68,6 @@ export default async function BuyerOffersPage({
           <p className="text-2xl font-black" style={{ color: 'var(--color-success)', letterSpacing: '-0.03em' }}>{stats.accepted}</p>
           <p className="text-xs font-semibold mt-0.5" style={{ color: 'var(--color-success)' }}>Accepted Deals</p>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        {tabs.map(t => (
-          <a
-            key={t}
-            href={`/buyer/offers?tab=${t}`}
-            style={{
-              padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600,
-              textDecoration: 'none', textTransform: 'capitalize',
-              background: tab === t ? C.green : 'var(--color-surface-2)',
-              color: tab === t ? '#fff' : C.muted,
-            }}
-          >
-            {t}
-          </a>
-        ))}
       </div>
 
       {/* Offers list */}
@@ -181,6 +148,66 @@ export default async function BuyerOffersPage({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function OffersSkeleton() {
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="dash-skeleton h-[70px] rounded-xl" />
+        <div className="dash-skeleton h-[70px] rounded-xl" />
+      </div>
+      <div className="space-y-3">
+        {[1, 2, 3].map(i => <div key={i} className="dash-skeleton h-24 rounded-xl" />)}
+      </div>
+    </div>
+  );
+}
+
+export default async function BuyerOffersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
+
+  const { tab = 'active' } = await searchParams;
+  const tabs = ['active', 'accepted', 'rejected', 'all'];
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-5">
+      <div>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          My Offers
+        </h1>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>Track your negotiations with farmers</p>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        {tabs.map(t => (
+          <a
+            key={t}
+            href={`/buyer/offers?tab=${t}`}
+            style={{
+              padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+              textDecoration: 'none', textTransform: 'capitalize',
+              background: tab === t ? C.green : 'var(--color-surface-2)',
+              color: tab === t ? '#fff' : C.muted,
+            }}
+          >
+            {t}
+          </a>
+        ))}
+      </div>
+
+      <Suspense key={tab} fallback={<OffersSkeleton />}>
+        <OffersContent tab={tab} userId={user.id} />
+      </Suspense>
     </div>
   );
 }

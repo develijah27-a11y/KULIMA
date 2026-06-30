@@ -1,16 +1,52 @@
 export default function AdminDashboardLoading() {
   return (
-    <div className="min-h-screen" style={{ background: 'var(--color-soil)' }}>
-      <div className="skeleton h-16" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }} />
-      <div className="max-w-5xl mx-auto px-6 py-6 space-y-5">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="skeleton h-28 rounded-2xl" />)}
+    <div className="space-y-5 max-w-6xl mx-auto">
+
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
+          <div className="dash-skeleton h-6 w-64 rounded-lg" />
+          <div className="dash-skeleton h-4 w-48 rounded-lg" />
         </div>
-        <div className="grid sm:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => <div key={i} className="skeleton h-24 rounded-2xl" />)}
-        </div>
-        <div className="skeleton h-48 rounded-2xl" />
+        <div className="dash-skeleton h-4 w-44 rounded-lg" />
       </div>
+
+      {/* Alert banner (conditional) */}
+
+      {/* KPIs (6) */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="dash-skeleton h-24 rounded-xl" />)}
+      </div>
+
+      {/* Admin tools */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {[1, 2, 3, 4, 5, 6, 7].map(i => <div key={i} className="dash-skeleton h-16 rounded-xl" />)}
+      </div>
+
+      {/* Growth + Role Breakdown (2-col) */}
+      <div className="grid lg:grid-cols-2 gap-5">
+        <div className="dash-skeleton h-48 rounded-xl" />
+        <div className="dash-skeleton h-48 rounded-xl" />
+      </div>
+
+      {/* Recent registrations + Pending actions (3:1 split) */}
+      <div className="grid lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2 dash-skeleton h-80 rounded-xl" />
+        <div className="dash-skeleton h-80 rounded-xl" />
+      </div>
+
+      {/* Marketplace + Districts (3:2 split) */}
+      <div className="grid lg:grid-cols-5 gap-5">
+        <div className="lg:col-span-3 dash-skeleton h-72 rounded-xl" />
+        <div className="lg:col-span-2 dash-skeleton h-72 rounded-xl" />
+      </div>
+
+      {/* Market prices + System health */}
+      <div className="grid lg:grid-cols-2 gap-5">
+        <div className="dash-skeleton h-56 rounded-xl" />
+        <div className="dash-skeleton h-56 rounded-xl" />
+      </div>
+
     </div>
   );
 }
