@@ -63,3 +63,15 @@ export function getCropGradient(cropKey: string) {
   const key = cropKey.toLowerCase().replace(/\s+/g, '_');
   return CROP_GRADIENTS[key] ?? { from: '#1B4332', to: '#40916C', emoji: '🌱' };
 }
+
+const CROP_COLOR_ALIASES: Record<string, string> = {
+  tomatoes:       '#EF4444',
+  bananas:        '#CA8A04',
+  sweet_potatoes: '#F97316',
+};
+
+export function getCropColor(cropKey?: string | null): string {
+  if (!cropKey) return 'var(--color-primary)';
+  const key = cropKey.toLowerCase().replace(/\s+/g, '_');
+  return CROP_GRADIENTS[key]?.to ?? CROP_COLOR_ALIASES[key] ?? 'var(--color-primary)';
+}

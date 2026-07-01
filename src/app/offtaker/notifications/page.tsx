@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { Bell } from 'lucide-react';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -35,7 +36,7 @@ export default async function OfftakerNotificationsPage() {
       </div>
       {notifications.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.shadow }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>🔔</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Bell size={48} style={{ color: C.muted }} /></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>All clear</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>No notifications right now.</p>
         </div>

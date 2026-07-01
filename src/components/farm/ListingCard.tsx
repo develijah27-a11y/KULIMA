@@ -1,23 +1,12 @@
 'use client';
 
+import { Leaf } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { PriceTag } from '@/components/ui/PriceTag';
+import { getCropColor } from '@/lib/crop-photos';
 import type { Listing, Offer, Farmer } from '@/types/domain';
-
-const cropEmojis: Record<string, string> = {
-  maize: '🌽',
-  beans: '🥜',
-  tomatoes: '🍅',
-  cassava: '🍠',
-  rice: '🍚',
-  coffee: '☕',
-  groundnuts: '🥜',
-  sweet_potatoes: '🍠',
-  bananas: '🍌',
-  sunflower: '🌻',
-};
 
 export function ListingCard({
   listing,
@@ -28,8 +17,6 @@ export function ListingCard({
   onViewOffers?: () => void;
   isFarmer?: boolean;
 }) {
-  const emoji = cropEmojis[listing.cropType] ?? '🌾';
-
   const statusVariant: Record<string, 'green' | 'gold' | 'neutral'> = {
     active: 'green',
     pending_sync: 'gold',
@@ -48,7 +35,7 @@ export function ListingCard({
     <Card key={listing.id} variant="elevated">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="text-2xl">{emoji}</span>
+          <Leaf size={20} style={{ color: getCropColor(listing.cropType), flexShrink: 0 }} />
           <div>
             <p className="text-sm font-semibold text-cream capitalize">{listing.cropType}</p>
             {listing.farmerName && (

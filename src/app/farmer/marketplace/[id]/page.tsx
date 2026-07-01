@@ -3,17 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { OfferManager } from './OfferManager';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
+import { Leaf } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', cardShadow: 'var(--d-shadow-card)',
   green: 'var(--color-primary)', greenBg: 'var(--color-primary-bg)', greenMed: 'var(--color-primary-hover)',
   amber: 'var(--color-harvest)', amberBg: 'var(--color-harvest-bg)',
-};
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
 };
 
 type Params = { params: Promise<{ id: string }> };
@@ -55,7 +52,6 @@ export default async function FarmerListingDetailPage({ params }: Params) {
 
   const enrichedOffers = offers.map((o: any) => ({ ...o, buyer_name: buyerNames[o.buyer_id] ?? 'Buyer' }));
   const pendingCount   = offers.filter((o: any) => ['pending','countered'].includes(o.status)).length;
-  const emoji          = CROP_EMOJI[listing.crop_type?.toLowerCase()] ?? '🌾';
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -67,8 +63,8 @@ export default async function FarmerListingDetailPage({ params }: Params) {
       {/* Listing summary card */}
       <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: '20px 22px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 14, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
-            {emoji}
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Leaf size={26} style={{ color: getCropColor(listing.crop_type) }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>

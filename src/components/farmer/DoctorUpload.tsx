@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Leaf } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -52,7 +53,7 @@ export function DoctorUploadClient() {
           <img src={preview} alt="Crop preview" className="max-h-48 mx-auto rounded-xl" />
         ) : (
           <div className="py-8">
-            <span className="text-4xl block mb-2">🌿</span>
+            <Leaf size={40} style={{ display: 'block', margin: '0 auto 8px', color: 'var(--color-primary)' }} />
             <p className="text-sm text-cream/50">Tap to upload a crop photo</p>
             <p className="text-[11px] text-cream/25 mt-1">JPG, PNG, WEBP — max 10MB</p>
           </div>

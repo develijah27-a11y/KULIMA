@@ -2,6 +2,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Leaf, ShieldCheck, Package } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -9,11 +11,6 @@ const C = {
   green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)', greenMed: 'var(--color-primary-hover)', amber: 'var(--color-harvest)',
 };
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
-};
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
   active:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Active' },
   sold:    { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Sold' },
@@ -54,7 +51,7 @@ async function MyListings({ profileId, filter }: { profileId: string; filter: st
   if (rows.length === 0) {
     return (
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 48, marginBottom: 12 }}>📦</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Package size={48} style={{ color: C.muted }} /></div>
         <p style={{ color: C.text, fontWeight: 700, fontSize: 16 }}>No listings yet</p>
         <p style={{ color: C.muted, fontSize: 14, margin: '4px 0 20px' }}>Post your first produce to start receiving offers from buyers.</p>
         <Link
@@ -72,7 +69,6 @@ async function MyListings({ profileId, filter }: { profileId: string; filter: st
       {rows.map((l: any) => {
         const st = STATUS_CFG[l.status] ?? STATUS_CFG.active;
         const pendingOffers = offerMap[l.id] ?? 0;
-        const emoji = CROP_EMOJI[l.crop_type?.toLowerCase()] ?? '🌾';
         return (
           <Link
             key={l.id}
@@ -82,10 +78,10 @@ async function MyListings({ profileId, filter }: { profileId: string; filter: st
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0"
+                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: 'var(--color-primary-bg)' }}
                 >
-                  {emoji}
+                  <Leaf size={20} style={{ color: getCropColor(l.crop_type) }} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -191,7 +187,7 @@ export default async function FarmerMarketplacePage({
 
       {/* Price protection notice */}
       <div style={{ background: 'var(--color-primary-bg)', border: '1px solid var(--color-primary-muted)', borderRadius: 12, padding: '10px 16px', display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span>🛡</span>
+        <ShieldCheck size={16} style={{ color: '#065F46', flexShrink: 0 }} />
         <p style={{ fontSize: 12, color: '#065F46', margin: 0 }}>
           Kulima alerts you if any offer is more than 30% below your asking price.
         </p>

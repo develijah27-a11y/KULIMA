@@ -1,6 +1,7 @@
 'use client';
 
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
+import { Truck, Banknote, Bell, Snowflake, Inbox, Map, CheckCircle2, LogOut } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -11,24 +12,24 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Driver Profile', desc: 'Update your name, photo and contact details', icon: '🚚', href: '/farmer/profile' },
-      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and withdraw earnings', icon: '💰', href: '/transporter/wallet' },
-      { label: 'Notifications', desc: 'Job alerts, payment notifications and updates', icon: '🔔', href: '/transporter/notifications' },
+      { label: 'Driver Profile', desc: 'Update your name, photo and contact details', icon: <Truck size={20} />, href: '/farmer/profile' },
+      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and withdraw earnings', icon: <Banknote size={20} />, href: '/transporter/wallet' },
+      { label: 'Notifications', desc: 'Job alerts, payment notifications and updates', icon: <Bell size={20} />, href: '/transporter/notifications' },
     ],
   },
   {
     title: 'Vehicle & Fleet',
     items: [
-      { label: 'My Vehicle', desc: 'Update truck type, plate, capacity and cold chain status', icon: '🚛', href: '/transporter/vehicle' },
-      { label: 'Cold Chain Logs', desc: 'Temperature compliance records for perishable loads', icon: '❄️', href: '/transporter/cold-chain' },
+      { label: 'My Vehicle', desc: 'Update truck type, plate, capacity and cold chain status', icon: <Truck size={20} />, href: '/transporter/vehicle' },
+      { label: 'Cold Chain Logs', desc: 'Temperature compliance records for perishable loads', icon: <Snowflake size={20} />, href: '/transporter/cold-chain' },
     ],
   },
   {
     title: 'Jobs',
     items: [
-      { label: 'Job Queue', desc: 'Browse and filter open delivery requests', icon: '📬', href: '/transporter/job-queue' },
-      { label: 'Active Jobs', desc: 'Manage current assignments and update status', icon: '🗺️', href: '/transporter/active' },
-      { label: 'Completed Deliveries', desc: 'View your full delivery history', icon: '✅', href: '/transporter/deliveries' },
+      { label: 'Job Queue', desc: 'Browse and filter open delivery requests', icon: <Inbox size={20} />, href: '/transporter/job-queue' },
+      { label: 'Active Jobs', desc: 'Manage current assignments and update status', icon: <Map size={20} />, href: '/transporter/active' },
+      { label: 'Completed Deliveries', desc: 'View your full delivery history', icon: <CheckCircle2 size={20} />, href: '/transporter/deliveries' },
     ],
   },
 ];
@@ -43,7 +44,9 @@ function SignOutInline() {
       onClick={handleSignOut}
       style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', width: '100%', textAlign: 'left', background: 'var(--d-card)', border: 'none', cursor: 'pointer' }}
     >
-      <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>🚪</span>
+      <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LogOut size={20} style={{ color: 'var(--color-danger)' }} />
+      </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
         <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
@@ -67,7 +70,7 @@ export default function TransporterSettingsPage() {
           <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
             {section.items.map((item, i) => (
               <a key={item.label} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', borderBottom: i < section.items.length - 1 ? `1px solid ${C.border}` : 'none', background: C.cardBg }}>
-                <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 1 }}>{item.label}</p>
                   <p style={{ fontSize: 12, color: C.muted }}>{item.desc}</p>

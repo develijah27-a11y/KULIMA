@@ -1,13 +1,14 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Leaf } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
-const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾', sorghum: '🌾', groundnuts: '🥜', cotton: '🌾' };
 
 export default async function GroupListingsPage() {
   const supabase = await createClient();
@@ -28,7 +29,7 @@ export default async function GroupListingsPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Group Listings 🌾</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Group Listings</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>{active.length} active · {rows.length} total</p>
         </div>
         <Link href="/groups/listings/create" style={{ padding: '8px 16px', background: C.greenMed, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -38,7 +39,7 @@ export default async function GroupListingsPage() {
 
       {rows.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>🌾</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Leaf size={40} style={{ color: C.muted }} /></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No group listings yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Pool your members' produce into consolidated listings to attract better-paying buyers.</p>
           <Link href="/groups/listings/create" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', background: C.greenMed, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -53,8 +54,8 @@ export default async function GroupListingsPage() {
               <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
                 {active.map((l: any, i: number) => (
                   <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: i < active.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                    <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-                      {CROP_EMOJI[l.crop_type?.toLowerCase()] ?? '🌾'}
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Leaf size={20} style={{ color: getCropColor(l.crop_type) }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px', textTransform: 'capitalize' }}>{l.crop_type}</p>

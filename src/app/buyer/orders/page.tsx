@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { Leaf, ClipboardList, CheckCircle2, Truck, Package, Star, X, AlertTriangle, FileText } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -13,11 +15,6 @@ const C = {
   purple: '#7C3AED', purpleBg: '#EDE9FE',
 };
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
-};
 
 type Order = {
   id: string;
@@ -43,12 +40,12 @@ type Order = {
 };
 
 const STEPS = [
-  { key: 'pending',    label: 'Placed',     icon: '📋' },
-  { key: 'confirmed',  label: 'Confirmed',  icon: '✅' },
-  { key: 'dispatched', label: 'Driver',     icon: '🚛' },
-  { key: 'in_transit', label: 'On the way', icon: '🚚' },
-  { key: 'delivered',  label: 'Delivered',  icon: '📦' },
-  { key: 'completed',  label: 'Done',       icon: '⭐' },
+  { key: 'pending',    label: 'Placed',     icon: <ClipboardList size={11} /> },
+  { key: 'confirmed',  label: 'Confirmed',  icon: <CheckCircle2 size={11} /> },
+  { key: 'dispatched', label: 'Driver',     icon: <Truck size={11} /> },
+  { key: 'in_transit', label: 'On the way', icon: <Truck size={11} /> },
+  { key: 'delivered',  label: 'Delivered',  icon: <Package size={11} /> },
+  { key: 'completed',  label: 'Done',       icon: <Star size={11} /> },
 ];
 
 const STEP_IDX: Record<string, number> = {
@@ -88,7 +85,7 @@ function Pipeline({ status }: { status: string }) {
   const cur = STEP_IDX[status] ?? 0;
   if (status === 'cancelled') return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 0' }}>
-      <span style={{ fontSize: 14, color: C.red }}>❌</span>
+      <X size={14} style={{ color: C.red, flexShrink: 0 }} />
       <span style={{ fontSize: 12, color: C.red, fontWeight: 600 }}>Order Cancelled</span>
     </div>
   );
@@ -110,7 +107,7 @@ function Pipeline({ status }: { status: string }) {
                 transition: 'all 0.3s',
               }}>
                 {done ? <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>✓</span>
-                      : <span style={{ fontSize: 11 }}>{s.icon}</span>}
+                      : <span style={{ display: 'flex', color: done ? '#fff' : 'var(--color-text-muted)' }}>{s.icon}</span>}
               </div>
               <span style={{ fontSize: 9, color: active ? C.green : done ? C.greenMed : C.muted, fontWeight: active || done ? 700 : 400, whiteSpace: 'nowrap' }}>
                 {s.label}
@@ -134,7 +131,10 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
       background: ok ? '#065F46' : '#991B1B', color: '#fff',
       borderRadius: 14, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
     }}>
-      <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{ok ? '✅ ' : '❌ '}{msg}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
+        {ok ? <CheckCircle2 size={16} /> : <X size={16} />}
+        {msg}
+      </div>
     </div>
   );
 }
@@ -142,7 +142,6 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
 function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) {
   const [pending, startT] = useTransition();
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
-  const emoji = CROP_EMOJI[order.crop_type?.toLowerCase()] ?? '🌿';
   const farmer = order.farmer;
 
   function showToast(msg: string, ok: boolean) {
@@ -203,8 +202,8 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
       {/* Header */}
       <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-          <div style={{ width: 46, height: 46, borderRadius: 14, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
-            {emoji}
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Leaf size={22} style={{ color: getCropColor(order.crop_type) }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
@@ -274,7 +273,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
               color: C.green, fontSize: 13, fontWeight: 700, textDecoration: 'none',
             }}
           >
-            🧾 Download Receipt / Invoice
+            <FileText size={14} style={{ flexShrink: 0 }} /> Download Receipt / Invoice
           </Link>
         </div>
       )}
@@ -292,7 +291,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
                 fontSize: 13, fontWeight: 700, cursor: pending ? 'wait' : 'pointer',
               }}
             >
-              {pending ? '⏳ Confirming…' : '✅ Confirm Receipt — Release Payment'}
+              {pending ? 'Confirming…' : 'Confirm Receipt — Release Payment'}
             </button>
           )}
           {canDispute && (
@@ -305,7 +304,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
                 cursor: pending ? 'wait' : 'pointer',
               }}
             >
-              {pending ? '⏳…' : '⚠️ There is a problem — Raise Dispute'}
+              {pending ? '…' : 'There is a problem — Raise Dispute'}
             </button>
           )}
           {canCancel && (
@@ -425,7 +424,7 @@ export default function BuyerOrdersPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: '52px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>📦</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Package size={48} style={{ color: C.muted }} /></div>
           <p style={{ fontWeight: 800, fontSize: 16, color: C.text }}>
             {orders.length === 0 ? 'No orders yet' : 'No orders in this category'}
           </p>

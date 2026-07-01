@@ -2,6 +2,8 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { FarmMapLoader } from './FarmMapLoader';
+import { Leaf, HardHat } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -9,10 +11,6 @@ const C = {
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-};
 
 export default async function FarmerFarmPage() {
   const supabase = await createClient();
@@ -43,9 +41,9 @@ export default async function FarmerFarmPage() {
         <div style={{ display: 'flex', gap: 8 }}>
           <Link
             href="/farmer/farm/workers"
-            style={{ padding: '9px 18px', background: 'var(--color-primary-bg)', border: '1.5px solid var(--color-primary-muted)', color: C.greenMed, borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+            style={{ padding: '9px 18px', background: 'var(--color-primary-bg)', border: '1.5px solid var(--color-primary-muted)', color: C.greenMed, borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            👷 Workers
+            <HardHat size={14} /> Workers
           </Link>
           <Link
             href="/farmer/farm/new"
@@ -92,7 +90,7 @@ export default async function FarmerFarmPage() {
       {/* Farm list */}
       {farmList.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>🌱</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Leaf size={48} style={{ color: C.green }} /></div>
           <p style={{ color: C.text, fontWeight: 700, fontSize: 16 }}>No farms registered yet</p>
           <p style={{ color: C.muted, fontSize: 14, marginTop: 4, marginBottom: 20 }}>
             Add your first farm to track boundaries, manage crops, and access market pricing.
@@ -111,8 +109,8 @@ export default async function FarmerFarmPage() {
               const crops = (farm.crop_types ?? []) as string[];
               return (
                 <div key={farm.id} style={{ padding: '16px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
-                    🌿
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Leaf size={22} style={{ color: C.green }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
@@ -135,7 +133,7 @@ export default async function FarmerFarmPage() {
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                         {crops.slice(0, 4).map((c: string) => (
                           <span key={c} style={{ fontSize: 10, padding: '2px 8px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, fontWeight: 600 }}>
-                            {CROP_EMOJI[c] ?? '🌾'} {c.replace(/_/g, ' ')}
+                            {c.replace(/_/g, ' ')}
                           </span>
                         ))}
                       </div>

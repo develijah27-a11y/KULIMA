@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Leaf } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -8,7 +10,6 @@ const C = {
   amber: 'var(--color-harvest)',
 };
 
-const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾', cotton: '🌾', vanilla: '🌿', cocoa: '🍫' };
 const CROP_COLOR: Record<string, string> = { maize: 'var(--color-harvest)', coffee: '#7C3AED', beans: 'var(--color-danger)', rice: 'var(--color-sky)', banana: 'var(--color-harvest)', cassava: 'var(--color-success)', tomato: 'var(--color-danger)' };
 
 export default async function SupplyPipelinePage() {
@@ -38,7 +39,7 @@ export default async function SupplyPipelinePage() {
     <div className="max-w-4xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Supply Pipeline 🔍</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Supply Pipeline</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>{rows.length} active listings available for contracting</p>
         </div>
         <Link href="/offtaker/pipeline/new" style={{ padding: '8px 16px', background: C.blue, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -52,7 +53,7 @@ export default async function SupplyPipelinePage() {
           const color = CROP_COLOR[crop] ?? C.greenMed;
           return (
             <div key={crop} style={{ flexShrink: 0, background: C.cardBg, borderRadius: 12, boxShadow: C.cardShadow, padding: '12px 16px', minWidth: 120 }}>
-              <div style={{ fontSize: 20, marginBottom: 4 }}>{CROP_EMOJI[crop] ?? '🌾'}</div>
+              <div style={{ marginBottom: 4 }}><Leaf size={20} style={{ color: getCropColor(crop) }} /></div>
               <p style={{ fontSize: 12, fontWeight: 800, color, margin: '0 0 2px', textTransform: 'capitalize' }}>{crop}</p>
               <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{data.count} farms · {(data.totalQty / 1000).toFixed(1)}t</p>
             </div>
@@ -63,7 +64,7 @@ export default async function SupplyPipelinePage() {
       {/* Listings */}
       {rows.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>🌾</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Leaf size={40} style={{ color: C.muted }} /></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No active listings</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Check back soon — farmers are adding new produce listings daily.</p>
         </div>
@@ -77,8 +78,8 @@ export default async function SupplyPipelinePage() {
             const color = CROP_COLOR[k] ?? C.greenMed;
             return (
               <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                <div style={{ width: 42, height: 42, borderRadius: 12, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-                  {CROP_EMOJI[k] ?? '🌾'}
+                <div style={{ width: 42, height: 42, borderRadius: 12, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Leaf size={20} style={{ color: getCropColor(l.crop_type) }} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px', textTransform: 'capitalize' }}>{l.crop_type}</p>

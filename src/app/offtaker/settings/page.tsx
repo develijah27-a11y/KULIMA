@@ -1,6 +1,7 @@
 'use client';
 
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
+import { Building2, CreditCard, Bell, FileText, Leaf, Star, BarChart3, ShieldCheck, AlertTriangle, LogOut } from 'lucide-react';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -8,25 +9,25 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Company Profile', desc: 'Update your name, phone, and contact details', icon: '🏢', href: '/farmer/profile' },
-      { label: 'Wallet & Payments', desc: 'Manage your balance and payment history', icon: '💳', href: '/offtaker/wallet' },
-      { label: 'Notifications', desc: 'Contract alerts and delivery updates', icon: '🔔', href: '/offtaker/notifications' },
+      { label: 'Company Profile', desc: 'Update your name, phone, and contact details', icon: <Building2 size={20} />, href: '/farmer/profile' },
+      { label: 'Wallet & Payments', desc: 'Manage your balance and payment history', icon: <CreditCard size={20} />, href: '/offtaker/wallet' },
+      { label: 'Notifications', desc: 'Contract alerts and delivery updates', icon: <Bell size={20} />, href: '/offtaker/notifications' },
     ],
   },
   {
     title: 'Procurement',
     items: [
-      { label: 'My Contracts', desc: 'View and manage forward purchase agreements', icon: '📄', href: '/offtaker/contracts' },
-      { label: 'Supply Pipeline', desc: 'Track committed volumes from farmers', icon: '🌾', href: '/offtaker/pipeline' },
-      { label: 'Supplier Scorecard', desc: 'Rate and review your farmer suppliers', icon: '⭐', href: '/offtaker/scorecard' },
+      { label: 'My Contracts', desc: 'View and manage forward purchase agreements', icon: <FileText size={20} />, href: '/offtaker/contracts' },
+      { label: 'Supply Pipeline', desc: 'Track committed volumes from farmers', icon: <Leaf size={20} />, href: '/offtaker/pipeline' },
+      { label: 'Supplier Scorecard', desc: 'Rate and review your farmer suppliers', icon: <Star size={20} />, href: '/offtaker/scorecard' },
     ],
   },
   {
     title: 'Analytics',
     items: [
-      { label: 'Spend Analytics', desc: 'Breakdown of spend by crop and time period', icon: '📊', href: '/offtaker/spend' },
-      { label: 'Quality & Compliance', desc: 'Fulfilment rates and quality standards tracking', icon: '✅', href: '/offtaker/quality' },
-      { label: 'Risk Alerts', desc: 'Supply risk flags and early warnings', icon: '⚠️', href: '/offtaker/risk' },
+      { label: 'Spend Analytics', desc: 'Breakdown of spend by crop and time period', icon: <BarChart3 size={20} />, href: '/offtaker/spend' },
+      { label: 'Quality & Compliance', desc: 'Fulfilment rates and quality standards tracking', icon: <ShieldCheck size={20} />, href: '/offtaker/quality' },
+      { label: 'Risk Alerts', desc: 'Supply risk flags and early warnings', icon: <AlertTriangle size={20} />, href: '/offtaker/risk' },
     ],
   },
 ];
@@ -38,7 +39,9 @@ function SignOutInline() {
   }
   return (
     <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', width: '100%', textAlign: 'left', background: 'var(--d-card)', border: 'none', cursor: 'pointer' }}>
-      <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>🚪</span>
+      <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LogOut size={20} style={{ color: 'var(--color-danger)' }} />
+      </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
         <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
@@ -62,7 +65,7 @@ export default function OfftakerSettingsPage() {
           <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
             {section.items.map((item, i) => (
               <a key={item.label} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', borderBottom: i < section.items.length - 1 ? `1px solid ${C.border}` : 'none', background: C.cardBg }}>
-                <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 1 }}>{item.label}</p>
                   <p style={{ fontSize: 12, color: C.muted }}>{item.desc}</p>

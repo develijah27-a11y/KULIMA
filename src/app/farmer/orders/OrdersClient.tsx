@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
+import { Leaf, CheckCircle2, X, AlertTriangle, ShoppingCart, Truck, Package, Banknote } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -13,11 +15,6 @@ const C = {
   purple: '#7C3AED', purpleBg: '#EDE9FE',
 };
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
-};
 
 type Order = {
   id: string;
@@ -46,9 +43,9 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> =
   dispatched: { label: 'Driver Sent',  color: C.purple, bg: C.purpleBg },
   in_transit: { label: 'On the Way',   color: C.green,  bg: C.greenBg  },
   delivered:  { label: 'Delivered',    color: C.green,  bg: C.greenBg  },
-  completed:  { label: 'Paid ✓',       color: C.green,  bg: C.greenBg  },
+  completed:  { label: 'Paid',         color: C.green,  bg: C.greenBg  },
   cancelled:  { label: 'Cancelled',    color: C.red,    bg: C.redBg    },
-  disputed:   { label: 'Disputed ⚠️',  color: C.red,    bg: C.redBg    },
+  disputed:   { label: 'Disputed',     color: C.red,    bg: C.redBg    },
 };
 
 const TABS = [
@@ -67,7 +64,10 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
       zIndex: 1000, minWidth: 260, background: ok ? '#065F46' : '#991B1B',
       color: '#fff', borderRadius: 14, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
     }}>
-      <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{ok ? '✅ ' : '❌ '}{msg}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {ok ? <CheckCircle2 size={16} /> : <X size={16} />}
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{msg}</p>
+      </div>
     </div>
   );
 }
@@ -79,7 +79,6 @@ function OrderCard({ order, onAction }: { order: Order; onAction: (id: string, n
   const [toast, setToast]       = useState<{ msg: string; ok: boolean } | null>(null);
 
   const cfg    = STATUS_CFG[order.status] ?? STATUS_CFG.pending;
-  const emoji  = CROP_EMOJI[order.crop_type?.toLowerCase()] ?? '🌿';
   const buyer  = order.buyer;
 
   function showToast(msg: string, ok: boolean) {
@@ -118,8 +117,8 @@ function OrderCard({ order, onAction }: { order: Order; onAction: (id: string, n
       <div style={{ padding: '16px 20px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
           {/* Crop icon */}
-          <div style={{ width: 46, height: 46, borderRadius: 14, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
-            {emoji}
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: C.greenBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Leaf size={22} style={{ color: getCropColor(order.crop_type) }} />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
@@ -187,7 +186,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: (id: string, n
                 onClick={() => { setShowNote(true); }}
                 style={{ flex: 1, padding: '12px', background: C.green, color: '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 14, cursor: 'pointer', boxShadow: '0 2px 12px rgba(34,197,94,0.3)' }}
               >
-                ✅ Confirm Order
+                Confirm Order
               </button>
               <button
                 onClick={() => doAction('cancel')}
@@ -204,7 +203,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: (id: string, n
                 disabled={pending}
                 style={{ flex: 1, padding: '12px', background: pending ? C.greenBg : C.green, color: pending ? C.green : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
               >
-                {pending ? '⏳ Confirming…' : '✅ Confirm & Notify Buyer'}
+                {pending ? 'Confirming…' : 'Confirm & Notify Buyer'}
               </button>
               <button onClick={() => { setShowNote(false); setNote(''); }} style={{ padding: '12px 14px', background: 'var(--color-surface-2)', color: C.muted, border: 'none', borderRadius: 12, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
                 Back
@@ -218,7 +217,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: (id: string, n
       {order.status === 'disputed' && (
         <div style={{ padding: '0 20px 14px' }}>
           <div style={{ padding: '12px 14px', background: C.redBg, borderRadius: 12, border: `1px solid ${C.red}` }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.red, margin: '0 0 4px' }}>⚠️ Order Disputed</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.red, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}><AlertTriangle size={14} /> Order Disputed</p>
             <p style={{ fontSize: 12, color: C.red, margin: 0, opacity: 0.85 }}>
               The buyer has raised a dispute. An admin is reviewing the case and will contact both parties within 24 hours. Funds are held in escrow.
             </p>
@@ -231,14 +230,14 @@ function OrderCard({ order, onAction }: { order: Order; onAction: (id: string, n
         <div style={{ padding: '0 20px 16px' }}>
           <div style={{ display: 'flex', gap: 16, overflowX: 'auto' }}>
             {[
-              { label: 'Confirmed',  ts: order.confirmed_at,  icon: '✅' },
-              { label: 'Dispatched', ts: order.dispatched_at, icon: '🚛' },
-              { label: 'Delivered',  ts: order.delivered_at,  icon: '📦' },
-              { label: 'Paid',       ts: order.completed_at,  icon: '💰' },
+              { label: 'Confirmed',  ts: order.confirmed_at,  icon: <CheckCircle2 size={10} style={{ color: C.muted }} /> },
+              { label: 'Dispatched', ts: order.dispatched_at, icon: <Truck size={10} style={{ color: C.muted }} /> },
+              { label: 'Delivered',  ts: order.delivered_at,  icon: <Package size={10} style={{ color: C.muted }} /> },
+              { label: 'Paid',       ts: order.completed_at,  icon: <Banknote size={10} style={{ color: C.muted }} /> },
             ].map(s => (
               <div key={s.label} style={{ flexShrink: 0 }}>
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.ts ? C.green : 'var(--color-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, margin: '0 auto 4px' }}>
-                  {s.ts ? <span style={{ color: '#fff', fontSize: 9, fontWeight: 700 }}>✓</span> : <span>{s.icon}</span>}
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.ts ? C.green : 'var(--color-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 4px' }}>
+                  {s.ts ? <CheckCircle2 size={12} style={{ color: '#fff' }} /> : s.icon}
                 </div>
                 <p style={{ fontSize: 9, color: s.ts ? C.greenMed : C.muted, textAlign: 'center', margin: 0, fontWeight: s.ts ? 700 : 400 }}>{s.label}</p>
                 {s.ts && <p style={{ fontSize: 8, color: C.muted, textAlign: 'center', margin: '1px 0 0' }}>{new Date(s.ts).toLocaleDateString('en-UG', { day:'numeric', month:'short' })}</p>}
@@ -290,7 +289,7 @@ export function OrdersClient({ orders: initial }: Props) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
         {[
           { label: 'New Orders',   value: newCount,    color: C.amber,  bg: C.amberBg  },
-          { label: disputedCount > 0 ? 'Disputed ⚠️' : 'In Progress', value: disputedCount > 0 ? disputedCount : activeCount, color: disputedCount > 0 ? C.red : C.blue, bg: disputedCount > 0 ? C.redBg : C.blueBg },
+          { label: disputedCount > 0 ? 'Disputed' : 'In Progress', value: disputedCount > 0 ? disputedCount : activeCount, color: disputedCount > 0 ? C.red : C.blue, bg: disputedCount > 0 ? C.redBg : C.blueBg },
           { label: 'Revenue',      value: revenue > 0 ? `UGX ${revenue >= 1e6 ? (revenue/1e6).toFixed(1)+'M' : Math.round(revenue/1000)+'K'}` : '—', color: C.green, bg: C.greenBg },
         ].map(s => (
           <div key={s.label} style={{ background: s.bg, borderRadius: 14, padding: '14px 16px' }}>
@@ -320,7 +319,7 @@ export function OrdersClient({ orders: initial }: Props) {
       {/* List */}
       {filtered.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: '52px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>🛒</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><ShoppingCart size={48} style={{ color: C.muted }} /></div>
           <p style={{ fontWeight: 800, fontSize: 16, color: C.text }}>
             {orders.length === 0 ? 'No orders yet' : 'Nothing here'}
           </p>

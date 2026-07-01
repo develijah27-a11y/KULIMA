@@ -1,6 +1,7 @@
 'use client';
 
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
+import { User, Banknote, Bell, Users, Megaphone, MessageCircle, BarChart3, CalendarDays, LogOut } from 'lucide-react';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -8,24 +9,24 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Leader Profile', desc: 'Update your name, phone, and contact details', icon: '👤', href: '/farmer/profile' },
-      { label: 'Group Wallet', desc: 'Manage group savings and transaction history', icon: '💰', href: '/groups/wallet' },
-      { label: 'Notifications', desc: 'Member alerts and market updates', icon: '🔔', href: '/groups/notifications' },
+      { label: 'Leader Profile', desc: 'Update your name, phone, and contact details', icon: <User size={20} />, href: '/farmer/profile' },
+      { label: 'Group Wallet', desc: 'Manage group savings and transaction history', icon: <Banknote size={20} />, href: '/groups/wallet' },
+      { label: 'Notifications', desc: 'Member alerts and market updates', icon: <Bell size={20} />, href: '/groups/notifications' },
     ],
   },
   {
     title: 'Group Management',
     items: [
-      { label: 'Members', desc: 'View and manage group members', icon: '👥', href: '/groups/members' },
-      { label: 'Announcements', desc: 'Post updates and notices to your group', icon: '📢', href: '/groups/announcements' },
-      { label: 'Group Chat', desc: 'Send messages and updates to members', icon: '💬', href: '/groups/chat' },
+      { label: 'Members', desc: 'View and manage group members', icon: <Users size={20} />, href: '/groups/members' },
+      { label: 'Announcements', desc: 'Post updates and notices to your group', icon: <Megaphone size={20} />, href: '/groups/announcements' },
+      { label: 'Group Chat', desc: 'Send messages and updates to members', icon: <MessageCircle size={20} />, href: '/groups/chat' },
     ],
   },
   {
     title: 'Finance & Planning',
     items: [
-      { label: 'Group Finance', desc: 'Track savings, loans, and contributions', icon: '📊', href: '/groups/finance' },
-      { label: 'Season Planning', desc: 'Coordinate planting and harvest schedules', icon: '📅', href: '/groups/season' },
+      { label: 'Group Finance', desc: 'Track savings, loans, and contributions', icon: <BarChart3 size={20} />, href: '/groups/finance' },
+      { label: 'Season Planning', desc: 'Coordinate planting and harvest schedules', icon: <CalendarDays size={20} />, href: '/groups/season' },
     ],
   },
 ];
@@ -37,7 +38,9 @@ function SignOutInline() {
   }
   return (
     <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', width: '100%', textAlign: 'left', background: 'var(--d-card)', border: 'none', cursor: 'pointer' }}>
-      <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>🚪</span>
+      <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LogOut size={20} style={{ color: 'var(--color-danger)' }} />
+      </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
         <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
@@ -61,7 +64,7 @@ export default function GroupsSettingsPage() {
           <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
             {section.items.map((item, i) => (
               <a key={item.label} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', borderBottom: i < section.items.length - 1 ? `1px solid ${C.border}` : 'none', background: C.cardBg }}>
-                <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 1 }}>{item.label}</p>
                   <p style={{ fontSize: 12, color: C.muted }}>{item.desc}</p>

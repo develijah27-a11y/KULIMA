@@ -2,6 +2,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Leaf, MessageSquare } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -17,10 +19,6 @@ const STATUS_CFG = {
   completed: { color: '#7C3AED',              bg: '#EDE9FE',                 label: 'Completed' },
 } as const;
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-};
 
 function timeAgo(iso: string) {
   const d = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -73,7 +71,7 @@ async function OffersContent({ tab, userId }: { tab: string; userId: string }) {
       {/* Offers list */}
       {rows.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 10 }}>💬</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><MessageSquare size={40} style={{ color: C.muted }} /></div>
           <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>No offers here</p>
           <Link href="/buyer/listings" style={{ display: 'inline-block', marginTop: 12, color: C.greenMed, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
             Browse listings →
@@ -85,13 +83,12 @@ async function OffersContent({ tab, userId }: { tab: string; userId: string }) {
             {rows.map((offer: any) => {
               const listing = offer.listing ?? {};
               const st = STATUS_CFG[offer.status as keyof typeof STATUS_CFG] ?? STATUS_CFG.pending;
-              const emoji = CROP_EMOJI[listing.crop_type?.toLowerCase()] ?? '🌾';
               const farmerName = farmerMap[listing.farmer_id] ?? 'Farmer';
 
               return (
                 <div key={offer.id} style={{ padding: '16px 20px' }}>
                   <div className="flex items-start gap-3">
-                    <span style={{ fontSize: 28, flexShrink: 0 }}>{emoji}</span>
+                    <Leaf size={24} style={{ color: getCropColor(listing.crop_type), flexShrink: 0, marginTop: 2 }} />
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <p className="text-sm font-bold capitalize" style={{ color: C.text }}>{listing.crop_type ?? '—'}</p>

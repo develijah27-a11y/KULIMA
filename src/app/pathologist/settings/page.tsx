@@ -1,6 +1,7 @@
 'use client';
 
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
+import { Stethoscope, Banknote, Bell, Microscope, ClipboardList, AlertOctagon, Map, LogOut } from 'lucide-react';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -8,23 +9,23 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Professional Profile', desc: 'Update your name, credentials, and specialisation', icon: '🩺', href: '/farmer/profile' },
-      { label: 'Wallet & Earnings', desc: 'Manage consultation payments and withdrawals', icon: '💰', href: '/pathologist/wallet' },
-      { label: 'Notifications', desc: 'Case alerts and outbreak warnings', icon: '🔔', href: '/pathologist/notifications' },
+      { label: 'Professional Profile', desc: 'Update your name, credentials, and specialisation', icon: <Stethoscope size={20} />, href: '/farmer/profile' },
+      { label: 'Wallet & Earnings', desc: 'Manage consultation payments and withdrawals', icon: <Banknote size={20} />, href: '/pathologist/wallet' },
+      { label: 'Notifications', desc: 'Case alerts and outbreak warnings', icon: <Bell size={20} />, href: '/pathologist/notifications' },
     ],
   },
   {
     title: 'Cases',
     items: [
-      { label: 'My Cases', desc: 'View and manage your assigned diagnoses', icon: '🔬', href: '/pathologist/my-cases' },
-      { label: 'Case Queue', desc: 'Browse unassigned disease reports needing review', icon: '📋', href: '/pathologist/case-queue' },
-      { label: 'Disease Alerts', desc: 'Active outbreak warnings across all districts', icon: '🚨', href: '/pathologist/disease-alerts' },
+      { label: 'My Cases', desc: 'View and manage your assigned diagnoses', icon: <Microscope size={20} />, href: '/pathologist/my-cases' },
+      { label: 'Case Queue', desc: 'Browse unassigned disease reports needing review', icon: <ClipboardList size={20} />, href: '/pathologist/case-queue' },
+      { label: 'Disease Alerts', desc: 'Active outbreak warnings across all districts', icon: <AlertOctagon size={20} />, href: '/pathologist/disease-alerts' },
     ],
   },
   {
     title: 'Intelligence',
     items: [
-      { label: 'Geo Disease Map', desc: 'Geographic distribution of reported outbreaks', icon: '🗺️', href: '/pathologist/geo-map' },
+      { label: 'Geo Disease Map', desc: 'Geographic distribution of reported outbreaks', icon: <Map size={20} />, href: '/pathologist/geo-map' },
     ],
   },
 ];
@@ -36,7 +37,9 @@ function SignOutInline() {
   }
   return (
     <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', width: '100%', textAlign: 'left', background: 'var(--d-card)', border: 'none', cursor: 'pointer' }}>
-      <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>🚪</span>
+      <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LogOut size={20} style={{ color: 'var(--color-danger)' }} />
+      </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
         <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
@@ -60,7 +63,7 @@ export default function PathologistSettingsPage() {
           <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
             {section.items.map((item, i) => (
               <a key={item.label} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', borderBottom: i < section.items.length - 1 ? `1px solid ${C.border}` : 'none', background: C.cardBg }}>
-                <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 1 }}>{item.label}</p>
                   <p style={{ fontSize: 12, color: C.muted }}>{item.desc}</p>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { type VerificationLevel } from '@/lib/trust';
 import { getCropPhotoUrl, getCropGradient } from '@/lib/crop-photos';
+import { Leaf } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -12,11 +13,6 @@ const C = {
 };
 
 const CROPS = ['maize','beans','coffee','rice','banana','cassava','tomato','sorghum','groundnuts','sweet_potatoes','sunflower'];
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
-};
 const CROP_COLOR: Record<string, string> = {
   maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED', rice: 'var(--color-sky)',
   banana: 'var(--color-harvest)', cassava: 'var(--color-success)', tomato: 'var(--color-danger)', sorghum: 'var(--color-harvest)',
@@ -149,7 +145,7 @@ export default async function BuyerListingsPage({
       {/* Listings grid */}
       {listings.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>🌾</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Leaf size={48} style={{ color: C.muted }} /></div>
           <p style={{ color: C.text, fontWeight: 700, fontSize: 16 }}>No listings found</p>
           <p style={{ color: C.muted, fontSize: 14, marginTop: 4 }}>Try adjusting your filters or check back later.</p>
         </div>
@@ -158,7 +154,6 @@ export default async function BuyerListingsPage({
           {listings.map((l: any) => {
             const k        = l.crop_type?.toLowerCase() ?? '';
             const color    = CROP_COLOR[k] ?? C.greenMed;
-            const emoji    = CROP_EMOJI[k] ?? '🌾';
             const market   = priceMap[k];
             const farmer   = l.farmer ?? {};
             const priceDelta = market ? Math.round(((l.asking_price - market) / market) * 100) : null;
@@ -183,7 +178,7 @@ export default async function BuyerListingsPage({
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)' }} />
                   {!photoUrl && (
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontSize: 52, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>{emoji}</span>
+                      <Leaf size={52} style={{ color: 'rgba(255,255,255,0.8)', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
                     </div>
                   )}
                   {/* Quantity badge */}

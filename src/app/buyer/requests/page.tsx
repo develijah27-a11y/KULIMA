@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Leaf, Inbox } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -8,10 +10,6 @@ const C = {
   green: 'var(--color-primary)',
 };
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-};
 
 export default async function BuyerRequestsPage() {
   const supabase = await createClient();
@@ -55,7 +53,7 @@ export default async function BuyerRequestsPage() {
       {/* Active negotiations */}
       {rows.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>📩</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Inbox size={48} style={{ color: C.muted }} /></div>
           <p style={{ fontWeight: 800, fontSize: 16, color: C.text, marginBottom: 6 }}>No active requests</p>
           <p style={{ fontSize: 13, color: C.muted, marginBottom: 20 }}>Browse listings and make an offer — your active negotiations appear here</p>
           <Link href="/buyer/listings" style={{ display: 'inline-block', padding: '11px 22px', background: C.green, color: '#fff', borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
@@ -70,12 +68,11 @@ export default async function BuyerRequestsPage() {
           </div>
           {rows.map((o: any, i: number) => {
             const crop  = o.listing?.crop_type ?? 'Produce';
-            const emoji = CROP_EMOJI[crop.toLowerCase()] ?? '🌿';
             const isCountered = o.status === 'countered';
             return (
               <div key={o.id} style={{ padding: '15px 18px', borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                  {emoji}
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Leaf size={16} style={{ color: getCropColor(o.listing?.crop_type) }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
@@ -99,7 +96,7 @@ export default async function BuyerRequestsPage() {
                   </p>
                   {isCountered && o.farmer_note && (
                     <p style={{ fontSize: 11, color: C.muted, margin: '4px 0 0', padding: '6px 10px', background: 'var(--color-sky-bg)', borderRadius: 8 }}>
-                      💬 {o.farmer_note}
+                      {o.farmer_note}
                     </p>
                   )}
                 </div>
@@ -120,10 +117,9 @@ export default async function BuyerRequestsPage() {
           </div>
           {listings.slice(0, 5).map((l: any, i: number) => {
             const crop  = l.crop_type ?? 'Produce';
-            const emoji = CROP_EMOJI[crop.toLowerCase()] ?? '🌿';
             return (
               <div key={l.id} style={{ padding: '13px 18px', borderBottom: i < 4 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 20, flexShrink: 0 }}>{emoji}</span>
+                <Leaf size={18} style={{ color: getCropColor(l.crop_type), flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: '0 0 1px', textTransform: 'capitalize' }}>{crop}</p>
                   <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{l.quantity_kg} kg · {l.district} · UGX {Number(l.asking_price).toLocaleString()}/kg</p>

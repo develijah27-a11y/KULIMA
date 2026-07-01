@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
+import { Leaf, CheckCircle2, X } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -10,11 +12,6 @@ const C = {
   red: 'var(--color-danger)', redBg: 'var(--color-danger-bg)',
 };
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
-};
 
 type Listing = {
   id: string;
@@ -35,7 +32,10 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
       zIndex: 1000, minWidth: 260, background: ok ? '#065F46' : '#991B1B',
       color: '#fff', borderRadius: 14, padding: '14px 20px',
     }}>
-      <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{ok ? '✅ ' : '❌ '}{msg}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {ok ? <CheckCircle2 size={16} /> : <X size={16} />}
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{msg}</p>
+      </div>
     </div>
   );
 }
@@ -125,7 +125,7 @@ export default function AdminListingsPage() {
         </div>
       ) : listings.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 8 }}>✅</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><CheckCircle2 size={40} style={{ color: C.green }} /></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>
             {tab === 'pending' ? 'No listings awaiting review' : `No ${tab} listings`}
           </p>
@@ -133,10 +133,9 @@ export default function AdminListingsPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {listings.map(l => {
-            const emoji = CROP_EMOJI[l.crop_type?.toLowerCase()] ?? '🌿';
             return (
               <div key={l.id} style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '16px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <div style={{ fontSize: 26, flexShrink: 0, marginTop: 2 }}>{emoji}</div>
+                <Leaf size={24} style={{ color: getCropColor(l.crop_type), flexShrink: 0, marginTop: 2 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                     <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0, textTransform: 'capitalize' }}>{l.crop_type}</p>

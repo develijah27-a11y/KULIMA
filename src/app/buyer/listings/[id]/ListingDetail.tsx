@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { type VerificationLevel } from '@/lib/trust';
 import { FavouriteButton } from '@/components/ui/FavouriteButton';
+import { Leaf, CheckCircle2, X, MapPin } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -38,7 +39,6 @@ interface Props {
   hasActiveOrder: boolean;
   gradient: { from: string; to: string };
   photoUrl: string | null;
-  cropEmoji: string;
   cropColor: string;
 }
 
@@ -53,21 +53,16 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
       boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
       animation: 'fadeInUp 0.25s ease',
     }}>
-      <span style={{ fontSize: 18 }}>{ok ? '✅' : '❌'}</span>
+      {ok ? <CheckCircle2 size={18} /> : <X size={18} />}
       <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{msg}</p>
     </div>
   );
 }
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
-};
 
 export function ListingDetail({
   listing, farmerId, isFavourited, marketPrice, existingOffer, hasActiveOrder,
-  gradient, photoUrl, cropEmoji, cropColor,
+  gradient, photoUrl, cropColor,
 }: Props) {
   const router = useRouter();
   const [qty, setQty] = useState(Math.min(50, listing.quantity_kg));
@@ -144,7 +139,7 @@ export function ListingDetail({
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 55%)' }} />
         {!photoUrl && (
           <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 72, filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.3))' }}>{cropEmoji}</span>
+            <Leaf size={72} style={{ color: 'rgba(255,255,255,0.85)', filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.3))' }} />
           </div>
         )}
         {/* Badge */}
@@ -158,8 +153,8 @@ export function ListingDetail({
           <p style={{ color: '#fff', fontWeight: 900, fontSize: 22, margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.5)', textTransform: 'capitalize', letterSpacing: '-0.02em' }}>
             {listing.crop_type}
           </p>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, margin: '2px 0 0' }}>
-            📍 {listing.district}
+          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 12, margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <MapPin size={11} />{listing.district}
             {listing.quality_grade && ` · Grade ${listing.quality_grade}`}
           </p>
         </div>

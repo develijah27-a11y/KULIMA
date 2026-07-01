@@ -2,21 +2,9 @@ import { redirect, notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { ListingDetail } from './ListingDetail';
-import { getCropPhotoUrl, getCropGradient } from '@/lib/crop-photos';
+import { getCropPhotoUrl, getCropGradient, getCropColor } from '@/lib/crop-photos';
 import { FavouriteButton } from '@/components/ui/FavouriteButton';
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
-};
-const CROP_COLOR: Record<string, string> = {
-  maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED',
-  rice: 'var(--color-sky)', banana: 'var(--color-harvest)', cassava: 'var(--color-primary)',
-  tomato: 'var(--color-danger)', sorghum: 'var(--color-harvest)',
-  groundnuts: 'var(--color-harvest)', sweet_potatoes: 'var(--color-harvest)',
-  sunflower: 'var(--color-harvest)',
-};
 
 export default async function BuyerListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -95,8 +83,7 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
         hasActiveOrder={!!(orderRes as any).data}
         gradient={getCropGradient(k)}
         photoUrl={getCropPhotoUrl(k, 600, 300)}
-        cropEmoji={CROP_EMOJI[k] ?? '🌾'}
-        cropColor={CROP_COLOR[k] ?? 'var(--color-primary)'}
+        cropColor={getCropColor(k)}
       />
     </div>
   );

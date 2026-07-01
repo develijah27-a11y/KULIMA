@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 export default function SupplierError({
   error,
@@ -26,7 +27,7 @@ export default function SupplierError({
         gap: 16,
       }}
     >
-      <p style={{ fontSize: 40 }}>⚠️</p>
+      <AlertTriangle size={40} style={{ color: 'var(--color-danger)' }} />
       <p
         style={{
           fontSize: 16,

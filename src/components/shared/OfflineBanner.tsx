@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { WifiOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function OfflineBanner() {
@@ -42,12 +43,12 @@ export function OfflineBanner() {
     >
       {isOffline ? (
         <>
-          <span>📵</span>
+          <WifiOff size={14} />
           <span>You're offline — changes will sync when reconnected</span>
         </>
       ) : (
         <>
-          <span className="animate-spin inline-block">⟳</span>
+          <Loader2 size={14} className="animate-spin" />
           <span>Back online — syncing…</span>
         </>
       )}

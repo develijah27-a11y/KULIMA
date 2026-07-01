@@ -1,10 +1,12 @@
 ﻿'use client';
 
+import { Leaf } from 'lucide-react';
+
 export default function GlobalError({ reset }: { error?: Error & { digest?: string }; reset: () => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', fontFamily: 'DM Sans, sans-serif' }}>
       <div style={{ textAlign: 'center', padding: 24 }}>
-        <p style={{ fontSize: 48 }}>🌿</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 0 }}><Leaf size={48} style={{ color: 'var(--color-primary)' }} /></div>
         <h1 style={{ fontWeight: 800, fontSize: 22, margin: '12px 0 6px', color: 'var(--d-text)' }}>Something went wrong</h1>
         <p style={{ fontSize: 14, opacity: 0.6, marginBottom: 20, color: 'var(--d-text)' }}>Please try again or go back to the dashboard.</p>
         <button

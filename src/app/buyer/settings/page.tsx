@@ -1,6 +1,7 @@
 'use client';
 
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
+import { User, CreditCard, Bell, Package, FileText, Truck, Snowflake, LogOut } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -11,23 +12,23 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Edit Profile', desc: 'Update your name, contact details and location', icon: '👤', href: '/farmer/profile' },
-      { label: 'Wallet & Payments', desc: 'Manage your mobile money and Kulima Pay balance', icon: '💳', href: '/buyer/wallet' },
-      { label: 'Notifications', desc: 'View and manage your alerts and updates', icon: '🔔', href: '/buyer/notifications' },
+      { label: 'Edit Profile', desc: 'Update your name, contact details and location', icon: <User size={20} />, href: '/farmer/profile' },
+      { label: 'Wallet & Payments', desc: 'Manage your mobile money and Kulima Pay balance', icon: <CreditCard size={20} />, href: '/buyer/wallet' },
+      { label: 'Notifications', desc: 'View and manage your alerts and updates', icon: <Bell size={20} />, href: '/buyer/notifications' },
     ],
   },
   {
     title: 'Sourcing',
     items: [
-      { label: 'My Orders', desc: 'Track all your purchases from farmers', icon: '📦', href: '/buyer/orders' },
-      { label: 'Contracts', desc: 'Manage forward purchase agreements', icon: '📄', href: '/buyer/contracts' },
-      { label: 'Deliveries', desc: 'Track your transport and delivery requests', icon: '🚛', href: '/buyer/deliveries' },
+      { label: 'My Orders', desc: 'Track all your purchases from farmers', icon: <Package size={20} />, href: '/buyer/orders' },
+      { label: 'Contracts', desc: 'Manage forward purchase agreements', icon: <FileText size={20} />, href: '/buyer/contracts' },
+      { label: 'Deliveries', desc: 'Track your transport and delivery requests', icon: <Truck size={20} />, href: '/buyer/deliveries' },
     ],
   },
   {
     title: 'Cold Chain',
     items: [
-      { label: 'Cold Chain Storage', desc: 'Refrigerated delivery history and bookings', icon: '🧊', href: '/buyer/cold-chain' },
+      { label: 'Cold Chain Storage', desc: 'Refrigerated delivery history and bookings', icon: <Snowflake size={20} />, href: '/buyer/cold-chain' },
     ],
   },
 ];
@@ -42,7 +43,9 @@ function SignOutInline() {
       onClick={handleSignOut}
       style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', width: '100%', textAlign: 'left', background: 'var(--d-card)', border: 'none', cursor: 'pointer' }}
     >
-      <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>🚪</span>
+      <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LogOut size={20} style={{ color: 'var(--color-danger)' }} />
+      </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
         <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
@@ -66,7 +69,7 @@ export default function BuyerSettingsPage() {
           <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
             {section.items.map((item, i) => (
               <a key={item.label} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', borderBottom: i < section.items.length - 1 ? `1px solid ${C.border}` : 'none', background: C.cardBg }}>
-                <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 1 }}>{item.label}</p>
                   <p style={{ fontSize: 12, color: C.muted }}>{item.desc}</p>

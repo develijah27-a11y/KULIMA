@@ -1,6 +1,7 @@
 'use client';
 
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
+import { User, CreditCard, Bell, Leaf, Package, Tractor, CalendarDays, Banknote, ShieldCheck, LogOut } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -11,25 +12,25 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'My Profile', desc: 'View and edit your name, phone, and location', icon: '👤', href: '/farmer/profile' },
-      { label: 'Wallet & Finance', desc: 'Manage your balance, deposits, and withdrawals', icon: '💳', href: '/farmer/wallet' },
-      { label: 'Notifications', desc: 'Price alerts, offer updates, and farm reminders', icon: '🔔', href: '/farmer/notifications' },
+      { label: 'My Profile', desc: 'View and edit your name, phone, and location', icon: <User size={20} />, href: '/farmer/profile' },
+      { label: 'Wallet & Finance', desc: 'Manage your balance, deposits, and withdrawals', icon: <CreditCard size={20} />, href: '/farmer/wallet' },
+      { label: 'Notifications', desc: 'Price alerts, offer updates, and farm reminders', icon: <Bell size={20} />, href: '/farmer/notifications' },
     ],
   },
   {
     title: 'Farm & Market',
     items: [
-      { label: 'My Listings', desc: 'Manage crops you have listed for sale', icon: '🌾', href: '/farmer/marketplace' },
-      { label: 'My Orders', desc: 'Track orders from buyers', icon: '📦', href: '/farmer/orders' },
-      { label: 'My Farm', desc: 'Update farm details, size, and crop history', icon: '🚜', href: '/farmer/farm' },
-      { label: 'Planting Calendar', desc: 'Record planting and expected harvest dates', icon: '📅', href: '/farmer/planting' },
-      { label: 'Finance & Loans', desc: 'View loans, repayments, and financial history', icon: '💰', href: '/farmer/finance' },
+      { label: 'My Listings', desc: 'Manage crops you have listed for sale', icon: <Leaf size={20} />, href: '/farmer/marketplace' },
+      { label: 'My Orders', desc: 'Track orders from buyers', icon: <Package size={20} />, href: '/farmer/orders' },
+      { label: 'My Farm', desc: 'Update farm details, size, and crop history', icon: <Tractor size={20} />, href: '/farmer/farm' },
+      { label: 'Planting Calendar', desc: 'Record planting and expected harvest dates', icon: <CalendarDays size={20} />, href: '/farmer/planting' },
+      { label: 'Finance & Loans', desc: 'View loans, repayments, and financial history', icon: <Banknote size={20} />, href: '/farmer/finance' },
     ],
   },
   {
     title: 'Trust & Verification',
     items: [
-      { label: 'Get Verified', desc: 'Upload your ID and farm documents to unlock better deals', icon: '✅', href: '/farmer/verify' },
+      { label: 'Get Verified', desc: 'Upload your ID and farm documents to unlock better deals', icon: <ShieldCheck size={20} />, href: '/farmer/verify' },
     ],
   },
 ];
@@ -44,7 +45,9 @@ function SignOutInline() {
       onClick={handleSignOut}
       style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', width: '100%', textAlign: 'left', background: 'var(--d-card)', border: 'none', cursor: 'pointer' }}
     >
-      <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>🚪</span>
+      <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LogOut size={20} style={{ color: 'var(--color-danger)' }} />
+      </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
         <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
@@ -70,7 +73,7 @@ export default function FarmerSettingsPage() {
           <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
             {section.items.map((item, i) => (
               <a key={item.label} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', borderBottom: i < section.items.length - 1 ? `1px solid ${C.border}` : 'none', background: C.cardBg }}>
-                <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 1 }}>{item.label}</p>
                   <p style={{ fontSize: 12, color: C.muted }}>{item.desc}</p>

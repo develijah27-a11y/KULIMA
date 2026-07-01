@@ -1,5 +1,7 @@
+import type { JSX } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { Bell, Truck, TrendingUp, Tag, Banknote, Settings, CloudRain, Bug, Microscope, CreditCard } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -7,9 +9,16 @@ const C = {
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
-const TYPE_ICON: Record<string, string> = {
-  delivery: '🚛', price: '📈', offer: '🤝', loan: '💰', system: '⚙️',
-  rain: '🌧️', pest: '🐛', disease: '🔬', payment: '💳',
+const TYPE_ICON: Record<string, JSX.Element> = {
+  delivery: <Truck size={16} />,
+  price:    <TrendingUp size={16} />,
+  offer:    <Tag size={16} />,
+  loan:     <Banknote size={16} />,
+  system:   <Settings size={16} />,
+  rain:     <CloudRain size={16} />,
+  pest:     <Bug size={16} />,
+  disease:  <Microscope size={16} />,
+  payment:  <CreditCard size={16} />,
 };
 
 export default async function FarmerNotificationsPage() {
@@ -17,7 +26,6 @@ export default async function FarmerNotificationsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  // notifications.farmer_id references profiles.id, not auth.users.id
   const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
   if (!profile) redirect('/auth/signin');
 
@@ -31,7 +39,6 @@ export default async function FarmerNotificationsPage() {
   const notifications = (data ?? []) as any[];
   const unread = notifications.filter(n => !n.read).length;
 
-  // Mark all as read
   if (unread > 0) {
     await supabase.from('notifications').update({ read: true }).eq('farmer_id', profile.id).eq('read', false);
   }
@@ -49,7 +56,9 @@ export default async function FarmerNotificationsPage() {
 
       {notifications.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>🔔</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+            <Bell size={48} style={{ color: C.muted }} />
+          </div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>All clear</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>
             Offer updates, weather alerts, and price changes will appear here.
@@ -58,14 +67,14 @@ export default async function FarmerNotificationsPage() {
       ) : (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
           {notifications.map((n: any, i: number) => {
-            const icon = TYPE_ICON[n.type] ?? '🔔';
+            const icon = TYPE_ICON[n.type] ?? <Bell size={16} />;
             return (
               <div key={n.id} style={{
                 padding: '15px 20px', display: 'flex', gap: 13, alignItems: 'flex-start',
                 borderBottom: i < notifications.length - 1 ? `1px solid ${C.border}` : 'none',
                 background: n.read ? C.cardBg : 'var(--color-primary-bg)',
               }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--color-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>
+                <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--color-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted, flexShrink: 0 }}>
                   {icon}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>

@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Leaf, Users } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -8,11 +10,6 @@ const C = {
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
-};
 
 const CROPS = ['maize','beans','coffee','rice','banana','cassava','tomato','sorghum','groundnuts','cotton'];
 const DISTRICTS = ['Kampala','Wakiso','Mukono','Jinja','Mbale','Gulu','Lira','Masaka','Mbarara','Kabale','Fort Portal','Arua','Soroti','Tororo','Iganga'];
@@ -60,7 +57,7 @@ export default async function GroupListingsPage({
     <div className="max-w-4xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Group Listings 🤝
+          Group Listings
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>
           {listings.length} consolidated lot{listings.length !== 1 ? 's' : ''} from farmer groups · bulk quantities at competitive prices
@@ -69,7 +66,7 @@ export default async function GroupListingsPage({
 
       {/* Info banner */}
       <div style={{ padding: '14px 18px', borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-        <span style={{ fontSize: 20, flexShrink: 0 }}>🌾</span>
+        <Leaf size={18} style={{ color: C.greenMed, flexShrink: 0 }} />
         <div>
           <p style={{ fontSize: 13, fontWeight: 700, color: C.greenMed, margin: '0 0 2px' }}>What are Group Listings?</p>
           <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Farmer cooperatives pool their harvests into large consolidated lots. Buy directly from groups for larger quantities and better prices.</p>
@@ -117,7 +114,7 @@ export default async function GroupListingsPage({
       {/* Listings */}
       {listings.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>🤝</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Users size={48} style={{ color: C.muted }} /></div>
           <p style={{ color: C.text, fontWeight: 700, fontSize: 16 }}>No group listings available</p>
           <p style={{ color: C.muted, fontSize: 14, marginTop: 4 }}>Check back soon — farmer groups publish consolidated lots regularly.</p>
           <Link href="/buyer/listings" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', background: C.green, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -127,7 +124,6 @@ export default async function GroupListingsPage({
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
           {listings.map((l: any) => {
-            const emoji      = CROP_EMOJI[l.crop_type?.toLowerCase()] ?? '🌾';
             const market     = priceMap[l.crop_type?.toLowerCase()];
             const priceDelta = market ? Math.round(((l.asking_price - market) / market) * 100) : null;
             const totalValue = Math.round((l.total_quantity_kg ?? 0) * (l.asking_price ?? 0));
@@ -141,8 +137,8 @@ export default async function GroupListingsPage({
                 {/* Card header */}
                 <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${C.border}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                    <div style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
-                      {emoji}
+                    <div style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Leaf size={22} style={{ color: getCropColor(l.crop_type) }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>

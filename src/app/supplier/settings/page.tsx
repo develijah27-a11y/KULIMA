@@ -1,6 +1,7 @@
 'use client';
 
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
+import { Store, CreditCard, Bell, Package, Zap, ShoppingCart, MapPin, Map, BarChart3, LogOut } from 'lucide-react';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -8,25 +9,25 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Business Profile', desc: 'Update your company name and contact details', icon: '🏪', href: '/farmer/profile' },
-      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and Kulima Pay balance', icon: '💳', href: '/supplier/wallet' },
-      { label: 'Notifications', desc: 'Order alerts and low-stock warnings', icon: '🔔', href: '/supplier/notifications' },
+      { label: 'Business Profile', desc: 'Update your company name and contact details', icon: <Store size={20} />, href: '/farmer/profile' },
+      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and Kulima Pay balance', icon: <CreditCard size={20} />, href: '/supplier/wallet' },
+      { label: 'Notifications', desc: 'Order alerts and low-stock warnings', icon: <Bell size={20} />, href: '/supplier/notifications' },
     ],
   },
   {
     title: 'Products',
     items: [
-      { label: 'Product Catalogue', desc: 'Add, edit, and update stock for your products', icon: '📦', href: '/supplier/catalogue' },
-      { label: 'Flash Deals', desc: 'Create time-limited discounts to move stock fast', icon: '⚡', href: '/supplier/flash-deals' },
-      { label: 'Pending Orders', desc: 'View and fulfil incoming farmer orders', icon: '🛒', href: '/supplier/orders' },
+      { label: 'Product Catalogue', desc: 'Add, edit, and update stock for your products', icon: <Package size={20} />, href: '/supplier/catalogue' },
+      { label: 'Flash Deals', desc: 'Create time-limited discounts to move stock fast', icon: <Zap size={20} />, href: '/supplier/flash-deals' },
+      { label: 'Pending Orders', desc: 'View and fulfil incoming farmer orders', icon: <ShoppingCart size={20} />, href: '/supplier/orders' },
     ],
   },
   {
     title: 'Coverage & Analytics',
     items: [
-      { label: 'Coverage Zones', desc: 'Set the districts where you supply products', icon: '📍', href: '/supplier/coverage' },
-      { label: 'Demand Map', desc: 'See where farmers are looking for your products', icon: '🗺️', href: '/supplier/demand' },
-      { label: 'Analytics', desc: 'Sales performance and revenue trends', icon: '📊', href: '/supplier/analytics' },
+      { label: 'Coverage Zones', desc: 'Set the districts where you supply products', icon: <MapPin size={20} />, href: '/supplier/coverage' },
+      { label: 'Demand Map', desc: 'See where farmers are looking for your products', icon: <Map size={20} />, href: '/supplier/demand' },
+      { label: 'Analytics', desc: 'Sales performance and revenue trends', icon: <BarChart3 size={20} />, href: '/supplier/analytics' },
     ],
   },
 ];
@@ -38,7 +39,9 @@ function SignOutInline() {
   }
   return (
     <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', width: '100%', textAlign: 'left', background: 'var(--d-card)', border: 'none', cursor: 'pointer' }}>
-      <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>🚪</span>
+      <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LogOut size={20} style={{ color: 'var(--color-danger)' }} />
+      </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
         <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
@@ -62,7 +65,7 @@ export default function SupplierSettingsPage() {
           <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
             {section.items.map((item, i) => (
               <a key={item.label} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', textDecoration: 'none', borderBottom: i < section.items.length - 1 ? `1px solid ${C.border}` : 'none', background: C.cardBg }}>
-                <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>{item.icon}</span>
+                <span style={{ width: 36, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted }}>{item.icon}</span>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: C.text, marginBottom: 1 }}>{item.label}</p>
                   <p style={{ fontSize: 12, color: C.muted }}>{item.desc}</p>
