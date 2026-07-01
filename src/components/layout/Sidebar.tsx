@@ -244,7 +244,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
                   color: active ? 'var(--color-sidebar-text)' : 'var(--color-sidebar-muted)',
                   textDecoration: 'none',
                   minHeight: 40,
-                  borderLeft: active && !collapsed ? '3px solid rgba(255,255,255,0.55)' : '3px solid transparent',
+                  borderLeft: active && !collapsed ? '3px solid #4ADE80' : '3px solid transparent',
                   paddingLeft: active && !collapsed ? 7 : (collapsed ? 0 : 10),
                 }}
               >

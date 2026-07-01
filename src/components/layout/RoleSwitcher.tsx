@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-const SIDEBAR_LIGHT = '#4B5320';
-const SIDEBAR_DARK  = '#0F1510';
+const SIDEBAR_LIGHT = '#1C3D2A';
+const SIDEBAR_DARK  = '#0C1A11';
+
 function getSidebarBg() {
   if (typeof window === 'undefined') return SIDEBAR_LIGHT;
   return document.documentElement.classList.contains('dark') ? SIDEBAR_DARK : SIDEBAR_LIGHT;
@@ -21,6 +22,9 @@ export const ROLE_META: Record<string, { icon: string; label: string; href: stri
   groups:      { icon: '👥', label: 'Groups',         href: '/groups/dashboard' },
 };
 
+// Roles a user can self-register into (admin requires backend assignment)
+const SELF_ADD_ROLES = ['farmer', 'buyer', 'transporter', 'supplier', 'pathologist', 'offtaker', 'groups'];
+
 interface RoleSwitcherProps {
   currentRole: string;
   allRoles: string[];
@@ -29,6 +33,7 @@ interface RoleSwitcherProps {
 export function RoleSwitcher({ currentRole, allRoles }: RoleSwitcherProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
   const [dropdownBg, setDropdownBg] = useState(SIDEBAR_LIGHT);
 
   useEffect(() => {
@@ -38,8 +43,40 @@ export function RoleSwitcher({ currentRole, allRoles }: RoleSwitcherProps) {
     return () => obs.disconnect();
   }, []);
 
-  const otherRoles = allRoles.filter(r => r !== currentRole && ROLE_META[r]);
   const current = ROLE_META[currentRole];
+
+  // Build the switchable list: all self-add roles except current,
+  // plus admin if the user already has it and it isn't the current role.
+  const switchableRoles = SELF_ADD_ROLES.filter(r => r !== currentRole);
+  if (currentRole !== 'admin' && allRoles.includes('admin')) {
+    switchableRoles.unshift('admin');
+  }
+
+  const handleRoleClick = async (role: string) => {
+    const meta = ROLE_META[role];
+    if (!meta || loading) return;
+
+    const hasRole = allRoles.includes(role);
+
+    if (!hasRole) {
+      setLoading(role);
+      try {
+        const res = await fetch('/api/profile/add-role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role }),
+        });
+        if (!res.ok) { setLoading(null); return; }
+      } catch {
+        setLoading(null);
+        return;
+      }
+      setLoading(null);
+    }
+
+    setOpen(false);
+    router.push(meta.href);
+  };
 
   return (
     <div style={{ position: 'relative' }}>
@@ -101,7 +138,7 @@ export function RoleSwitcher({ currentRole, allRoles }: RoleSwitcherProps) {
               borderRadius: 10,
               padding: 5,
               zIndex: 50,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
+              boxShadow: '0 8px 28px rgba(0,0,0,0.40)',
             }}
           >
             <p style={{
@@ -111,12 +148,15 @@ export function RoleSwitcher({ currentRole, allRoles }: RoleSwitcherProps) {
             }}>
               Switch role
             </p>
-            {otherRoles.map(role => {
+            {switchableRoles.map(role => {
               const meta = ROLE_META[role];
+              const hasRole = allRoles.includes(role);
+              const isLoading = loading === role;
               return (
                 <button
                   key={role}
-                  onClick={() => { setOpen(false); router.push(meta.href); }}
+                  onClick={() => handleRoleClick(role)}
+                  disabled={!!loading}
                   style={{
                     width: '100%',
                     display: 'flex',
@@ -126,18 +166,31 @@ export function RoleSwitcher({ currentRole, allRoles }: RoleSwitcherProps) {
                     borderRadius: 7,
                     background: 'transparent',
                     border: 'none',
-                    cursor: 'pointer',
+                    cursor: loading ? 'wait' : 'pointer',
                     transition: 'background 0.1s',
                     textAlign: 'left',
                     minHeight: 'unset', minWidth: 'unset',
+                    opacity: isLoading ? 0.6 : 1,
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.10)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)'; }}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                 >
-                  <span style={{ fontSize: 14 }}>{meta.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-sidebar-text)' }}>
+                  <span style={{ fontSize: 14 }}>{isLoading ? '⏳' : meta.icon}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-sidebar-text)', flex: 1 }}>
                     {meta.label}
                   </span>
+                  {!hasRole && (
+                    <span style={{
+                      fontSize: 8, fontWeight: 800,
+                      color: 'rgba(74, 222, 128, 0.95)',
+                      background: 'rgba(74, 222, 128, 0.15)',
+                      padding: '2px 6px', borderRadius: 99,
+                      textTransform: 'uppercase', letterSpacing: '0.06em',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      + Add
+                    </span>
+                  )}
                 </button>
               );
             })}

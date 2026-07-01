@@ -40,14 +40,14 @@
   --color-soil:          #0D1F12;   /* deep forest — used by landing page */
   --color-soil-mid:      #1A3120;
 
-  /* ── Sidebar — Army / Olive Green ── */
-  --color-sidebar:         #4B5320;
-  --color-sidebar-hover:   #3A4119;
-  --color-sidebar-text:    #FFFFFF;
-  --color-sidebar-muted:   rgba(255, 255, 255, 0.60);
-  --color-sidebar-divider: rgba(255, 255, 255, 0.14);
-  --color-sidebar-active:  rgba(255, 255, 255, 0.18);
-  --color-sidebar-badge:   rgba(255, 255, 255, 0.20);
+  /* ── Sidebar — Deep Forest Emerald ── */
+  --color-sidebar:         #1C3D2A;
+  --color-sidebar-hover:   #244D35;
+  --color-sidebar-text:    #F0FDF4;
+  --color-sidebar-muted:   rgba(240, 253, 244, 0.55);
+  --color-sidebar-divider: rgba(255, 255, 255, 0.10);
+  --color-sidebar-active:  rgba(74, 222, 128, 0.18);
+  --color-sidebar-badge:   rgba(74, 222, 128, 0.28);
 
   /* ── Text ── */
   --color-text:          #111827;   /* near-black for maximum legibility */
@@ -152,14 +152,14 @@
   --color-soil:          #060F08;
   --color-soil-mid:      #0D1F12;
 
-  /* ── Sidebar dark — near-black forest, army green accents ── */
-  --color-sidebar:         #0F1510;
-  --color-sidebar-hover:   #1A2010;
-  --color-sidebar-text:    rgba(255, 255, 255, 0.88);
-  --color-sidebar-muted:   rgba(255, 255, 255, 0.42);
+  /* ── Sidebar dark — near-black forest, bright green accents ── */
+  --color-sidebar:         #0C1A11;
+  --color-sidebar-hover:   #122216;
+  --color-sidebar-text:    rgba(240, 253, 244, 0.92);
+  --color-sidebar-muted:   rgba(240, 253, 244, 0.42);
   --color-sidebar-divider: rgba(255, 255, 255, 0.07);
-  --color-sidebar-active:  rgba(107, 124, 61, 0.28);
-  --color-sidebar-badge:   rgba(143, 168, 58, 0.28);
+  --color-sidebar-active:  rgba(74, 222, 128, 0.14);
+  --color-sidebar-badge:   rgba(74, 222, 128, 0.22);
 
   --color-text:          #F0FDF4;
   --color-text-muted:    #A3B8A7;
@@ -227,7 +227,7 @@
   --color-sky:      #0EA5E9;   /* weather blue */
   --color-cream:    #F9FAF8;   /* off-white */
   --color-surface2: #F0F7F1;   /* light green surface */
-  --color-sidebar:  #4B5320;   /* army / olive green sidebar */
+  --color-sidebar:  #1C3D2A;   /* deep forest emerald sidebar */
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -307,10 +307,10 @@ button:not(.no-min-touch), [role="button"] {
   -webkit-user-select: none; user-select: none;
   will-change: transform;
 }
-.sidebar-item:hover  { background: rgba(255,255,255,0.09) !important; }
-.sidebar-item:active { background: rgba(255,255,255,0.18) !important; transform: scale(0.97) translateZ(0); }
-.dark .sidebar-item:hover  { background: rgba(107,124,61,0.16) !important; }
-.dark .sidebar-item:active { background: rgba(107,124,61,0.30) !important; }
+.sidebar-item:hover  { background: rgba(255,255,255,0.08) !important; }
+.sidebar-item:active { background: rgba(74,222,128,0.20) !important; transform: scale(0.97) translateZ(0); }
+.dark .sidebar-item:hover  { background: rgba(74,222,128,0.08) !important; }
+.dark .sidebar-item:active { background: rgba(74,222,128,0.18) !important; transform: scale(0.97) translateZ(0); }
 
 .mobile-nav-item {
   transition: transform 80ms ease, opacity 80ms ease;
@@ -905,16 +905,16 @@ input.auth-input:-webkit-autofill:active {
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* Army green sidebar — light: bold olive, dark: near-black forest with green accents */
+/* Deep forest emerald sidebar — light: rich emerald, dark: near-black with green depth */
 .glass-sidebar {
-  background: #4B5320 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 2px 0 24px rgba(75, 83, 32, 0.30);
+  background: #1C3D2A !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 2px 0 32px rgba(0, 0, 0, 0.22);
 }
 .dark .glass-sidebar {
-  background: #0F1510 !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
-  box-shadow: 2px 0 24px rgba(0, 0, 0, 0.45);
+  background: #0C1A11 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 2px 0 32px rgba(0, 0, 0, 0.55);
 }
 
 /* Glass modal / sheet */
