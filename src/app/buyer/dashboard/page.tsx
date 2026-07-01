@@ -425,6 +425,28 @@ async function SpendingSummary({ userId }: { userId: string }) {
   );
 }
 
+// ── Welcome Header (async — streamed independently) ───────────────────────────
+
+async function WelcomeHeader({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  const firstName = profile?.full_name?.split(' ')[0] ?? 'Buyer';
+  return (
+    <div className="flex items-start justify-between">
+      <div>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Welcome back, {firstName} 🛒
+        </h1>
+        <p className="text-sm mt-0.5" style={{ color: C.muted }}>Buyer Hub · {profile?.location ?? 'Uganda'}</p>
+      </div>
+      <Link href="/buyer/listings"
+        className="px-4 py-2 rounded-xl text-sm font-bold text-white"
+        style={{ background: C.green, textDecoration: 'none' }}>
+        Browse Market →
+      </Link>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function BuyerDashboardPage() {
@@ -433,26 +455,21 @@ export default async function BuyerDashboardPage() {
   if (!user) redirect('/auth/signin');
   const userId = user.id;
 
-  const profile = await getProfile(userId);
-  const firstName = profile?.full_name?.split(' ')[0] ?? 'Buyer';
-
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Welcome back, {firstName} 🛒
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: C.muted }}>Buyer Hub · {profile?.location ?? 'Uganda'}</p>
+      {/* Header — streams as soon as profile resolves, rest of page doesn't wait */}
+      <Suspense fallback={
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <div className="dash-skeleton h-6 w-52 rounded-lg" />
+            <div className="dash-skeleton h-4 w-32 rounded-lg" />
+          </div>
+          <div className="dash-skeleton h-9 w-36 rounded-xl" />
         </div>
-        <Link href="/buyer/listings"
-          className="px-4 py-2 rounded-xl text-sm font-bold text-white"
-          style={{ background: C.green, textDecoration: 'none' }}>
-          Browse Market →
-        </Link>
-      </div>
+      }>
+        <WelcomeHeader userId={userId} />
+      </Suspense>
 
       {/* Stats */}
       <Suspense fallback={

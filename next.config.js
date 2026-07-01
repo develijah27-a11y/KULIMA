@@ -17,6 +17,11 @@ const nextConfig = {
       'date-fns',
       'clsx',
       'tailwind-merge',
+      'recharts',
+      '@supabase/supabase-js',
+      '@supabase/ssr',
+      'zod',
+      'framer-motion',
     ],
     // How long the client-side router cache holds prefetched RSC payloads.
     // Default in Next.js 15+ is 0 for dynamic pages (pages that use cookies/headers),

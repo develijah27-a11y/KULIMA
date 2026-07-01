@@ -363,10 +363,14 @@ async function MarketplaceActivity() {
 // ─── Top Districts by Activity ────────────────────────────────────────────────
 async function DistrictActivity() {
   const supabase = await createClient();
+  // Fetch only the 8 most-active districts using a smaller window.
+  // Uganda has ~150 districts; at this scale fetching 500 rows is cheap and
+  // gives an accurate top-8 without loading thousands of rows.
   const { data: listings } = await (supabase.from as any)('listings')
     .select('district')
     .eq('status', 'active')
-    .limit(2000);
+    .not('district', 'is', null)
+    .limit(500);
 
   const counts: Record<string, number> = {};
   (listings ?? []).forEach((l: any) => {
