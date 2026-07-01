@@ -4,6 +4,7 @@ import { VerifyWizard } from './VerifyWizard';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { TrustScore } from '@/components/trust/TrustScore';
 import { BADGE_CONFIG, type VerificationLevel } from '@/lib/trust';
+import { Smartphone, Check, Gem, Star } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -79,7 +80,7 @@ export default async function VerifyPage() {
                       fontWeight: 700, flexShrink: 0,
                       boxShadow: isCurr ? `0 0 0 3px ${cfg.border}` : 'none',
                     }}>
-                      {done ? (lvl === 'grey' ? '📱' : lvl === 'green' ? '✓' : lvl === 'blue' ? '◆' : '★') : i + 1}
+                      {done ? (lvl === 'grey' ? <Smartphone size={14} /> : lvl === 'green' ? <Check size={14} /> : lvl === 'blue' ? <Gem size={14} /> : <Star size={14} />) : i + 1}
                     </div>
                     {i < LEVELS.length - 1 && (
                       <div style={{ flex: 1, height: 2, background: done && i < currentIdx ? cfg.color : C.border }} />

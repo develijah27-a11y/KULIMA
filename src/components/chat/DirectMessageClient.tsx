@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { Check, CheckCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export interface DmMessage {
@@ -213,8 +214,8 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
                 <p style={{ fontSize: 10, color: C.muted, margin: '3px 4px 0', textAlign: isOwn ? 'right' : 'left' }}>
                   {timeLabel(msg.created_at)}
                   {isOwn && (
-                    <span style={{ marginLeft: 4, color: msg.read ? C.green : C.muted }}>
-                      {msg.read ? '✓✓' : '✓'}
+                    <span style={{ marginLeft: 4, color: msg.read ? C.green : C.muted, display: 'inline-flex', verticalAlign: 'middle' }}>
+                      {msg.read ? <CheckCheck size={10} /> : <Check size={10} />}
                     </span>
                   )}
                 </p>

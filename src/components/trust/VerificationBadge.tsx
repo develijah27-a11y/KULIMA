@@ -1,3 +1,4 @@
+import { Smartphone, Check, Gem, Star } from 'lucide-react';
 import { BADGE_CONFIG, type VerificationLevel } from '@/lib/trust';
 
 interface Props {
@@ -9,16 +10,14 @@ interface Props {
 export function VerificationBadge({ level, size = 'sm', showLabel = true }: Props) {
   const cfg = BADGE_CONFIG[level];
 
-  const icons: Record<VerificationLevel, string> = {
-    grey:  '📱',
-    green: '✓',
-    blue:  '◆',
-    gold:  '★',
-  };
+  const iconSize = size === 'xs' ? 9 : size === 'sm' ? 11 : 13;
+  const iconEl = level === 'grey'  ? <Smartphone size={iconSize} />
+               : level === 'blue'  ? <Gem size={iconSize} />
+               : level === 'gold'  ? <Star size={iconSize} />
+               : <Check size={iconSize} />;
 
   const px = size === 'xs' ? '6px 8px' : size === 'sm' ? '4px 10px' : '6px 14px';
   const fs = size === 'xs' ? '10px' : size === 'sm' ? '11px' : '13px';
-  const iconFs = size === 'xs' ? '9px' : size === 'sm' ? '11px' : '13px';
 
   return (
     <span
@@ -37,7 +36,7 @@ export function VerificationBadge({ level, size = 'sm', showLabel = true }: Prop
         whiteSpace: 'nowrap',
       }}
     >
-      <span style={{ fontSize: iconFs }}>{icons[level]}</span>
+      {iconEl}
       {showLabel && cfg.label}
     </span>
   );

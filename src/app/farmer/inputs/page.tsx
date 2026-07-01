@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Leaf, FlaskConical, Wrench, Settings, Package, CheckCircle2, X } from 'lucide-react';
+import type { JSX } from 'react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -15,8 +17,13 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> =
   cancelled: { label: 'Cancelled', color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
 };
 
-const CAT_ICON: Record<string, string> = {
-  seeds: '🌱', fertilizers: '🌿', pesticides: '🧪', tools: '🔧', equipment: '⚙️', other: '📦',
+const CAT_ICON: Record<string, JSX.Element> = {
+  seeds:        <Leaf size={20} />,
+  fertilizers:  <Leaf size={20} />,
+  pesticides:   <FlaskConical size={20} />,
+  tools:        <Wrench size={20} />,
+  equipment:    <Settings size={20} />,
+  other:        <Package size={20} />,
 };
 
 type Order = {
@@ -106,7 +113,7 @@ export default function FarmerInputsPage() {
       {/* Toast */}
       {toast && (
         <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, minWidth: 260, background: toast.ok ? '#065F46' : '#991B1B', color: '#fff', borderRadius: 14, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{toast.ok ? '✅ ' : '❌ '}{toast.msg}</p>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>{toast.ok ? <CheckCircle2 size={16} /> : <X size={16} />}{toast.msg}</p>
         </div>
       )}
 
@@ -212,14 +219,14 @@ export default function FarmerInputsPage() {
         ) : (
           filtered.map((order, i) => {
             const cfg = STATUS_CFG[order.status] ?? STATUS_CFG.pending;
-            const icon = CAT_ICON[order.category ?? ''] ?? '📦';
+            const icon = CAT_ICON[order.category ?? ''] ?? <Package size={20} />;
             const existingReturn = returnStatusFor(order.id);
             const canReturn = order.status === 'delivered' && !existingReturn;
 
             return (
               <div key={order.id} style={{ padding: '16px 20px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', flexShrink: 0 }}>
                     {icon}
                   </div>
                   <div style={{ flex: 1 }}>

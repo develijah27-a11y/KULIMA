@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CloudRain, TrendingUp, Users, Microscope, Package, BarChart3, Globe, Leaf, ShoppingCart, Store } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -21,7 +22,7 @@ export default function Home() {
 
         {/* Orange badge */}
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 16px', borderRadius: 99, background: '#FFEDD5', border: '1.5px solid #FED7AA', color: '#EA580C', fontSize: 12, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 28 }}>
-          🌍 Smart Farming for Africa
+          <Globe size={13} /> Smart Farming for Africa
         </div>
 
         {/* Big headline */}
@@ -64,15 +65,15 @@ export default function Home() {
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 24px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
             {[
-              { icon: '🌦️', title: 'Weather Alerts' },
-              { icon: '📈', title: 'Live Crop Prices' },
-              { icon: '🤝', title: 'Buyer Marketplace' },
-              { icon: '🔬', title: 'AI Crop Doctor' },
-              { icon: '📦', title: 'Farm Inputs' },
-              { icon: '📊', title: 'Farm Analytics' },
+              { icon: <CloudRain size={22} />, title: 'Weather Alerts' },
+              { icon: <TrendingUp size={22} />, title: 'Live Crop Prices' },
+              { icon: <Users size={22} />, title: 'Buyer Marketplace' },
+              { icon: <Microscope size={22} />, title: 'AI Crop Doctor' },
+              { icon: <Package size={22} />, title: 'Farm Inputs' },
+              { icon: <BarChart3 size={22} />, title: 'Farm Analytics' },
             ].map(({ icon, title }) => (
               <div key={title} style={{ padding: '18px 20px', borderRadius: 14, background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 22 }}>{icon}</span>
+                <span style={{ display: 'flex', color: '#fff' }}>{icon}</span>
                 <p style={{ fontWeight: 800, color: '#fff', fontSize: 14, margin: 0 }}>{title}</p>
               </div>
             ))}
@@ -88,12 +89,12 @@ export default function Home() {
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
             {[
-              { emoji: '🌾', role: 'Farmers',   accent: '#F97316', bg: '#FFF7ED', border: '#FED7AA', points: ['Weather & planting guides', 'Live prices & buyer offers', 'AI disease detection'] },
-              { emoji: '🛒', role: 'Buyers',    accent: '#D97706', bg: '#FFFBEB', border: '#FDE68A', points: ['Browse verified listings', 'Direct crop offers', 'Escrow payments'] },
-              { emoji: '🚚', role: 'Suppliers', accent: '#0284C7', bg: '#F0F9FF', border: '#BAE6FD', points: ['Reach farmers directly', 'Manage orders', 'Verified profile'] },
-            ].map(({ emoji, role, accent, bg, border, points }) => (
+              { icon: <Leaf size={32} />, role: 'Farmers',   accent: '#F97316', bg: '#FFF7ED', border: '#FED7AA', points: ['Weather & planting guides', 'Live prices & buyer offers', 'AI disease detection'] },
+              { icon: <ShoppingCart size={32} />, role: 'Buyers',    accent: '#D97706', bg: '#FFFBEB', border: '#FDE68A', points: ['Browse verified listings', 'Direct crop offers', 'Escrow payments'] },
+              { icon: <Store size={32} />, role: 'Suppliers', accent: '#0284C7', bg: '#F0F9FF', border: '#BAE6FD', points: ['Reach farmers directly', 'Manage orders', 'Verified profile'] },
+            ].map(({ icon, role, accent, bg, border, points }) => (
               <div key={role} style={{ padding: '24px', borderRadius: 18, background: bg, border: `2px solid ${border}` }}>
-                <span style={{ fontSize: 32, display: 'block', marginBottom: 12 }}>{emoji}</span>
+                <span style={{ display: 'flex', marginBottom: 12, color: accent }}>{icon}</span>
                 <h3 style={{ fontSize: 18, fontWeight: 900, color: accent, letterSpacing: '-0.02em', marginBottom: 14, margin: '0 0 14px' }}>{role}</h3>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {points.map(p => (

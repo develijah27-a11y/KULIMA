@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import { DISTRICT_NAMES } from '@/lib/districts';
+import { Leaf, Flame } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -11,9 +13,9 @@ const C = {
 };
 
 const REGION_CFG = {
-  uganda:      { label: '🇺🇬 Uganda Markets',    desc: 'Farm gate & export prices' },
-  east_africa: { label: '🌍 East Africa',         desc: 'Regional exchange prices' },
-  global:      { label: '🌐 Global Markets',      desc: 'International futures & OTC' },
+  uganda:      { label: 'Uganda Markets',    desc: 'Farm gate & export prices' },
+  east_africa: { label: 'East Africa',       desc: 'Regional exchange prices' },
+  global:      { label: 'Global Markets',    desc: 'International futures & OTC' },
 } as const;
 
 type Region = keyof typeof REGION_CFG;
@@ -177,7 +179,7 @@ async function UgandaLocalPrices({
     return db - da;
   });
 
-  const EMOJI: Record<string, string> = { maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌', cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜', sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️' };
+  const KNOWN_CROPS = ['maize', 'beans', 'coffee', 'rice', 'banana', 'cassava', 'tomato', 'sorghum', 'groundnuts', 'sweet_potatoes', 'sunflower', 'cotton'];
   const COLOR: Record<string, string> = { maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED', rice: 'var(--color-sky)', banana: '#B45309', cassava: 'var(--color-success)', tomato: 'var(--color-danger)', sorghum: 'var(--color-harvest)', groundnuts: '#B45309', sweet_potatoes: 'var(--color-harvest)', sunflower: '#B45309' };
 
   // Group cash prices by crop_key
@@ -192,14 +194,14 @@ async function UgandaLocalPrices({
       {/* Hot demand banner */}
       {hotCrops.length > 0 && (
         <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 16, padding: '16px 20px' }}>
-          <p style={{ color: 'var(--color-primary-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-            🔥 High Buyer Demand — Last 30 Days
+          <p style={{ color: 'var(--color-primary-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Flame size={12} /> High Buyer Demand — Last 30 Days
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {hotCrops.map((d: any) => (
               <a key={d.crop_type} href={`/farmer/prices?crop=${d.crop_type}`}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'rgba(255,255,255,0.12)', borderRadius: 8, textDecoration: 'none' }}>
-                <span style={{ fontSize: 16 }}>{EMOJI[d.crop_type] ?? '🌾'}</span>
+                <span style={{ display: 'flex', color: getCropColor(d.crop_type) }}><Leaf size={16} /></span>
                 <div>
                   <p style={{ color: '#fff', fontWeight: 700, fontSize: 12, margin: 0, textTransform: 'capitalize' }}>{d.crop_type.replace(/_/g,' ')}</p>
                   <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, margin: 0 }}>{d.offer_count_30d} active buyers</p>
@@ -225,7 +227,7 @@ async function UgandaLocalPrices({
             <label style={{ fontSize: 11, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Crop</label>
             <select name="crop" defaultValue={cropFilter} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: 'var(--d-input-bg)' }}>
               <option value="">All Crops</option>
-              {Object.keys(EMOJI).map(c => <option key={c} value={c} style={{ textTransform: 'capitalize' }}>{c.replace(/_/g,' ')}</option>)}
+              {KNOWN_CROPS.map(c => <option key={c} value={c} style={{ textTransform: 'capitalize' }}>{c.replace(/_/g,' ')}</option>)}
             </select>
           </div>
           <button type="submit" style={{ padding: '8px 18px', background: C.green, color: '#fff', border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Filter</button>
@@ -251,14 +253,14 @@ async function UgandaLocalPrices({
             return (
               <a key={crop} href={`/farmer/prices?tab=uganda${district ? `&district=${district}` : ''}&crop=${crop}`}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: i < cropEntries.length - 1 ? `1px solid ${C.border}` : 'none', textDecoration: 'none', background: isPrimary ? 'var(--color-primary-bg)' : 'transparent' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-                  {EMOJI[crop] ?? '🌾'}
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: getCropColor(crop) }}>
+                  <Leaf size={18} />
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 2 }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, textTransform: 'capitalize' }}>{crop.replace(/_/g,' ')}</p>
                     {isPrimary && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-success-bg)', color: 'var(--color-success)' }}>YOUR CROP</span>}
-                    {dm?.offer_count_30d > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>🔥 IN DEMAND</span>}
+                    {dm?.offer_count_30d > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>IN DEMAND</span>}
                   </div>
                   <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{info.market} · {info.district}</p>
                 </div>
@@ -276,7 +278,7 @@ async function UgandaLocalPrices({
       {Object.keys(cashByCrop).length > 0 && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0 }}>🇺🇬 Uganda Cash Crop Prices</h2>
+            <h2 style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0 }}>Uganda Cash Crop Prices</h2>
             <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 4, background: 'var(--color-primary-bg)', color: C.greenMed }}>FARM GATE & EXPORT</span>
           </div>
           {Object.entries(cashByCrop).map(([key, rows]) => (

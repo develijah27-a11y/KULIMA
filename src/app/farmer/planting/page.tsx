@@ -6,6 +6,8 @@ import {
   getCurrentSeasonSummary,
   type PlantingWindow,
 } from '@/lib/planting-calendar';
+import type { JSX } from 'react';
+import { Leaf, Clock, Wrench, ClipboardList, Sun } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -23,15 +25,19 @@ const URGENCY_CFG: Record<string, { bg: string; color: string; border: string }>
   low:    { bg: 'var(--color-primary-bg)', color: 'var(--color-success)', border: 'var(--color-primary-muted)' },
 };
 
-const ALERT_TYPE_ICON: Record<string, string> = {
-  plant_now: '🌱', plant_soon: '⏰', harvest_now: '🌾', harvest_soon: '⏳', prepare: '🔧',
+const ALERT_TYPE_ICON: Record<string, JSX.Element> = {
+  plant_now:    <Leaf size={20} />,
+  plant_soon:   <Clock size={20} />,
+  harvest_now:  <Leaf size={20} />,
+  harvest_soon: <Clock size={20} />,
+  prepare:      <Wrench size={20} />,
 };
 
-const PHASE_CFG: Record<string, { bg: string; color: string; icon: string }> = {
-  planting: { bg: 'var(--color-success-bg)', color: 'var(--color-success)', icon: '🌱' },
-  growing:  { bg: 'var(--color-sky-bg)',     color: 'var(--color-sky)',     icon: '🌿' },
-  harvest:  { bg: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', icon: '🌾' },
-  dry:      { bg: 'var(--color-surface-2)',  color: 'var(--d-muted)',       icon: '☀️' },
+const PHASE_CFG: Record<string, { bg: string; color: string; icon: JSX.Element }> = {
+  planting: { bg: 'var(--color-success-bg)', color: 'var(--color-success)', icon: <Leaf size={28} /> },
+  growing:  { bg: 'var(--color-sky-bg)',     color: 'var(--color-sky)',     icon: <Leaf size={28} /> },
+  harvest:  { bg: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', icon: <Leaf size={28} /> },
+  dry:      { bg: 'var(--color-surface-2)',  color: 'var(--d-muted)',       icon: <Sun size={28} /> },
 };
 
 function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -146,7 +152,7 @@ export default async function PlantingPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '28px' }}>{phaseCfg.icon}</span>
+                <span style={{ display: 'flex', color: '#fff' }}>{phaseCfg.icon}</span>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   {phaseCfg.bg && 'Current Season'}
                 </span>
@@ -203,7 +209,7 @@ export default async function PlantingPage() {
             <div className="divide-y" style={{ borderColor: C.border }}>
               {alerts.map((alert, i) => {
                 const cfg = URGENCY_CFG[alert.urgency];
-                const typeIcon = ALERT_TYPE_ICON[alert.type] ?? '📋';
+                const typeIcon = ALERT_TYPE_ICON[alert.type] ?? <ClipboardList size={20} />;
                 return (
                   <div
                     key={i}
@@ -218,10 +224,10 @@ export default async function PlantingPage() {
                         width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
                         background: cfg.bg, border: `1px solid ${cfg.border}`,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '20px',
+                        color: cfg.color,
                       }}
                     >
-                      {alert.emoji}
+                      {typeIcon}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
@@ -240,7 +246,7 @@ export default async function PlantingPage() {
                             background: 'var(--color-surface-2)', color: C.muted,
                           }}
                         >
-                          {typeIcon} {alert.type.replace(/_/g, ' ')}
+                          {alert.type.replace(/_/g, ' ')}
                         </span>
                       </div>
                       <p style={{ fontSize: '13px', color: C.muted, lineHeight: '1.5' }}>{alert.message}</p>

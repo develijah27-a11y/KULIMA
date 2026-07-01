@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Leaf, ShoppingCart, Truck, Store, Microscope, Package, Globe } from 'lucide-react';
 
-const ROLES = [
+type RoleId = 'farmer' | 'buyer' | 'transporter' | 'supplier' | 'pathologist' | 'offtaker';
+
+const ROLES: { id: RoleId; icon: React.ReactNode; title: string; desc: string; color: string; border: string; bg: string }[] = [
   {
     id: 'farmer',
-    icon: '🌾',
+    icon: <Leaf size={28} />,
     title: 'Farmer',
     desc: 'Manage your farm, access weather, sell directly to buyers.',
     color: '#F97316',
@@ -15,7 +18,7 @@ const ROLES = [
   },
   {
     id: 'buyer',
-    icon: '🛒',
+    icon: <ShoppingCart size={28} />,
     title: 'Buyer',
     desc: 'Browse listings, make offers, and track crop orders.',
     color: '#FBBF24',
@@ -24,7 +27,7 @@ const ROLES = [
   },
   {
     id: 'transporter',
-    icon: '🚚',
+    icon: <Truck size={28} />,
     title: 'Transporter',
     desc: 'Offer delivery services and bid on transport jobs.',
     color: '#38BDF8',
@@ -33,7 +36,7 @@ const ROLES = [
   },
   {
     id: 'supplier',
-    icon: '🏪',
+    icon: <Store size={28} />,
     title: 'Input Supplier',
     desc: 'Sell seeds, fertiliser, and farming inputs to farmers.',
     color: '#4ADE80',
@@ -42,7 +45,7 @@ const ROLES = [
   },
   {
     id: 'pathologist',
-    icon: '🔬',
+    icon: <Microscope size={28} />,
     title: 'Pathologist',
     desc: 'Diagnose crop diseases and support farm health.',
     color: '#F472B6',
@@ -51,16 +54,14 @@ const ROLES = [
   },
   {
     id: 'offtaker',
-    icon: '📦',
+    icon: <Package size={28} />,
     title: 'Offtaker',
     desc: 'Purchase large volumes, manage processing and supply chains.',
     color: '#A78BFA',
     border: 'rgba(167,139,250,0.30)',
     bg: 'rgba(167,139,250,0.08)',
   },
-] as const;
-
-type RoleId = typeof ROLES[number]['id'];
+];
 
 export default function RoleSelectionPage() {
   const router = useRouter();
@@ -108,7 +109,7 @@ export default function RoleSelectionPage() {
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5 text-xs font-bold tracking-widest uppercase"
           style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.28)', color: '#F97316' }}
         >
-          🌍 Welcome to Kulima
+          <Globe size={12} /> Welcome to Kulima
         </div>
         <h1
           className="font-black mb-3"
@@ -188,7 +189,7 @@ export default function RoleSelectionPage() {
                 </span>
               )}
 
-              <span style={{ fontSize: 28, display: 'block', marginBottom: 8 }}>{icon}</span>
+              <span style={{ display: 'flex', marginBottom: 8, color }}>{icon}</span>
               <p style={{ fontSize: 15, fontWeight: 800, color: isSelected ? color : '#FFF7ED', marginBottom: 4, letterSpacing: '-0.02em' }}>
                 {title}
               </p>

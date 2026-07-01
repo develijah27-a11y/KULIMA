@@ -5,6 +5,7 @@ import { fetchWeatherForDistrict } from '@/lib/weather-server';
 import { DISTRICT_NAMES } from '@/lib/districts';
 import { getCurrentSeasonSummary, generatePlantingAlerts } from '@/lib/planting-calendar';
 import { WeatherDistrictSelector } from './WeatherDistrictSelector';
+import { Sun, Moon, CloudSun, Cloud, CloudRain, CloudLightning, Snowflake, Wind, Droplets, CalendarDays, Leaf } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -14,12 +15,17 @@ const C = {
   cardShadow: 'var(--d-shadow-card)',
 };
 
-const WEATHER_ICON: Record<string, string> = {
-  '01d': '☀️', '01n': '🌙', '02d': '⛅', '02n': '⛅',
-  '03d': '☁️', '03n': '☁️', '04d': '☁️', '04n': '☁️',
-  '09d': '🌧️', '09n': '🌧️', '10d': '🌦️', '10n': '🌦️',
-  '11d': '⛈️', '11n': '⛈️', '13d': '❄️', '50d': '🌫️',
-};
+function WeatherIcon({ code, size = 22 }: { code: string; size?: number }) {
+  if (code === '01d') return <Sun size={size} style={{ color: '#F59E0B' }} />;
+  if (code === '01n') return <Moon size={size} style={{ color: '#94A3B8' }} />;
+  if (code === '02d' || code === '02n') return <CloudSun size={size} style={{ color: '#60A5FA' }} />;
+  if (code === '03d' || code === '03n' || code === '04d' || code === '04n') return <Cloud size={size} style={{ color: '#94A3B8' }} />;
+  if (code === '09d' || code === '09n' || code === '10d' || code === '10n') return <CloudRain size={size} style={{ color: '#3B82F6' }} />;
+  if (code === '11d' || code === '11n') return <CloudLightning size={size} style={{ color: '#7C3AED' }} />;
+  if (code === '13d') return <Snowflake size={size} style={{ color: '#BAE6FD' }} />;
+  if (code === '50d') return <Wind size={size} style={{ color: '#94A3B8' }} />;
+  return <CloudSun size={size} style={{ color: '#60A5FA' }} />;
+}
 
 const PHASE_COLOR: Record<string, { bg: string; color: string; label: string }> = {
   planting: { bg: 'var(--color-success-bg)', color: 'var(--color-success)', label: 'Planting Season' },
@@ -95,8 +101,8 @@ export default async function WeatherPage({
                 <span style={{ fontSize: '52px', fontWeight: 900, color: C.text, letterSpacing: '-0.04em', lineHeight: 1 }}>
                   {weather.now.temp}°
                 </span>
-                <span style={{ fontSize: '36px', marginBottom: '4px' }}>
-                  {WEATHER_ICON[weather.now.icon] ?? '🌤️'}
+                <span style={{ display: 'flex', marginBottom: '4px' }}>
+                  <WeatherIcon code={weather.now.icon} size={36} />
                 </span>
               </div>
               <p style={{ fontSize: '14px', color: C.muted, textTransform: 'capitalize', marginBottom: '4px' }}>
@@ -110,7 +116,7 @@ export default async function WeatherPage({
             {/* Humidity */}
             <div className="p-5">
               <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Humidity</p>
-              <p style={{ fontSize: '32px', marginBottom: '4px' }}>💧</p>
+              <div style={{ display: 'flex', marginBottom: '4px', color: C.blue }}><Droplets size={32} /></div>
               <p style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>{weather.now.humidity}%</p>
               <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
                 {weather.now.humidity > 80 ? 'High — disease risk' : weather.now.humidity > 60 ? 'Moderate' : 'Low — irrigation needed'}
@@ -120,7 +126,7 @@ export default async function WeatherPage({
             {/* Wind */}
             <div className="p-5">
               <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Wind</p>
-              <p style={{ fontSize: '32px', marginBottom: '4px' }}>💨</p>
+              <div style={{ display: 'flex', marginBottom: '4px', color: C.muted }}><Wind size={32} /></div>
               <p style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>{weather.now.wind} m/s</p>
               <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
                 {weather.now.wind > 8 ? 'Strong — delay spraying' : weather.now.wind > 4 ? 'Moderate' : 'Calm — good for spraying'}
@@ -130,7 +136,7 @@ export default async function WeatherPage({
             {/* Precipitation */}
             <div className="p-5">
               <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Precipitation</p>
-              <p style={{ fontSize: '32px', marginBottom: '4px' }}>🌧️</p>
+              <div style={{ display: 'flex', marginBottom: '4px', color: C.blue }}><CloudRain size={32} /></div>
               <p style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>{weather.now.precipitation.toFixed(1)} mm</p>
               <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
                 {weather.now.precipitation > 10 ? 'Heavy rain' : weather.now.precipitation > 2 ? 'Light rain' : 'No significant rain'}
@@ -173,7 +179,7 @@ export default async function WeatherPage({
               </p>
               {plantingAlerts.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <p style={{ fontSize: '28px', marginBottom: '8px' }}>📅</p>
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px', color: C.muted }}><CalendarDays size={28} /></div>
                   <p style={{ fontSize: '13px', color: C.muted }}>No urgent alerts</p>
                   <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>Add crops to your profile for personalized alerts</p>
                 </div>
@@ -183,7 +189,7 @@ export default async function WeatherPage({
                     const urg = URGENCY_COLOR[alert.urgency];
                     return (
                       <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '10px', borderRadius: '10px', background: urg.bg }}>
-                        <span style={{ fontSize: '20px', flexShrink: 0 }}>{alert.emoji}</span>
+                        <span style={{ display: 'flex', flexShrink: 0, color: urg.color }}><Leaf size={20} /></span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: '13px', fontWeight: 700, color: C.text, marginBottom: '2px' }}>{alert.title}</p>
                           <p style={{ fontSize: '11px', color: C.muted, lineHeight: '1.4' }}>{alert.message}</p>
@@ -222,7 +228,7 @@ export default async function WeatherPage({
               {weather.daily.map((day, i) => {
                 const probPct = day.precipProbability;
                 const barColor = probPct >= 70 ? C.blue : probPct >= 40 ? '#60A5FA' : '#BBF7D0';
-                const rowBg = day.precipMm > 10 ? 'var(--color-sky-bg)' : day.farmingNote.includes('⚠️') ? 'var(--color-danger-bg)' : 'transparent';
+                const rowBg = day.precipMm > 10 ? 'var(--color-sky-bg)' : day.farmingNote.includes('Avoid field work') ? 'var(--color-danger-bg)' : 'transparent';
                 return (
                   <div
                     key={i}
@@ -237,7 +243,7 @@ export default async function WeatherPage({
                     }}
                   >
                     <p style={{ fontSize: '13px', fontWeight: 600, color: C.text }}>{day.dayLabel}</p>
-                    <p style={{ fontSize: '22px' }}>{WEATHER_ICON[day.icon] ?? '🌤️'}</p>
+                    <div style={{ display: 'flex' }}><WeatherIcon code={day.icon} size={22} /></div>
                     <div>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>{day.high}°</span>
                       <span style={{ fontSize: '12px', color: C.muted }}> / {day.low}°</span>
@@ -281,11 +287,11 @@ export default async function WeatherPage({
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               {[
-                { season: 'Season A · Long Rains', months: 'Mar – May', crops: 'Maize, Beans, Groundnuts', icon: '🌱' },
-                { season: 'Season B · Short Rains', months: 'Sep – Nov', crops: 'Beans, Sweet Potato, Tomato', icon: '🫘' },
+                { season: 'Season A · Long Rains', months: 'Mar – May', crops: 'Maize, Beans, Groundnuts' },
+                { season: 'Season B · Short Rains', months: 'Sep – Nov', crops: 'Beans, Sweet Potato, Tomato' },
               ].map((s) => (
                 <div key={s.season} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px' }}>
-                  <p style={{ fontSize: '20px', marginBottom: '6px' }}>{s.icon}</p>
+                  <div style={{ display: 'flex', marginBottom: '6px', color: '#BBF7D0' }}><Leaf size={20} /></div>
                   <p style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', marginBottom: '2px' }}>{s.season}</p>
                   <p style={{ fontSize: '12px', color: 'var(--color-primary-muted)', marginBottom: '4px' }}>{s.months}</p>
                   <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>{s.crops}</p>

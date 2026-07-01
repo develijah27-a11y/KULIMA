@@ -2,6 +2,8 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
+import { Banknote, TrendingUp, CheckCircle2, AlertTriangle, Wallet, Calculator, ClipboardList, BarChart3, CalendarDays, Clock, Users } from 'lucide-react';
+import type { JSX } from 'react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -60,24 +62,24 @@ async function FinanceSummary({ userId }: { userId: string }) {
     <>
       {/* KPI row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-        {[
+        {((): { label: string; value: string; sub: string; icon: JSX.Element; border: string; bg: string; color: string }[] => [
           {
             label: 'Total Invested (Season A)',
             value: totalSpent > 0 ? `UGX ${totalSpent.toLocaleString()}` : '—',
             sub: `${expenses.length} expense entries`,
-            icon: '💸', border: C.red, bg: 'var(--color-danger-bg)', color: C.red,
+            icon: <Banknote size={20} />, border: C.red, bg: 'var(--color-danger-bg)', color: C.red,
           },
           {
             label: 'Projected Revenue',
             value: totalProjectedRevenue > 0 ? `UGX ${totalProjectedRevenue.toLocaleString()}` : '—',
             sub: projections.length > 0 ? `${projections.length} plan${projections.length !== 1 ? 's' : ''}` : 'Run the calculator',
-            icon: '📈', border: C.green, bg: 'var(--color-primary-bg)', color: C.green,
+            icon: <TrendingUp size={20} />, border: C.green, bg: 'var(--color-primary-bg)', color: C.green,
           },
           {
             label: 'Projected Profit',
             value: totalProjectedProfit !== 0 ? `UGX ${Math.abs(totalProjectedProfit).toLocaleString()}` : '—',
             sub: ROI !== null ? `${ROI}% return on investment` : 'No projection yet',
-            icon: totalProjectedProfit >= 0 ? '✅' : '⚠️',
+            icon: totalProjectedProfit >= 0 ? <CheckCircle2 size={20} /> : <AlertTriangle size={20} />,
             border: totalProjectedProfit >= 0 ? C.greenMed : C.amber,
             bg: totalProjectedProfit >= 0 ? 'var(--color-primary-bg)' : 'var(--color-harvest-bg)',
             color: totalProjectedProfit >= 0 ? C.greenMed : C.amber,
@@ -86,9 +88,9 @@ async function FinanceSummary({ userId }: { userId: string }) {
             label: 'Wallet Balance',
             value: `UGX ${walletBalance.toLocaleString()}`,
             sub: 'Available for farm inputs',
-            icon: '💰', border: C.blue, bg: 'var(--color-sky-bg)', color: C.blue,
+            icon: <Wallet size={20} />, border: C.blue, bg: 'var(--color-sky-bg)', color: C.blue,
           },
-        ].map(({ label, value, sub, icon, border, bg, color }) => (
+        ])().map(({ label, value, sub, icon, border, bg, color }) => (
           <div
             key={label}
             style={{
@@ -98,7 +100,7 @@ async function FinanceSummary({ userId }: { userId: string }) {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
               <p style={{ fontSize: '12px', fontWeight: 700, color: C.muted }}>{label}</p>
-              <span style={{ fontSize: '20px' }}>{icon}</span>
+              <span style={{ display: 'flex', color }}>{icon}</span>
             </div>
             <p style={{ fontSize: '22px', fontWeight: 900, color: C.text, letterSpacing: '-0.03em', marginBottom: '4px' }}>{value}</p>
             <p style={{ fontSize: '12px', color }}>{sub}</p>
@@ -199,19 +201,19 @@ export default async function FinancePage() {
   const actions = [
     {
       href: '/farmer/finance/calculator',
-      icon: '🧮', title: 'Profitability Calculator',
+      icon: <Calculator size={28} />, title: 'Profitability Calculator',
       desc: 'Calculate expected yield, costs & profit for any crop and farm size',
       color: C.green, bg: 'var(--color-primary-bg)', border: 'var(--color-primary-muted)',
     },
     {
       href: '/farmer/finance/expenses',
-      icon: '📋', title: 'Expense Tracker',
+      icon: <ClipboardList size={28} />, title: 'Expense Tracker',
       desc: 'Log fertilizer, seed, labor and other costs as you spend',
       color: C.blue, bg: 'var(--color-sky-bg)', border: 'var(--color-sky)',
     },
     {
       href: '/farmer/prices',
-      icon: '📊', title: 'Live Market Prices',
+      icon: <BarChart3 size={28} />, title: 'Live Market Prices',
       desc: 'Check current buying prices across all districts before selling',
       color: C.amber, bg: 'var(--color-harvest-bg)', border: 'var(--color-warning-border)',
     },
@@ -242,7 +244,7 @@ export default async function FinancePage() {
               textDecoration: 'none', transition: 'transform 0.1s',
             }}
           >
-            <span style={{ fontSize: '28px', display: 'block', marginBottom: '12px' }}>{icon}</span>
+            <span style={{ display: 'flex', marginBottom: '12px', color }}>{icon}</span>
             <p style={{ fontSize: '15px', fontWeight: 800, color, marginBottom: '6px' }}>{title}</p>
             <p style={{ fontSize: '13px', color: C.muted, lineHeight: '1.5' }}>{desc}</p>
             <p style={{ fontSize: '13px', fontWeight: 700, color, marginTop: '12px' }}>Open →</p>
@@ -271,13 +273,13 @@ export default async function FinancePage() {
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
           {[
-            { icon: '📅', tip: 'Track every cost from day one — most farmers underestimate total input costs by 30%.' },
-            { icon: '⏰', tip: 'Storing maize 2–3 months post-harvest can increase price by UGX 150–300/kg.' },
-            { icon: '🤝', tip: 'Group selling with neighbors reduces transport cost per kg by up to 40%.' },
-            { icon: '💹', tip: 'Always calculate your break-even price before accepting any buyer\'s offer.' },
+            { icon: <CalendarDays size={18} />, tip: 'Track every cost from day one — most farmers underestimate total input costs by 30%.' },
+            { icon: <Clock size={18} />, tip: 'Storing maize 2–3 months post-harvest can increase price by UGX 150–300/kg.' },
+            { icon: <Users size={18} />, tip: 'Group selling with neighbors reduces transport cost per kg by up to 40%.' },
+            { icon: <TrendingUp size={18} />, tip: 'Always calculate your break-even price before accepting any buyer\'s offer.' },
           ].map(({ icon, tip }) => (
             <div key={tip} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-              <span style={{ fontSize: '18px', flexShrink: 0 }}>{icon}</span>
+              <span style={{ display: 'flex', flexShrink: 0, color: 'rgba(255,255,255,0.75)' }}>{icon}</span>
               <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.75)', lineHeight: '1.5' }}>{tip}</p>
             </div>
           ))}

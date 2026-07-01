@@ -1,6 +1,7 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { Briefcase, HardHat, Droplets, FlaskConical, Leaf, Truck, ShieldCheck, Package, User, Phone, Banknote, Check } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -10,18 +11,34 @@ const C = {
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 
-export const WORKER_ROLES: { value: string; label: string; color: string; bg: string; icon: string }[] = [
-  { value: 'farm_manager',          label: 'Farm Manager',          color: 'var(--color-primary)', bg: 'var(--color-success-bg)', icon: '👨‍💼' },
-  { value: 'field_worker',          label: 'Field Worker',          color: 'var(--color-info)', bg: 'var(--color-sky-bg)', icon: '👷' },
-  { value: 'irrigation_specialist', label: 'Irrigation Specialist', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     icon: '💧' },
-  { value: 'pest_controller',       label: 'Pest Controller',       color: '#7C3AED',              bg: '#EDE9FE',                icon: '🧴' },
-  { value: 'harvester',             label: 'Harvester',             color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', icon: '🌾' },
-  { value: 'driver',                label: 'Driver / Transport',    color: 'var(--d-muted)',       bg: 'var(--color-surface-2)', icon: '🚜' },
-  { value: 'watchman',              label: 'Watchman / Security',   color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  icon: '🔒' },
-  { value: 'store_keeper',          label: 'Store Keeper',          color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', icon: '🏚️' },
-  { value: 'casual_laborer',        label: 'Casual Laborer',        color: 'var(--d-muted)',       bg: 'var(--d-subtle)',         icon: '🧑‍🌾' },
-  { value: 'other',                 label: 'Other',                 color: 'var(--d-muted)',       bg: 'var(--color-surface-2)', icon: '👤' },
+export const WORKER_ROLES: { value: string; label: string; color: string; bg: string }[] = [
+  { value: 'farm_manager',          label: 'Farm Manager',          color: 'var(--color-primary)', bg: 'var(--color-success-bg)' },
+  { value: 'field_worker',          label: 'Field Worker',          color: 'var(--color-info)',    bg: 'var(--color-sky-bg)'     },
+  { value: 'irrigation_specialist', label: 'Irrigation Specialist', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
+  { value: 'pest_controller',       label: 'Pest Controller',       color: '#7C3AED',              bg: '#EDE9FE'                 },
+  { value: 'harvester',             label: 'Harvester',             color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { value: 'driver',                label: 'Driver / Transport',    color: 'var(--d-muted)',       bg: 'var(--color-surface-2)'  },
+  { value: 'watchman',              label: 'Watchman / Security',   color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
+  { value: 'store_keeper',          label: 'Store Keeper',          color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { value: 'casual_laborer',        label: 'Casual Laborer',        color: 'var(--d-muted)',       bg: 'var(--d-subtle)'         },
+  { value: 'other',                 label: 'Other',                 color: 'var(--d-muted)',       bg: 'var(--color-surface-2)'  },
 ];
+
+function getRoleIcon(role: string): React.ReactNode {
+  const map: Record<string, React.ReactNode> = {
+    farm_manager:          <Briefcase size={22} />,
+    field_worker:          <HardHat size={22} />,
+    irrigation_specialist: <Droplets size={22} />,
+    pest_controller:       <FlaskConical size={22} />,
+    harvester:             <Leaf size={22} />,
+    driver:                <Truck size={22} />,
+    watchman:              <ShieldCheck size={22} />,
+    store_keeper:          <Package size={22} />,
+    casual_laborer:        <User size={22} />,
+    other:                 <User size={22} />,
+  };
+  return map[role] ?? <User size={22} />;
+}
 
 const WAGE_PERIODS = [
   { value: 'daily',    label: 'per day' },
@@ -76,7 +93,7 @@ function RoleBadge({ role }: { role: string }) {
       background: cfg.bg, color: cfg.color,
       fontSize: 11, fontWeight: 700,
     }}>
-      {cfg.icon} {cfg.label}
+      {cfg.label}
     </span>
   );
 }
@@ -236,7 +253,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
           style={{ ...inputStyle, width: 'auto', flex: '0 0 auto' }}
         >
           <option value="">All Roles</option>
-          {WORKER_ROLES.map(r => <option key={r.value} value={r.value}>{r.icon} {r.label}</option>)}
+          {WORKER_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
         </select>
 
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: C.muted, cursor: 'pointer' }}>
@@ -298,7 +315,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
               <label style={labelStyle}>Role *</label>
               <select value={form.role} onChange={e => setF('role', e.target.value)} style={inputStyle} required>
                 {WORKER_ROLES.map(r => (
-                  <option key={r.value} value={r.value}>{r.icon} {r.label}</option>
+                  <option key={r.value} value={r.value}>{r.label}</option>
                 ))}
               </select>
             </div>
@@ -356,7 +373,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                       color: active ? C.greenMed : C.muted, cursor: 'pointer',
                     }}
                   >
-                    {active ? '✓ ' : ''}{task}
+                    {active && <Check size={12} />}{task}
                   </button>
                 );
               })}
@@ -407,9 +424,9 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                 <div style={{
                   width: 46, height: 46, borderRadius: 12, background: cfg.bg,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 22, flexShrink: 0,
+                  color: cfg.color, flexShrink: 0,
                 }}>
-                  {cfg.icon}
+                  {getRoleIcon(w.role)}
                 </div>
 
                 {/* Info */}
@@ -426,18 +443,18 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
 
                   <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 6 }}>
                     {w.phone && (
-                      <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>📞 {w.phone}</p>
+                      <p style={{ fontSize: 12, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={11} />{w.phone}</p>
                     )}
                     {w.farms?.name && (
                       <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>🌿 {w.farms.name}</p>
                     )}
                     {w.wage_ugx && (
                       <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
-                        💰 UGX {Number(w.wage_ugx).toLocaleString()} / {w.wage_period === 'daily' ? 'day' : w.wage_period === 'monthly' ? 'month' : 'season'}
+                        <Banknote size={11} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />UGX {Number(w.wage_ugx).toLocaleString()} / {w.wage_period === 'daily' ? 'day' : w.wage_period === 'monthly' ? 'month' : 'season'}
                       </p>
                     )}
                     <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
-                      📅 Since {new Date(w.start_date).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      Since {new Date(w.start_date).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>
 
