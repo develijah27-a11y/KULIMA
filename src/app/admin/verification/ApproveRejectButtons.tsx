@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { CheckCircle2, X } from 'lucide-react';
 
 interface Props {
   verificationId: string;
@@ -33,7 +34,7 @@ export function ApproveRejectButtons({ verificationId, userId, targetLevel }: Pr
   if (done) {
     return (
       <span style={{ fontSize: 12, fontWeight: 700, color: done === 'approved' ? 'var(--color-success)' : 'var(--color-danger)' }}>
-        {done === 'approved' ? '✓ Approved' : '✗ Rejected'}
+        {done === 'approved' ? <><CheckCircle2 size={14} /> Approved</> : <><X size={14} /> Rejected</>}
       </span>
     );
   }

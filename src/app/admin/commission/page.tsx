@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
+import { CheckCircle2, X } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -15,7 +16,7 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
       zIndex: 1000, minWidth: 260, background: ok ? '#065F46' : '#991B1B',
       color: '#fff', borderRadius: 14, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
     }}>
-      <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{ok ? '✅ ' : '❌ '}{msg}</p>
+      <p style={{ margin: 0, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>{ok ? <CheckCircle2 size={16} /> : <X size={16} />}{msg}</p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PrintButton } from './PrintButton';
+import { CheckCircle2 } from 'lucide-react';
 
 export default async function OrderReceiptPage({
   params,
@@ -89,7 +90,7 @@ export default async function OrderReceiptPage({
             background: isComplete ? '#dcfce7' : '#fef3c7',
             color: isComplete ? '#15803d' : '#b45309',
           }}>
-            {isComplete ? '✅ Payment Complete' : `Status: ${order.status.toUpperCase()}`}
+            {isComplete ? <><CheckCircle2 size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Payment Complete</> : `Status: ${order.status.toUpperCase()}`}
           </span>
         </div>
 

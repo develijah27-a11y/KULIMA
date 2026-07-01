@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Banknote, Plus, ArrowUpRight, Settings, ClipboardList, Wallet } from 'lucide-react';
+import type { JSX } from 'react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -8,8 +10,11 @@ const C = {
   amber: 'var(--color-harvest)',
 };
 
-const TX_ICON: Record<string, string> = {
-  sale_payout: '💰', contribution: '➕', withdrawal: '↗', fee: '⚙',
+const TX_ICON: Record<string, JSX.Element> = {
+  sale_payout:  <Banknote size={18} />,
+  contribution: <Plus size={18} />,
+  withdrawal:   <ArrowUpRight size={18} />,
+  fee:          <Settings size={18} />,
 };
 
 export default async function GroupsWalletPage() {
@@ -88,7 +93,7 @@ export default async function GroupsWalletPage() {
           background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow,
           textDecoration: 'none',
         }}>
-          <span style={{ fontSize: 20 }}>📋</span>
+          <span style={{ display: 'flex', color: C.green }}><ClipboardList size={20} /></span>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Group Listings</p>
             <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>Manage sales</p>
@@ -99,7 +104,7 @@ export default async function GroupsWalletPage() {
           background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow,
           textDecoration: 'none',
         }}>
-          <span style={{ fontSize: 20 }}>➕</span>
+          <span style={{ display: 'flex', color: C.green }}><Plus size={20} /></span>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Record Contribution</p>
             <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>Log member funds</p>
@@ -114,7 +119,7 @@ export default async function GroupsWalletPage() {
         </div>
         {txns.length === 0 ? (
           <div style={{ padding: '28px 20px', textAlign: 'center' }}>
-            <p style={{ fontSize: 32, marginBottom: 8 }}>💰</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, color: C.muted }}><Wallet size={32} /></div>
             <p style={{ color: C.muted, fontSize: 13 }}>
               No transactions yet. Sale proceeds will appear here after group listings are sold.
             </p>
@@ -124,7 +129,7 @@ export default async function GroupsWalletPage() {
             {txns.map((t: any) => (
               <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: `1px solid ${C.border}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>{TX_ICON[t.type] ?? '💸'}</span>
+                  <span style={{ display: 'flex', color: C.amber }}>{TX_ICON[t.type] ?? <Banknote size={18} />}</span>
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0, textTransform: 'capitalize' }}>
                       {t.type?.replace(/_/g, ' ')}

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PrintInvoiceButton } from './PrintInvoiceButton';
+import { CheckCircle2, Clock } from 'lucide-react';
 
 export default async function InvoicePage({
   params,
@@ -71,7 +72,7 @@ export default async function InvoicePage({
             background: paid ? '#dcfce7' : '#fef3c7',
             color: paid ? '#15803d' : '#b45309',
           }}>
-            {paid ? '✅ Payment Settled' : '⏳ Payment Pending'}
+            {paid ? <><CheckCircle2 size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Payment Settled</> : <><Clock size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Payment Pending</>}
           </span>
         </div>
 

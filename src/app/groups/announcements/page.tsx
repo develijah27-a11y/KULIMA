@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { Bell, Megaphone, Smartphone } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -8,10 +9,10 @@ const C = {
 };
 
 const SAMPLE_ANNOUNCEMENTS = [
-  { emoji: '📅', title: 'Group Meeting', body: 'Monthly planning meeting this Saturday at Kiboga Community Hall, 10am. All members must attend.', date: 'Jun 14', priority: 'high' },
-  { emoji: '🌾', title: 'Harvest Collection', body: 'Maize harvest collection starts June 20. Bring 50 kg bags. Weighing point at Okello store.', date: 'Jun 12', priority: 'medium' },
-  { emoji: '💰', title: 'Bulk Order Payment Due', body: 'June fertiliser order payment of UGX 30,000 per member is due by June 18. Pay to treasurer.', date: 'Jun 10', priority: 'high' },
-  { emoji: '🌱', title: 'New Seed Variety Available', body: 'NASECO hybrid maize seed now available via our bulk order. Contact the secretary to add your order.', date: 'Jun 8', priority: 'low' },
+  { title: 'Group Meeting', body: 'Monthly planning meeting this Saturday at Kiboga Community Hall, 10am. All members must attend.', date: 'Jun 14', priority: 'high' },
+  { title: 'Harvest Collection', body: 'Maize harvest collection starts June 20. Bring 50 kg bags. Weighing point at Okello store.', date: 'Jun 12', priority: 'medium' },
+  { title: 'Bulk Order Payment Due', body: 'June fertiliser order payment of UGX 30,000 per member is due by June 18. Pay to treasurer.', date: 'Jun 10', priority: 'high' },
+  { title: 'New Seed Variety Available', body: 'NASECO hybrid maize seed now available via our bulk order. Contact the secretary to add your order.', date: 'Jun 8', priority: 'low' },
 ];
 
 export default async function AnnouncementsPage() {
@@ -38,13 +39,13 @@ export default async function AnnouncementsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Announcements 📢</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Announcements</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Important updates for all group members</p>
       </div>
 
       {isEmpty && (
         <div style={{ padding: '12px 16px', borderRadius: 10, background: 'var(--color-harvest-bg)', fontSize: 12, color: C.amber, fontWeight: 600 }}>
-          📋 No announcements yet — showing sample content. Create real announcements from Group Settings.
+          No announcements yet — showing sample content. Create real announcements from Group Settings.
         </div>
       )}
 
@@ -56,7 +57,7 @@ export default async function AnnouncementsPage() {
             <div key={a.id ?? i} style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '16px 20px', opacity: isEmpty ? 0.75 : 1 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <span style={{ fontSize: 20 }}>{a.emoji ?? '📢'}</span>
+                  <span style={{ display: 'flex', color: pc.c }}><Megaphone size={20} /></span>
                   <p style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0 }}>{a.title}</p>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, marginLeft: 12 }}>
@@ -73,7 +74,7 @@ export default async function AnnouncementsPage() {
       </div>
 
       <div style={{ padding: '14px 18px', borderRadius: 12, background: C.cardBg, boxShadow: C.cardShadow }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 4px' }}>📱 SMS Broadcast Coming Soon</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}><Smartphone size={13} />SMS Broadcast Coming Soon</p>
         <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Send announcements directly as SMS to all group members who don't have smartphones.</p>
       </div>
     </div>

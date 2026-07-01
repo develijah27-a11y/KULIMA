@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState } from 'react';
+import { CheckCircle2, X } from 'lucide-react';
 
 const CROPS = [
   'maize', 'beans', 'groundnuts', 'sorghum', 'rice', 'cassava',
@@ -187,7 +188,7 @@ export function PriceEditor({ districts }: Props) {
                 color: result.ok ? 'var(--color-success)' : 'var(--color-danger)',
               }}
             >
-              {result.ok ? '✓' : '✗'} {result.msg}
+              {result.ok ? <CheckCircle2 size={14} /> : <X size={14} />} {result.msg}
             </p>
           )}
         </div>

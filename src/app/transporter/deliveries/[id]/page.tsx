@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { BidForm } from './BidForm';
+import { Check } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -88,7 +89,7 @@ export default async function DeliveryDetailPage({ params }: { params: Promise<{
                 UGX {Math.round(existingBid.price).toLocaleString()}
               </p>
               <p style={{ fontSize: 11, fontWeight: 600, color: existingBid.status === 'accepted' ? 'var(--color-success)' : existingBid.status === 'rejected' ? 'var(--color-danger)' : 'var(--color-harvest)', margin: 0 }}>
-                {existingBid.status === 'accepted' ? '✓ Bid accepted! Check your active deliveries.' : existingBid.status === 'rejected' ? 'Bid rejected' : 'Awaiting response'}
+                {existingBid.status === 'accepted' ? <><Check size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />Bid accepted! Check your active deliveries.</> : existingBid.status === 'rejected' ? 'Bid rejected' : 'Awaiting response'}
               </p>
             </div>
           </div>
