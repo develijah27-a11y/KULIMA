@@ -1,10 +1,9 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { cache } from 'react';
 import type { Database } from '../database.types';
 import { env } from '@/config/env';
 
-export const createClient = cache(async () => {
+export const createClient = async () => {
   const cookieStore = await cookies();
 
   const anonKey =

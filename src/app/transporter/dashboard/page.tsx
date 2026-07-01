@@ -130,7 +130,7 @@ function QuickActions() {
 async function VehicleCard({ userId }: { userId: string }) {
   const supabase = await createClient();
   const { data: vehicle } = await (supabase.from as any)('vehicles')
-    .select('id, plate_number, vehicle_type, capacity_kg, is_available, is_cold_capable, make, model')
+    .select('id, plate_number, vehicle_type, capacity_kg, is_available, is_cold_capable, make_model')
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -159,7 +159,7 @@ async function VehicleCard({ userId }: { userId: string }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <p style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0 }}>
-              {vehicle.make ?? ''} {vehicle.model ?? ''} · {vehicle.plate_number}
+              {vehicle.make_model ?? ''}{vehicle.make_model ? ' · ' : ''}{vehicle.plate_number}
             </p>
             {vehicle.is_cold_capable && (
               <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: 'var(--color-sky-bg)', color: C.blue, display: 'flex', alignItems: 'center', gap: 3 }}>

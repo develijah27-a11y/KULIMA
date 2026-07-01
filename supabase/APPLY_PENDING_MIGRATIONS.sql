@@ -527,5 +527,19 @@ CREATE POLICY "admin full access" ON input_returns
   );
 
 -- ============================================================================
+-- 2026-07-01: Fix missing GRANTs for authenticated role on transport tables.
+-- Without these, RLS policies on vehicles/delivery_requests/delivery_bids
+-- are unreachable — PostgREST rejects requests before even evaluating them.
+-- ============================================================================
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON vehicles          TO authenticated;
+GRANT SELECT, INSERT, UPDATE         ON delivery_requests TO authenticated;
+GRANT SELECT, INSERT, UPDATE         ON delivery_bids     TO authenticated;
+
+-- Also grant sequences so INSERT can generate UUIDs via gen_random_uuid()
+-- (needed for tables where id default uses a sequence)
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+
+-- ============================================================================
 -- Done. All pending migrations applied.
 -- ============================================================================
