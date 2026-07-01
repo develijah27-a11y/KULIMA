@@ -1,7 +1,12 @@
-﻿import { Suspense, cache } from 'react';
+import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import {
+  ClipboardList, AlertCircle, CheckCircle2, Microscope,
+  Stethoscope, FileText, BookOpen, Map, Folder,
+  Leaf, AlertTriangle,
+} from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -28,7 +33,6 @@ async function PathologistStats({ userId }: { userId: string }) {
   const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
 
-  // Try disease_scans table (from existing disease detection feature)
   const [pendingRes, urgentRes, resolvedRes, scansRes] = await Promise.allSettled([
     (supabase.from as any)('disease_reports')
       .select('id', { count: 'exact', head: true })
@@ -53,10 +57,10 @@ async function PathologistStats({ userId }: { userId: string }) {
   const scansCount    = scansRes.status    === 'fulfilled' ? (scansRes.value.count    ?? 0) : 0;
 
   const stats = [
-    { label: 'Pending Cases', value: pendingCount, icon: '📋', sub: 'Awaiting triage', border: pendingCount ? C.amber : C.muted },
-    { label: 'Urgent Cases', value: urgentCount, icon: '🚨', sub: 'High severity', border: urgentCount ? C.red : C.muted },
-    { label: 'Resolved This Week', value: resolvedCount, icon: '✅', sub: 'Closed by you', border: C.greenBright },
-    { label: 'Scans Today', value: scansCount, icon: '🔬', sub: 'AI diagnoses run', border: C.blue },
+    { label: 'Pending Cases',      value: pendingCount,  icon: <ClipboardList size={18} />, sub: 'Awaiting triage',   border: pendingCount ? C.amber : C.muted },
+    { label: 'Urgent Cases',       value: urgentCount,   icon: <AlertCircle size={18} />,   sub: 'High severity',     border: urgentCount ? C.red : C.muted },
+    { label: 'Resolved This Week', value: resolvedCount, icon: <CheckCircle2 size={18} />,  sub: 'Closed by you',     border: C.greenBright },
+    { label: 'Scans Today',        value: scansCount,    icon: <Microscope size={18} />,    sub: 'AI diagnoses run',  border: C.blue },
   ];
 
   return (
@@ -65,7 +69,7 @@ async function PathologistStats({ userId }: { userId: string }) {
         <div key={label} style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '18px 20px' }}>
           <div className="flex items-start justify-between mb-2">
             <p className="text-xs font-semibold" style={{ color: C.muted }}>{label}</p>
-            <span className="text-xl">{icon}</span>
+            <div style={{ color: border }}>{icon}</div>
           </div>
           <p className="text-2xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>{value}</p>
           <p className="text-xs mt-1" style={{ color: C.muted }}>{sub}</p>
@@ -77,11 +81,11 @@ async function PathologistStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Triage Case', href: '/pathologist/case-queue', emoji: '🩺', bg: 'var(--color-danger-bg)', color: C.red },
-    { label: 'File Report', href: '/pathologist/my-cases/new', emoji: '📝', bg: 'var(--color-sky-bg)', color: C.blue },
-    { label: 'Disease Library', href: '/pathologist/disease-alerts', emoji: '📚', bg: '#F5F3FF', color: C.purple },
-    { label: 'Outbreak Map', href: '/pathologist/geo-map', emoji: '🗺️', bg: 'var(--color-harvest-bg)', color: C.amber },
-    { label: 'My Cases', href: '/pathologist/my-cases', emoji: '📁', bg: 'var(--color-primary-bg)', color: C.green },
+    { label: 'Triage Case',     href: '/pathologist/case-queue',      icon: <Stethoscope size={20} />, bg: 'var(--color-danger-bg)',  color: C.red    },
+    { label: 'File Report',     href: '/pathologist/my-cases/new',    icon: <FileText size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'Disease Library', href: '/pathologist/disease-alerts',  icon: <BookOpen size={20} />,    bg: '#F5F3FF',                 color: C.purple },
+    { label: 'Outbreak Map',    href: '/pathologist/geo-map',         icon: <Map size={20} />,         bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'My Cases',        href: '/pathologist/my-cases',        icon: <Folder size={20} />,      bg: 'var(--color-primary-bg)', color: C.green  },
   ];
 
   return (
@@ -90,10 +94,10 @@ function QuickActions() {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
-        {actions.map(({ label, href, emoji, bg, color }) => (
+        {actions.map(({ label, href, icon, bg, color }) => (
           <Link key={label} href={href} className="flex flex-col items-center gap-2 py-4 rounded-xl hover:opacity-85 transition-opacity" style={{ background: bg, textDecoration: 'none' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
-              {emoji}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>
+              {icon}
             </div>
             <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
           </Link>
@@ -103,7 +107,6 @@ function QuickActions() {
   );
 }
 
-// Pending disease cases queue
 async function CaseQueue() {
   const supabase = await createClient();
   const { data: cases, error } = await (supabase.from as any)('disease_reports')
@@ -120,8 +123,6 @@ async function CaseQueue() {
     medium: { label: 'MEDIUM', color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)', border: 'var(--color-harvest)' },
     low:    { label: 'LOW',    color: 'var(--color-success)',  bg: 'var(--color-success-bg)', border: 'var(--color-success)' },
   };
-
-  const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾' };
 
   function timeAgo(iso: string) {
     const d = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -142,7 +143,7 @@ async function CaseQueue() {
 
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-3xl mb-3">✅</p>
+          <CheckCircle2 size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-bold" style={{ color: C.text }}>All clear — no pending cases</p>
           <p className="text-xs mt-1" style={{ color: C.muted }}>New farmer disease reports will appear here for triage</p>
         </div>
@@ -152,8 +153,8 @@ async function CaseQueue() {
             const urg = URGENCY[c.urgency] ?? URGENCY.low;
             return (
               <Link key={c.id} href={`/pathologist/case-queue/${c.id}`} className="px-5 py-3.5 flex items-center gap-3 hover:bg-gray-50 transition-colors" style={{ textDecoration: 'none' }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: urg.bg, border: `1px solid ${urg.border}` }}>
-                  {CROP_EMOJI[c.crop_type?.toLowerCase()] ?? '🌱'}
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: urg.bg, border: `1px solid ${urg.border}`, color: urg.color }}>
+                  <Leaf size={18} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -172,18 +173,21 @@ async function CaseQueue() {
   );
 }
 
-// Seasonal disease alert panel — always-visible intelligence
 function DiseaseAlertPanel() {
   const month = new Date().getMonth();
 
-  // Uganda seasonal disease risk calendar
+  const RISK_ICON: Record<string, React.ReactNode> = {
+    high:   <AlertTriangle size={16} />,
+    medium: <Leaf size={16} />,
+  };
+
   const ALERTS = [
-    { crop: 'Maize', disease: 'Fall Armyworm (FAW)', risk: 'high', months: [2,3,4,8,9,10], districts: 'Northern, Eastern Uganda', icon: '🐛', action: 'Spray emamectin benzoate within 24h of detection' },
-    { crop: 'Maize', disease: 'Maize Lethal Necrosis (MLN)', risk: 'high', months: [0,1,2,3,4,5], districts: 'All maize-growing regions', icon: '🍂', action: 'No cure — rogue and destroy infected plants immediately' },
-    { crop: 'Coffee', disease: 'Coffee Berry Disease (CBD)', risk: 'high', months: [3,4,5,9,10,11], districts: 'Mt. Elgon, Rwenzori', icon: '☕', action: 'Spray copper-based fungicide at berry formation' },
-    { crop: 'Cassava', disease: 'Cassava Brown Streak (CBSD)', risk: 'medium', months: [0,1,2,9,10,11], districts: 'Western, Central Uganda', icon: '🥔', action: 'Use clean planting material; whitefly control' },
-    { crop: 'Banana', disease: 'Banana Xanthomonas Wilt (BXW)', risk: 'high', months: Array.from({length:12},(_,i)=>i), districts: 'Central, Western Uganda', icon: '🍌', action: 'Destroy infected mats; disinfect tools with bleach' },
-    { crop: 'Tomato', disease: 'Late Blight', risk: 'medium', months: [3,4,9,10], districts: 'Kabale, Kisoro highlands', icon: '🍅', action: 'Spray Mancozeb or Metalaxyl preventively in wet season' },
+    { crop: 'Maize',   disease: 'Fall Armyworm (FAW)',           risk: 'high',   months: [2,3,4,8,9,10],       districts: 'Northern, Eastern Uganda',       action: 'Spray emamectin benzoate within 24h of detection' },
+    { crop: 'Maize',   disease: 'Maize Lethal Necrosis (MLN)',   risk: 'high',   months: [0,1,2,3,4,5],        districts: 'All maize-growing regions',       action: 'No cure — rogue and destroy infected plants immediately' },
+    { crop: 'Coffee',  disease: 'Coffee Berry Disease (CBD)',     risk: 'high',   months: [3,4,5,9,10,11],      districts: 'Mt. Elgon, Rwenzori',             action: 'Spray copper-based fungicide at berry formation' },
+    { crop: 'Cassava', disease: 'Cassava Brown Streak (CBSD)',   risk: 'medium', months: [0,1,2,9,10,11],      districts: 'Western, Central Uganda',         action: 'Use clean planting material; whitefly control' },
+    { crop: 'Banana',  disease: 'Banana Xanthomonas Wilt (BXW)', risk: 'high',   months: Array.from({length:12},(_,i)=>i), districts: 'Central, Western Uganda', action: 'Destroy infected mats; disinfect tools with bleach' },
+    { crop: 'Tomato',  disease: 'Late Blight',                   risk: 'medium', months: [3,4,9,10],           districts: 'Kabale, Kisoro highlands',        action: 'Spray Mancozeb or Metalaxyl preventively in wet season' },
   ].filter(a => a.months.includes(month));
 
   const RISK: Record<string, { color: string; bg: string }> = {
@@ -206,7 +210,9 @@ function DiseaseAlertPanel() {
           const cfg = RISK[a.risk];
           return (
             <div key={`${a.crop}-${a.disease}`} className="px-5 py-3.5 flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: cfg.bg }}>{a.icon}</div>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: cfg.bg, color: cfg.color }}>
+                {RISK_ICON[a.risk] ?? <Leaf size={16} />}
+              </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-0.5">
                   <p className="text-sm font-bold" style={{ color: C.text }}>{a.disease}</p>
@@ -223,7 +229,6 @@ function DiseaseAlertPanel() {
   );
 }
 
-// Recent disease scans from farmers
 async function RecentScans() {
   const supabase = await createClient();
   const { data: scans, error } = await (supabase.from as any)('disease_scans')
@@ -248,7 +253,7 @@ async function RecentScans() {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-8 text-center">
-          <p className="text-2xl mb-2">🔬</p>
+          <Microscope size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-medium" style={{ color: C.muted }}>No scans yet today</p>
         </div>
       ) : (
@@ -259,7 +264,9 @@ async function RecentScans() {
             return (
               <div key={s.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-surface-2)' }}>🔬</div>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--color-surface-2)', color: C.muted }}>
+                    <Microscope size={16} />
+                  </div>
                   <div>
                     <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>{s.crop_type} — {s.disease_detected ?? 'Pending review'}</p>
                     <p className="text-[11px]" style={{ color: C.muted }}>{timeAgo(s.created_at)}</p>
@@ -277,16 +284,14 @@ async function RecentScans() {
   );
 }
 
-// Outbreak geo-summary
 function OutbreakSummary() {
   const month = new Date().getMonth();
-  // Real Uganda outbreak data by season
   const HOTSPOTS = [
-    { district: 'Gulu', crop: 'Maize', disease: 'Fall Armyworm', severity: 'high', active: [2,3,4,8,9,10].includes(month) },
-    { district: 'Mukono', crop: 'Banana', disease: 'BXW Wilt', severity: 'high', active: true },
-    { district: 'Mt. Elgon', crop: 'Coffee', disease: 'Coffee Berry Disease', severity: 'medium', active: [3,4,5,9,10,11].includes(month) },
-    { district: 'Wakiso', crop: 'Tomato', disease: 'Late Blight', severity: 'medium', active: [3,4,9,10].includes(month) },
-    { district: 'Masaka', crop: 'Cassava', disease: 'CBSD', severity: 'medium', active: [0,1,2,9,10,11].includes(month) },
+    { district: 'Gulu',     crop: 'Maize',   disease: 'Fall Armyworm',       severity: 'high',   active: [2,3,4,8,9,10].includes(month) },
+    { district: 'Mukono',   crop: 'Banana',  disease: 'BXW Wilt',            severity: 'high',   active: true },
+    { district: 'Mt. Elgon',crop: 'Coffee',  disease: 'Coffee Berry Disease', severity: 'medium', active: [3,4,5,9,10,11].includes(month) },
+    { district: 'Wakiso',   crop: 'Tomato',  disease: 'Late Blight',          severity: 'medium', active: [3,4,9,10].includes(month) },
+    { district: 'Masaka',   crop: 'Cassava', disease: 'CBSD',                severity: 'medium', active: [0,1,2,9,10,11].includes(month) },
   ].filter(h => h.active);
 
   const SEVERITY: Record<string, { color: string; bg: string }> = {
@@ -332,11 +337,10 @@ export default async function PathologistDashboardPage() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Dr. {firstName} 🩺
+            Dr. {firstName}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>Plant Disease Hub · {profile?.location ?? 'Uganda'}</p>
         </div>
@@ -345,15 +349,12 @@ export default async function PathologistDashboardPage() {
         </Link>
       </div>
 
-      {/* Stats */}
       <Suspense fallback={<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}</div>}>
         <PathologistStats userId={userId} />
       </Suspense>
 
-      {/* Quick Actions */}
       <QuickActions />
 
-      {/* Case Queue + Disease Alerts (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-80 rounded-xl" />}>
           <CaseQueue />
@@ -361,7 +362,6 @@ export default async function PathologistDashboardPage() {
         <DiseaseAlertPanel />
       </div>
 
-      {/* Recent Scans + Outbreak Map (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-60 rounded-xl" />}>
           <RecentScans />

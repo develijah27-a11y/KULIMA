@@ -1,7 +1,12 @@
-﻿import { Suspense, cache } from 'react';
+import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import {
+  Users, TrendingUp, Package, DollarSign, AlertTriangle, CheckCircle2,
+  Building2, MessageCircle, Microscope, Truck, ShoppingCart, BarChart3,
+  Bell, ShieldCheck, CreditCard,
+} from 'lucide-react';
 
 const C = {
   text:       'var(--d-text)',
@@ -44,7 +49,6 @@ function timeAgo(iso: string) {
   return `${Math.floor(d / 1440)}d ago`;
 }
 
-// ─── Cached auth + admin check ────────────────────────────────────────────────
 const getAdminProfile = cache(async () => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -84,12 +88,12 @@ async function PlatformKPIs() {
   const activeListCount = activeListRes.status === 'fulfilled' ? (activeListRes.value.count ?? 0) : 0;
 
   const kpis = [
-    { label: 'Total Users', value: totalCount.toLocaleString(), sub: 'All roles registered', icon: '👥', border: C.violet, color: C.violet },
-    { label: 'New This Week', value: `+${newWeekCount.toLocaleString()}`, sub: '7-day growth', icon: '📈', border: C.greenBright, color: C.greenMed },
-    { label: 'Active Listings', value: activeListCount.toLocaleString(), sub: 'Live on marketplace', icon: '📦', border: C.amber, color: C.amber },
-    { label: 'GMV This Month', value: gmv >= 1e9 ? `${(gmv/1e9).toFixed(1)}B` : gmv >= 1e6 ? `${(gmv/1e6).toFixed(1)}M` : gmv > 0 ? `${Math.round(gmv/1000)}K` : '—', sub: 'UGX gross market value', icon: '💰', border: C.blue, color: C.blue },
-    { label: 'Pending KYC', value: kycPending.toString(), sub: kycPending ? 'Awaiting review' : 'All clear', icon: kycPending ? '⚠️' : '✅', border: kycPending ? C.red : C.greenBright, color: kycPending ? C.red : C.greenMed, alert: kycPending > 0 },
-    { label: 'Wallet TVL', value: tvl >= 1e9 ? `${(tvl/1e9).toFixed(1)}B` : tvl >= 1e6 ? `${(tvl/1e6).toFixed(1)}M` : tvl > 0 ? `${Math.round(tvl/1000)}K` : '—', sub: 'UGX total in wallets', icon: '🏦', border: C.indigo, color: C.indigo },
+    { label: 'Total Users',     value: totalCount.toLocaleString(),                              sub: 'All roles registered',    icon: <Users size={16} />,          border: C.violet,     color: C.violet  },
+    { label: 'New This Week',   value: `+${newWeekCount.toLocaleString()}`,                      sub: '7-day growth',            icon: <TrendingUp size={16} />,     border: C.greenBright,color: C.greenMed },
+    { label: 'Active Listings', value: activeListCount.toLocaleString(),                         sub: 'Live on marketplace',     icon: <Package size={16} />,        border: C.amber,      color: C.amber   },
+    { label: 'GMV This Month',  value: gmv >= 1e9 ? `${(gmv/1e9).toFixed(1)}B` : gmv >= 1e6 ? `${(gmv/1e6).toFixed(1)}M` : gmv > 0 ? `${Math.round(gmv/1000)}K` : '—', sub: 'UGX gross market value', icon: <DollarSign size={16} />, border: C.blue, color: C.blue },
+    { label: 'Pending KYC',     value: kycPending.toString(),                                    sub: kycPending ? 'Awaiting review' : 'All clear', icon: kycPending ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />, border: kycPending ? C.red : C.greenBright, color: kycPending ? C.red : C.greenMed, alert: kycPending > 0 },
+    { label: 'Wallet TVL',      value: tvl >= 1e9 ? `${(tvl/1e9).toFixed(1)}B` : tvl >= 1e6 ? `${(tvl/1e6).toFixed(1)}M` : tvl > 0 ? `${Math.round(tvl/1000)}K` : '—', sub: 'UGX total in wallets', icon: <Building2 size={16} />, border: C.indigo, color: C.indigo },
   ];
 
   return (
@@ -99,7 +103,7 @@ async function PlatformKPIs() {
           {alert && <div style={{ position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: '50%', background: C.red, boxShadow: `0 0 0 3px rgba(230,57,70,0.2)` }} />}
           <div className="flex items-start justify-between mb-2">
             <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: C.muted }}>{label}</p>
-            <span className="text-lg">{icon}</span>
+            <div style={{ color }}>{icon}</div>
           </div>
           <p className="text-2xl font-black" style={{ color, letterSpacing: '-0.03em' }}>{value}</p>
           <p className="text-[10px] mt-1" style={{ color: C.muted }}>{sub}</p>
@@ -113,7 +117,6 @@ async function PlatformKPIs() {
 async function RoleBreakdown() {
   const supabase = await createClient();
   const ROLES = ['farmer', 'buyer', 'transporter', 'supplier', 'pathologist', 'offtaker', 'groups'] as const;
-  // Parallel count queries — never downloads full rows
   const results = await Promise.all(
     ROLES.map(r => (supabase.from as any)('profiles').select('id', { count: 'exact', head: true }).eq('role', r))
   );
@@ -153,7 +156,7 @@ async function RoleBreakdown() {
   );
 }
 
-// ─── 7-Day User Registration Sparkline ───────────────────────────────────────
+// ─── 7-Day Signups Sparkline ──────────────────────────────────────────────────
 async function GrowthSparkline() {
   const supabase = await createClient();
   const days: { label: string; from: string; to: string }[] = [];
@@ -168,7 +171,6 @@ async function GrowthSparkline() {
     });
   }
 
-  // 7 parallel count queries — no row data downloaded
   const results = await Promise.all(
     days.map(d => (supabase.from as any)('profiles')
       .select('id', { count: 'exact', head: true })
@@ -229,7 +231,7 @@ async function RecentRegistrations() {
       </div>
       {rows.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="text-3xl mb-2">👥</p>
+          <Users size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm" style={{ color: C.muted }}>No users yet</p>
         </div>
       ) : (
@@ -276,10 +278,10 @@ async function PendingActions() {
   const deliveriesCount = deliveriesRes.status === 'fulfilled' ? (deliveriesRes.value.count ?? 0) : 0;
 
   const items = [
-    { label: 'KYC Verifications', count: kycCount, href: '/admin/verification', icon: '🪪', urgency: kycCount > 5 },
-    { label: 'Open Buyer Offers', count: offersCount, href: '/admin/buyers', icon: '💬', urgency: false },
-    { label: 'Disease Reports', count: reportsCount, href: '/admin/dashboard', icon: '🔬', urgency: reportsCount > 0 },
-    { label: 'Open Delivery Jobs', count: deliveriesCount, href: '/admin/deliveries', icon: '🚛', urgency: false },
+    { label: 'KYC Verifications',  count: kycCount,        href: '/admin/verification', icon: <CreditCard size={16} />,    urgency: kycCount > 5 },
+    { label: 'Open Buyer Offers',  count: offersCount,     href: '/admin/buyers',       icon: <MessageCircle size={16} />, urgency: false },
+    { label: 'Disease Reports',    count: reportsCount,    href: '/admin/dashboard',    icon: <Microscope size={16} />,    urgency: reportsCount > 0 },
+    { label: 'Open Delivery Jobs', count: deliveriesCount, href: '/admin/deliveries',   icon: <Truck size={16} />,         urgency: false },
   ];
 
   return (
@@ -292,7 +294,7 @@ async function PendingActions() {
         {items.map(({ label, count, href, icon, urgency }) => (
           <Link key={label} href={href} className="px-5 py-3.5 flex items-center justify-between hover:bg-gray-50 transition-colors" style={{ textDecoration: 'none' }}>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base" style={{ background: urgency ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)' }}>{icon}</div>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: urgency ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)', color: urgency ? C.red : C.green }}>{icon}</div>
               <p className="text-sm font-medium" style={{ color: C.text }}>{label}</p>
             </div>
             <div className="flex items-center gap-2">
@@ -306,7 +308,7 @@ async function PendingActions() {
   );
 }
 
-// ─── Recent Marketplace Activity ──────────────────────────────────────────────
+// ─── Marketplace Activity ──────────────────────────────────────────────────────
 async function MarketplaceActivity() {
   const supabase = await createClient();
   const { data: activity } = await (supabase.from as any)('offers')
@@ -331,7 +333,7 @@ async function MarketplaceActivity() {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-2xl mb-2">📊</p>
+          <BarChart3 size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm" style={{ color: C.muted }}>No activity yet</p>
         </div>
       ) : (
@@ -341,7 +343,9 @@ async function MarketplaceActivity() {
             return (
               <div key={o.id} className="px-5 py-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0" style={{ background: 'var(--color-primary-bg)' }}>🛒</div>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'var(--color-primary-bg)', color: C.green }}>
+                    <ShoppingCart size={14} />
+                  </div>
                   <div>
                     <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>{o.listing.crop_type} · {o.listing.quantity_kg}kg</p>
                     <p className="text-[10px]" style={{ color: C.muted }}>{o.listing.district} · {timeAgo(o.created_at)}</p>
@@ -360,12 +364,9 @@ async function MarketplaceActivity() {
   );
 }
 
-// ─── Top Districts by Activity ────────────────────────────────────────────────
+// ─── Top Districts ────────────────────────────────────────────────────────────
 async function DistrictActivity() {
   const supabase = await createClient();
-  // Fetch only the 8 most-active districts using a smaller window.
-  // Uganda has ~150 districts; at this scale fetching 500 rows is cheap and
-  // gives an accurate top-8 without loading thousands of rows.
   const { data: listings } = await (supabase.from as any)('listings')
     .select('district')
     .eq('status', 'active')
@@ -444,7 +445,7 @@ async function MarketPriceSummary() {
       </div>
       {summary.length === 0 ? (
         <div className="px-5 py-8 text-center">
-          <p className="text-2xl mb-2">📊</p>
+          <BarChart3 size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm" style={{ color: C.muted }}>No price data yet</p>
           <Link href="/admin/prices" className="block mt-3 text-xs font-bold" style={{ color: C.greenMed }}>Add first prices →</Link>
         </div>
@@ -509,22 +510,22 @@ function SystemHealth() {
 // ─── Admin Quick Actions ───────────────────────────────────────────────────────
 function AdminTools() {
   const tools = [
-    { href: '/admin/users',        emoji: '👥', label: 'Manage Users',    sub: 'Search, edit roles, suspend',      bg: '#EDE9FE',                   color: C.violet },
-    { href: '/admin/verification', emoji: '🪪', label: 'KYC Queue',       sub: 'Approve/reject verifications',     bg: 'var(--color-danger-bg)',     color: C.red },
-    { href: '/admin/prices',       emoji: '📊', label: 'Market Prices',   sub: 'Update crop price data',            bg: 'var(--color-success-bg)',    color: C.greenMed },
-    { href: '/admin/alert',        emoji: '📢', label: 'Send Alert',      sub: 'Broadcast notifications',           bg: 'var(--color-sky-bg)',        color: C.blue },
-    { href: '/admin/buyers',       emoji: '🛒', label: 'Buyer Accounts',  sub: 'Review buyer registrations',        bg: 'var(--color-harvest-bg)',    color: C.amber },
-    { href: '/admin/deliveries',   emoji: '🚛', label: 'Deliveries',     sub: 'Uber-style delivery tracking',       bg: '#EDE9FE',                   color: '#7C3AED' },
-    { href: '/admin/analytics',    emoji: '📈', label: 'Analytics',       sub: 'Growth, revenue & trends',          bg: '#CFFAFE',                   color: '#0891B2' },
+    { href: '/admin/users',        icon: <Users size={20} />,        label: 'Manage Users',   sub: 'Search, edit roles, suspend',      bg: '#EDE9FE',                   color: C.violet  },
+    { href: '/admin/verification', icon: <ShieldCheck size={20} />,  label: 'KYC Queue',      sub: 'Approve/reject verifications',     bg: 'var(--color-danger-bg)',     color: C.red     },
+    { href: '/admin/prices',       icon: <BarChart3 size={20} />,    label: 'Market Prices',  sub: 'Update crop price data',           bg: 'var(--color-success-bg)',    color: C.greenMed },
+    { href: '/admin/alert',        icon: <Bell size={20} />,         label: 'Send Alert',     sub: 'Broadcast notifications',          bg: 'var(--color-sky-bg)',        color: C.blue    },
+    { href: '/admin/buyers',       icon: <ShoppingCart size={20} />, label: 'Buyer Accounts', sub: 'Review buyer registrations',       bg: 'var(--color-harvest-bg)',    color: C.amber   },
+    { href: '/admin/deliveries',   icon: <Truck size={20} />,        label: 'Deliveries',     sub: 'Uber-style delivery tracking',     bg: '#EDE9FE',                   color: '#7C3AED' },
+    { href: '/admin/analytics',    icon: <TrendingUp size={20} />,   label: 'Analytics',      sub: 'Growth, revenue & trends',         bg: '#CFFAFE',                   color: '#0891B2' },
   ];
 
   return (
     <div>
       <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Admin Tools</p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {tools.map(({ href, emoji, label, sub, bg, color }) => (
+        {tools.map(({ href, icon, label, sub, bg, color }) => (
           <Link key={href} href={href} className="flex items-center gap-3 p-4 rounded-xl hover:opacity-90 transition-opacity" style={{ background: C.cardBg, boxShadow: C.cardShadow, textDecoration: 'none' }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: bg }}>{emoji}</div>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: bg, color }}>{icon}</div>
             <div className="min-w-0">
               <p className="text-sm font-bold truncate" style={{ color: C.text }}>{label}</p>
               <p className="text-[10px] mt-0.5" style={{ color: C.muted }}>{sub}</p>
@@ -547,7 +548,7 @@ async function AlertBanner() {
 
   return (
     <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: 'var(--color-harvest-bg)', border: '1px solid var(--color-warning-border)' }}>
-      <span className="text-lg">⚠️</span>
+      <AlertTriangle size={18} style={{ color: 'var(--color-harvest)', flexShrink: 0 }} />
       <div className="flex-1">
         <p className="text-sm font-bold" style={{ color: 'var(--color-harvest)' }}>{count} KYC verification{count > 1 ? 's' : ''} pending review</p>
         <p className="text-xs" style={{ color: 'var(--color-harvest)' }}>Users are waiting to be verified. Review the queue to unlock their full access.</p>
@@ -570,7 +571,6 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-5 max-w-6xl mx-auto">
 
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -584,20 +584,16 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Alert banner (conditional) */}
       <Suspense fallback={null}>
         <AlertBanner />
       </Suspense>
 
-      {/* KPIs */}
       <Suspense fallback={<div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">{[1,2,3,4,5,6].map(i => <div key={i} className="dash-skeleton h-24 rounded-xl" />)}</div>}>
         <PlatformKPIs />
       </Suspense>
 
-      {/* Admin tools */}
       <AdminTools />
 
-      {/* Growth + Role Breakdown (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
           <GrowthSparkline />
@@ -607,7 +603,6 @@ export default async function AdminDashboardPage() {
         </Suspense>
       </div>
 
-      {/* Recent registrations + Pending actions (3:1 split) */}
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2">
           <Suspense fallback={<div className="dash-skeleton h-80 rounded-xl" />}>
@@ -621,7 +616,6 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Marketplace + Districts (3:2 split) */}
       <div className="grid lg:grid-cols-5 gap-5">
         <div className="lg:col-span-3">
           <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
@@ -635,7 +629,6 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Market prices + System health */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-56 rounded-xl" />}>
           <MarketPriceSummary />

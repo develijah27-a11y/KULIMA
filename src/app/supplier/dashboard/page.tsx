@@ -1,7 +1,13 @@
-﻿import { Suspense, cache } from 'react';
+import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import {
+  Package, ShoppingCart, AlertTriangle, CreditCard,
+  Plus, ClipboardList, DollarSign, Map, BarChart3,
+  Radio, Leaf, Wrench, Droplets, Recycle, Settings,
+  Store, MapPin, Bell, Inbox, Sprout, FlaskConical,
+} from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -22,7 +28,19 @@ const getProfile = cache(async (userId: string) => {
   return data as any;
 });
 
-// Stats: try supplier_products table, fall back gracefully
+const CATEGORY_ICON: Record<string, React.ReactNode> = {
+  fertilizer: <Leaf size={16} />, fertilizers: <Leaf size={16} />,
+  seed: <Sprout size={16} />, seeds: <Sprout size={16} />,
+  pesticide: <FlaskConical size={16} />, pesticides: <FlaskConical size={16} />,
+  herbicide: <Leaf size={16} />,
+  tool: <Wrench size={16} />, tools: <Wrench size={16} />,
+  irrigation: <Droplets size={16} />,
+  organic: <Recycle size={16} />,
+  equipment: <Settings size={16} />,
+  other: <Package size={16} />,
+};
+
+// Stats
 async function SupplierStats({ profileId, userId }: { profileId: string; userId: string }) {
   const supabase = await createClient();
 
@@ -49,19 +67,19 @@ async function SupplierStats({ profileId, userId }: { profileId: string; userId:
   const lowStockCount = lowStockRes.status === 'fulfilled' ? (lowStockRes.value.count ?? 0) : 0;
 
   const stats = [
-    { label: 'Products Listed', value: productsCount, icon: '📦', sub: 'In your catalogue', border: C.greenBright },
-    { label: 'Pending Orders', value: ordersCount, icon: '🛒', sub: 'Awaiting processing', border: C.amber },
-    { label: 'Low Stock Alerts', value: lowStockCount, icon: '⚠️', sub: 'Need restocking', border: lowStockCount ? C.red : C.muted },
-    { label: 'Wallet Balance', value: `UGX ${Math.round(walletRes?.data?.balance ?? 0).toLocaleString()}`, icon: '💳', sub: 'Available balance', border: C.blue },
+    { label: 'Products Listed',  value: productsCount, icon: <Package size={18} />,      sub: 'In your catalogue',   border: C.greenBright, color: C.greenMed },
+    { label: 'Pending Orders',   value: ordersCount,   icon: <ShoppingCart size={18} />, sub: 'Awaiting processing', border: C.amber,       color: C.amber    },
+    { label: 'Low Stock Alerts', value: lowStockCount, icon: <AlertTriangle size={18} />, sub: 'Need restocking',    border: lowStockCount ? C.red : C.muted, color: lowStockCount ? C.red : C.muted },
+    { label: 'Wallet Balance',   value: `UGX ${Math.round(walletRes?.data?.balance ?? 0).toLocaleString()}`, icon: <CreditCard size={18} />, sub: 'Available balance', border: C.blue, color: C.blue },
   ];
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map(({ label, value, icon, sub, border }) => (
+      {stats.map(({ label, value, icon, sub, border, color }) => (
         <div key={label} style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '18px 20px' }}>
           <div className="flex items-start justify-between mb-2">
             <p className="text-xs font-semibold" style={{ color: C.muted }}>{label}</p>
-            <span className="text-xl">{icon}</span>
+            <div style={{ color }}>{icon}</div>
           </div>
           <p className="text-2xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>{value}</p>
           <p className="text-xs mt-1" style={{ color: C.muted }}>{sub}</p>
@@ -73,11 +91,11 @@ async function SupplierStats({ profileId, userId }: { profileId: string; userId:
 
 function QuickActions() {
   const actions = [
-    { label: 'Add Product', href: '/supplier/catalogue', emoji: '➕', bg: 'var(--color-primary-bg)', color: 'var(--color-primary)' },
-    { label: 'View Orders', href: '/supplier/orders', emoji: '📋', bg: 'var(--color-sky-bg)', color: C.blue },
-    { label: 'Update Prices', href: '/supplier/catalogue', emoji: '💰', bg: 'var(--color-harvest-bg)', color: C.amber },
-    { label: 'Demand Map', href: '/supplier/demand', emoji: '🗺️', bg: '#F5F3FF', color: C.purple },
-    { label: 'Analytics', href: '/supplier/analytics', emoji: '📊', bg: 'var(--color-danger-bg)', color: C.red },
+    { label: 'Add Product',    href: '/supplier/catalogue', icon: <Plus size={20} />,          bg: 'var(--color-primary-bg)', color: C.green  },
+    { label: 'View Orders',    href: '/supplier/orders',    icon: <ClipboardList size={20} />,  bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'Update Prices',  href: '/supplier/catalogue', icon: <DollarSign size={20} />,     bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'Demand Map',     href: '/supplier/demand',    icon: <Map size={20} />,             bg: '#F5F3FF',                 color: C.purple },
+    { label: 'Analytics',      href: '/supplier/analytics', icon: <BarChart3 size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
   ];
 
   return (
@@ -86,10 +104,10 @@ function QuickActions() {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
-        {actions.map(({ label, href, emoji, bg, color }) => (
+        {actions.map(({ label, href, icon, bg, color }) => (
           <Link key={label} href={href} className="flex flex-col items-center gap-2 py-4 rounded-xl hover:opacity-85 transition-opacity" style={{ background: bg, textDecoration: 'none' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
-              {emoji}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>
+              {icon}
             </div>
             <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
           </Link>
@@ -99,11 +117,9 @@ function QuickActions() {
   );
 }
 
-// Demand intelligence banner — which crops are being searched by farmers
 async function DemandIntelligence() {
   const supabase = await createClient();
 
-  // Pull from recent listings to infer input demand
   const { data: listings } = await (supabase.from as any)('listings')
     .select('crop_type, district')
     .eq('status', 'active')
@@ -135,8 +151,8 @@ async function DemandIntelligence() {
   return (
     <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)' }}>
       <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: 'rgba(82,183,136,0.2)' }}>
-          📡
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(82,183,136,0.2)', color: 'var(--color-primary-muted)' }}>
+          <Radio size={20} />
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--color-primary-muted)' }}>Demand Intelligence</p>
@@ -173,7 +189,6 @@ async function DemandIntelligence() {
   );
 }
 
-// Pending orders section
 async function RecentOrders({ profileId }: { profileId: string }) {
   const supabase = await createClient();
   const { data: orders, error } = await (supabase.from as any)('supplier_orders')
@@ -202,7 +217,7 @@ async function RecentOrders({ profileId }: { profileId: string }) {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-3xl mb-3">📭</p>
+          <Inbox size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-bold" style={{ color: C.text }}>No orders yet</p>
           <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Add products to your catalogue so farmers can order from you</p>
           <Link href="/supplier/catalogue" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
@@ -216,7 +231,9 @@ async function RecentOrders({ profileId }: { profileId: string }) {
             return (
               <div key={o.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-primary-bg)' }}>🧪</div>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--color-primary-bg)', color: C.green }}>
+                    <Package size={16} />
+                  </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: C.text }}>{o.product_name}</p>
                     <p className="text-[11px]" style={{ color: C.muted }}>{o.quantity} {o.unit} · {o.buyer_name ?? o.district}</p>
@@ -232,7 +249,6 @@ async function RecentOrders({ profileId }: { profileId: string }) {
   );
 }
 
-// Product catalogue preview
 async function CataloguePreview({ profileId }: { profileId: string }) {
   const supabase = await createClient();
   const { data: products, error } = await (supabase.from as any)('supplier_products')
@@ -243,13 +259,6 @@ async function CataloguePreview({ profileId }: { profileId: string }) {
     .limit(6);
 
   const rows = error ? [] : (products ?? []);
-
-  const CATEGORY_ICON: Record<string, string> = {
-    fertilizer: '🌿', seed: '🌱', pesticide: '🧪', herbicide: '🌾',
-    tool: '🔧', irrigation: '💧', organic: '♻️',
-    seeds: '🌱', fertilizers: '🌿', pesticides: '🧪', tools: '🔧',
-    equipment: '⚙️', other: '📦',
-  };
 
   return (
     <Card>
@@ -262,7 +271,7 @@ async function CataloguePreview({ profileId }: { profileId: string }) {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-3xl mb-3">🏪</p>
+          <Store size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-bold" style={{ color: C.text }}>Your catalogue is empty</p>
           <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>List seeds, fertilizers, pesticides and tools for farmers to find you</p>
           <Link href="/supplier/catalogue" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
@@ -273,11 +282,13 @@ async function CataloguePreview({ profileId }: { profileId: string }) {
         <div className="divide-y" style={{ borderColor: C.border }}>
           {rows.map((p: any) => {
             const lowStock = (p.stock_qty ?? 999) < 10;
+            const catIcon = CATEGORY_ICON[p.category?.toLowerCase()] ?? CATEGORY_ICON.other;
             return (
               <div key={p.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: lowStock ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)' }}>
-                    {CATEGORY_ICON[p.category] ?? '📦'}
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: lowStock ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)', color: lowStock ? C.red : C.green }}>
+                    {catIcon}
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: C.text }}>{p.name}</p>
@@ -287,7 +298,9 @@ async function CataloguePreview({ profileId }: { profileId: string }) {
                 <div className="text-right shrink-0">
                   <p className="text-sm font-black" style={{ color: C.text }}>UGX {Math.round(p.price_per_unit ?? 0).toLocaleString()}</p>
                   {lowStock && (
-                    <span className="text-[10px] font-bold" style={{ color: C.red }}>⚠ Low stock</span>
+                    <span className="text-[10px] font-bold flex items-center gap-1 justify-end" style={{ color: C.red }}>
+                      <AlertTriangle size={9} /> Low stock
+                    </span>
                   )}
                 </div>
               </div>
@@ -299,13 +312,12 @@ async function CataloguePreview({ profileId }: { profileId: string }) {
   );
 }
 
-// Tips / Getting started for new suppliers
 function GettingStarted() {
   const steps = [
-    { done: false, icon: '🏪', title: 'Add your products', sub: 'List seeds, fertilizers, pesticides & tools', href: '/supplier/catalogue' },
-    { done: false, icon: '📍', title: 'Set your coverage area', sub: 'Which districts do you deliver to?', href: '/supplier/settings' },
-    { done: false, icon: '💳', title: 'Set up your wallet', sub: 'Receive payments from farmers directly', href: '/supplier/wallet' },
-    { done: false, icon: '📣', title: 'Get verified', sub: 'Boost trust with a verification badge', href: '/supplier/settings' },
+    { icon: <Store size={18} />,    title: 'Add your products',     sub: 'List seeds, fertilizers, pesticides & tools', href: '/supplier/catalogue' },
+    { icon: <MapPin size={18} />,   title: 'Set your coverage area', sub: 'Which districts do you deliver to?',          href: '/supplier/settings'  },
+    { icon: <CreditCard size={18} />,title: 'Set up your wallet',   sub: 'Receive payments from farmers directly',       href: '/supplier/wallet'    },
+    { icon: <Bell size={18} />,     title: 'Get verified',          sub: 'Boost trust with a verification badge',        href: '/supplier/settings'  },
   ];
 
   return (
@@ -317,7 +329,7 @@ function GettingStarted() {
       <div className="divide-y" style={{ borderColor: C.border }}>
         {steps.map(({ icon, title, sub, href }) => (
           <Link key={title} href={href} className="px-5 py-3.5 flex items-center gap-3 hover:bg-gray-50 transition-colors" style={{ textDecoration: 'none' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-primary-bg)' }}>{icon}</div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--color-primary-bg)', color: C.green }}>{icon}</div>
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: C.text }}>{title}</p>
               <p className="text-xs" style={{ color: C.muted }}>{sub}</p>
@@ -342,11 +354,10 @@ export default async function SupplierDashboardPage() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Welcome, {firstName} 👋
+            Welcome, {firstName}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>
             Input Supplier Hub · {profile?.location ?? 'Uganda'}
@@ -357,20 +368,16 @@ export default async function SupplierDashboardPage() {
         </Link>
       </div>
 
-      {/* Stats */}
       <Suspense fallback={<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}</div>}>
         <SupplierStats profileId={profileId} userId={userId} />
       </Suspense>
 
-      {/* Quick Actions */}
       <QuickActions />
 
-      {/* Demand intelligence */}
       <Suspense fallback={<div className="dash-skeleton h-36 rounded-xl" />}>
         <DemandIntelligence />
       </Suspense>
 
-      {/* Orders + Catalogue (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
           <RecentOrders profileId={profileId} />
@@ -380,7 +387,6 @@ export default async function SupplierDashboardPage() {
         </Suspense>
       </div>
 
-      {/* Getting started */}
       <GettingStarted />
 
     </div>

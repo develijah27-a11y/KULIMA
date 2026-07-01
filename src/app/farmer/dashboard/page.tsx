@@ -1,17 +1,20 @@
-﻿import { Suspense, cache } from 'react';
+import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { fetchWeatherForFarmer, type ServerWeatherData } from '@/lib/weather-server';
 import { buildSeasonalPlan, generateDiseaseAlerts, type InsightSeverity } from '@/lib/agri-intel';
 import { generatePlantingAlerts } from '@/lib/planting-calendar';
+import {
+  Package, DollarSign, Home, Bell, CheckCircle2, Sprout,
+  Sun, Moon, Cloud, CloudSun, CloudRain, CloudLightning, Snowflake,
+  Calendar, MessageCircle, ShoppingCart, Pencil, ClipboardList, Search,
+  BarChart3, Leaf, AlertTriangle, AlertCircle, Wind, Droplets,
+} from 'lucide-react';
 
-// Deduplicate weather fetch across WeatherCard + WeatherForecast components in same render
 const getWeatherCached = cache(async (lat: number, lon: number): Promise<ServerWeatherData> => {
   return fetchWeatherForFarmer(lat, lon);
 });
-
-// ─── Shared cached fetchers ───────────────────────────────────────────────────
 
 const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
@@ -31,8 +34,6 @@ const getListingsCount = cache(async (profileId: string) => {
   return count ?? 0;
 });
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function computeAgriScore(profile: any, listingsCount: number): number {
   let s = 300;
   if (profile?.full_name)   s += 50;
@@ -51,7 +52,6 @@ function timeAgo(iso: string) {
   return `${Math.floor(d / 1440)}d ago`;
 }
 
-// Design constants
 const C = {
   green:      'var(--color-primary)',
   greenMed:   'var(--color-primary-hover)',
@@ -74,6 +74,19 @@ const SEVERITY_MAP: Record<InsightSeverity, { color: string; bg: string; border:
   info:     { color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)',     border: 'var(--color-sky-muted)'      },
 };
 
+const SEVERITY_ICON: Record<string, React.ReactNode> = {
+  critical: <AlertCircle size={15} />,
+  warning:  <AlertTriangle size={15} />,
+  positive: <Sprout size={15} />,
+  info:     <Leaf size={15} />,
+};
+
+const URGENCY_ICON: Record<string, React.ReactNode> = {
+  high:   <AlertTriangle size={16} />,
+  medium: <Leaf size={16} />,
+  low:    <Sprout size={16} />,
+};
+
 const CROP_COLORS: Record<string, string> = {
   maize: 'var(--color-harvest)', beans: 'var(--color-success)', coffee: '#92400E',
   rice: 'var(--color-sky)', banana: 'var(--color-harvest)', cassava: 'var(--color-success)', tomato: 'var(--color-danger)',
@@ -85,6 +98,19 @@ const Card = ({ children, className = '', style = {} }: { children: React.ReactN
   </div>
 );
 
+function WeatherIcon({ code, size = 28 }: { code: string; size?: number }) {
+  const s = { size, strokeWidth: 1.5 };
+  const n = code?.replace(/[dn]$/, '') ?? '';
+  if (code === '01n') return <Moon {...s} style={{ color: '#94A3B8' }} />;
+  if (n === '01') return <Sun {...s} style={{ color: '#F59E0B' }} />;
+  if (n === '02') return <CloudSun {...s} style={{ color: '#94A3B8' }} />;
+  if (n === '03' || n === '04') return <Cloud {...s} style={{ color: '#94A3B8' }} />;
+  if (n === '09' || n === '10') return <CloudRain {...s} style={{ color: '#60A5FA' }} />;
+  if (n === '11') return <CloudLightning {...s} style={{ color: '#7C3AED' }} />;
+  if (n === '13') return <Snowflake {...s} style={{ color: '#60A5FA' }} />;
+  return <Cloud {...s} style={{ color: '#94A3B8' }} />;
+}
+
 // ─── Streaming: Weather card (3-column) ──────────────────────────────────────
 
 async function WeatherCard({ userId }: { userId: string }) {
@@ -92,10 +118,6 @@ async function WeatherCard({ userId }: { userId: string }) {
   const lat: number = profile?.latitude ?? 0.3476;
   const lon: number = profile?.longitude ?? 32.5825;
   const weather = await getWeatherCached(lat, lon);
-  const ICON: Record<string, string> = {
-    '01d': '☀️', '01n': '🌙', '02d': '⛅', '03d': '☁️', '04d': '☁️',
-    '09d': '🌧️', '10d': '🌦️', '11d': '⛈️', '13d': '❄️', '50d': '🌫️',
-  };
 
   const dailyMap: Record<string, { high: number; low: number; icon: string }> = {};
   for (const item of weather.forecast) {
@@ -115,12 +137,12 @@ async function WeatherCard({ userId }: { userId: string }) {
           <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Current Weather</p>
           <div className="flex items-end gap-2">
             <span className="text-4xl font-black" style={{ color: C.text, letterSpacing: '-0.04em' }}>{weather.now.temp}°C</span>
-            <span className="text-3xl mb-1">{ICON[weather.now.icon] ?? '🌤️'}</span>
+            <span className="mb-1"><WeatherIcon code={weather.now.icon} size={32} /></span>
           </div>
           <p className="text-sm capitalize mt-1" style={{ color: C.muted }}>{weather.now.description}</p>
           <div className="flex gap-4 mt-3">
-            <span className="text-xs" style={{ color: C.muted }}>💧 {weather.now.humidity}%</span>
-            <span className="text-xs" style={{ color: C.muted }}>💨 {weather.now.wind.toFixed(1)} m/s</span>
+            <span className="text-xs flex items-center gap-1" style={{ color: C.muted }}><Droplets size={11} /> {weather.now.humidity}%</span>
+            <span className="text-xs flex items-center gap-1" style={{ color: C.muted }}><Wind size={11} /> {weather.now.wind.toFixed(1)} m/s</span>
           </div>
         </div>
 
@@ -133,7 +155,7 @@ async function WeatherCard({ userId }: { userId: string }) {
               const dt = new Date(rainItem.dt_txt);
               return (
                 <>
-                  <p className="text-2xl mb-1">🌧️</p>
+                  <div className="mb-1"><CloudRain size={28} strokeWidth={1.5} style={{ color: '#60A5FA' }} /></div>
                   <p className="text-sm font-bold" style={{ color: C.red }}>
                     Rain at {dt.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -145,7 +167,7 @@ async function WeatherCard({ userId }: { userId: string }) {
             }
             return (
               <>
-                <p className="text-2xl mb-1">☀️</p>
+                <div className="mb-1"><Sun size={28} strokeWidth={1.5} style={{ color: '#F59E0B' }} /></div>
                 <p className="text-sm font-bold" style={{ color: C.greenMed }}>No rain expected</p>
                 <p className="text-xs mt-1" style={{ color: C.muted }}>Good for fieldwork</p>
               </>
@@ -156,13 +178,13 @@ async function WeatherCard({ userId }: { userId: string }) {
         {/* Date */}
         <div className="p-5">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Today</p>
-          <p className="text-2xl mb-1">📅</p>
+          <div className="mb-1"><Calendar size={28} strokeWidth={1.5} style={{ color: C.blue }} /></div>
           <p className="text-sm font-bold leading-snug" style={{ color: C.text }}>{todayDate}</p>
           <div className="flex gap-2 mt-3 flex-wrap">
             {days.slice(0, 2).map(([label, d]) => (
               <div key={label} className="text-center">
                 <p className="text-[10px]" style={{ color: C.muted }}>{label}</p>
-                <p className="text-sm">{ICON[d.icon] ?? '🌤️'}</p>
+                <div className="flex justify-center my-0.5"><WeatherIcon code={d.icon} size={16} /></div>
                 <p className="text-[10px] font-bold">{Math.round(d.high)}°</p>
               </div>
             ))}
@@ -197,13 +219,14 @@ async function QuickStats({ userId }: { userId: string }) {
   const latestPrice = priceData[0]?.price_per_kg;
   const prevPrice = priceData[1]?.price_per_kg;
   const priceTrend = latestPrice && prevPrice ? ((latestPrice - prevPrice) / prevPrice * 100) : null;
+  const hasAlerts = !!(alertCount.count);
 
   const stats = [
     {
       label: 'Active Listings',
       value: `${listingsRes.count ?? 0}`,
       sub: 'Available to buyers',
-      icon: '📦',
+      icon: <Package size={18} />,
       color: C.greenBright,
       border: C.greenBright,
     },
@@ -211,7 +234,7 @@ async function QuickStats({ userId }: { userId: string }) {
       label: `${primaryCrop.charAt(0).toUpperCase() + primaryCrop.slice(1)} Price`,
       value: latestPrice ? `UGX ${Math.round(latestPrice).toLocaleString()}` : '—',
       sub: priceTrend !== null ? `${priceTrend >= 0 ? '↑' : '↓'} ${Math.abs(priceTrend).toFixed(1)}% today` : 'per kg',
-      icon: '💰',
+      icon: <DollarSign size={18} />,
       color: priceTrend !== null && priceTrend < 0 ? C.red : C.amber,
       border: priceTrend !== null && priceTrend < 0 ? C.red : C.amber,
     },
@@ -219,17 +242,17 @@ async function QuickStats({ userId }: { userId: string }) {
       label: 'Farm Value',
       value: '—',
       sub: 'Add inventory to calculate',
-      icon: '🏡',
+      icon: <Home size={18} />,
       color: C.blue,
       border: C.blue,
     },
     {
       label: 'Alerts',
       value: `${alertCount.count ?? 0}`,
-      sub: alertCount.count ? 'Unread notifications' : 'All clear',
-      icon: alertCount.count ? '🔔' : '✅',
-      color: alertCount.count ? C.red : C.greenBright,
-      border: alertCount.count ? C.red : C.greenBright,
+      sub: hasAlerts ? 'Unread notifications' : 'All clear',
+      icon: hasAlerts ? <Bell size={18} /> : <CheckCircle2 size={18} />,
+      color: hasAlerts ? C.red : C.greenBright,
+      border: hasAlerts ? C.red : C.greenBright,
     },
   ];
 
@@ -239,7 +262,7 @@ async function QuickStats({ userId }: { userId: string }) {
         <div key={label} style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '20px' }}>
           <div className="flex items-start justify-between mb-3">
             <p className="text-xs font-semibold" style={{ color: C.muted }}>{label}</p>
-            <span className="text-xl">{icon}</span>
+            <div style={{ color }}>{icon}</div>
           </div>
           <p className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>{value}</p>
           <p className="text-xs mt-1" style={{ color }}>{sub}</p>
@@ -262,8 +285,8 @@ async function AIBanner({ userId }: { userId: string }) {
       className="rounded-xl p-5 flex items-start gap-4"
       style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)' }}
     >
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: 'rgba(82,183,136,0.2)' }}>
-        🌱
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(82,183,136,0.2)', color: '#4ADE80' }}>
+        <Sprout size={20} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-primary-muted)' }}>AI Recommendation</p>
@@ -303,7 +326,6 @@ async function MarketPricesTable({ userId }: { userId: string }) {
     groups[k].push(p.price_per_kg);
   });
 
-  // Put farmer's primary crop first
   const primary = profile?.primary_crop?.toLowerCase() ?? '';
   const sorted = Object.entries(groups)
     .map(([crop, ps]) => ({
@@ -324,7 +346,7 @@ async function MarketPricesTable({ userId }: { userId: string }) {
       </div>
       {sorted.length === 0 ? (
         <div className="px-5 py-8 text-center">
-          <p className="text-2xl mb-2">📊</p>
+          <BarChart3 size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-medium" style={{ color: C.muted }}>No price data yet</p>
         </div>
       ) : (
@@ -371,11 +393,6 @@ async function WeatherForecast({ userId }: { userId: string }) {
   const lon = profile?.longitude ?? 32.5825;
   const weather = await getWeatherCached(lat, lon);
 
-  const ICON: Record<string, string> = {
-    '01d': '☀️', '02d': '⛅', '03d': '☁️', '04d': '☁️',
-    '09d': '🌧️', '10d': '🌦️', '11d': '⛈️', '13d': '❄️',
-  };
-
   const dailyMap: Record<string, { high: number; low: number; icon: string; rain: boolean }> = {};
   for (const item of weather.forecast) {
     const k = new Date(item.dt_txt).toLocaleDateString('en-UG', { weekday: 'short', day: 'numeric' });
@@ -401,7 +418,7 @@ async function WeatherForecast({ userId }: { userId: string }) {
         {days.map(([label, d], i) => (
           <div key={label} className="flex flex-col items-center gap-1.5 py-4 px-2" style={{ background: d.rain && i === 1 ? 'var(--color-harvest-bg)' : 'transparent', borderRadius: '8px' }}>
             <p className="text-[11px] font-bold" style={{ color: C.muted }}>{label.split(' ')[0]}</p>
-            <p className="text-2xl">{ICON[d.icon] ?? '🌤️'}</p>
+            <WeatherIcon code={d.icon} size={22} />
             <p className="text-sm font-black" style={{ color: C.text }}>{Math.round(d.high)}°</p>
             <p className="text-[11px]" style={{ color: C.muted }}>{Math.round(d.low)}°</p>
             {d.rain && <span className="text-[10px] font-bold" style={{ color: C.red }}>Rain</span>}
@@ -442,7 +459,7 @@ async function RecentOffers({ userId }: { userId: string }) {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-8 text-center">
-          <p className="text-2xl mb-2">💬</p>
+          <MessageCircle size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-medium" style={{ color: C.muted }}>No offers yet</p>
           <p className="text-xs mt-1" style={{ color: C.muted }}>Create a listing to attract buyers</p>
         </div>
@@ -450,11 +467,12 @@ async function RecentOffers({ userId }: { userId: string }) {
         <div className="divide-y" style={{ borderColor: C.border }}>
           {rows.map((o: any) => {
             const st = STATUS[o.status] ?? STATUS.pending;
+            const cropColor = CROP_COLORS[o.listing.crop_type?.toLowerCase()] ?? C.greenMed;
             return (
               <div key={o.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: 'var(--color-primary-bg)', color: C.greenMed }}>
-                    🛒
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--color-primary-bg)', color: cropColor }}>
+                    <ShoppingCart size={14} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>
@@ -504,7 +522,6 @@ async function FinanceOverview({ userId }: { userId: string }) {
         </p>
       </div>
       <div className="grid grid-cols-3 divide-x" style={{ borderColor: C.border }}>
-        {/* AgriScore */}
         <div className="p-5">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>AgriScore</p>
           <p className="text-3xl font-black mb-1" style={{ color: scoreColor, letterSpacing: '-0.04em' }}>{score}</p>
@@ -517,8 +534,6 @@ async function FinanceOverview({ userId }: { userId: string }) {
             <span className="text-[10px]" style={{ color: C.muted }}>850</span>
           </div>
         </div>
-
-        {/* Loan eligibility */}
         <div className="p-5">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Loan Eligibility</p>
           <p className="text-base font-bold mb-1" style={{ color: scoreColor }}>{eligibility}</p>
@@ -527,8 +542,6 @@ async function FinanceOverview({ userId }: { userId: string }) {
             <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: scoreColor, borderRadius: '9999px' }} />
           </div>
         </div>
-
-        {/* Recommended limit */}
         <div className="p-5">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Recommended Limit</p>
           <p className="text-xl font-black mb-1" style={{ color: C.text, letterSpacing: '-0.03em' }}>
@@ -568,8 +581,8 @@ async function DiseasePanel({ userId }: { userId: string }) {
           const cfg = SEVERITY_MAP[a.severity];
           return (
             <div key={a.id} className="px-5 py-3.5 flex items-start gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm shrink-0" style={{ background: cfg.bg }}>
-                {a.icon}
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: cfg.bg, color: cfg.color }}>
+                {SEVERITY_ICON[a.severity]}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-0.5">
@@ -627,9 +640,9 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
           const cfg = URGENCY[alert.urgency];
           return (
             <div key={i} className="px-5 py-3.5 flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shrink-0"
-                style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
-                {alert.emoji}
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}>
+                {URGENCY_ICON[alert.urgency]}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
@@ -653,11 +666,11 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Create Listing', href: '/farmer/marketplace/new', emoji: '✏️', bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
-    { label: 'Add Record',     href: '/farmer/farm',               emoji: '📋', bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
-    { label: 'Check Weather',  href: '/farmer/weather',            emoji: '🌤',  bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
-    { label: 'Scan Disease',   href: '/farmer/doctor',             emoji: '🔍', bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
-    { label: 'Apply for Loan', href: '/farmer/finance',            emoji: '💰', bg: 'var(--color-success-bg)',  color: 'var(--color-success)' },
+    { label: 'Create Listing', href: '/farmer/marketplace/new', icon: <Pencil size={20} />,      bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
+    { label: 'Add Record',     href: '/farmer/farm',            icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
+    { label: 'Check Weather',  href: '/farmer/weather',         icon: <Cloud size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
+    { label: 'Scan Disease',   href: '/farmer/doctor',          icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
+    { label: 'Apply for Loan', href: '/farmer/finance',         icon: <DollarSign size={20} />,    bg: 'var(--color-success-bg)',  color: 'var(--color-success)' },
   ];
 
   return (
@@ -666,7 +679,7 @@ function QuickActions() {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
-        {actions.map(({ label, href, emoji, bg, color }) => (
+        {actions.map(({ label, href, icon, bg, color }) => (
           <Link
             key={label}
             href={href}
@@ -674,8 +687,8 @@ function QuickActions() {
             className="flex flex-col items-center gap-2 py-4 rounded-xl transition-opacity hover:opacity-85 active:scale-95"
             style={{ background: bg, textDecoration: 'none' }}
           >
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
-              {emoji}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>
+              {icon}
             </div>
             <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
           </Link>

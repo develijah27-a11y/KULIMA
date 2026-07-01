@@ -1,7 +1,12 @@
-﻿import { Suspense, cache } from 'react';
+import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import {
+  Users, Package, Banknote, Building2,
+  UserPlus, DollarSign, Calendar, Megaphone,
+  ClipboardList, Leaf,
+} from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -9,6 +14,12 @@ const C = {
   amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: '#7C3AED',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
+
+const CROP_COLORS: Record<string, string> = {
+  maize: 'var(--color-harvest)', coffee: '#7C3AED', beans: 'var(--color-danger)',
+  rice: 'var(--color-sky)', banana: 'var(--color-harvest)', cassava: 'var(--color-success)', tomato: 'var(--color-danger)',
+  cotton: 'var(--color-sky)',
+};
 
 const Card = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <div style={{ background: C.cardBg, borderRadius: '14px', boxShadow: C.cardShadow, ...style }}>
@@ -50,10 +61,10 @@ async function GroupStats({ userId }: { userId: string }) {
   const walletBal     = walletRes.status   === 'fulfilled' ? (walletRes.value.data?.balance ?? 0) : 0;
 
   const stats = [
-    { label: 'Group Members', value: membersCount, icon: '👥', sub: 'Active members', border: C.greenBright },
-    { label: 'Collective Listings', value: listingsCount, icon: '📦', sub: 'Active on market', border: C.blue },
-    { label: 'Group Balance', value: `UGX ${Math.round(walletBal).toLocaleString()}`, icon: '💵', sub: 'Pooled funds', border: C.amber },
-    { label: 'Loan Applications', value: loansCount, icon: '🏦', sub: 'Pending review', border: loansCount ? C.amber : C.muted },
+    { label: 'Group Members',      value: membersCount,                                  icon: <Users size={18} />,    sub: 'Active members',    border: C.greenBright },
+    { label: 'Collective Listings',value: listingsCount,                                 icon: <Package size={18} />,  sub: 'Active on market',  border: C.blue },
+    { label: 'Group Balance',      value: `UGX ${Math.round(walletBal).toLocaleString()}`, icon: <Banknote size={18} />, sub: 'Pooled funds',      border: C.amber },
+    { label: 'Loan Applications',  value: loansCount,                                   icon: <Building2 size={18} />,sub: 'Pending review',    border: loansCount ? C.amber : C.muted },
   ];
 
   return (
@@ -62,7 +73,7 @@ async function GroupStats({ userId }: { userId: string }) {
         <div key={label} style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '18px 20px' }}>
           <div className="flex items-start justify-between mb-2">
             <p className="text-xs font-semibold" style={{ color: C.muted }}>{label}</p>
-            <span className="text-xl">{icon}</span>
+            <div style={{ color: border }}>{icon}</div>
           </div>
           <p className="text-2xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>{value}</p>
           <p className="text-xs mt-1" style={{ color: C.muted }}>{sub}</p>
@@ -74,11 +85,11 @@ async function GroupStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Add Member', href: '/groups/members/add', emoji: '👤', bg: 'var(--color-primary-bg)', color: C.green },
-    { label: 'Group Listing', href: '/groups/listings/create', emoji: '📦', bg: 'var(--color-sky-bg)', color: C.blue },
-    { label: 'Record Payment', href: '/groups/finance', emoji: '💰', bg: 'var(--color-harvest-bg)', color: C.amber },
-    { label: 'Apply for Loan', href: '/groups/loans', emoji: '🏦', bg: '#F5F3FF', color: C.purple },
-    { label: 'Season Plan', href: '/groups/announcements', emoji: '📅', bg: 'var(--color-danger-bg)', color: C.red },
+    { label: 'Add Member',    href: '/groups/members/add',      icon: <UserPlus size={20} />,   bg: 'var(--color-primary-bg)', color: C.green  },
+    { label: 'Group Listing', href: '/groups/listings/create',  icon: <Package size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'Record Payment',href: '/groups/finance',          icon: <DollarSign size={20} />, bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'Apply for Loan',href: '/groups/loans',            icon: <Building2 size={20} />,  bg: '#F5F3FF',                 color: C.purple },
+    { label: 'Season Plan',   href: '/groups/announcements',    icon: <Calendar size={20} />,   bg: 'var(--color-danger-bg)',  color: C.red    },
   ];
 
   return (
@@ -87,10 +98,10 @@ function QuickActions() {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
-        {actions.map(({ label, href, emoji, bg, color }) => (
+        {actions.map(({ label, href, icon, bg, color }) => (
           <Link key={label} href={href} className="flex flex-col items-center gap-2 py-4 rounded-xl hover:opacity-85 transition-opacity" style={{ background: bg, textDecoration: 'none' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
-              {emoji}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>
+              {icon}
             </div>
             <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
           </Link>
@@ -100,11 +111,9 @@ function QuickActions() {
   );
 }
 
-// Season announcement / group achievement banner
 async function SeasonBanner({ userId }: { userId: string }) {
   const supabase = await createClient();
 
-  // Current Uganda season context
   const month = new Date().getMonth();
   const season = month >= 2 && month <= 4 ? 'Season A (Mar–May)' : month >= 8 && month <= 10 ? 'Season B (Sep–Nov)' : 'Off-season';
   const nextAction = month >= 2 && month <= 4
@@ -123,8 +132,8 @@ async function SeasonBanner({ userId }: { userId: string }) {
   return (
     <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)' }}>
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: 'rgba(82,183,136,0.2)' }}>
-          📢
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(82,183,136,0.2)', color: 'var(--color-primary-muted)' }}>
+          <Megaphone size={20} />
         </div>
         <div className="flex-1">
           <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-primary-muted)' }}>
@@ -145,7 +154,6 @@ async function SeasonBanner({ userId }: { userId: string }) {
   );
 }
 
-// Group members list
 async function MembersList({ userId }: { userId: string }) {
   const supabase = await createClient();
   const { data: members, error } = await (supabase.from as any)('group_members')
@@ -155,8 +163,6 @@ async function MembersList({ userId }: { userId: string }) {
     .limit(6);
 
   const rows = error ? [] : (members ?? []);
-
-  const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾', cotton: '🌾' };
 
   function timeAgo(iso: string) {
     const d = Math.round((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -176,7 +182,7 @@ async function MembersList({ userId }: { userId: string }) {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-3xl mb-3">👥</p>
+          <Users size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-bold" style={{ color: C.text }}>No members yet</p>
           <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Add farmers to your group to start collective farming activities</p>
           <Link href="/groups/members/add" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
@@ -194,7 +200,7 @@ async function MembersList({ userId }: { userId: string }) {
                 <div>
                   <p className="text-sm font-semibold" style={{ color: C.text }}>{m.full_name}</p>
                   <p className="text-[11px]" style={{ color: C.muted }}>
-                    {m.village ?? 'Unknown'} · {m.acres ?? '?'} ac · {CROP_EMOJI[m.crop_type?.toLowerCase()] ?? '🌱'} {m.crop_type ?? 'Mixed'}
+                    {m.village ?? 'Unknown'} · {m.acres ?? '?'} ac · {m.crop_type ?? 'Mixed'}
                   </p>
                 </div>
               </div>
@@ -207,7 +213,6 @@ async function MembersList({ userId }: { userId: string }) {
   );
 }
 
-// Group collective listings
 async function GroupListings({ userId }: { userId: string }) {
   const supabase = await createClient();
   const { data: listings, error } = await (supabase.from as any)('group_listings')
@@ -218,7 +223,6 @@ async function GroupListings({ userId }: { userId: string }) {
 
   const rows = error ? [] : (listings ?? []);
 
-  const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾', cotton: '🌾' };
   const STATUS: Record<string, { label: string; color: string; bg: string }> = {
     active:  { label: 'Active',  color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
     pending: { label: 'Pending', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
@@ -236,7 +240,7 @@ async function GroupListings({ userId }: { userId: string }) {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-3xl mb-3">📦</p>
+          <Package size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-bold" style={{ color: C.text }}>No collective listings yet</p>
           <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Pool your members' produce to negotiate better prices with buyers</p>
           <Link href="/groups/listings/create" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
@@ -247,12 +251,13 @@ async function GroupListings({ userId }: { userId: string }) {
         <div className="divide-y" style={{ borderColor: C.border }}>
           {rows.map((l: any) => {
             const k = l.crop_type?.toLowerCase() ?? '';
+            const cropColor = CROP_COLORS[k] ?? C.greenMed;
             const st = STATUS[l.status] ?? STATUS.pending;
             return (
               <div key={l.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-primary-bg)' }}>
-                    {CROP_EMOJI[k] ?? '🌾'}
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${cropColor}18`, color: cropColor }}>
+                    <Leaf size={15} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>{l.crop_type}</p>
@@ -274,7 +279,6 @@ async function GroupListings({ userId }: { userId: string }) {
   );
 }
 
-// Financial summary
 async function FinancialSummary({ userId }: { userId: string }) {
   const supabase = await createClient();
 
@@ -295,10 +299,10 @@ async function FinancialSummary({ userId }: { userId: string }) {
   const activeLoans = allLoans.filter((l: any) => l.status === 'active');
   const loanTotal = activeLoans.reduce((s: number, l: any) => s + (l.amount ?? 0), 0);
 
-  const items = [
-    { label: 'Contributions this week', value: `UGX ${Math.round(weeklyContrib).toLocaleString()}`, icon: '💵', color: C.greenMed },
-    { label: 'Active loans outstanding', value: `UGX ${Math.round(loanTotal).toLocaleString()}`, icon: '🏦', color: loanTotal > 0 ? C.amber : C.muted },
-    { label: 'Loan applications pending', value: allLoans.filter((l: any) => l.status === 'pending').length, icon: '📋', color: C.blue },
+  const items: { label: string; value: string | number; icon: React.ReactNode; color: string }[] = [
+    { label: 'Contributions this week', value: `UGX ${Math.round(weeklyContrib).toLocaleString()}`, icon: <Banknote size={16} />,      color: C.greenMed },
+    { label: 'Active loans outstanding', value: `UGX ${Math.round(loanTotal).toLocaleString()}`,    icon: <Building2 size={16} />,     color: loanTotal > 0 ? C.amber : C.muted },
+    { label: 'Loan applications pending', value: allLoans.filter((l: any) => l.status === 'pending').length, icon: <ClipboardList size={16} />, color: C.blue },
   ];
 
   return (
@@ -311,7 +315,7 @@ async function FinancialSummary({ userId }: { userId: string }) {
         {items.map(({ label, value, icon, color }) => (
           <div key={label} className="px-5 py-3.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center text-base shrink-0" style={{ background: 'var(--color-primary-bg)' }}>{icon}</div>
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--color-primary-bg)', color }}>{icon}</div>
               <p className="text-sm font-medium" style={{ color: C.text }}>{label}</p>
             </div>
             <p className="text-sm font-black shrink-0" style={{ color }}>{value}</p>
@@ -327,13 +331,12 @@ async function FinancialSummary({ userId }: { userId: string }) {
   );
 }
 
-// Getting started for new groups
 function GroupSetupGuide() {
-  const steps = [
-    { icon: '👥', title: 'Add your first members', sub: 'Invite farmers in your community to join', href: '/groups/members/add' },
-    { icon: '📦', title: 'Create a collective listing', sub: 'Pool produce to negotiate better buyer prices', href: '/groups/listings/create' },
-    { icon: '💵', title: 'Set up group wallet', sub: 'Collect contributions from all members', href: '/groups/finance' },
-    { icon: '🏦', title: 'Apply for group loan', sub: 'Access group credit for shared input purchases', href: '/groups/loans' },
+  const steps: { icon: React.ReactNode; title: string; sub: string; href: string }[] = [
+    { icon: <Users size={18} />,    title: 'Add your first members',       sub: 'Invite farmers in your community to join',       href: '/groups/members/add' },
+    { icon: <Package size={18} />,  title: 'Create a collective listing',  sub: 'Pool produce to negotiate better buyer prices',  href: '/groups/listings/create' },
+    { icon: <Banknote size={18} />, title: 'Set up group wallet',          sub: 'Collect contributions from all members',         href: '/groups/finance' },
+    { icon: <Building2 size={18} />,title: 'Apply for group loan',         sub: 'Access group credit for shared input purchases', href: '/groups/loans' },
   ];
 
   return (
@@ -345,7 +348,7 @@ function GroupSetupGuide() {
       <div className="divide-y" style={{ borderColor: C.border }}>
         {steps.map(({ icon, title, sub, href }) => (
           <Link key={title} href={href} className="px-5 py-3.5 flex items-center gap-3 hover:bg-gray-50 transition-colors" style={{ textDecoration: 'none' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style={{ background: 'var(--color-primary-bg)' }}>{icon}</div>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--color-primary-bg)', color: C.green }}>{icon}</div>
             <div className="flex-1">
               <p className="text-sm font-semibold" style={{ color: C.text }}>{title}</p>
               <p className="text-xs" style={{ color: C.muted }}>{sub}</p>
@@ -369,11 +372,10 @@ export default async function GroupsDashboardPage() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            {firstName}'s Group 👥
+            {firstName}'s Group
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>Farmer Group Hub · {profile?.location ?? 'Uganda'}</p>
         </div>
@@ -382,20 +384,16 @@ export default async function GroupsDashboardPage() {
         </Link>
       </div>
 
-      {/* Stats */}
       <Suspense fallback={<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}</div>}>
         <GroupStats userId={userId} />
       </Suspense>
 
-      {/* Quick Actions */}
       <QuickActions />
 
-      {/* Season Banner */}
       <Suspense fallback={<div className="dash-skeleton h-24 rounded-xl" />}>
         <SeasonBanner userId={userId} />
       </Suspense>
 
-      {/* Members + Listings (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
           <MembersList userId={userId} />
@@ -405,7 +403,6 @@ export default async function GroupsDashboardPage() {
         </Suspense>
       </div>
 
-      {/* Finance + Setup Guide (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
           <FinancialSummary userId={userId} />

@@ -1,7 +1,12 @@
-﻿import { Suspense, cache } from 'react';
+import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import {
+  FileText, Users, CreditCard, DollarSign,
+  Search, Star, BarChart3, Send,
+  TrendingUp, Leaf, Clock,
+} from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -9,6 +14,11 @@ const C = {
   amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: '#7C3AED',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
+
+const CROP_COLORS: Record<string, string> = {
+  maize: 'var(--color-harvest)', coffee: '#7C3AED', beans: 'var(--color-danger)',
+  rice: 'var(--color-sky)', banana: 'var(--color-harvest)', cassava: 'var(--color-success)', tomato: 'var(--color-danger)',
+};
 
 const Card = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <div style={{ background: C.cardBg, borderRadius: '14px', boxShadow: C.cardShadow, ...style }}>
@@ -51,10 +61,10 @@ async function OfftakerStats({ userId }: { userId: string }) {
   const uniqueSuppliers = new Set(suppliersData.map((r: any) => r.farmer_id)).size;
 
   const stats = [
-    { label: 'Active Contracts', value: contractsCount, icon: '📄', sub: 'Current agreements', border: C.greenBright },
-    { label: 'Suppliers', value: uniqueSuppliers, icon: '🧑‍🌾', sub: 'Active farmers supplying', border: C.blue },
-    { label: 'Pending Payments', value: pendingPayCount, icon: '💳', sub: 'Awaiting settlement', border: pendingPayCount ? C.amber : C.muted },
-    { label: 'Wallet Balance', value: `UGX ${Math.round(walletBal).toLocaleString()}`, icon: '💰', sub: 'Available funds', border: C.purple },
+    { label: 'Active Contracts',  value: contractsCount,                                      icon: <FileText size={18} />,   sub: 'Current agreements',      border: C.greenBright },
+    { label: 'Suppliers',         value: uniqueSuppliers,                                     icon: <Users size={18} />,      sub: 'Active farmers supplying', border: C.blue },
+    { label: 'Pending Payments',  value: pendingPayCount,                                     icon: <CreditCard size={18} />, sub: 'Awaiting settlement',      border: pendingPayCount ? C.amber : C.muted },
+    { label: 'Wallet Balance',    value: `UGX ${Math.round(walletBal).toLocaleString()}`,     icon: <DollarSign size={18} />, sub: 'Available funds',          border: C.purple },
   ];
 
   return (
@@ -63,7 +73,7 @@ async function OfftakerStats({ userId }: { userId: string }) {
         <div key={label} style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '18px 20px' }}>
           <div className="flex items-start justify-between mb-2">
             <p className="text-xs font-semibold" style={{ color: C.muted }}>{label}</p>
-            <span className="text-xl">{icon}</span>
+            <div style={{ color: border }}>{icon}</div>
           </div>
           <p className="text-2xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>{value}</p>
           <p className="text-xs mt-1" style={{ color: C.muted }}>{sub}</p>
@@ -75,11 +85,11 @@ async function OfftakerStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'New Contract', href: '/offtaker/pipeline/new', emoji: '📝', bg: 'var(--color-primary-bg)', color: C.green },
-    { label: 'Browse Supply', href: '/offtaker/pipeline', emoji: '🔍', bg: 'var(--color-sky-bg)', color: C.blue },
-    { label: 'Rate Supplier', href: '/offtaker/scorecard', emoji: '⭐', bg: 'var(--color-harvest-bg)', color: C.amber },
-    { label: 'Analytics', href: '/offtaker/spend', emoji: '📊', bg: '#F5F3FF', color: C.purple },
-    { label: 'Send Offer', href: '/offtaker/pipeline', emoji: '📨', bg: 'var(--color-danger-bg)', color: C.red },
+    { label: 'New Contract',  href: '/offtaker/pipeline/new', icon: <FileText size={20} />,  bg: 'var(--color-primary-bg)', color: C.green  },
+    { label: 'Browse Supply', href: '/offtaker/pipeline',     icon: <Search size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'Rate Supplier', href: '/offtaker/scorecard',    icon: <Star size={20} />,      bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'Analytics',     href: '/offtaker/spend',        icon: <BarChart3 size={20} />, bg: '#F5F3FF',                 color: C.purple },
+    { label: 'Send Offer',    href: '/offtaker/pipeline',     icon: <Send size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
   ];
 
   return (
@@ -88,10 +98,10 @@ function QuickActions() {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
-        {actions.map(({ label, href, emoji, bg, color }) => (
+        {actions.map(({ label, href, icon, bg, color }) => (
           <Link key={label} href={href} className="flex flex-col items-center gap-2 py-4 rounded-xl hover:opacity-85 transition-opacity" style={{ background: bg, textDecoration: 'none' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
-              {emoji}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>
+              {icon}
             </div>
             <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
           </Link>
@@ -101,7 +111,6 @@ function QuickActions() {
   );
 }
 
-// Market intelligence banner
 async function MarketIntelligence() {
   const supabase = await createClient();
   const { data: prices } = await supabase.from('market_prices')
@@ -131,8 +140,8 @@ async function MarketIntelligence() {
   return (
     <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #0C1C35 0%, #1e3a5f 100%)' }}>
       <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: 'rgba(59,130,246,0.2)' }}>
-          📈
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa' }}>
+          <TrendingUp size={20} />
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#60a5fa' }}>Market Intelligence</p>
@@ -163,7 +172,6 @@ async function MarketIntelligence() {
   );
 }
 
-// Active contracts
 async function ActiveContracts({ userId }: { userId: string }) {
   const supabase = await createClient();
   const { data: contracts, error } = await (supabase.from as any)('offtaker_contracts')
@@ -174,8 +182,6 @@ async function ActiveContracts({ userId }: { userId: string }) {
     .limit(5);
 
   const rows = error ? [] : (contracts ?? []);
-
-  const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾', cotton: '🌾', vanilla: '🌿', cocoa: '🍫', sesame: '🌻' };
 
   return (
     <Card>
@@ -188,7 +194,7 @@ async function ActiveContracts({ userId }: { userId: string }) {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-3xl mb-3">📄</p>
+          <FileText size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-bold" style={{ color: C.text }}>No active contracts yet</p>
           <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Create forward contracts with farmers to secure your supply pipeline</p>
           <Link href="/offtaker/pipeline/new" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
@@ -199,13 +205,15 @@ async function ActiveContracts({ userId }: { userId: string }) {
         <div className="divide-y" style={{ borderColor: C.border }}>
           {rows.map((c: any) => {
             const k = c.crop_type?.toLowerCase() ?? '';
+            const cropColor = CROP_COLORS[k] ?? C.greenMed;
             const daysUntil = Math.ceil((new Date(c.delivery_date).getTime() - Date.now()) / 864e5);
             const urgent = daysUntil <= 7;
             return (
               <div key={c.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: urgent ? 'var(--color-harvest-bg)' : 'var(--color-primary-bg)' }}>
-                    {CROP_EMOJI[k] ?? '🌾'}
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: urgent ? 'var(--color-harvest-bg)' : `${cropColor}18`, color: urgent ? C.amber : cropColor }}>
+                    <Leaf size={18} />
                   </div>
                   <div>
                     <p className="text-sm font-bold capitalize" style={{ color: C.text }}>{c.crop_type} · {c.quantity_kg.toLocaleString()} kg</p>
@@ -214,7 +222,11 @@ async function ActiveContracts({ userId }: { userId: string }) {
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-black" style={{ color: C.text }}>UGX {Math.round(c.price_ugx ?? 0).toLocaleString()}</p>
-                  {urgent && <span className="text-[10px] font-bold" style={{ color: C.amber }}>⏰ {daysUntil}d left</span>}
+                  {urgent && (
+                    <span className="text-[10px] font-bold flex items-center gap-1 justify-end" style={{ color: C.amber }}>
+                      <Clock size={9} /> {daysUntil}d left
+                    </span>
+                  )}
                 </div>
               </div>
             );
@@ -225,7 +237,6 @@ async function ActiveContracts({ userId }: { userId: string }) {
   );
 }
 
-// Available supply from farmers
 async function AvailableSupply() {
   const supabase = await createClient();
   const { data: listings } = await (supabase.from as any)('listings')
@@ -235,8 +246,6 @@ async function AvailableSupply() {
     .limit(6);
 
   const rows = listings ?? [];
-  const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾', cotton: '🌾' };
-  const CROP_COLOR: Record<string, string> = { maize: 'var(--color-harvest)', coffee: '#7C3AED', beans: 'var(--color-danger)', rice: 'var(--color-sky)', banana: 'var(--color-harvest)', cassava: 'var(--color-success)', tomato: 'var(--color-danger)' };
 
   return (
     <Card>
@@ -249,19 +258,19 @@ async function AvailableSupply() {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-8 text-center">
-          <p className="text-2xl mb-2">🌾</p>
+          <Leaf size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-medium" style={{ color: C.muted }}>No active listings right now</p>
         </div>
       ) : (
         <div className="divide-y" style={{ borderColor: C.border }}>
           {rows.map((l: any) => {
             const k = l.crop_type?.toLowerCase() ?? '';
-            const color = CROP_COLOR[k] ?? C.greenMed;
+            const color = CROP_COLORS[k] ?? C.greenMed;
             return (
               <Link key={l.id} href="/offtaker/pipeline" className="px-5 py-3 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors" style={{ textDecoration: 'none' }}>
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base shrink-0" style={{ background: `${color}18` }}>
-                    {CROP_EMOJI[k] ?? '🌾'}
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}18`, color }}>
+                    <Leaf size={14} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold capitalize" style={{ color: C.text }}>{l.crop_type}</p>
@@ -281,7 +290,6 @@ async function AvailableSupply() {
   );
 }
 
-// Supplier scorecard
 async function SupplierScorecard({ userId }: { userId: string }) {
   const supabase = await createClient();
   const { data: scorecards, error } = await (supabase.from as any)('offtaker_scorecards')
@@ -303,7 +311,7 @@ async function SupplierScorecard({ userId }: { userId: string }) {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-8 text-center">
-          <p className="text-2xl mb-2">⭐</p>
+          <Star size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-medium" style={{ color: C.muted }}>No scorecards yet</p>
           <p className="text-xs mt-1" style={{ color: C.muted }}>Rate your suppliers after each completed contract</p>
         </div>
@@ -346,11 +354,10 @@ export default async function OfftakerDashboardPage() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Supply Command, {firstName} 📦
+            Supply Command, {firstName}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>Offtaker Hub · {profile?.location ?? 'Uganda'}</p>
         </div>
@@ -359,20 +366,16 @@ export default async function OfftakerDashboardPage() {
         </Link>
       </div>
 
-      {/* Stats */}
       <Suspense fallback={<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}</div>}>
         <OfftakerStats userId={userId} />
       </Suspense>
 
-      {/* Quick Actions */}
       <QuickActions />
 
-      {/* Market Intelligence */}
       <Suspense fallback={<div className="dash-skeleton h-36 rounded-xl" />}>
         <MarketIntelligence />
       </Suspense>
 
-      {/* Active Contracts + Available Supply (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
           <ActiveContracts userId={userId} />
@@ -382,7 +385,6 @@ export default async function OfftakerDashboardPage() {
         </Suspense>
       </div>
 
-      {/* Supplier Scorecard */}
       <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
         <SupplierScorecard userId={userId} />
       </Suspense>

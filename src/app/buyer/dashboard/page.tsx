@@ -2,6 +2,10 @@ import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import {
+  ShoppingBag, MessageCircle, CheckCircle2, CreditCard, Package,
+  Truck, Snowflake, Zap, DollarSign, Leaf, Clock, RefreshCw,
+} from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -9,6 +13,11 @@ const C = {
   amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)',
   cardShadow: 'var(--d-shadow-card)', purple: '#7C3AED',
 } as const;
+
+const CROP_COLORS: Record<string, string> = {
+  maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED',
+  rice: 'var(--color-sky)', banana: '#B45309', cassava: 'var(--color-success)', tomato: 'var(--color-danger)',
+};
 
 const Card = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
   <div style={{ background: C.cardBg, borderRadius: '14px', boxShadow: C.cardShadow, ...style }}>
@@ -46,14 +55,14 @@ async function BuyerStats({ userId }: { userId: string }) {
   ]);
 
   const stats = [
-    { label: 'Market Listings',  value: listingsRes.count ?? 0,    sub: 'Available now',        icon: '🌾', border: C.greenBright },
-    { label: 'Pending Offers',   value: pendingRes.count ?? 0,     sub: 'Awaiting farmer reply', icon: '💬', border: C.amber },
-    { label: 'Active Orders',    value: ordersRes.count ?? 0,      sub: 'Accepted deals',        icon: '✅', border: C.blue },
+    { label: 'Market Listings', value: listingsRes.count ?? 0,    sub: 'Available now',         icon: <ShoppingBag size={18} />,   border: C.greenBright },
+    { label: 'Pending Offers',  value: pendingRes.count ?? 0,     sub: 'Awaiting farmer reply',  icon: <MessageCircle size={18} />, border: C.amber },
+    { label: 'Active Orders',   value: ordersRes.count ?? 0,      sub: 'Accepted deals',         icon: <CheckCircle2 size={18} />,  border: C.blue },
     {
       label: 'Wallet Balance',
       value: `UGX ${Math.round(walletRes?.data?.balance ?? 0).toLocaleString()}`,
       sub: 'Available funds',
-      icon: '💳',
+      icon: <CreditCard size={18} />,
       border: C.purple,
     },
   ];
@@ -64,7 +73,7 @@ async function BuyerStats({ userId }: { userId: string }) {
         <div key={label} style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '18px 20px' }}>
           <div className="flex items-start justify-between mb-2">
             <p className="text-xs font-semibold" style={{ color: C.muted }}>{label}</p>
-            <span className="text-xl">{icon}</span>
+            <div style={{ color: border }}>{icon}</div>
           </div>
           <p className="text-2xl font-black" style={{ color: C.text, letterSpacing: '-0.04em' }}>{value}</p>
           <p className="text-xs mt-1" style={{ color: C.muted }}>{sub}</p>
@@ -78,11 +87,11 @@ async function BuyerStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Browse Market', href: '/buyer/listings',   emoji: '🌾', bg: 'var(--color-primary-bg)', color: C.green },
-    { label: 'My Orders',     href: '/buyer/orders',     emoji: '📦', bg: 'var(--color-sky-bg)',     color: C.blue },
-    { label: 'My Offers',     href: '/buyer/requests',   emoji: '💬', bg: 'var(--color-harvest-bg)', color: C.amber },
-    { label: 'Deliveries',    href: '/buyer/deliveries', emoji: '🚛', bg: '#EDE9FE',                 color: C.purple },
-    { label: 'Wallet',        href: '/buyer/wallet',     emoji: '💳', bg: 'var(--color-success-bg)', color: 'var(--color-success)' },
+    { label: 'Browse Market', href: '/buyer/listings',   icon: <ShoppingBag size={20} />,   bg: 'var(--color-primary-bg)', color: C.green  },
+    { label: 'My Orders',     href: '/buyer/orders',     icon: <Package size={20} />,       bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'My Offers',     href: '/buyer/requests',   icon: <MessageCircle size={20} />, bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'Deliveries',    href: '/buyer/deliveries', icon: <Truck size={20} />,         bg: '#EDE9FE',                 color: C.purple },
+    { label: 'Wallet',        href: '/buyer/wallet',     icon: <CreditCard size={20} />,    bg: 'var(--color-success-bg)', color: 'var(--color-success)' },
   ];
 
   return (
@@ -91,12 +100,12 @@ function QuickActions() {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
-        {actions.map(({ label, href, emoji, bg, color }) => (
+        {actions.map(({ label, href, icon, bg, color }) => (
           <Link key={label} href={href} prefetch={true}
             className="flex flex-col items-center gap-2 py-4 rounded-xl hover:opacity-85 transition-opacity"
             style={{ background: bg, textDecoration: 'none' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ background: 'rgba(255,255,255,0.7)' }}>
-              {emoji}
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>
+              {icon}
             </div>
             <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
           </Link>
@@ -123,13 +132,11 @@ async function ActiveOffers({ userId }: { userId: string }) {
 
   const rows = ((offers ?? []) as any[]).filter(o => o?.listing);
 
-  const STATUS: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-    pending:  { label: 'Waiting',   color: C.amber,  bg: 'var(--color-harvest-bg)', icon: '⏳' },
-    countered:{ label: 'Countered', color: C.blue,   bg: 'var(--color-sky-bg)',     icon: '🔄' },
-    accepted: { label: 'Accepted',  color: 'var(--color-success)', bg: 'var(--color-success-bg)', icon: '✅' },
+  const STATUS: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
+    pending:  { label: 'Waiting',   color: C.amber,               bg: 'var(--color-harvest-bg)', icon: <Clock size={10} /> },
+    countered:{ label: 'Countered', color: C.blue,                bg: 'var(--color-sky-bg)',     icon: <RefreshCw size={10} /> },
+    accepted: { label: 'Accepted',  color: 'var(--color-success)', bg: 'var(--color-success-bg)', icon: <CheckCircle2 size={10} /> },
   };
-
-  const CROP_EMOJI: Record<string, string> = { maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌', cassava: '🥔', tomato: '🍅' };
 
   function timeAgo(iso: string) {
     const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -149,7 +156,7 @@ async function ActiveOffers({ userId }: { userId: string }) {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-3xl mb-2">💬</p>
+          <MessageCircle size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-medium" style={{ color: C.muted }}>No active offers</p>
           <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Browse the market and make an offer to a farmer</p>
           <Link href="/buyer/listings" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
@@ -161,12 +168,13 @@ async function ActiveOffers({ userId }: { userId: string }) {
           {rows.map((o: any) => {
             const st = STATUS[o.status] ?? STATUS.pending;
             const crop = o.listing.crop_type?.toLowerCase() ?? '';
+            const cropColor = CROP_COLORS[crop] ?? C.greenMed;
             return (
               <div key={o.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
-                    style={{ background: 'var(--color-primary-bg)' }}>
-                    {CROP_EMOJI[crop] ?? '🌾'}
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: `${cropColor}18`, color: cropColor }}>
+                    <Leaf size={15} />
                   </div>
                   <div>
                     <p className="text-sm font-bold capitalize" style={{ color: C.text }}>
@@ -181,8 +189,8 @@ async function ActiveOffers({ userId }: { userId: string }) {
                   <p className="text-sm font-black" style={{ color: C.text }}>
                     UGX {Math.round(o.counter_price ?? o.offered_price).toLocaleString()}
                   </p>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: st.bg, color: st.color }}>
-                    {st.icon} {st.label}
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: st.bg, color: st.color, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    {st.icon}{st.label}
                   </span>
                 </div>
               </div>
@@ -208,11 +216,11 @@ async function RecentDeliveries({ userId }: { userId: string }) {
   if (rows.length === 0) return null;
 
   const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
-    open:       { label: 'Finding Driver', color: C.amber,  bg: 'var(--color-harvest-bg)' },
-    assigned:   { label: 'Driver Assigned',color: C.blue,   bg: 'var(--color-sky-bg)' },
-    in_transit: { label: 'On the Way',     color: C.green,  bg: 'var(--color-primary-bg)' },
-    delivered:  { label: 'Delivered',      color: C.purple, bg: '#EDE9FE' },
-    cancelled:  { label: 'Cancelled',      color: C.red,    bg: 'var(--color-danger-bg)' },
+    open:       { label: 'Finding Driver',  color: C.amber,  bg: 'var(--color-harvest-bg)' },
+    assigned:   { label: 'Driver Assigned', color: C.blue,   bg: 'var(--color-sky-bg)' },
+    in_transit: { label: 'On the Way',      color: C.green,  bg: 'var(--color-primary-bg)' },
+    delivered:  { label: 'Delivered',       color: C.purple, bg: '#EDE9FE' },
+    cancelled:  { label: 'Cancelled',       color: C.red,    bg: 'var(--color-danger-bg)' },
   };
 
   return (
@@ -227,12 +235,13 @@ async function RecentDeliveries({ userId }: { userId: string }) {
       <div className="divide-y" style={{ borderColor: C.border }}>
         {rows.map((d: any) => {
           const cfg = STATUS_CFG[d.status] ?? STATUS_CFG.open;
-          const typeIcon = d.delivery_type === 'cold' ? '❄️' : d.delivery_type === 'fast' ? '⚡' : '🚛';
+          const typeIcon = d.delivery_type === 'cold' ? <Snowflake size={16} /> : d.delivery_type === 'fast' ? <Zap size={16} /> : <Truck size={16} />;
+          const typeColor = d.delivery_type === 'cold' ? C.blue : d.delivery_type === 'fast' ? C.amber : C.green;
           return (
             <div key={d.id} className="px-5 py-3.5 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
-                  style={{ background: 'var(--color-primary-bg)' }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: 'var(--color-primary-bg)', color: typeColor }}>
                   {typeIcon}
                 </div>
                 <div>
@@ -266,8 +275,10 @@ async function FreshListings() {
     .limit(6);
 
   const rows = listings ?? [];
-  const EMOJI: Record<string, string>  = { maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌', cassava: '🥔', tomato: '🍅' };
-  const COLORS: Record<string, string> = { maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED', rice: C.blue, banana: '#B45309', cassava: 'var(--color-success)', tomato: 'var(--color-danger)' };
+  const COLORS: Record<string, string> = {
+    maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: '#7C3AED',
+    rice: 'var(--color-sky)', banana: '#B45309', cassava: 'var(--color-success)', tomato: 'var(--color-danger)',
+  };
 
   return (
     <Card>
@@ -280,7 +291,7 @@ async function FreshListings() {
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <p className="text-3xl mb-2">🌾</p>
+          <Leaf size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-medium" style={{ color: C.muted }}>No active listings yet</p>
         </div>
       ) : (
@@ -293,9 +304,9 @@ async function FreshListings() {
                 className="px-5 py-3.5 flex items-center justify-between gap-3 hover:opacity-90 transition-opacity"
                 style={{ textDecoration: 'none', display: 'flex' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
-                    style={{ background: `${color}18` }}>
-                    {EMOJI[k] ?? '🌾'}
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: `${color}18`, color }}>
+                    <Leaf size={15} />
                   </div>
                   <div>
                     <p className="text-sm font-bold capitalize" style={{ color: C.text }}>{l.crop_type}</p>
@@ -331,7 +342,10 @@ async function MarketPulse() {
     if (k) { if (!groups[k]) groups[k] = []; groups[k].push(p.price_per_kg); }
   });
 
-  const COLORS: Record<string, string> = { maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: C.purple, rice: C.blue, banana: '#B45309', cassava: 'var(--color-success)' };
+  const COLORS: Record<string, string> = {
+    maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: C.purple,
+    rice: C.blue, banana: '#B45309', cassava: 'var(--color-success)',
+  };
 
   const pulse = Object.entries(groups).slice(0, 6).map(([crop, ps]) => ({
     crop, avg: Math.round(ps.reduce((a, b) => a + b, 0) / ps.length),
@@ -397,8 +411,8 @@ async function SpendingSummary({ userId }: { userId: string }) {
   return (
     <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #0C1C35 0%, #1e3a5f 100%)' }}>
       <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ background: 'rgba(59,130,246,0.2)' }}>
-          💰
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa' }}>
+          <DollarSign size={20} />
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#60a5fa' }}>Procurement Summary</p>
@@ -425,7 +439,7 @@ async function SpendingSummary({ userId }: { userId: string }) {
   );
 }
 
-// ── Welcome Header (async — streamed independently) ───────────────────────────
+// ── Welcome Header ────────────────────────────────────────────────────────────
 
 async function WelcomeHeader({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
@@ -434,7 +448,7 @@ async function WelcomeHeader({ userId }: { userId: string }) {
     <div className="flex items-start justify-between">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Welcome back, {firstName} 🛒
+          Welcome back, {firstName}
         </h1>
         <p className="text-sm mt-0.5" style={{ color: C.muted }}>Buyer Hub · {profile?.location ?? 'Uganda'}</p>
       </div>
@@ -458,7 +472,6 @@ export default async function BuyerDashboardPage() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* Header — streams as soon as profile resolves, rest of page doesn't wait */}
       <Suspense fallback={
         <div className="flex items-start justify-between">
           <div className="space-y-2">
@@ -471,7 +484,6 @@ export default async function BuyerDashboardPage() {
         <WelcomeHeader userId={userId} />
       </Suspense>
 
-      {/* Stats */}
       <Suspense fallback={
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}
@@ -480,15 +492,12 @@ export default async function BuyerDashboardPage() {
         <BuyerStats userId={userId} />
       </Suspense>
 
-      {/* Quick Actions */}
       <QuickActions />
 
-      {/* Spending summary (only renders if user has data) */}
       <Suspense fallback={null}>
         <SpendingSummary userId={userId} />
       </Suspense>
 
-      {/* Active Offers + Recent Deliveries (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
           <ActiveOffers userId={userId} />
@@ -498,7 +507,6 @@ export default async function BuyerDashboardPage() {
         </Suspense>
       </div>
 
-      {/* Market Pulse + Fresh Listings (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
           <MarketPulse />
