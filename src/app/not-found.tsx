@@ -1,4 +1,5 @@
 ﻿import Link from 'next/link';
+import { Leaf } from 'lucide-react';
 
 export default function NotFound() {
   return (
@@ -19,10 +20,10 @@ export default function NotFound() {
         style={{
           width: 72, height: 72, borderRadius: 20, background: 'var(--color-primary)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 36, marginBottom: 24, boxShadow: '0 8px 32px rgba(22,163,74,0.25)',
+          marginBottom: 24, boxShadow: '0 8px 32px rgba(22,163,74,0.25)',
         }}
       >
-        🌱
+        <Leaf size={36} style={{ color: '#fff' }} />
       </div>
 
       <p

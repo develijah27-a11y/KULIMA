@@ -1,6 +1,8 @@
 ﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Leaf, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -23,9 +25,6 @@ const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> =
   closed:    { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Closed' },
 };
 
-const CROP_EMOJI: Record<string, string> = {
-  maize:'🌽', coffee:'☕', beans:'🫘', banana:'🍌', cassava:'🥔', tomato:'🍅', rice:'🌾', sunflower:'🌻',
-};
 
 const TABS = [
   { key: '',           label: 'All Cases' },
@@ -88,7 +87,7 @@ export default async function PathologistCasesPage({
         </div>
         {counts.open > 0 && (
           <div style={{ padding: '6px 14px', borderRadius: 10, background: 'var(--color-danger-bg)' }}>
-            <p style={{ fontSize: 12, fontWeight: 700, color: C.red, margin: 0 }}>⚠ {counts.open} pending triage</p>
+            <p style={{ fontSize: 12, fontWeight: 700, color: C.red, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><AlertTriangle size={12} />{counts.open} pending triage</p>
           </div>
         )}
       </div>
@@ -138,7 +137,7 @@ export default async function PathologistCasesPage({
         </div>
       ) : rows.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 10 }}>✅</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><CheckCircle2 size={40} style={{ color: C.green }} /></div>
           <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>No cases found</p>
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
             {status || severity ? 'Try clearing the filters.' : 'The queue is clear.'}
@@ -156,8 +155,8 @@ export default async function PathologistCasesPage({
                 href={`/pathologist/cases/${c.id}`}
                 style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '16px 20px', borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : 'none', textDecoration: 'none' }}
               >
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: sev.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
-                  {CROP_EMOJI[c.crop_type?.toLowerCase()] ?? '🌱'}
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: sev.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Leaf size={20} style={{ color: getCropColor(c.crop_type) }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>

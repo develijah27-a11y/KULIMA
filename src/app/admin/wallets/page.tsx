@@ -1,6 +1,7 @@
 ﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Building2, CreditCard, ClipboardList } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -71,13 +72,13 @@ export default async function AdminWalletsPage({
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: 'Total Value Locked', value: `UGX ${fmt(tvl)}`, icon: '🏦', color: C.blue },
-          { label: 'Active Wallets', value: active.toLocaleString(), icon: '💳', color: C.greenMed },
-          { label: 'Recent Transactions', value: transactions.length.toLocaleString(), icon: '📋', color: C.amber },
+          { label: 'Total Value Locked', value: `UGX ${fmt(tvl)}`, icon: <Building2 size={18} />, color: C.blue },
+          { label: 'Active Wallets', value: active.toLocaleString(), icon: <CreditCard size={18} />, color: C.greenMed },
+          { label: 'Recent Transactions', value: transactions.length.toLocaleString(), icon: <ClipboardList size={18} />, color: C.amber },
         ].map(({ label, value, icon, color }) => (
           <div key={label} style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '18px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <span style={{ fontSize: 20 }}>{icon}</span>
+              <span style={{ display: 'flex', color }}>{icon}</span>
               <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: C.muted, margin: 0 }}>{label}</p>
             </div>
             <p style={{ fontSize: 22, fontWeight: 900, color, letterSpacing: '-0.03em', margin: 0 }}>{value}</p>

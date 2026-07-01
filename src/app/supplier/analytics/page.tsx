@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Banknote, Wallet, CheckCircle2, ClipboardList, BarChart3, AlertTriangle } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -32,16 +33,16 @@ export default async function SupplierAnalyticsPage() {
   const lowStock = products.filter((p: any) => (p.stock_qty ?? 999) < 10).length;
 
   const stats = [
-    { label: 'Total Revenue', value: `UGX ${Math.round(totalRevenue).toLocaleString()}`, icon: '💰', color: C.green, sub: 'From completed orders' },
-    { label: 'Wallet Balance', value: `UGX ${Math.round(balance).toLocaleString()}`, icon: '💳', color: C.blue, sub: 'Available to withdraw' },
-    { label: 'Orders Fulfilled', value: completedOrders.length, icon: '✅', color: 'var(--color-success)', sub: 'All-time deliveries' },
-    { label: 'Pending Orders', value: pendingOrders, icon: '📋', color: C.amber, sub: 'Need processing' },
+    { label: 'Total Revenue',   value: `UGX ${Math.round(totalRevenue).toLocaleString()}`, icon: <Banknote size={16} />,     color: C.green,                sub: 'From completed orders' },
+    { label: 'Wallet Balance',  value: `UGX ${Math.round(balance).toLocaleString()}`,       icon: <Wallet size={16} />,       color: C.blue,                 sub: 'Available to withdraw' },
+    { label: 'Orders Fulfilled',value: completedOrders.length,                              icon: <CheckCircle2 size={16} />, color: 'var(--color-success)', sub: 'All-time deliveries' },
+    { label: 'Pending Orders',  value: pendingOrders,                                       icon: <ClipboardList size={16} />,color: C.amber,                sub: 'Need processing' },
   ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Analytics 📊</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Analytics</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Your business performance overview</p>
       </div>
 
@@ -50,7 +51,7 @@ export default async function SupplierAnalyticsPage() {
           <div key={label} style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '18px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <p style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>{label}</p>
-              <span style={{ fontSize: 18 }}>{icon}</span>
+              <span style={{ display: 'flex', color }}>{icon}</span>
             </div>
             <p style={{ fontSize: 20, fontWeight: 900, color, letterSpacing: '-0.03em', margin: '0 0 4px' }}>{value}</p>
             <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{sub}</p>
@@ -61,7 +62,7 @@ export default async function SupplierAnalyticsPage() {
       {lowStock > 0 && (
         <div style={{ padding: '16px 20px', background: 'var(--color-danger-bg)', borderRadius: 14, border: '1px solid var(--color-danger)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-danger)', margin: '0 0 2px' }}>⚠ {lowStock} product{lowStock !== 1 ? 's' : ''} running low on stock</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-danger)', margin: '0 0 2px', display: 'flex', alignItems: 'center', gap: 6 }}><AlertTriangle size={14} />{lowStock} product{lowStock !== 1 ? 's' : ''} running low on stock</p>
             <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Restock soon to avoid missing orders</p>
           </div>
           <Link href="/supplier/catalogue" style={{ padding: '8px 16px', background: 'var(--color-danger)', color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
@@ -76,7 +77,7 @@ export default async function SupplierAnalyticsPage() {
         </div>
         {orders.length === 0 ? (
           <div style={{ padding: '32px', textAlign: 'center' }}>
-            <p style={{ fontSize: 32, marginBottom: 8 }}>📊</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}><BarChart3 size={32} style={{ color: C.muted }} /></div>
             <p style={{ color: C.muted, fontSize: 13 }}>No order history yet. Add products to your catalogue to start receiving orders.</p>
           </div>
         ) : (

@@ -2,6 +2,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Leaf } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -154,7 +156,6 @@ async function CropDemand() {
   const sorted = Object.entries(crops).sort((a, b) => b[1].totalKg - a[1].totalKg).slice(0, 8);
   const maxKg = sorted[0]?.[1].totalKg ?? 1;
 
-  const EMOJI: Record<string,string> = { maize:'🌽', coffee:'☕', beans:'🫘', banana:'🍌', cassava:'🥔', tomato:'🍅', rice:'🌾', cotton:'🌾', groundnuts:'🥜', sunflower:'🌻' };
 
   return (
     <Card>
@@ -171,7 +172,7 @@ async function CropDemand() {
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black" style={{ color: C.muted }}>#{i+1}</span>
-                  <span className="text-sm">{EMOJI[crop] ?? '🌱'}</span>
+                  <Leaf size={14} style={{ color: getCropColor(crop) }} />
                   <span className="text-xs font-bold capitalize" style={{ color: C.text }}>{crop}</span>
                 </div>
                 <div className="text-right">

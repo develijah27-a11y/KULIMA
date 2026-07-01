@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Leaf, FolderOpen } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -33,13 +35,12 @@ export default async function MyCasesPage() {
     resolved:   { label: 'Resolved',  color: 'var(--color-success)',  bg: 'var(--color-success-bg)' },
   };
 
-  const CROP_EMOJI: Record<string, string> = { maize: '🌽', coffee: '☕', beans: '🫘', banana: '🍌', cassava: '🥔', tomato: '🍅', rice: '🌾' };
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>My Cases 📁</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>My Cases</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>{rows.length} case{rows.length !== 1 ? 's' : ''} assigned to you</p>
         </div>
         <Link href="/pathologist/my-cases/new" style={{ padding: '8px 16px', background: C.red, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -49,7 +50,7 @@ export default async function MyCasesPage() {
 
       {rows.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>📁</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><FolderOpen size={40} style={{ color: C.muted }} /></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No cases yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Cases assigned to you from the queue will appear here.</p>
           <Link href="/pathologist/case-queue" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', background: C.red, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -66,8 +67,8 @@ export default async function MyCasesPage() {
                 borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : 'none',
                 textDecoration: 'none', background: C.cardBg,
               }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                  {CROP_EMOJI[c.crop_type?.toLowerCase()] ?? '🌱'}
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Leaf size={16} style={{ color: getCropColor(c.crop_type) }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px', textTransform: 'capitalize' }}>{c.crop_type} · {c.district}</p>

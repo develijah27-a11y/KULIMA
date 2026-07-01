@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { ClipboardList, Truck, CheckCircle2, AlertTriangle, CreditCard, Banknote } from 'lucide-react';
 
 const C = {
   text:        'var(--d-text)',
@@ -18,17 +19,17 @@ const C = {
 } as const;
 
 const STATUS_CFG = {
-  open:       { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Open',       icon: '📋' },
-  assigned:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Assigned',   icon: '🤝' },
-  in_transit: { color: '#7C3AED',              bg: '#EDE9FE',                  label: 'In Transit', icon: '🚛' },
-  delivered:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Delivered',  icon: '✅' },
-  cancelled:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Cancelled',  icon: '✗'  },
+  open:       { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Open'       },
+  assigned:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Assigned'   },
+  in_transit: { color: '#7C3AED',              bg: '#EDE9FE',                  label: 'In Transit' },
+  delivered:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Delivered'  },
+  cancelled:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Cancelled'  },
 } as const;
 
 const TYPE_CFG = {
   standard: { color: 'var(--d-muted)',        bg: 'var(--color-surface-2)',  label: 'Standard' },
-  fast:     { color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)', label: '⚡ Fast'  },
-  cold:     { color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)',     label: '❄️ Cold'  },
+  fast:     { color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)', label: 'Fast'     },
+  cold:     { color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)',     label: 'Cold'     },
 } as const;
 
 function fmt(n: number) {
@@ -67,12 +68,12 @@ async function DeliveryKPIs() {
     : 0;
 
   const kpis = [
-    { label: 'Open Requests',   value: openCount.toString(),      sub: 'Awaiting a driver',      icon: '📋', border: C.blue,        color: C.blue    },
-    { label: 'Active',          value: activeCount.toString(),     sub: 'Assigned or in transit', icon: '🚛', border: C.violet,      color: C.violet  },
-    { label: 'Delivered Today', value: deliveredToday.toString(),  sub: 'Completed today',        icon: '✅', border: C.greenMed,   color: C.greenMed },
-    { label: 'Pending Payment', value: pendingPayCount.toString(), sub: 'Awaiting buyer payment', icon: pendingPayCount ? '⚠️' : '💳',
+    { label: 'Open Requests',   value: openCount.toString(),      sub: 'Awaiting a driver',      icon: <ClipboardList size={14} />, border: C.blue,        color: C.blue    },
+    { label: 'Active',          value: activeCount.toString(),     sub: 'Assigned or in transit', icon: <Truck size={14} />,         border: C.violet,      color: C.violet  },
+    { label: 'Delivered Today', value: deliveredToday.toString(),  sub: 'Completed today',        icon: <CheckCircle2 size={14} />,  border: C.greenMed,   color: C.greenMed },
+    { label: 'Pending Payment', value: pendingPayCount.toString(), sub: 'Awaiting buyer payment', icon: pendingPayCount ? <AlertTriangle size={14} /> : <CreditCard size={14} />,
       border: pendingPayCount ? C.red : C.amber, color: pendingPayCount ? C.red : C.amber, alert: pendingPayCount > 3 },
-    { label: 'Commission Paid', value: commission > 0 ? `UGX ${fmt(commission)}` : '—', sub: 'Platform revenue collected', icon: '💰',
+    { label: 'Commission Paid', value: commission > 0 ? `UGX ${fmt(commission)}` : '—', sub: 'Platform revenue collected', icon: <Banknote size={14} />,
       border: C.greenBright, color: C.greenMed },
   ];
 
@@ -83,7 +84,7 @@ async function DeliveryKPIs() {
           {alert && <div style={{ position: 'absolute', top: 10, right: 10, width: 7, height: 7, borderRadius: '50%', background: C.red, boxShadow: `0 0 0 3px rgba(220,38,38,0.18)` }} />}
           <div className="flex items-start justify-between mb-2">
             <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: C.muted }}>{label}</p>
-            <span className="text-base">{icon}</span>
+            <span style={{ display: 'flex', color }}>{icon}</span>
           </div>
           <p className="text-xl font-black" style={{ color, letterSpacing: '-0.03em' }}>{value}</p>
           <p className="text-[10px] mt-1" style={{ color: C.muted }}>{sub}</p>
@@ -213,7 +214,7 @@ async function DeliveriesList({ status }: { status: string }) {
   if (rows.length === 0) {
     return (
       <div className="py-16 text-center">
-        <p className="text-4xl mb-3">🚛</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Truck size={40} style={{ color: C.muted }} /></div>
         <p className="text-sm font-semibold" style={{ color: C.text }}>
           {status ? `No ${STATUS_CFG[status as keyof typeof STATUS_CFG]?.label ?? status} deliveries` : 'No deliveries yet'}
         </p>
@@ -248,7 +249,7 @@ async function DeliveriesList({ status }: { status: string }) {
 
                 <div className="flex items-center gap-1.5 flex-wrap mb-2">
                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: st.bg, color: st.color }}>
-                    {st.icon} {st.label}
+                    {st.label}
                   </span>
                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: typ.bg, color: typ.color }}>
                     {typ.label}
