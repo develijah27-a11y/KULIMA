@@ -31,7 +31,7 @@ export const createClient = async () => {
       },
     }
   );
-});
+};
 
 export const createServiceRoleClient = () => {
   return createServerClient<Database>(

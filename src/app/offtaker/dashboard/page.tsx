@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   FileText, Users, CreditCard, DollarSign,
   Search, Star, BarChart3, Send,
-  TrendingUp, Leaf, Clock,
+  TrendingUp, Leaf, Clock, Truck,
 } from 'lucide-react';
 
 const C = {
@@ -85,11 +85,12 @@ async function OfftakerStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'New Contract',  href: '/offtaker/pipeline/new', icon: <FileText size={20} />,  bg: 'var(--color-primary-bg)', color: C.green  },
-    { label: 'Browse Supply', href: '/offtaker/pipeline',     icon: <Search size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
-    { label: 'Rate Supplier', href: '/offtaker/scorecard',    icon: <Star size={20} />,      bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'Analytics',     href: '/offtaker/spend',        icon: <BarChart3 size={20} />, bg: '#F5F3FF',                 color: C.purple },
-    { label: 'Send Offer',    href: '/offtaker/pipeline',     icon: <Send size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
+    { label: 'New Contract',   href: '/offtaker/pipeline/new',    icon: <FileText size={20} />,  bg: 'var(--color-primary-bg)', color: C.green  },
+    { label: 'Browse Supply',  href: '/offtaker/pipeline',        icon: <Search size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'Rate Supplier',  href: '/offtaker/scorecard',       icon: <Star size={20} />,      bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'Analytics',      href: '/offtaker/spend',           icon: <BarChart3 size={20} />, bg: '#F5F3FF',                 color: C.purple },
+    { label: 'Send Offer',     href: '/offtaker/pipeline',        icon: <Send size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
+    { label: 'Book Delivery',  href: '/offtaker/deliveries/new',  icon: <Truck size={20} />,     bg: '#F0FDF4',                 color: C.green  },
   ];
 
   return (
@@ -97,7 +98,7 @@ function QuickActions() {
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
       </div>
-      <div className="grid grid-cols-5 gap-2 p-4">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
           <Link key={label} href={href} className="flex flex-col items-center gap-2 py-4 rounded-xl hover:opacity-85 transition-opacity" style={{ background: bg, textDecoration: 'none' }}>
             <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>

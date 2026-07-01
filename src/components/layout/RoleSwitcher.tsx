@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
+import { Settings, Leaf, ShoppingCart, Truck, Store, Microscope, Package, Users, Loader2 } from 'lucide-react';
 
 const SIDEBAR_LIGHT = '#1C3D2A';
 const SIDEBAR_DARK  = '#0C1A11';
@@ -11,18 +12,17 @@ function getSidebarBg() {
   return document.documentElement.classList.contains('dark') ? SIDEBAR_DARK : SIDEBAR_LIGHT;
 }
 
-export const ROLE_META: Record<string, { icon: string; label: string; href: string }> = {
-  admin:       { icon: '⚙️', label: 'Admin',          href: '/admin/dashboard' },
-  farmer:      { icon: '🌾', label: 'Farmer',         href: '/farmer/dashboard' },
-  buyer:       { icon: '🛒', label: 'Buyer',          href: '/buyer/dashboard' },
-  transporter: { icon: '🚚', label: 'Transporter',    href: '/transporter/dashboard' },
-  supplier:    { icon: '🏪', label: 'Input Supplier', href: '/supplier/dashboard' },
-  pathologist: { icon: '🔬', label: 'Pathologist',    href: '/pathologist/dashboard' },
-  offtaker:    { icon: '📦', label: 'Offtaker',       href: '/offtaker/dashboard' },
-  groups:      { icon: '👥', label: 'Groups',         href: '/groups/dashboard' },
+export const ROLE_META: Record<string, { icon: JSX.Element; label: string; href: string }> = {
+  admin:       { icon: <Settings size={14} />,    label: 'Admin',          href: '/admin/dashboard' },
+  farmer:      { icon: <Leaf size={14} />,         label: 'Farmer',         href: '/farmer/dashboard' },
+  buyer:       { icon: <ShoppingCart size={14} />, label: 'Buyer',          href: '/buyer/dashboard' },
+  transporter: { icon: <Truck size={14} />,        label: 'Transporter',    href: '/transporter/dashboard' },
+  supplier:    { icon: <Store size={14} />,         label: 'Input Supplier', href: '/supplier/dashboard' },
+  pathologist: { icon: <Microscope size={14} />,   label: 'Pathologist',    href: '/pathologist/dashboard' },
+  offtaker:    { icon: <Package size={14} />,      label: 'Offtaker',       href: '/offtaker/dashboard' },
+  groups:      { icon: <Users size={14} />,         label: 'Groups',         href: '/groups/dashboard' },
 };
 
-// Roles a user can self-register into (admin requires backend assignment)
 const SELF_ADD_ROLES = ['farmer', 'buyer', 'transporter', 'supplier', 'pathologist', 'offtaker', 'groups'];
 
 interface RoleSwitcherProps {
@@ -45,8 +45,6 @@ export function RoleSwitcher({ currentRole, allRoles }: RoleSwitcherProps) {
 
   const current = ROLE_META[currentRole];
 
-  // Build the switchable list: all self-add roles except current,
-  // plus admin if the user already has it and it isn't the current role.
   const switchableRoles = SELF_ADD_ROLES.filter(r => r !== currentRole);
   if (currentRole !== 'admin' && allRoles.includes('admin')) {
     switchableRoles.unshift('admin');
@@ -100,7 +98,9 @@ export function RoleSwitcher({ currentRole, allRoles }: RoleSwitcherProps) {
         onMouseLeave={e => { if (!open) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)'; }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-          <span style={{ fontSize: 14 }}>{current?.icon}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--color-sidebar-text)' }}>
+            {current?.icon}
+          </span>
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-sidebar-text)' }}>
             {current?.label}
           </span>
@@ -175,7 +175,9 @@ export function RoleSwitcher({ currentRole, allRoles }: RoleSwitcherProps) {
                   onMouseEnter={e => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.10)'; }}
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
                 >
-                  <span style={{ fontSize: 14 }}>{isLoading ? '⏳' : meta.icon}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--color-sidebar-text)' }}>
+                    {isLoading ? <Loader2 size={14} className="animate-spin" /> : meta.icon}
+                  </span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-sidebar-text)', flex: 1 }}>
                     {meta.label}
                   </span>

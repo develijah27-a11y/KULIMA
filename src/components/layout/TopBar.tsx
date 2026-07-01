@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, MapPin } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { OfflineStatusPill } from '@/components/ui/OfflineStatusPill';
 import { ROLE_META } from '@/components/layout/RoleSwitcher';
@@ -58,8 +58,8 @@ export function TopBar({
           {shortGreeting}
         </p>
         {location && (
-          <p className="text-xs mt-0.5 truncate hidden sm:block" style={{ color: 'var(--color-text-muted)' }}>
-            📍 {location}, Uganda
+          <p className="text-xs mt-0.5 truncate hidden sm:block" style={{ color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 3 }}>
+            <MapPin size={11} style={{ flexShrink: 0 }} /> {location}, Uganda
           </p>
         )}
         <div className="hidden sm:block mt-0.5">
@@ -95,7 +95,7 @@ export function TopBar({
                 fontFamily: 'var(--font-body)',
               }}
             >
-              <span style={{ fontSize: 15 }}>{currentMeta!.icon}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', color: 'var(--color-text)' }}>{currentMeta!.icon}</span>
               <ChevronDown
                 size={11}
                 style={{
@@ -162,7 +162,7 @@ export function TopBar({
                         onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-2)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                       >
-                        <span style={{ fontSize: 16 }}>{meta.icon}</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center' }}>{meta.icon}</span>
                         <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>
                           {meta.label}
                         </span>

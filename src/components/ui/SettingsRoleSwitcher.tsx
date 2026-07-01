@@ -1,18 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type JSX } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { Settings, Leaf, ShoppingCart, Truck, Store, Microscope, Package, Users } from 'lucide-react';
 
-const ROLE_META: Record<string, { icon: string; label: string; href: string; accent: string }> = {
-  farmer:      { icon: '🌾', label: 'Farmer',         href: '/farmer/dashboard',      accent: '#2D6A4F' },
-  buyer:       { icon: '🛒', label: 'Buyer',          href: '/buyer/dashboard',       accent: '#1A56DB' },
-  supplier:    { icon: '🏪', label: 'Input Supplier', href: '/supplier/dashboard',    accent: '#FF6B00' },
-  transporter: { icon: '🚚', label: 'Transporter',    href: '/transporter/dashboard', accent: '#6366F1' },
-  pathologist: { icon: '🔬', label: 'Pathologist',    href: '/pathologist/dashboard', accent: '#E11D48' },
-  offtaker:    { icon: '📦', label: 'Offtaker',       href: '/offtaker/dashboard',    accent: '#0891B2' },
-  groups:      { icon: '👥', label: 'Groups',         href: '/groups/dashboard',      accent: '#7C3AED' },
-  admin:       { icon: '⚙️', label: 'Admin',          href: '/admin/dashboard',       accent: '#374151' },
+const ROLE_META: Record<string, { icon: JSX.Element; label: string; href: string; accent: string }> = {
+  farmer:      { icon: <Leaf size={24} />,         label: 'Farmer',         href: '/farmer/dashboard',      accent: '#2D6A4F' },
+  buyer:       { icon: <ShoppingCart size={24} />, label: 'Buyer',          href: '/buyer/dashboard',       accent: '#1A56DB' },
+  supplier:    { icon: <Store size={24} />,         label: 'Input Supplier', href: '/supplier/dashboard',    accent: '#FF6B00' },
+  transporter: { icon: <Truck size={24} />,         label: 'Transporter',    href: '/transporter/dashboard', accent: '#6366F1' },
+  pathologist: { icon: <Microscope size={24} />,   label: 'Pathologist',    href: '/pathologist/dashboard', accent: '#E11D48' },
+  offtaker:    { icon: <Package size={24} />,      label: 'Offtaker',       href: '/offtaker/dashboard',    accent: '#0891B2' },
+  groups:      { icon: <Users size={24} />,         label: 'Groups',         href: '/groups/dashboard',      accent: '#7C3AED' },
+  admin:       { icon: <Settings size={24} />,      label: 'Admin',          href: '/admin/dashboard',       accent: '#374151' },
 };
 
 export function SettingsRoleSwitcher() {
@@ -86,7 +87,9 @@ export function SettingsRoleSwitcher() {
                 if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = 'var(--color-surface-2)';
               }}
             >
-              <span style={{ fontSize: 26 }}>{meta.icon}</span>
+              <div style={{ color: meta.accent, display: 'flex', alignItems: 'center' }}>
+                {meta.icon}
+              </div>
               <span style={{
                 fontSize: 12, fontWeight: 700, textAlign: 'center', lineHeight: 1.3,
                 color: isActive ? meta.accent : 'var(--d-text)',

@@ -70,7 +70,7 @@ export default async function FarmerLayout({ children }: { children: React.React
 
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'there';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first} 👋`;
+  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
 
   // Badge unread count on notifications
   const navWithBadge = FARMER_NAV.map(item =>

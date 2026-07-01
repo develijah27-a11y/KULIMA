@@ -58,7 +58,7 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
 
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'there';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first} 👋`;
+  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
 
   const navWithBadge = BUYER_NAV.map(item =>
     item.href === '/buyer/notifications' && unreadCount > 0

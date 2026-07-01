@@ -6,7 +6,7 @@ import {
   Package, ShoppingCart, AlertTriangle, CreditCard,
   Plus, ClipboardList, DollarSign, Map, BarChart3,
   Radio, Leaf, Wrench, Droplets, Recycle, Settings,
-  Store, MapPin, Bell, Inbox, Sprout, FlaskConical,
+  Store, MapPin, Bell, Inbox, Sprout, FlaskConical, Truck,
 } from 'lucide-react';
 
 const C = {
@@ -91,11 +91,12 @@ async function SupplierStats({ profileId, userId }: { profileId: string; userId:
 
 function QuickActions() {
   const actions = [
-    { label: 'Add Product',    href: '/supplier/catalogue', icon: <Plus size={20} />,          bg: 'var(--color-primary-bg)', color: C.green  },
-    { label: 'View Orders',    href: '/supplier/orders',    icon: <ClipboardList size={20} />,  bg: 'var(--color-sky-bg)',     color: C.blue   },
-    { label: 'Update Prices',  href: '/supplier/catalogue', icon: <DollarSign size={20} />,     bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'Demand Map',     href: '/supplier/demand',    icon: <Map size={20} />,             bg: '#F5F3FF',                 color: C.purple },
-    { label: 'Analytics',      href: '/supplier/analytics', icon: <BarChart3 size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
+    { label: 'Add Product',     href: '/supplier/catalogue',      icon: <Plus size={20} />,          bg: 'var(--color-primary-bg)', color: C.green  },
+    { label: 'View Orders',     href: '/supplier/orders',         icon: <ClipboardList size={20} />,  bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'Update Prices',   href: '/supplier/catalogue',      icon: <DollarSign size={20} />,     bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'Demand Map',      href: '/supplier/demand',         icon: <Map size={20} />,             bg: '#F5F3FF',                 color: C.purple },
+    { label: 'Analytics',       href: '/supplier/analytics',      icon: <BarChart3 size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
+    { label: 'Book Delivery',   href: '/supplier/deliveries/new', icon: <Truck size={20} />,          bg: '#F0FDF4',                 color: C.green  },
   ];
 
   return (
@@ -103,7 +104,7 @@ function QuickActions() {
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
       </div>
-      <div className="grid grid-cols-5 gap-2 p-4">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
           <Link key={label} href={href} className="flex flex-col items-center gap-2 py-4 rounded-xl hover:opacity-85 transition-opacity" style={{ background: bg, textDecoration: 'none' }}>
             <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>

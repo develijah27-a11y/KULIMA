@@ -59,7 +59,7 @@ export default async function PathologistLayout({ children }: { children: React.
 
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'there';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first} 👋`;
+  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
 
   const navWithBadge = PATHOLOGIST_NAV.map(item =>
     item.href === '/pathologist/notifications' && unreadCount > 0 ? { ...item, badge: unreadCount } : item

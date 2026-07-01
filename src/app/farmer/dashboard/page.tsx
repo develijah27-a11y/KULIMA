@@ -9,7 +9,7 @@ import {
   Package, DollarSign, Home, Bell, CheckCircle2, Sprout,
   Sun, Moon, Cloud, CloudSun, CloudRain, CloudLightning, Snowflake,
   Calendar, MessageCircle, ShoppingCart, Pencil, ClipboardList, Search,
-  BarChart3, Leaf, AlertTriangle, AlertCircle, Wind, Droplets,
+  BarChart3, Leaf, AlertTriangle, AlertCircle, Wind, Droplets, Truck,
 } from 'lucide-react';
 
 const getWeatherCached = cache(async (lat: number, lon: number): Promise<ServerWeatherData> => {
@@ -666,11 +666,12 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Create Listing', href: '/farmer/marketplace/new', icon: <Pencil size={20} />,      bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
-    { label: 'Add Record',     href: '/farmer/farm',            icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
-    { label: 'Check Weather',  href: '/farmer/weather',         icon: <Cloud size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
-    { label: 'Scan Disease',   href: '/farmer/doctor',          icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
-    { label: 'Apply for Loan', href: '/farmer/finance',         icon: <DollarSign size={20} />,    bg: 'var(--color-success-bg)',  color: 'var(--color-success)' },
+    { label: 'Create Listing',   href: '/farmer/marketplace/new',  icon: <Pencil size={20} />,      bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
+    { label: 'Add Record',       href: '/farmer/farm',             icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
+    { label: 'Check Weather',    href: '/farmer/weather',          icon: <Cloud size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
+    { label: 'Scan Disease',     href: '/farmer/doctor',           icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
+    { label: 'Apply for Loan',   href: '/farmer/finance',          icon: <DollarSign size={20} />,    bg: 'var(--color-success-bg)',  color: 'var(--color-success)' },
+    { label: 'Book Delivery',    href: '/farmer/deliveries/new',   icon: <Truck size={20} />,         bg: '#F5F3FF',                  color: '#7C3AED' },
   ];
 
   return (
@@ -678,7 +679,7 @@ function QuickActions() {
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
       </div>
-      <div className="grid grid-cols-5 gap-2 p-4">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
           <Link
             key={label}

@@ -59,7 +59,7 @@ export default async function OfftakerLayout({ children }: { children: React.Rea
 
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'there';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first} 👋`;
+  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
 
   const navWithBadge = OFFTAKER_NAV.map(item =>
     item.href === '/offtaker/notifications' && unreadCount > 0 ? { ...item, badge: unreadCount } : item

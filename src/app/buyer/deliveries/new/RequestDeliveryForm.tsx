@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, type FormEvent } from 'react';
+import { useState, useEffect, useCallback, type FormEvent, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
+import { Truck, Zap, Snowflake, MapPin, Clock, Briefcase, CheckCircle2, Megaphone, AlertTriangle } from 'lucide-react';
 import type { DeliveryType, FareBreakdown } from '@/lib/delivery-pricing';
 
 const C = {
@@ -15,19 +16,19 @@ const DISTRICTS = [
   'Mityana','Nakaseke','Rakai','Lyantonde','Ntungamo','Isingiro','Kiruhura','Bushenyi',
 ];
 
-const DELIVERY_TYPES: { type: DeliveryType; icon: string; label: string; subtitle: string; color: string; bg: string; border: string }[] = [
+const DELIVERY_TYPES: { type: DeliveryType; icon: JSX.Element; label: string; subtitle: string; color: string; bg: string; border: string }[] = [
   {
-    type: 'standard', icon: '🚛', label: 'Standard',
+    type: 'standard', icon: <Truck size={24} />, label: 'Standard',
     subtitle: '2–5 days · Lowest price',
     color: 'var(--color-primary)', bg: 'var(--color-primary-bg)', border: 'var(--color-primary)',
   },
   {
-    type: 'fast', icon: '⚡', label: 'Fast Delivery',
+    type: 'fast', icon: <Zap size={24} />, label: 'Fast Delivery',
     subtitle: 'Same day – 24 hrs',
     color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', border: 'var(--color-harvest)',
   },
   {
-    type: 'cold', icon: '❄️', label: 'Cold Chain',
+    type: 'cold', icon: <Snowflake size={24} />, label: 'Cold Chain',
     subtitle: '1–3 days · Refrigerated',
     color: '#0EA5E9', bg: '#E0F2FE', border: '#0EA5E9',
   },
@@ -57,7 +58,6 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   const [submitted, setSubmitted]             = useState(false);
   const [driversNotified, setDriversNotified] = useState<number | null>(null);
 
-  // Live fare estimate — re-fetches whenever route, cargo, or type changes
   const fetchFare = useCallback(async () => {
     if (!pickupDistrict || !dropoffDistrict || !cargoKg || parseFloat(cargoKg) <= 0) {
       setFare(null); return;
@@ -73,7 +73,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   }, [pickupDistrict, dropoffDistrict, cargoKg, deliveryType]);
 
   useEffect(() => {
-    const id = setTimeout(fetchFare, 400); // debounce 400ms
+    const id = setTimeout(fetchFare, 400);
     return () => clearTimeout(id);
   }, [fetchFare]);
 
@@ -116,7 +116,11 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
     const hasDrivers = driversNotified !== null && driversNotified > 0;
     return (
       <div style={{ textAlign: 'center', padding: '32px 20px' }}>
-        <p style={{ fontSize: 40, marginBottom: 12 }}>{hasDrivers ? '✅' : '📢'}</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+          {hasDrivers
+            ? <CheckCircle2 size={48} style={{ color: 'var(--color-success)' }} />
+            : <Megaphone size={48} style={{ color: 'var(--color-harvest)' }} />}
+        </div>
         <p style={{ fontWeight: 800, fontSize: 17, color: C.text, marginBottom: 6 }}>Delivery Posted!</p>
         {hasDrivers ? (
           <p style={{ fontSize: 13, color: 'var(--color-success)', fontWeight: 600 }}>
@@ -139,7 +143,6 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   return (
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-      {/* Prefilled offer banner */}
       {prefilledOffer && (
         <div style={{ padding: '11px 14px', background: 'var(--color-primary-bg)', borderRadius: 10, border: '1px solid var(--color-primary-muted)' }}>
           <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success)', margin: 0 }}>
@@ -148,7 +151,6 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         </div>
       )}
 
-      {/* ── Delivery type selector ──────────────────────────────────────────── */}
       <div>
         <label style={{ fontSize: 13, fontWeight: 700, color: C.text, display: 'block', marginBottom: 10 }}>
           Delivery Type *
@@ -171,7 +173,9 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
                   transition: 'all 0.15s',
                 }}
               >
-                <p style={{ fontSize: 22, margin: '0 0 4px' }}>{dt.icon}</p>
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 8px', color: selected ? dt.color : C.muted }}>
+                  {dt.icon}
+                </div>
                 <p style={{ fontSize: 12, fontWeight: 800, color: selected ? dt.color : C.text, margin: '0 0 2px' }}>
                   {dt.label}
                 </p>
@@ -183,13 +187,12 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
           })}
         </div>
         {deliveryType === 'cold' && (
-          <p style={{ fontSize: 11, color: '#0EA5E9', marginTop: 7, fontWeight: 600 }}>
-            ❄️ Only refrigerated vehicles will be matched for cold chain deliveries
+          <p style={{ fontSize: 11, color: '#0EA5E9', marginTop: 7, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Snowflake size={11} /> Only refrigerated vehicles will be matched for cold chain deliveries
           </p>
         )}
       </div>
 
-      {/* ── Route ──────────────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Pickup District *</label>
@@ -222,7 +225,6 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         </div>
       </div>
 
-      {/* ── Cargo ──────────────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Cargo Weight (kg) *</label>
@@ -250,7 +252,6 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
           rows={2} style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }} />
       </div>
 
-      {/* ── Live fare estimate ──────────────────────────────────────────────── */}
       {(fare || fareLoading) && (
         <div style={{
           padding: '16px 18px', borderRadius: 14,
@@ -268,10 +269,10 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
                 </p>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11, color: C.muted }}>
-                <span>📍 Distance: ~{fare.distanceKm} km</span>
-                <span>⏱ ETA: {fare.etaLabel}</span>
-                <span>🚛 Driver earns: UGX {fare.driverEarnings.toLocaleString()}</span>
-                <span>💼 App commission: UGX {fare.commissionAmount.toLocaleString()}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={10} /> Distance: ~{fare.distanceKm} km</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={10} /> ETA: {fare.etaLabel}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Truck size={10} /> Driver earns: UGX {fare.driverEarnings.toLocaleString()}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Briefcase size={10} /> App commission: UGX {fare.commissionAmount.toLocaleString()}</span>
               </div>
               <p style={{ fontSize: 10, color: C.muted, margin: '8px 0 0', borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
                 Final price is fixed — no negotiation. Driver is paid after you confirm delivery.
@@ -281,7 +282,11 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         </div>
       )}
 
-      {error && <p style={{ color: 'var(--color-danger)', fontSize: 13 }}>⚠ {error}</p>}
+      {error && (
+        <p style={{ color: 'var(--color-danger)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <AlertTriangle size={13} /> {error}
+        </p>
+      )}
 
       <button type="submit" disabled={loading}
         style={{ padding: '14px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}>

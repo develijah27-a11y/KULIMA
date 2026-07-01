@@ -51,7 +51,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'Admin';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first} 👋`;
+  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>

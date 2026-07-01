@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Bell, Check, CheckCheck, ExternalLink } from 'lucide-react';
+import React, { useState, useEffect, useRef, type JSX } from 'react';
+import { X, Bell, Check, CheckCheck, ExternalLink, Package, TrendingUp, Cloud, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -21,12 +21,12 @@ interface NotificationDrawerProps {
   onMarkRead?: (id: string) => void;
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  order:   '📦',
-  price:   '💰',
-  weather: '🌤️',
-  message: '💬',
-  system:  '🔔',
+const TYPE_ICONS: Record<string, JSX.Element> = {
+  order:   <Package size={16} />,
+  price:   <TrendingUp size={16} />,
+  weather: <Cloud size={16} />,
+  message: <MessageCircle size={16} />,
+  system:  <Bell size={16} />,
 };
 
 function groupByDate(notifications: Notification[]) {
@@ -248,7 +248,7 @@ function NotifItem({
   n: Notification;
   onMarkRead?: (id: string) => void;
 }) {
-  const icon = TYPE_ICONS[n.type ?? 'system'] ?? '🔔';
+  const icon = TYPE_ICONS[n.type ?? 'system'] ?? <Bell size={16} />;
 
   const content = (
     <div
@@ -266,7 +266,7 @@ function NotifItem({
           width: 36, height: 36, borderRadius: 10, flexShrink: 0,
           background: 'var(--color-surface-2)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 16,
+          color: 'var(--color-text-muted)',
         }}
       >
         {icon}
