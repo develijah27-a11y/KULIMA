@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { GroupListingOrderForm } from './GroupListingOrderForm';
+import { Leaf, ShieldCheck, CheckCircle2, BarChart3, Tag, TrendingUp } from 'lucide-react';
+import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -8,11 +10,6 @@ const C = {
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
-const CROP_EMOJI: Record<string, string> = {
-  maize: '🌽', beans: '🫘', coffee: '☕', rice: '🌾', banana: '🍌',
-  cassava: '🥔', tomato: '🍅', sorghum: '🌾', groundnuts: '🥜',
-  sweet_potatoes: '🍠', sunflower: '🌻', cotton: '🏵️',
-};
 
 export default async function GroupListingDetailPage({
   params,
@@ -48,7 +45,7 @@ export default async function GroupListingDetailPage({
   const market     = priceMap[listing.crop_type?.toLowerCase()];
   const priceDelta = market ? Math.round(((listing.asking_price - market) / market) * 100) : null;
   const totalValue = Math.round((listing.total_quantity_kg ?? 0) * (listing.asking_price ?? 0));
-  const emoji      = CROP_EMOJI[listing.crop_type?.toLowerCase()] ?? '🌾';
+  const cropColor  = getCropColor(listing.crop_type?.toLowerCase() ?? '');
   const hasOrder   = !!existingOrderRes.data;
 
   return (
@@ -60,8 +57,8 @@ export default async function GroupListingDetailPage({
         {/* Header */}
         <div style={{ padding: '22px 24px 18px', background: 'var(--color-primary-bg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-              {emoji}
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: cropColor }}>
+              <Leaf size={28} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -92,7 +89,7 @@ export default async function GroupListingDetailPage({
         {/* Market comparison */}
         {priceDelta !== null && (
           <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 14 }}>{Math.abs(priceDelta) <= 10 ? '📊' : priceDelta < 0 ? '🏷️' : '💰'}</span>
+            <span style={{ display: 'flex', color: priceDelta <= 0 ? 'var(--color-success)' : 'var(--color-harvest)' }}>{Math.abs(priceDelta) <= 10 ? <BarChart3 size={14} /> : priceDelta < 0 ? <Tag size={14} /> : <TrendingUp size={14} />}</span>
             <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>
               <strong style={{ color: priceDelta <= 0 ? 'var(--color-success)' : 'var(--color-harvest)' }}>
                 {priceDelta >= 0 ? '+' : ''}{priceDelta}%
@@ -112,7 +109,7 @@ export default async function GroupListingDetailPage({
 
         {/* Group trust indicator */}
         <div style={{ padding: '14px 20px', display: 'flex', gap: 12, alignItems: 'center' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>🛡️</div>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--color-success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-success)' }}><ShieldCheck size={18} /></div>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-success)', margin: '0 0 2px' }}>Escrow-protected transaction</p>
             <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>Payment is held in escrow and released only after delivery confirmation.</p>
@@ -123,7 +120,7 @@ export default async function GroupListingDetailPage({
       {/* Order form or active order notice */}
       {hasOrder ? (
         <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 32, marginBottom: 10 }}>✅</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><CheckCircle2 size={36} style={{ color: 'var(--color-success)' }} /></div>
           <p style={{ fontWeight: 700, fontSize: 15, color: C.text, marginBottom: 4 }}>Order already placed</p>
           <p style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>You have an active order for this group listing. Track it in My Orders.</p>
           <a href="/buyer/orders" style={{ display: 'inline-block', padding: '10px 20px', background: C.green, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>

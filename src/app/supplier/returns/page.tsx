@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CheckCircle2, X, Package } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -77,14 +78,15 @@ export default function SupplierReturnsPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       {/* Toast */}
       {toast && (
-        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, minWidth: 260, background: toast.ok ? '#065F46' : '#991B1B', color: '#fff', borderRadius: 14, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{toast.ok ? '✅ ' : '❌ '}{toast.msg}</p>
+        <div style={{ position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, minWidth: 260, background: toast.ok ? '#065F46' : '#991B1B', color: '#fff', borderRadius: 14, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          {toast.ok ? <CheckCircle2 size={16} /> : <X size={16} />}
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{toast.msg}</p>
         </div>
       )}
 
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.03em', marginBottom: 4 }}>
-          Input Returns 📦
+          Input Returns
         </h1>
         <p style={{ fontSize: 13, color: C.muted }}>
           {pending.length > 0 ? `${pending.length} return${pending.length !== 1 ? 's' : ''} awaiting your review` : 'Manage return requests from farmers'}
@@ -132,7 +134,7 @@ export default function SupplierReturnsPage() {
           <div style={{ padding: '40px 24px', textAlign: 'center', color: C.muted, fontSize: 14 }}>Loading returns…</div>
         ) : visible.length === 0 ? (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <p style={{ fontSize: 36, marginBottom: 12 }}>📬</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: C.muted }}><Package size={40} /></div>
             <p style={{ fontWeight: 700, color: C.text, marginBottom: 4 }}>No {tab} returns</p>
             <p style={{ fontSize: 13, color: C.muted }}>
               {tab === 'pending' ? 'Return requests from farmers will appear here.' : 'Resolved returns will be listed here.'}
@@ -185,14 +187,14 @@ export default function SupplierReturnsPage() {
                         disabled={responding === ret.id}
                         style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'var(--color-success-bg)', color: 'var(--color-success)', border: 'none', fontWeight: 700, fontSize: 13, cursor: responding === ret.id ? 'not-allowed' : 'pointer' }}
                       >
-                        {responding === ret.id ? 'Saving…' : '✅ Approve Return'}
+                        {responding === ret.id ? 'Saving…' : <><CheckCircle2 size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Approve Return</>}
                       </button>
                       <button
                         onClick={() => respond(ret.id, 'rejected')}
                         disabled={responding === ret.id}
                         style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: 'none', fontWeight: 700, fontSize: 13, cursor: responding === ret.id ? 'not-allowed' : 'pointer' }}
                       >
-                        {responding === ret.id ? 'Saving…' : '❌ Reject Return'}
+                        {responding === ret.id ? 'Saving…' : <><X size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Reject Return</>}
                       </button>
                     </div>
                   </div>

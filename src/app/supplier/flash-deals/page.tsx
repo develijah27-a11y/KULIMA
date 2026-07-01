@@ -1,6 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useTransition } from 'react';
+import { CheckCircle2, X, Zap, Leaf, FlaskConical, Package, Wrench, Settings } from 'lucide-react';
+
+function getCatIcon(category: string): React.ReactNode {
+  const cat = category?.toLowerCase();
+  if (cat === 'seed')        return <Leaf size={20} />;
+  if (cat === 'fertiliser')  return <FlaskConical size={20} />;
+  if (cat === 'pesticide')   return <Wrench size={20} />;
+  if (cat === 'tool')        return <Wrench size={20} />;
+  if (cat === 'equipment')   return <Settings size={20} />;
+  return <Package size={20} />;
+}
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -10,9 +21,6 @@ const C = {
   red: 'var(--color-danger)', redBg: 'var(--color-danger-bg)',
 };
 
-const CATEGORY_EMOJI: Record<string, string> = {
-  seed: '🌱', fertiliser: '🧪', pesticide: '🪣', tool: '🔧', equipment: '⚙️', other: '📦',
-};
 
 type Product = {
   id: string;
@@ -35,7 +43,10 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
       zIndex: 1000, minWidth: 260, background: ok ? '#065F46' : '#991B1B',
       color: '#fff', borderRadius: 14, padding: '14px 20px',
     }}>
-      <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{ok ? '✅ ' : '❌ '}{msg}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {ok ? <CheckCircle2 size={16} /> : <X size={16} />}
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{msg}</p>
+      </div>
     </div>
   );
 }
@@ -64,7 +75,7 @@ function CountdownBadge({ endsAt }: { endsAt: string | null }) {
       fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 999,
       background: C.amberBg, color: C.amber, fontVariantNumeric: 'tabular-nums',
     }}>
-      ⚡ {t} left
+      <Zap size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />{t} left
     </span>
   );
 }
@@ -157,7 +168,7 @@ export default function FlashDealsPage() {
               fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
             }}
           >
-            {showForm ? '✕ Cancel' : '⚡ New Deal'}
+            {showForm ? 'Cancel' : <><Zap size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />New Deal</>}
           </button>
         )}
       </div>
@@ -184,7 +195,7 @@ export default function FlashDealsPage() {
               <option value="">— Choose a product —</option>
               {candidates.map(p => (
                 <option key={p.id} value={p.id}>
-                  {CATEGORY_EMOJI[p.category?.toLowerCase()] ?? '📦'} {p.name} · UGX {Number(p.price_per_unit).toLocaleString()}/{p.unit} · {p.stock_qty} in stock
+                  {p.name} · UGX {Number(p.price_per_unit).toLocaleString()}/{p.unit} · {p.stock_qty} in stock
                 </option>
               ))}
             </select>
@@ -257,7 +268,7 @@ export default function FlashDealsPage() {
               fontSize: 14, fontWeight: 800, cursor: !selectedId || pending ? 'not-allowed' : 'pointer',
             }}
           >
-            {pending ? '⏳ Starting…' : `⚡ Start ${durationHrs}h Flash Deal`}
+            {pending ? 'Starting…' : `Start ${durationHrs}h Flash Deal`}
           </button>
         </div>
       )}
@@ -276,14 +287,13 @@ export default function FlashDealsPage() {
             </span>
           </div>
           {activeDeals.map((p, i) => {
-            const emoji = CATEGORY_EMOJI[p.category?.toLowerCase()] ?? '📦';
             const saving = Math.round(Number(p.price_per_unit) - Number(p.flash_price_ugx ?? p.price_per_unit));
             const pct    = Math.round((saving / Number(p.price_per_unit)) * 100);
             return (
               <div key={p.id} style={{ padding: '16px 20px', borderBottom: i < activeDeals.length - 1 ? `1px solid ${C.border}` : 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: C.amberBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-                    {emoji}
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: C.amberBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: C.amber }}>
+                    {getCatIcon(p.category)}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
@@ -323,7 +333,7 @@ export default function FlashDealsPage() {
         </div>
       ) : (
         <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: '40px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 10 }}>⚡</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: C.amber }}><Zap size={48} /></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6 }}>No active flash deals</p>
           <p style={{ fontSize: 13, color: C.muted }}>
             {candidates.length > 0
@@ -341,10 +351,9 @@ export default function FlashDealsPage() {
             <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>High-stock products — good candidates for a deal</p>
           </div>
           {candidates.slice(0, 5).map((p, i) => {
-            const emoji = CATEGORY_EMOJI[p.category?.toLowerCase()] ?? '📦';
             return (
               <div key={p.id} style={{ padding: '12px 20px', borderBottom: i < Math.min(candidates.length, 5) - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ fontSize: 20, flexShrink: 0 }}>{emoji}</span>
+                <span style={{ display: 'flex', flexShrink: 0, color: C.muted }}>{getCatIcon(p.category)}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0 }}>{p.name}</p>
                   <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>
@@ -358,7 +367,7 @@ export default function FlashDealsPage() {
                     background: C.amberBg, color: C.amber, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                   }}
                 >
-                  ⚡ Flash
+                  Flash
                 </button>
               </div>
             );

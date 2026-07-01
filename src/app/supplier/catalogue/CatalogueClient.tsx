@@ -1,6 +1,17 @@
 ﻿'use client';
 
 import { useState } from 'react';
+import { Leaf, FlaskConical, Wrench, Settings, Package, Store } from 'lucide-react';
+
+function getCatIcon(category: string, size = 22) {
+  const cat = category?.toLowerCase();
+  if (cat === 'seeds')        return <Leaf size={size} />;
+  if (cat === 'fertilizers')  return <FlaskConical size={size} />;
+  if (cat === 'pesticides')   return <Wrench size={size} />;
+  if (cat === 'tools')        return <Wrench size={size} />;
+  if (cat === 'equipment')    return <Settings size={size} />;
+  return <Package size={size} />;
+}
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -11,9 +22,6 @@ const C = {
 const CATEGORIES = ['seeds','fertilizers','pesticides','tools','equipment','other'] as const;
 const UNITS = ['kg','g','litre','ml','piece','bag','bundle','box'];
 
-const CAT_ICON: Record<string, string> = {
-  seeds:'🌱', fertilizers:'🌿', pesticides:'🧪', tools:'🔧', equipment:'⚙️', other:'📦',
-};
 
 type Cat = typeof CATEGORIES[number];
 
@@ -122,7 +130,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
           <button key={c} onClick={() => setFilter(c)}
             style={{ padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', textTransform: 'capitalize',
               background: filter === c ? C.green : 'var(--d-subtle)', color: filter === c ? '#fff' : C.muted }}>
-            {c === 'all' ? 'All' : `${CAT_ICON[c]} ${c}`}
+            {c === 'all' ? 'All' : <><span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4 }}>{getCatIcon(c, 12)}</span>{c}</>}
           </button>
         ))}
       </div>
@@ -136,7 +144,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
       {/* Product grid */}
       {visible.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 10 }}>🏪</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: C.muted }}><Store size={48} /></div>
           <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>
             {filter === 'all' ? 'No products yet' : `No ${filter} listed`}
           </p>
@@ -148,8 +156,8 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
             const lowStock = p.stock_qty < 5 && p.is_available;
             return (
               <div key={p.id} style={{ padding: '16px 20px', borderBottom: i < visible.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: lowStock ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
-                  {CAT_ICON[p.category]}
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: lowStock ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: lowStock ? C.red : C.green }}>
+                  {getCatIcon(p.category)}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

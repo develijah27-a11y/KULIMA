@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import type { JSX } from 'react';
+import { Sprout, Leaf, Droplets, FlaskConical, CheckCircle2 } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -13,13 +15,13 @@ const UG_SEASONS = [
   { name: 'Dry Season', months: 'Dec – Feb', desc: 'Irrigated crops, coffee fly crop, sweet potato.', current: false },
 ];
 
-const MILESTONES = [
-  { icon: '🌱', title: 'Land Prep', month: 'Feb', done: true },
-  { icon: '🫘', title: 'Planting', month: 'Mar', done: true },
-  { icon: '💧', title: 'First Topdress', month: 'Apr', done: true },
-  { icon: '🌿', title: 'Weeding', month: 'May', done: false },
-  { icon: '🧪', title: 'Second Topdress', month: 'Jun', done: false },
-  { icon: '🌽', title: 'Harvest', month: 'Jul', done: false },
+const MILESTONES: { icon: JSX.Element; title: string; month: string; done: boolean }[] = [
+  { icon: <Sprout size={18} />,      title: 'Land Prep',       month: 'Feb', done: true  },
+  { icon: <Leaf size={18} />,        title: 'Planting',        month: 'Mar', done: true  },
+  { icon: <Droplets size={18} />,    title: 'First Topdress',  month: 'Apr', done: true  },
+  { icon: <Leaf size={18} />,        title: 'Weeding',         month: 'May', done: false },
+  { icon: <FlaskConical size={18} />,title: 'Second Topdress', month: 'Jun', done: false },
+  { icon: <Leaf size={18} />,        title: 'Harvest',         month: 'Jul', done: false },
 ];
 
 export default async function SeasonPlannerPage() {
@@ -34,7 +36,7 @@ export default async function SeasonPlannerPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Season Planner 📅</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Season Planner</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Coordinate your group's planting and harvest calendar</p>
       </div>
 
@@ -55,8 +57,8 @@ export default async function SeasonPlannerPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {MILESTONES.map((m, i) => (
             <div key={m.title} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 12, background: C.cardBg, boxShadow: C.cardShadow, opacity: m.done ? 1 : 0.7 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: m.done ? 'var(--color-success-bg)' : 'var(--color-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                {m.done ? '✅' : m.icon}
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: m.done ? 'var(--color-success-bg)' : 'var(--color-surface-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: m.done ? 'var(--color-success)' : C.muted }}>
+                {m.done ? <CheckCircle2 size={18} /> : m.icon}
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px' }}>{m.title}</p>

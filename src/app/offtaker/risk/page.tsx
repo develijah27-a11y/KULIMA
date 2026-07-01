@@ -1,16 +1,18 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import type { JSX } from 'react';
+import { CloudRain, Bug, TrendingDown, Truck, ClipboardList, AlertTriangle, Clock } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
 };
 
-const RISK_TYPES = [
-  { icon: '🌧️', title: 'Weather Risk', color: 'var(--color-sky)', bg: 'var(--color-sky-bg)', desc: 'Drought, floods, and unseasonal rain causing crop failure in contracted districts.', level: 'Medium', affected: ['Northern Uganda', 'Karamoja'] },
-  { icon: '🦟', title: 'Pest & Disease', color: 'var(--color-danger)', bg: 'var(--color-danger-bg)', desc: 'Fall Armyworm and other active outbreaks in maize-growing regions.', level: 'High', affected: ['Eastern Uganda', 'Western Uganda'] },
-  { icon: '📉', title: 'Price Volatility', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', desc: 'Market price swings that could push contracted prices above spot rate.', level: 'Low', affected: ['All regions'] },
-  { icon: '🚚', title: 'Logistics Risk', color: 'var(--color-primary)', bg: 'var(--color-primary-bg)', desc: 'Road conditions and transport delays affecting delivery timelines.', level: 'Low', affected: ['Remote districts'] },
+const RISK_TYPES: { icon: JSX.Element; title: string; color: string; bg: string; desc: string; level: string; affected: string[] }[] = [
+  { icon: <CloudRain size={20} />,    title: 'Weather Risk',    color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     desc: 'Drought, floods, and unseasonal rain causing crop failure in contracted districts.', level: 'Medium', affected: ['Northern Uganda', 'Karamoja'] },
+  { icon: <Bug size={20} />,          title: 'Pest & Disease',  color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)', desc: 'Fall Armyworm and other active outbreaks in maize-growing regions.', level: 'High',   affected: ['Eastern Uganda', 'Western Uganda'] },
+  { icon: <TrendingDown size={20} />, title: 'Price Volatility',color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)',desc: 'Market price swings that could push contracted prices above spot rate.', level: 'Low', affected: ['All regions'] },
+  { icon: <Truck size={20} />,        title: 'Logistics Risk',  color: 'var(--color-primary)', bg: 'var(--color-primary-bg)',desc: 'Road conditions and transport delays affecting delivery timelines.', level: 'Low', affected: ['Remote districts'] },
 ];
 
 const LEVEL_COLOR: Record<string, string> = { High: 'var(--color-danger)', Medium: 'var(--color-harvest)', Low: 'var(--color-success)' };
@@ -36,13 +38,13 @@ export default async function RiskManagementPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Risk Management ⚠️</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Risk Management</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Monitor procurement risks and supply chain exposure</p>
       </div>
 
       {soonDeliveries.length > 0 && (
         <div style={{ padding: '14px 16px', borderRadius: 12, background: 'var(--color-harvest-bg)', border: `1px solid var(--color-harvest)`, display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ fontSize: 20 }}>⏰</span>
+          <span style={{ display: 'flex', color: 'var(--color-harvest)' }}><Clock size={20} /></span>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-harvest)', margin: '0 0 2px' }}>Deliveries Due Within 14 Days</p>
             <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{soonDeliveries.length} contract{soonDeliveries.length !== 1 ? 's' : ''} · {soonDeliveries.reduce((s: number, c: any) => s + (c.quantity_kg ?? 0), 0).toLocaleString()} kg incoming</p>
@@ -53,7 +55,7 @@ export default async function RiskManagementPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {RISK_TYPES.map(risk => (
           <div key={risk.title} style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: risk.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: risk.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: risk.color }}>
               {risk.icon}
             </div>
             <div style={{ flex: 1 }}>
@@ -73,7 +75,7 @@ export default async function RiskManagementPage() {
       </div>
 
       <div style={{ padding: '16px 20px', borderRadius: 14, background: C.cardBg, boxShadow: C.cardShadow }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 8px' }}>📋 Automated Risk Alerts Coming Soon</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 6 }}><ClipboardList size={14} />Automated Risk Alerts Coming Soon</p>
         <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>We're building SMS and push notifications for when weather or disease alerts affect your contract districts. Stay tuned.</p>
       </div>
     </div>

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
+import type { JSX } from 'react';
+import { Banknote, TrendingUp, TrendingDown, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -9,11 +11,11 @@ const C = {
   cardShadow: 'var(--d-shadow-card)', greenMed: 'var(--color-primary-hover)',
 };
 
-const TYPES = [
-  { value: 'contribution', label: 'Contribution', icon: '💵', color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
-  { value: 'income',       label: 'Income',       icon: '📈', color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
-  { value: 'expense',      label: 'Expense',      icon: '📉', color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
-  { value: 'loan',         label: 'Loan',         icon: '🤝', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
+const TYPES: { value: string; label: string; icon: JSX.Element; color: string; bg: string }[] = [
+  { value: 'contribution', label: 'Contribution', icon: <Banknote size={16} />,     color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+  { value: 'income',       label: 'Income',       icon: <TrendingUp size={16} />,   color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
+  { value: 'expense',      label: 'Expense',      icon: <TrendingDown size={16} />, color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
+  { value: 'loan',         label: 'Loan',         icon: <Users size={16} />,        color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
 ];
 
 export default function RecordFinancePage() {
@@ -52,7 +54,7 @@ export default function RecordFinancePage() {
     <div className="max-w-xl mx-auto space-y-5">
       <Link href="/groups/finance" style={{ fontSize: 13, color: C.muted, textDecoration: 'none' }}>← Group Finance</Link>
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Record Transaction 💰</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Record Transaction</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Log contributions, income, expenses, and loans</p>
       </div>
 
@@ -63,7 +65,7 @@ export default function RecordFinancePage() {
             {TYPES.map(t => (
               <button key={t.value} type="button" onClick={() => setType(t.value)}
                 style={{ padding: '10px 12px', borderRadius: 10, border: `2px solid ${type === t.value ? t.color : C.border}`, background: type === t.value ? t.bg : 'var(--d-input-bg)', color: type === t.value ? t.color : C.muted, fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>{t.icon}</span> {t.label}
+                <span style={{ display: 'flex' }}>{t.icon}</span> {t.label}
               </button>
             ))}
           </div>

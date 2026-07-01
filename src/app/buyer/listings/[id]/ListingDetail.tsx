@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { type VerificationLevel } from '@/lib/trust';
 import { FavouriteButton } from '@/components/ui/FavouriteButton';
-import { Leaf, CheckCircle2, X, MapPin } from 'lucide-react';
+import { Leaf, CheckCircle2, X, MapPin, Package, Users, ShieldCheck, Star, ShoppingCart } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -194,7 +194,7 @@ export function ListingDetail({
             </div>
             <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>
               {farmer.location ?? listing.district}
-              {farmer.trust_score ? ` · ⭐ ${farmer.trust_score.toFixed(1)} trust` : ''}
+              {farmer.trust_score ? <> · <Star size={10} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> {farmer.trust_score.toFixed(1)} trust</> : ''}
             </p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -220,7 +220,7 @@ export function ListingDetail({
       {/* ── Already ordered / offered ────────────────────────────────────── */}
       {(hasActiveOrder || existingOffer) && (
         <div style={{ background: C.amberBg, borderRadius: 14, padding: '14px 18px', display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ fontSize: 20 }}>{hasActiveOrder ? '📦' : '🤝'}</span>
+          <span style={{ display: 'flex', color: C.amber }}>{hasActiveOrder ? <Package size={20} /> : <Users size={20} />}</span>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.amber, margin: 0 }}>
               {hasActiveOrder ? 'You have an active order for this listing' : `Offer sent · UGX ${existingOffer?.offered_price?.toLocaleString()}/kg`}
@@ -285,7 +285,7 @@ export function ListingDetail({
               boxShadow: '0 4px 16px rgba(34,197,94,0.35)',
             }}
           >
-            {buyPending ? '⏳ Placing order…' : `🛒 Buy Now — UGX ${total.toLocaleString()}`}
+            {buyPending ? 'Placing order…' : <><ShoppingCart size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 6 }} />Buy Now — UGX {total.toLocaleString()}</>}
           </button>
         </div>
       )}
@@ -302,7 +302,7 @@ export function ListingDetail({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 18 }}>🤝</span>
+              <span style={{ display: 'flex', color: C.muted }}><Users size={18} /></span>
               <div style={{ textAlign: 'left' }}>
                 <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>Negotiate price instead</p>
                 <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>Send a lower offer to the farmer</p>
@@ -379,7 +379,7 @@ export function ListingDetail({
                     fontSize: 14, fontWeight: 700, cursor: offerPending ? 'wait' : 'pointer',
                   }}
                 >
-                  {offerPending ? '⏳ Sending…' : `🤝 Send Offer — UGX ${offerPrice > 0 ? offerPrice.toLocaleString() : '—'}/kg`}
+                  {offerPending ? 'Sending…' : `Send Offer — UGX ${offerPrice > 0 ? offerPrice.toLocaleString() : '—'}/kg`}
                 </button>
               </div>
             </div>
@@ -390,7 +390,7 @@ export function ListingDetail({
       {/* ── Platform guarantee ───────────────────────────────────────────── */}
       <div style={{ background: C.greenBg, borderRadius: 14, padding: '14px 18px' }}>
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-          <span style={{ fontSize: 18, flexShrink: 0 }}>🛡</span>
+          <span style={{ display: 'flex', flexShrink: 0, color: '#065F46' }}><ShieldCheck size={18} /></span>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: '#065F46', margin: 0 }}>Kulima Buyer Protection</p>
             <p style={{ fontSize: 11, color: '#065F46', margin: '3px 0 0', opacity: 0.85 }}>
