@@ -51,7 +51,7 @@ export default async function InvoicePage({
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 36 }}>
           <div>
-            <p style={{ fontSize: 26, fontWeight: 900, color: '#15803d', margin: 0, letterSpacing: '-0.03em' }}>🌱 KULIMA</p>
+            <p style={{ fontSize: 26, fontWeight: 900, color: '#15803d', margin: 0, letterSpacing: '-0.03em' }}>KULIMA</p>
             <p style={{ fontSize: 11, color: '#6b7280', margin: '4px 0 0' }}>Agricultural Marketplace · Uganda</p>
           </div>
           <div style={{ textAlign: 'right' }}>

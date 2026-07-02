@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -9,10 +10,10 @@ const C = {
   green: 'var(--color-primary)',
 };
 
-const TYPE_META: Record<string, { icon: string; label: string; color: string }> = {
-  standard: { icon: '🚛', label: 'Standard',     color: 'var(--color-primary)' },
-  fast:     { icon: '⚡', label: 'Fast Delivery', color: 'var(--color-harvest)' },
-  cold:     { icon: '❄️', label: 'Cold Chain',    color: '#0EA5E9' },
+const TYPE_META: Record<string, { icon: ReactNode; label: string; color: string }> = {
+  standard: { icon: <Truck size={16} />,     label: 'Standard',     color: 'var(--color-primary)' },
+  fast:     { icon: <Zap size={16} />,       label: 'Fast Delivery', color: 'var(--color-harvest)' },
+  cold:     { icon: <Snowflake size={16} />, label: 'Cold Chain',    color: '#0EA5E9' },
 };
 
 function timeAgo(iso: string) {
@@ -98,15 +99,15 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
       </div>
 
       {error && (
-        <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, fontSize: 13, color: 'var(--color-danger)' }}>
-          ⚠ {error}
+        <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, fontSize: 13, color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <AlertTriangle size={14} />{error}
         </div>
       )}
 
       {/* ── PENDING TAB ──────────────────────────────────────────────────────── */}
       {tab === 'pending' && (
         pending.length === 0 ? (
-          <EmptyState icon="📡" title="No pending requests" body="The system will notify you when a delivery matches your vehicle and district." />
+          <EmptyState icon={<Radio size={48} />} title="No pending requests" body="The system will notify you when a delivery matches your vehicle and district." />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {pending.map((a: any) => {
@@ -119,7 +120,7 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                        <span style={{ fontSize: 16 }}>{tm.icon}</span>
+                        <span style={{ display: 'flex', color: tm.color }}>{tm.icon}</span>
                         <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>
                           {d?.pickup_district} → {d?.dropoff_district}
                         </p>
@@ -145,14 +146,14 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                   {/* Location details */}
                   {(d?.pickup_location || d?.dropoff_location) && (
                     <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>
-                      <p style={{ margin: '0 0 2px' }}>📍 Pickup: {d.pickup_location}</p>
-                      <p style={{ margin: 0 }}>📦 Dropoff: {d.dropoff_location}</p>
+                      <p style={{ margin: '0 0 2px', display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} />Pickup: {d.pickup_location}</p>
+                      <p style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Package size={11} />Dropoff: {d.dropoff_location}</p>
                     </div>
                   )}
 
                   {d?.notes && (
                     <p style={{ fontSize: 11, color: C.muted, padding: '8px 12px', background: 'var(--color-surface-2)', borderRadius: 8, margin: '0 0 12px' }}>
-                      💬 {d.notes}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MessageSquare size={11} />{d.notes}</span>
                     </p>
                   )}
 
@@ -177,7 +178,7 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
       {/* ── ACTIVE TAB ───────────────────────────────────────────────────────── */}
       {tab === 'active' && (
         active.length === 0 ? (
-          <EmptyState icon="🚗" title="No active deliveries" body="Accept a pending request to start earning." />
+          <EmptyState icon={<Car size={48} />} title="No active deliveries" body="Accept a pending request to start earning." />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {active.map((d: any) => {
@@ -190,7 +191,7 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                        <span style={{ fontSize: 16 }}>{tm.icon}</span>
+                        <span style={{ display: 'flex', color: tm.color }}>{tm.icon}</span>
                         <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>
                           {d.pickup_district} → {d.dropoff_district}
                         </p>
@@ -204,7 +205,7 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                       background: isInTransit ? 'var(--color-harvest-bg)' : 'var(--color-sky-bg)',
                       color: isInTransit ? 'var(--color-harvest)' : 'var(--color-sky)',
                     }}>
-                      {isInTransit ? '🚛 In Transit' : '🚗 Assigned'}
+                      {isInTransit ? 'In Transit' : 'Assigned'}
                     </span>
                   </div>
 
@@ -217,9 +218,9 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
 
                   {(d.pickup_location || d.dropoff_location) && (
                     <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>
-                      {isAssigned && <p style={{ margin: '0 0 2px', fontWeight: 600, color: C.text }}>📍 Head to pickup:</p>}
+                      {isAssigned && <p style={{ margin: '0 0 2px', fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} />Head to pickup:</p>}
                       {d.pickup_location && <p style={{ margin: '0 0 2px' }}>{d.pickup_location}, {d.pickup_district}</p>}
-                      {isInTransit && d.dropoff_location && <p style={{ margin: '0 0 2px', fontWeight: 600, color: C.text }}>🎯 Deliver to:</p>}
+                      {isInTransit && d.dropoff_location && <p style={{ margin: '0 0 2px', fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center', gap: 4 }}><Target size={11} />Deliver to:</p>}
                       {isInTransit && d.dropoff_location && <p style={{ margin: 0 }}>{d.dropoff_location}, {d.dropoff_district}</p>}
                     </div>
                   )}
@@ -227,13 +228,13 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                   {isAssigned && (
                     <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'start_transit')}
                       style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: isBusy ? 'var(--color-surface-2)' : 'var(--color-harvest)', color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
-                      {isBusy ? 'Updating…' : '📦 Mark Cargo Picked Up'}
+                      {isBusy ? 'Updating…' : <><Package size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Mark Cargo Picked Up</>}
                     </button>
                   )}
                   {isInTransit && (
                     <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'complete')}
                       style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: isBusy ? 'var(--color-surface-2)' : '#7C3AED', color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
-                      {isBusy ? 'Updating…' : '✅ Mark Delivered'}
+                      {isBusy ? 'Updating…' : <><CheckCircle2 size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Mark Delivered</>}
                     </button>
                   )}
                 </div>
@@ -246,7 +247,7 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
       {/* ── COMPLETED TAB ────────────────────────────────────────────────────── */}
       {tab === 'completed' && (
         completed.length === 0 ? (
-          <EmptyState icon="✅" title="No completed deliveries yet" body="Your delivery history will appear here." />
+          <EmptyState icon={<CheckCircle2 size={48} />} title="No completed deliveries yet" body="Your delivery history will appear here." />
         ) : (
           <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
             {completed.map((d: any, i: number) => {
@@ -256,7 +257,7 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                 <div key={d.id} style={{ padding: '14px 18px', borderBottom: i < completed.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                      <span>{tm.icon}</span>
+                      <span style={{ display: 'flex', color: tm.color }}>{tm.icon}</span>
                       <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0 }}>
                         {d.pickup_district} → {d.dropoff_district}
                       </p>
@@ -270,7 +271,7 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                       UGX {Number(d.driver_earnings ?? 0).toLocaleString()}
                     </p>
                     <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: paid ? 'var(--color-success-bg)' : 'var(--color-harvest-bg)', color: paid ? 'var(--color-success)' : 'var(--color-harvest)' }}>
-                      {paid ? '✓ Paid' : 'Awaiting payment'}
+                      {paid ? <><CheckCircle2 size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 2 }} />Paid</> : 'Awaiting payment'}
                     </span>
                   </div>
                 </div>
@@ -283,10 +284,10 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
   );
 }
 
-function EmptyState({ icon, title, body }: { icon: string; title: string; body: string }) {
+function EmptyState({ icon, title, body }: { icon: ReactNode; title: string; body: string }) {
   return (
     <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-      <p style={{ fontSize: 48, marginBottom: 12 }}>{icon}</p>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: C.muted }}>{icon}</div>
       <p style={{ fontWeight: 800, fontSize: 15, color: C.text, marginBottom: 6 }}>{title}</p>
       <p style={{ fontSize: 13, color: C.muted }}>{body}</p>
     </div>

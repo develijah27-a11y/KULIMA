@@ -2,7 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { BidForm } from './BidForm';
-import { Check } from 'lucide-react';
+import { Check, Truck } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -38,7 +38,7 @@ export default async function DeliveryDetailPage({ params }: { params: Promise<{
       {/* Delivery details */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>🚛</div>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)', flexShrink: 0 }}><Truck size={24} /></div>
           <div>
             <h1 className="text-lg font-black" style={{ color: C.text, letterSpacing: '-0.02em', margin: '0 0 2px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               {delivery.pickup_district} → {delivery.dropoff_district}

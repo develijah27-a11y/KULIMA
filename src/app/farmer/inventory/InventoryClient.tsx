@@ -1,9 +1,10 @@
 ﻿'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import { queueRecord } from '@/lib/db';
 import { showToast } from '@/components/ui/Toast';
 import { useDebounce } from '@/hooks/useDebounce';
+import { Package, Leaf, FlaskConical, ShieldCheck, Wrench, Wheat, Pin, AlertTriangle, CheckCircle2, Banknote, LayoutGrid, Search } from 'lucide-react';
 
 export interface InventoryItem {
   id: string;
@@ -45,14 +46,14 @@ const C = {
 
 type Category = 'all' | 'seeds' | 'fertilizers' | 'pesticides' | 'tools' | 'harvest' | 'other';
 
-const CATS: { key: Category; label: string; emoji: string; color: string; bg: string }[] = [
-  { key: 'all',         label: 'All Items',    emoji: '📦', color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
-  { key: 'seeds',       label: 'Seeds',        emoji: '🌱', color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
-  { key: 'fertilizers', label: 'Fertilizers',  emoji: '🧪', color: 'var(--color-sky)', bg: 'var(--color-sky-bg)' },
-  { key: 'pesticides',  label: 'Pesticides',   emoji: '🛡️', color: '#7C3AED', bg: '#EDE9FE' },
-  { key: 'tools',       label: 'Tools',        emoji: '🔧', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
-  { key: 'harvest',     label: 'Harvest',      emoji: '🌾', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
-  { key: 'other',       label: 'Other',        emoji: '📌', color: 'var(--d-muted)', bg: 'var(--color-surface-2)' },
+const CATS: { key: Category; label: string; icon: ReactNode; color: string; bg: string }[] = [
+  { key: 'all',         label: 'All Items',   icon: <Package size={14} />,     color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
+  { key: 'seeds',       label: 'Seeds',       icon: <Leaf size={14} />,        color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+  { key: 'fertilizers', label: 'Fertilizers', icon: <FlaskConical size={14} />,color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)' },
+  { key: 'pesticides',  label: 'Pesticides',  icon: <ShieldCheck size={14} />, color: '#7C3AED',              bg: '#EDE9FE' },
+  { key: 'tools',       label: 'Tools',       icon: <Wrench size={14} />,      color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { key: 'harvest',     label: 'Harvest',     icon: <Wheat size={14} />,       color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { key: 'other',       label: 'Other',       icon: <Pin size={14} />,         color: 'var(--d-muted)',       bg: 'var(--color-surface-2)' },
 ];
 
 const UNITS = ['kg', 'g', 'liters', 'ml', 'bags', 'crates', 'bunches', 'items', 'tons', 'acres'];
@@ -62,12 +63,12 @@ const EMPTY_FORM = {
   low_stock_threshold: '', cost_per_unit: '', notes: '',
 };
 
-function StatCard({ label, value, sub, color, emoji }: { label: string; value: string; sub: string; color: string; emoji: string }) {
+function StatCard({ label, value, sub, color, icon }: { label: string; value: string; sub: string; color: string; icon: ReactNode }) {
   return (
     <div style={{ background: C.cardBg, borderRadius: 12, boxShadow: C.cardShadow, borderTop: `3px solid ${color}`, padding: '18px 20px' }}>
       <div className="flex items-start justify-between mb-2">
         <p className="text-xs font-semibold" style={{ color: C.muted }}>{label}</p>
-        <span className="text-xl">{emoji}</span>
+        <span style={{ display: 'flex', color }}>{icon}</span>
       </div>
       <p className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>{value}</p>
       <p className="text-xs mt-0.5" style={{ color }}>{sub}</p>
@@ -218,34 +219,34 @@ export function InventoryClient({ initialItems, profile }: Props) {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Items" value={String(items.length)} sub="In inventory" color={C.greenBright} emoji="📦" />
+        <StatCard label="Total Items" value={String(items.length)} sub="In inventory" color={C.greenBright} icon={<Package size={20} />} />
         <StatCard
           label="Low Stock"
           value={String(lowStockCount)}
           sub={lowStockCount > 0 ? 'Needs restocking' : 'All well stocked'}
           color={lowStockCount > 0 ? C.red : C.greenBright}
-          emoji={lowStockCount > 0 ? '⚠️' : '✅'}
+          icon={lowStockCount > 0 ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}
         />
         <StatCard
           label="Inventory Value"
           value={totalValue > 0 ? `UGX ${Math.round(totalValue).toLocaleString()}` : '—'}
           sub={totalValue > 0 ? 'Estimated total' : 'Add costs to calculate'}
           color={C.amber}
-          emoji="💰"
+          icon={<Banknote size={20} />}
         />
         <StatCard
           label="Categories"
           value={String(CATS.slice(1).filter(c => categoryCounts[c.key]).length)}
           sub="Active categories"
           color={C.blue}
-          emoji="🗂️"
+          icon={<LayoutGrid size={20} />}
         />
       </div>
 
       {/* Low stock alert */}
       {lowStockCount > 0 && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)' }}>
-          <span className="text-xl">⚠️</span>
+          <span style={{ display: 'flex', color: 'var(--color-danger)' }}><AlertTriangle size={20} /></span>
           <div>
             <p className="text-sm font-bold" style={{ color: 'var(--color-danger)' }}>
               {lowStockCount} item{lowStockCount !== 1 ? 's' : ''} running low
@@ -286,7 +287,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
                 boxShadow: active ? C.cardShadow : 'none',
               }}
             >
-              <span>{c.emoji}</span>
+              <span style={{ display: 'flex' }}>{c.icon}</span>
               <span>{c.label}</span>
               {count > 0 && (
                 <span
@@ -308,19 +309,19 @@ export function InventoryClient({ initialItems, profile }: Props) {
         >
           {items.length === 0 ? (
             <>
-              <p style={{ fontSize: 56, marginBottom: 16 }}>🌱</p>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: 'var(--color-primary)' }}><Leaf size={56} /></div>
               <p className="text-lg font-black mb-2" style={{ color: C.text }}>No inventory yet</p>
               <p className="text-sm mb-6" style={{ color: C.muted }}>
                 Track your seeds, fertilizers, tools, and harvest stock. Know exactly what you have and when to restock.
               </p>
               <div className="grid sm:grid-cols-3 gap-3 max-w-lg mx-auto mb-6">
                 {[
-                  { emoji: '🌱', label: 'Seeds', desc: 'Maize, beans, sorghum...' },
-                  { emoji: '🧪', label: 'Fertilizers', desc: 'DAP, urea, organic...' },
-                  { emoji: '🔧', label: 'Tools', desc: 'Hoes, sprayers, pumps...' },
-                ].map(({ emoji, label, desc }) => (
+                  { icon: <Leaf size={28} />, label: 'Seeds', desc: 'Maize, beans, sorghum...' },
+                  { icon: <FlaskConical size={28} />, label: 'Fertilizers', desc: 'DAP, urea, organic...' },
+                  { icon: <Wrench size={28} />, label: 'Tools', desc: 'Hoes, sprayers, pumps...' },
+                ].map(({ icon, label, desc }) => (
                   <div key={label} className="rounded-xl p-4 text-center" style={{ background: 'var(--color-primary-bg)' }}>
-                    <p style={{ fontSize: 28, marginBottom: 6 }}>{emoji}</p>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6, color: 'var(--color-primary)' }}>{icon}</div>
                     <p className="text-sm font-bold" style={{ color: 'var(--color-primary)' }}>{label}</p>
                     <p className="text-xs mt-1" style={{ color: 'var(--color-primary-hover)' }}>{desc}</p>
                   </div>
@@ -336,7 +337,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
             </>
           ) : (
             <>
-              <p style={{ fontSize: 40, marginBottom: 12 }}>🔍</p>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: C.muted }}><Search size={40} /></div>
               <p className="text-base font-bold" style={{ color: C.text }}>No items found</p>
               <p className="text-sm mt-1" style={{ color: C.muted }}>
                 Try a different category or search term
@@ -371,9 +372,9 @@ export function InventoryClient({ initialItems, profile }: Props) {
 
                   {/* Name */}
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
-                      style={{ background: cat.bg }}>
-                      {cat.emoji}
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: cat.bg, color: cat.color }}>
+                      {cat.icon}
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{item.name}</p>
@@ -500,7 +501,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
                         border: `1.5px solid ${form.category === c.key ? c.color : C.border}`,
                       }}
                     >
-                      <span>{c.emoji}</span>
+                      <span style={{ display: 'flex' }}>{c.icon}</span>
                       <span>{c.label}</span>
                     </button>
                   ))}

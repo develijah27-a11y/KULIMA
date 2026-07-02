@@ -6,6 +6,7 @@ import {
   BADGE_CONFIG, LEVEL_DETAILS, getRequiredDocs, canUpgradeTo,
   type VerificationLevel,
 } from '@/lib/trust';
+import { Clock, CheckCircle2, Check, Diamond, Star, Paperclip, AlertTriangle } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -82,7 +83,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
   if (step === 'done') {
     return (
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 32, textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>⏳</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: C.muted }}><Clock size={48} /></div>
         <h2 style={{ color: C.text, fontWeight: 800, fontSize: 20, margin: '0 0 8px', letterSpacing: '-0.02em' }}>
           Verification Under Review
         </h2>
@@ -92,9 +93,9 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
           You'll receive a notification once approved.
         </p>
         <div style={{ background: 'var(--color-primary-bg)', borderRadius: 12, padding: '12px 16px', display: 'inline-block' }}>
-          <p style={{ color: 'var(--color-success)', fontSize: 13, fontWeight: 600, margin: 0 }}>
-            ✓ Documents submitted successfully
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-success)', fontSize: 13, fontWeight: 600 }}>
+            <CheckCircle2 size={14} />Documents submitted successfully
+          </div>
         </div>
       </div>
     );
@@ -140,7 +141,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
                     background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
                     fontSize: 12, fontWeight: 700,
                   }}>
-                    {lvl === 'green' ? '✓' : lvl === 'blue' ? '◆' : '★'} {cfg.label}
+                    {lvl === 'green' ? <Check size={12} /> : lvl === 'blue' ? <Diamond size={12} /> : <Star size={12} />} {cfg.label}
                   </span>
                   {locked && (
                     <span style={{ fontSize: 11, color: C.muted }}>
@@ -227,7 +228,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
                     {file ? file.name : 'Tap to upload • JPG, PNG or PDF'}
                   </p>
                 </div>
-                <span style={{ fontSize: 22 }}>{file ? '✅' : '📎'}</span>
+                <span style={{ display: 'flex', color: file ? 'var(--color-success)' : C.muted }}>{file ? <CheckCircle2 size={22} /> : <Paperclip size={22} />}</span>
               </div>
             </div>
           );
@@ -236,7 +237,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
 
       {error && (
         <div style={{ marginTop: 16, padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, border: '1px solid var(--color-danger)' }}>
-          <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>⚠ {error}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-danger)', fontSize: 13 }}><AlertTriangle size={14} />{error}</div>
         </div>
       )}
 

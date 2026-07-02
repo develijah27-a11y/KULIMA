@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2, X, Users } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -45,7 +46,10 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
       zIndex: 1000, minWidth: 260, background: ok ? '#065F46' : '#991B1B',
       color: '#fff', borderRadius: 14, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
     }}>
-      <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{ok ? '✅ ' : '❌ '}{msg}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        {ok ? <CheckCircle2 size={14} /> : <X size={14} />}
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>{msg}</p>
+      </div>
     </div>
   );
 }
@@ -180,7 +184,7 @@ function OfferCard({ offer, askingPrice, onDone }: { offer: Offer; askingPrice: 
               disabled={pending}
               style={{ flex: 1, padding: '11px', background: C.blue, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
             >
-              {pending ? '⏳ Sending…' : `Send Counter — UGX ${counterPrice.toLocaleString()}`}
+              {pending ? 'Sending…' : `Send Counter — UGX ${counterPrice.toLocaleString()}`}
             </button>
             <button onClick={() => setAction(null)} style={{ padding: '11px 14px', background: 'var(--color-surface-2)', color: C.muted, border: 'none', borderRadius: 10, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
               Cancel
@@ -197,7 +201,7 @@ function OfferCard({ offer, askingPrice, onDone }: { offer: Offer; askingPrice: 
             disabled={pending}
             style={{ flex: 1, padding: '11px', background: C.green, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 2px 10px rgba(34,197,94,0.3)' }}
           >
-            {pending ? '⏳' : `✅ Accept UGX ${Math.round(offer.offered_price).toLocaleString()}`}
+            {pending ? 'Accepting…' : <><CheckCircle2 size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Accept UGX {Math.round(offer.offered_price).toLocaleString()}</>}
           </button>
           <button
             onClick={() => setAction('counter')}
@@ -249,7 +253,7 @@ export function OfferManager({ listingId, askingPrice, cropType, initialOffers }
 
       {offers.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 10 }}>🤝</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: C.muted }}><Users size={48} /></div>
           <p style={{ fontWeight: 700, fontSize: 15, color: C.text }}>No offers yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Share your listing link to attract buyers.</p>
         </div>

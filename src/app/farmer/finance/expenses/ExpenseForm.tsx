@@ -1,9 +1,25 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { EXPENSE_CATEGORIES, SEASONS } from '@/lib/farm-finance';
 import { queueRecord } from '@/lib/db';
 import { showToast } from '@/components/ui/Toast';
+import { Leaf, FlaskConical, Droplets, HardHat, Tractor, Truck, Wrench, Package, ClipboardList, X } from 'lucide-react';
+
+function getCatIcon(cat: string): ReactNode {
+  const map: Record<string, ReactNode> = {
+    seeds:     <Leaf size={18} />,
+    fertilizer:<FlaskConical size={18} />,
+    pesticide: <Package size={18} />,
+    labor:     <HardHat size={18} />,
+    land_prep: <Tractor size={18} />,
+    transport: <Truck size={18} />,
+    equipment: <Wrench size={18} />,
+    irrigation:<Droplets size={18} />,
+    other:     <Package size={18} />,
+  };
+  return map[cat] ?? <Package size={18} />;
+}
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -154,7 +170,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
             fontSize: '14px', fontWeight: 700, cursor: 'pointer',
           }}
         >
-          {showForm ? '✕ Cancel' : '+ Add Expense'}
+          {showForm ? 'Cancel' : '+ Add Expense'}
         </button>
       </div>
 
@@ -302,7 +318,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
       {/* Expense list */}
       {filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: C.muted }}>
-          <p style={{ fontSize: '32px', marginBottom: '12px' }}>📋</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: C.muted }}><ClipboardList size={48} /></div>
           <p style={{ fontSize: '15px', fontWeight: 600, color: C.text }}>No expenses yet</p>
           <p style={{ fontSize: '13px', marginTop: '4px' }}>Click "+ Add Expense" to start tracking your farm costs.</p>
         </div>
@@ -322,10 +338,10 @@ export function ExpenseForm({ initialExpenses }: Props) {
                 style={{
                   width: '40px', height: '40px', borderRadius: '10px', flexShrink: 0,
                   background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '18px',
+                  color: 'var(--color-primary)',
                 }}
               >
-                {getCatEmoji(expense.category)}
+                {getCatIcon(expense.category)}
               </div>
 
               {/* Info */}
@@ -355,10 +371,10 @@ export function ExpenseForm({ initialExpenses }: Props) {
                   background: deleting === expense.id ? 'var(--color-surface-2)' : 'var(--color-danger-bg)',
                   color: deleting === expense.id ? C.muted : C.red,
                   cursor: deleting === expense.id ? 'default' : 'pointer',
-                  fontSize: '14px', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}
               >
-                ✕
+                <X size={14} />
               </button>
             </div>
           ))}
@@ -368,11 +384,3 @@ export function ExpenseForm({ initialExpenses }: Props) {
   );
 }
 
-function getCatEmoji(cat: string): string {
-  const map: Record<string, string> = {
-    seeds: '🌱', fertilizer: '🧪', pesticide: '🧴', labor: '👷',
-    land_prep: '🚜', transport: '🚛', equipment: '🔧',
-    irrigation: '💧', storage: '🏚️', other: '📦',
-  };
-  return map[cat] ?? '📦';
-}

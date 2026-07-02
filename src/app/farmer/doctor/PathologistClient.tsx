@@ -1,19 +1,20 @@
 ﻿'use client';
 
 import { useState, useRef } from 'react';
+import { Microscope, Paperclip, AlertTriangle, FlaskConical, Lightbulb, Clock, Check, Leaf, Camera } from 'lucide-react';
 
 const CROPS = [
-  { value: 'maize',         label: 'Maize',          emoji: '🌽' },
-  { value: 'beans',         label: 'Beans',          emoji: '🫘' },
-  { value: 'coffee',        label: 'Coffee',         emoji: '☕' },
-  { value: 'cassava',       label: 'Cassava',        emoji: '🥔' },
-  { value: 'tomato',        label: 'Tomato',         emoji: '🍅' },
-  { value: 'banana',        label: 'Banana',         emoji: '🍌' },
-  { value: 'groundnuts',    label: 'Groundnuts',     emoji: '🥜' },
-  { value: 'sorghum',       label: 'Sorghum',        emoji: '🌾' },
-  { value: 'sweet_potatoes',label: 'Sweet Potato',   emoji: '🍠' },
-  { value: 'rice',          label: 'Rice',           emoji: '🌾' },
-  { value: 'sunflower',     label: 'Sunflower',      emoji: '🌻' },
+  { value: 'maize',         label: 'Maize'        },
+  { value: 'beans',         label: 'Beans'        },
+  { value: 'coffee',        label: 'Coffee'       },
+  { value: 'cassava',       label: 'Cassava'      },
+  { value: 'tomato',        label: 'Tomato'       },
+  { value: 'banana',        label: 'Banana'       },
+  { value: 'groundnuts',    label: 'Groundnuts'   },
+  { value: 'sorghum',       label: 'Sorghum'      },
+  { value: 'sweet_potatoes',label: 'Sweet Potato' },
+  { value: 'rice',          label: 'Rice'         },
+  { value: 'sunflower',     label: 'Sunflower'    },
 ];
 
 const PARTS = ['Leaf', 'Stem', 'Root', 'Fruit / Pod', 'Whole Plant', 'Soil'];
@@ -25,12 +26,12 @@ const SEVERITY_CFG = {
 };
 
 const COMMON_DISEASES = [
-  { name: 'Fall Armyworm',     crop: 'Maize',    icon: '🐛', color: 'var(--color-danger)', bg: 'var(--color-danger-bg)' },
-  { name: 'Northern Leaf Blight',  crop: 'Maize',   icon: '🍂', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
-  { name: 'Bacterial Wilt',        crop: 'Tomato',  icon: '🥀', color: '#7C3AED',              bg: '#F5F3FF'                 },
-  { name: 'Mosaic Virus',          crop: 'Cassava', icon: '🟡', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
-  { name: 'Coffee Berry Disease',  crop: 'Coffee',  icon: '☕', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
-  { name: 'Bean Anthracnose',      crop: 'Beans',   icon: '🫘', color: 'var(--color-success)', bg: 'var(--color-primary-bg)' },
+  { name: 'Fall Armyworm',        crop: 'Maize',    color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
+  { name: 'Northern Leaf Blight', crop: 'Maize',    color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { name: 'Bacterial Wilt',       crop: 'Tomato',   color: '#7C3AED',              bg: '#F5F3FF'                 },
+  { name: 'Mosaic Virus',         crop: 'Cassava',  color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
+  { name: 'Coffee Berry Disease', crop: 'Coffee',   color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  { name: 'Bean Anthracnose',     crop: 'Beans',    color: 'var(--color-success)', bg: 'var(--color-primary-bg)' },
 ];
 
 type DiagnosisResult = {
@@ -156,10 +157,10 @@ export function PathologistClient() {
                   style={{
                     width: '64px', height: '64px', borderRadius: '16px', margin: '0 auto 16px',
                     background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '28px',
+                    color: 'var(--color-primary)',
                   }}
                 >
-                  🔬
+                  <Microscope size={28} />
                 </div>
                 <p style={{ fontSize: '15px', fontWeight: 700, color: C.text, marginBottom: '6px' }}>
                   Upload Plant Photo
@@ -183,8 +184,8 @@ export function PathologistClient() {
           {/* Controls */}
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {fileName && (
-              <p style={{ fontSize: '12px', color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                📎 {fileName}
+              <p style={{ fontSize: '12px', color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Paperclip size={12} />{fileName}
               </p>
             )}
 
@@ -207,7 +208,7 @@ export function PathologistClient() {
                       cursor: 'pointer',
                     }}
                   >
-                    {c.emoji} {c.label}
+                    {c.label}
                   </button>
                 ))}
               </div>
@@ -239,9 +240,9 @@ export function PathologistClient() {
             </div>
 
             {error && (
-              <p style={{ fontSize: '13px', color: C.red, background: 'var(--color-danger-bg)', padding: '10px 14px', borderRadius: '8px' }}>
-                ⚠ {error}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '13px', color: C.red, background: 'var(--color-danger-bg)', padding: '10px 14px', borderRadius: '8px' }}>
+                <AlertTriangle size={14} />{error}
+              </div>
             )}
 
             <button
@@ -275,7 +276,7 @@ export function PathologistClient() {
                   Analysing…
                 </>
               ) : (
-                <>🔬 Request Diagnosis</>
+                <><Microscope size={16} />Request Diagnosis</>
               )}
             </button>
           </div>
@@ -286,7 +287,7 @@ export function PathologistClient() {
           {!result ? (
             /* Empty state */
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '48px 32px', textAlign: 'center', minHeight: '480px' }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>🧪</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: C.muted }}><FlaskConical size={48} /></div>
               <p style={{ fontSize: '16px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>
                 Awaiting Sample
               </p>
@@ -300,9 +301,9 @@ export function PathologistClient() {
                   border: '1px solid var(--color-primary-muted)',
                 }}
               >
-                <p style={{ fontSize: '12px', color: 'var(--color-primary-hover)', fontWeight: 600 }}>
-                  💡 Best results: photograph in good daylight, focus on the most affected leaf or part
-                </p>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, fontSize: '12px', color: 'var(--color-primary-hover)', fontWeight: 600 }}>
+                  <Lightbulb size={12} style={{ flexShrink: 0, marginTop: 1 }} />Best results: photograph in good daylight, focus on the most affected leaf or part
+                </div>
               </div>
             </div>
           ) : (
@@ -367,9 +368,9 @@ export function PathologistClient() {
                 {/* Urgency notice */}
                 {result.urgency && (
                   <div style={{ padding: '12px 20px', background: 'var(--color-harvest-bg)', borderBottom: `1px solid ${C.border}` }}>
-                    <p style={{ fontSize: '12px', fontWeight: 600, color: C.amber }}>
-                      ⏱ {result.urgency}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '12px', fontWeight: 600, color: C.amber }}>
+                      <Clock size={12} />{result.urgency}
+                    </div>
                   </div>
                 )}
 
@@ -423,7 +424,7 @@ export function PathologistClient() {
                     <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {result.prevention.map((p, i) => (
                         <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '13px', color: C.text }}>
-                          <span style={{ color: C.greenMed, fontWeight: 700, flexShrink: 0, marginTop: '1px' }}>✓</span>
+                          <span style={{ color: C.greenMed, flexShrink: 0, marginTop: '1px', display: 'flex' }}><Check size={12} /></span>
                           {p}
                         </li>
                       ))}
@@ -458,7 +459,7 @@ export function PathologistClient() {
                 inputRef.current?.click();
               }}
             >
-              <span style={{ fontSize: '24px', display: 'block', marginBottom: '8px' }}>{d.icon}</span>
+              <span style={{ display: 'flex', marginBottom: '8px', color: d.color }}><Leaf size={24} /></span>
               <p style={{ fontSize: '13px', fontWeight: 700, color: d.color, lineHeight: '1.3', marginBottom: '3px' }}>{d.name}</p>
               <p style={{ fontSize: '11px', color: C.muted }}>{d.crop}</p>
             </div>
@@ -474,7 +475,7 @@ export function PathologistClient() {
           display: 'flex', gap: '16px', alignItems: 'flex-start',
         }}
       >
-        <span style={{ fontSize: '28px', flexShrink: 0 }}>📸</span>
+        <span style={{ display: 'flex', flexShrink: 0, color: 'rgba(255,255,255,0.7)' }}><Camera size={28} /></span>
         <div>
           <p style={{ fontSize: '14px', fontWeight: 700, color: '#FFFFFF', marginBottom: '6px' }}>
             How to get the best diagnosis
@@ -488,8 +489,8 @@ export function PathologistClient() {
               'Clean lens before shooting',
               'Take multiple angles if unsure',
             ].map((tip) => (
-              <p key={tip} style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
-                ✓ {tip}
+              <p key={tip} style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'flex-start', gap: 4 }}>
+                <Check size={12} style={{ flexShrink: 0, marginTop: 1 }} />{tip}
               </p>
             ))}
           </div>

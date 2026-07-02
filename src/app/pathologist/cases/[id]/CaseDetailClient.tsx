@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Leaf, Stethoscope } from 'lucide-react';
 
 const C = {
   text:       'var(--d-text)',
@@ -76,9 +77,6 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
     } finally { setLoading(null); }
   }
 
-  const CROP_EMOJI: Record<string, string> = {
-    maize:'🌽', coffee:'☕', beans:'🫘', banana:'🍌', cassava:'🥔', tomato:'🍅', rice:'🌾', sunflower:'🌻',
-  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -87,8 +85,8 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
       {/* Case summary */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 20 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 12, background: sev.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0 }}>
-            {CROP_EMOJI[c.crop_type?.toLowerCase()] ?? '🌱'}
+          <div style={{ width: 52, height: 52, borderRadius: 12, background: sev.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: sev.color }}>
+            <Leaf size={26} />
           </div>
           <div>
             <h1 className="text-lg font-black" style={{ color: C.text, letterSpacing: '-0.02em', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', sans-serif", textTransform: 'capitalize' }}>
@@ -193,7 +191,7 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
         {canClaim && (
           <button disabled={loading === 'claim'} onClick={() => action('claim')}
             style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: C.green, color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-            {loading === 'claim' ? 'Claiming…' : '🩺 Claim This Case'}
+            {loading === 'claim' ? 'Claiming…' : <><Stethoscope size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Claim This Case</>}
           </button>
         )}
         {canClose && (
