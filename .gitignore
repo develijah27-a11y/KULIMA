@@ -38,3 +38,7 @@ next-env.d.ts
 
 # Claude Code local settings (may contain API tokens)
 .claude/settings.local.json
+
+# Local migration/admin scripts (may contain credentials)
+run_migration.js
+*.migration.js
