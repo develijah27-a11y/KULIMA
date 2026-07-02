@@ -189,7 +189,7 @@ export default function JobQueuePage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, margin: 0, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Job Queue
+            Available Jobs
           </h1>
           <p style={{ fontSize: 13, color: C.muted, margin: '3px 0 0' }}>
             {jobs.length} open job{jobs.length !== 1 ? 's' : ''}
@@ -214,7 +214,7 @@ export default function JobQueuePage() {
             <option value="">All Types</option>
             <option value="standard">Standard</option>
             <option value="fast">Express</option>
-            <option value="cold">Cold Chain</option>
+            <option value="cold">Cool Transport</option>
           </select>
           <input value={cargo} onChange={e => setCargo(e.target.value)} placeholder="Cargo (e.g. maize)"
             style={{ flex: 1, minWidth: 110, padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13 }} />

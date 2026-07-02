@@ -153,7 +153,7 @@ export default function FlashDealsPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, margin: 0, letterSpacing: '-0.03em' }}>Flash Deals</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, margin: 0, letterSpacing: '-0.03em' }}>Quick Deals</h1>
           <p style={{ fontSize: 13, color: C.muted, margin: '4px 0 0' }}>
             Time-limited discounts to move stock fast — highlighted to farmers near you
           </p>
@@ -281,7 +281,7 @@ export default function FlashDealsPage() {
       ) : activeDeals.length > 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>Active Flash Deals</p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>Active Quick Deals</p>
             <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: C.amberBg, color: C.amber }}>
               {activeDeals.length} live
             </span>

@@ -131,7 +131,7 @@ export default async function TransporterColdChainPage() {
       {historyRows.length > 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
           <div style={{ padding: '12px 18px', borderBottom: `1px solid ${C.border}` }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Cold Chain History</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Cool Transport History</p>
           </div>
           {historyRows.map((d: any, i: number) => (
             <div key={d.id} style={{ padding: '13px 18px', borderBottom: i < historyRows.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

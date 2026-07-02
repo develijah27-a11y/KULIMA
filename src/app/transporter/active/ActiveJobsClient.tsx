@@ -13,7 +13,7 @@ const C = {
 const TYPE_META: Record<string, { icon: ReactNode; label: string; color: string }> = {
   standard: { icon: <Truck size={16} />,     label: 'Standard',     color: 'var(--color-primary)' },
   fast:     { icon: <Zap size={16} />,       label: 'Fast Delivery', color: 'var(--color-harvest)' },
-  cold:     { icon: <Snowflake size={16} />, label: 'Cold Chain',    color: '#0EA5E9' },
+  cold:     { icon: <Snowflake size={16} />, label: 'Cool Transport', color: '#0EA5E9' },
 };
 
 function timeAgo(iso: string) {

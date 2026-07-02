@@ -175,7 +175,7 @@ export function ConsultationBooking({ walletBalance, consultations }: Props) {
       {consultations.length > 0 && (
         <div style={{ borderTop: `1px solid ${C.border}` }}>
           <div style={{ padding: '12px 18px', borderBottom: `1px solid ${C.border}` }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Your Consultations</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Your Bookings</p>
           </div>
           {consultations.slice(0, 4).map((c) => {
             const st = STATUS_MAP[c.status] ?? STATUS_MAP.pending;

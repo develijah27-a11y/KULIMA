@@ -28,7 +28,7 @@ const DELIVERY_TYPES: { type: DeliveryType; icon: JSX.Element; label: string; su
     color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', border: 'var(--color-harvest)',
   },
   {
-    type: 'cold', icon: <Snowflake size={24} />, label: 'Cold Chain',
+    type: 'cold', icon: <Snowflake size={24} />, label: 'Cool Transport',
     subtitle: '1–3 days · Refrigerated',
     color: '#0EA5E9', bg: '#E0F2FE', border: '#0EA5E9',
   },

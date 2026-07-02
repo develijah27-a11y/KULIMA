@@ -22,7 +22,7 @@ const STATUS_CFG: Record<string, { icon: JSX.Element; label: string; color: stri
 const TYPE_META: Record<string, { icon: JSX.Element; label: string }> = {
   standard: { icon: <Truck size={14} />,     label: 'Standard' },
   fast:     { icon: <Zap size={14} />,       label: 'Fast' },
-  cold:     { icon: <Snowflake size={14} />, label: 'Cold Chain' },
+  cold:     { icon: <Snowflake size={14} />, label: 'Cool Transport' },
 };
 
 export default async function FarmerDeliveriesPage() {

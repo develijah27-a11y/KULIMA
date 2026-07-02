@@ -508,53 +508,27 @@ async function FinanceOverview({ userId }: { userId: string }) {
 
   let scoreColor = C.red;
   let scoreLabel = 'Building';
-  let loanLimit = '500,000';
-  let eligibility = 'Low';
-  if (score >= 500) { scoreColor = C.amber; scoreLabel = 'Fair'; loanLimit = '1,500,000'; eligibility = 'Moderate'; }
-  if (score >= 650) { scoreColor = C.greenMed; scoreLabel = 'Good'; loanLimit = '3,000,000'; eligibility = 'Good'; }
-  if (score >= 780) { scoreColor = C.greenBright; scoreLabel = 'Excellent'; loanLimit = '5,000,000'; eligibility = 'Excellent'; }
+  if (score >= 500) { scoreColor = C.amber; scoreLabel = 'Fair'; }
+  if (score >= 650) { scoreColor = C.greenMed; scoreLabel = 'Good'; }
+  if (score >= 780) { scoreColor = C.greenBright; scoreLabel = 'Excellent'; }
 
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Finance Overview
+          Farm Score
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: C.border }}>
-        <div className="p-4 sm:p-5 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Farm Score</p>
-          <p className="text-3xl font-black mb-1" style={{ color: scoreColor, letterSpacing: '-0.04em' }}>{score}</p>
-          <p className="text-xs font-semibold mb-3" style={{ color: scoreColor }}>{scoreLabel}</p>
-          <div className="h-1.5 rounded-full mb-1" style={{ background: 'var(--color-surface-2)' }}>
-            <div className="h-1.5 rounded-full agriscore-bar" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${C.amber}, ${scoreColor})` }} />
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[10px]" style={{ color: C.muted }}>300</span>
-            <span className="text-[10px]" style={{ color: C.muted }}>850</span>
-          </div>
+      <div className="p-4 sm:p-5">
+        <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Farm Score</p>
+        <p className="text-3xl font-black mb-1" style={{ color: scoreColor, letterSpacing: '-0.04em' }}>{score}</p>
+        <p className="text-xs font-semibold mb-3" style={{ color: scoreColor }}>{scoreLabel}</p>
+        <div className="h-1.5 rounded-full mb-1" style={{ background: 'var(--color-surface-2)' }}>
+          <div className="h-1.5 rounded-full agriscore-bar" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${C.amber}, ${scoreColor})` }} />
         </div>
-        <div className="p-4 sm:p-5 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Can I Get a Loan?</p>
-          <p className="text-base font-bold mb-1" style={{ color: scoreColor }}>{eligibility}</p>
-          <p className="text-xs mb-3" style={{ color: C.muted }}>You qualify — apply now</p>
-          <div className="h-1.5 rounded-full" style={{ background: 'var(--color-surface-2)' }}>
-            <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: scoreColor, borderRadius: '9999px' }} />
-          </div>
-        </div>
-        <div className="p-4 sm:p-5 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>You Can Borrow Up To</p>
-          <p className="text-xl font-black mb-1" style={{ color: C.text, letterSpacing: '-0.03em' }}>
-            UGX {loanLimit}
-          </p>
-          <p className="text-xs" style={{ color: C.muted }}>Based on your farm score</p>
-          <a
-            href="/farmer/finance"
-            className="mt-3 block text-xs font-bold px-3 py-1.5 rounded-lg text-center"
-            style={{ background: 'var(--color-primary-bg)', color: C.greenMed }}
-          >
-            Apply Now →
-          </a>
+        <div className="flex justify-between">
+          <span className="text-[10px]" style={{ color: C.muted }}>300</span>
+          <span className="text-[10px]" style={{ color: C.muted }}>850</span>
         </div>
       </div>
     </Card>
@@ -670,7 +644,6 @@ function QuickActions() {
     { label: 'Farm Records',     href: '/farmer/farm',             icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
     { label: 'Check Weather',    href: '/farmer/weather',          icon: <Cloud size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
     { label: 'Crop Doctor',      href: '/farmer/doctor',           icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
-    { label: 'Get a Loan',       href: '/farmer/finance',          icon: <DollarSign size={20} />,    bg: 'var(--color-success-bg)',  color: 'var(--color-success)' },
     { label: 'Book Delivery',    href: '/farmer/deliveries/new',   icon: <Truck size={20} />,         bg: '#F5F3FF',                  color: '#7C3AED' },
   ];
 
