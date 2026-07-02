@@ -89,7 +89,7 @@ export default async function GroupListingsPage({
           </button>
           {(crop || district) && (
             <a href="/buyer/group-listings" style={{ padding: '8px 14px', fontSize: 13, color: C.muted, textDecoration: 'none', borderRadius: 10, border: `1px solid ${C.border}`, display: 'flex', alignItems: 'center' }}>
-              Clear ✕
+              Clear ×
             </a>
           )}
         </form>
@@ -100,12 +100,12 @@ export default async function GroupListingsPage({
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {crop && (
             <a href={filterUrl({ crop: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
-              {crop.replace(/_/g,' ')} ✕
+              {crop.replace(/_/g,' ')} ×
             </a>
           )}
           {district && (
             <a href={filterUrl({ district: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
-              {district} ✕
+              {district} ×
             </a>
           )}
         </div>

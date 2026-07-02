@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { AlertTriangle, TrendingUp, Map } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -95,12 +96,12 @@ export default async function GeoClusterPage() {
                 <p style={{ fontSize: 12, fontWeight: 700, color: C.text, margin: '0 0 4px' }}>{district}</p>
                 {diseaseCount > 0 && (
                   <p style={{ fontSize: 10, color: riskColor, margin: '0 0 2px', fontWeight: 600 }}>
-                    ⚠ {diseaseCount} disease {diseaseCount === 1 ? 'report' : 'reports'}
+                    <AlertTriangle size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />{diseaseCount} disease {diseaseCount === 1 ? 'report' : 'reports'}
                   </p>
                 )}
                 {topCrop && (
                   <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>
-                    📈 {topCrop.crop} · UGX {Number(topCrop.price).toLocaleString()}/kg
+                    <TrendingUp size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />{topCrop.crop} · UGX {Number(topCrop.price).toLocaleString()}/kg
                   </p>
                 )}
                 {diseaseCount === 0 && !topCrop && (
@@ -116,7 +117,7 @@ export default async function GeoClusterPage() {
       {hotspots.length > 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
           <div style={{ padding: '12px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>⚠️</span>
+            <AlertTriangle size={16} style={{ color: 'var(--color-danger)', flexShrink: 0 }} />
             <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-danger)', margin: 0 }}>Disease Hotspots</p>
           </div>
           {hotspots.map(([district, count], i) => (
@@ -136,7 +137,7 @@ export default async function GeoClusterPage() {
 
       {totalScans === 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '40px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>🗺️</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: C.muted }}><Map size={48} /></div>
           <p style={{ fontWeight: 700, fontSize: 15, color: C.text, marginBottom: 6 }}>No data yet for your area</p>
           <p style={{ fontSize: 13, color: C.muted }}>As farmers use the Disease Detector and market features, clusters will appear on this map.</p>
         </div>

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { FavouriteButton } from '@/components/ui/FavouriteButton';
+import { Heart } from 'lucide-react';
 
 export default async function BuyerFavouritesPage() {
   const supabase = await createClient();
@@ -28,7 +29,7 @@ export default async function BuyerFavouritesPage() {
 
       {list.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px' }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>🤍</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><Heart size={48} /></div>
           <p style={{ fontWeight: 800, fontSize: 16, color: 'var(--d-text)', marginBottom: 6 }}>No saved farmers yet</p>
           <p style={{ fontSize: 13, color: 'var(--d-muted)', marginBottom: 20 }}>
             Browse listings and tap the heart icon to save farmers you like.

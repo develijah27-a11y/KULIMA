@@ -125,17 +125,17 @@ export default async function BuyerListingsPage({
           <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
             {crop && (
               <a href={filterUrl({ crop: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
-                {crop.replace(/_/g,' ')} ✕
+                {crop.replace(/_/g,' ')} ×
               </a>
             )}
             {district && (
               <a href={filterUrl({ district: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
-                {district} ✕
+                {district} ×
               </a>
             )}
             {q && (
               <a href={filterUrl({ q: '' })} style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed, textDecoration: 'none', fontWeight: 600 }}>
-                "{q}" ✕
+                "{q}" ×
               </a>
             )}
           </div>

@@ -439,7 +439,7 @@ export default async function PlantingPage() {
               padding: '20px', display: 'flex', alignItems: 'center', gap: '16px',
             }}
           >
-            <span style={{ fontSize: '32px' }}>🌾</span>
+            <span style={{ display: 'flex', color: 'var(--color-harvest)', flexShrink: 0 }}><Leaf size={32} /></span>
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: '14px', fontWeight: 700, color: C.text, marginBottom: '4px' }}>
                 Add your crops for personalized alerts

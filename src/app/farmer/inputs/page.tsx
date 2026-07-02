@@ -171,7 +171,7 @@ export default function FarmerInputsPage() {
       )}
 
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.03em', marginBottom: 4 }}>My Inputs 🌱</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.03em', marginBottom: 4 }}>My Inputs</h1>
         <p style={{ fontSize: 13, color: C.muted }}>Farm inputs ordered from suppliers</p>
       </div>
 
@@ -210,7 +210,7 @@ export default function FarmerInputsPage() {
           <div style={{ padding: '40px 24px', textAlign: 'center', color: C.muted, fontSize: 14 }}>Loading your inputs…</div>
         ) : filtered.length === 0 ? (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-            <p style={{ fontSize: 36, marginBottom: 12 }}>🌱</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><Leaf size={48} /></div>
             <p style={{ fontWeight: 700, color: C.text, marginBottom: 4 }}>No {tab !== 'all' ? tab : ''} input orders</p>
             <p style={{ fontSize: 13, color: C.muted }}>
               Browse the supplier catalogue to order seeds, fertilizers, and other farm inputs.

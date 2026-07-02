@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import React, { useState } from 'react';
-import { Briefcase, HardHat, Droplets, FlaskConical, Leaf, Truck, ShieldCheck, Package, User, Phone, Banknote, Check } from 'lucide-react';
+import { Briefcase, HardHat, Droplets, FlaskConical, Leaf, Truck, ShieldCheck, Package, User, Phone, Banknote, Check, X } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -396,7 +396,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
       {/* Worker list */}
       {visible.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.shadow }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>👷</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: C.muted }}><HardHat size={48} /></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No workers yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4, marginBottom: 20 }}>
             Add your farm workers and assign them roles to keep track of who does what.
@@ -446,7 +446,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                       <p style={{ fontSize: 12, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={11} />{w.phone}</p>
                     )}
                     {w.farms?.name && (
-                      <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>🌿 {w.farms.name}</p>
+                      <p style={{ fontSize: 12, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Leaf size={11} />{w.farms.name}</p>
                     )}
                     {w.wage_ugx && (
                       <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
@@ -496,9 +496,9 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                   <button
                     onClick={() => handleDelete(w.id)}
                     disabled={deleting === w.id}
-                    style={{ padding: '6px 10px', borderRadius: 7, border: 'none', background: 'var(--color-danger-bg)', color: C.red, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    style={{ padding: '6px 10px', borderRadius: 7, border: 'none', background: 'var(--color-danger-bg)', color: C.red, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                   >
-                    ✕
+                    <X size={14} />
                   </button>
                 </div>
               </div>

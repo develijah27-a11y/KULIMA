@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { PrintInvoicesButton } from './PrintInvoicesButton';
+import { FileText, Upload } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -26,7 +27,7 @@ export default async function InvoicesPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Invoices 🧾</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Invoices</h1>
         {rows.length > 0 && <PrintInvoicesButton />}
       </div>
       <p className="text-sm" style={{ color: C.muted }}>{rows.length} completed contracts · {unpaid.length} awaiting payment</p>
@@ -61,7 +62,7 @@ export default async function InvoicesPage() {
         </div>
       ) : (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '40px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>🧾</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: C.muted }}><FileText size={48} /></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No invoices yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Invoices are generated when contracts are completed and deliveries confirmed.</p>
           <Link href="/offtaker/contracts" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', background: C.blue, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -73,7 +74,7 @@ export default async function InvoicesPage() {
       {rows.length > 0 && (
         <div style={{ padding: '16px 20px', borderRadius: 14, background: 'var(--color-sky-bg)', boxShadow: C.cardShadow, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.blue, margin: '0 0 4px' }}>📤 Export Invoices</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 700, color: C.blue, margin: '0 0 4px' }}><Upload size={12} />Export Invoices</div>
             <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Print or save as PDF for tax compliance and finance records.</p>
           </div>
           <PrintInvoicesButton />

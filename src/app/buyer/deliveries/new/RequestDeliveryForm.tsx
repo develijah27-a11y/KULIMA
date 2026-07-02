@@ -146,7 +146,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
       {prefilledOffer && (
         <div style={{ padding: '11px 14px', background: 'var(--color-primary-bg)', borderRadius: 10, border: '1px solid var(--color-primary-muted)' }}>
           <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success)', margin: 0 }}>
-            ✓ Linked deal: {prefilledOffer.crop_type} · {prefilledOffer.quantity_kg} kg
+            <CheckCircle2 size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Linked deal: {prefilledOffer.crop_type} · {prefilledOffer.quantity_kg} kg
           </p>
         </div>
       )}

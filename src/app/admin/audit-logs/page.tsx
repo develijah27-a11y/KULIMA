@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { ClipboardList } from 'lucide-react';
 
 const C = {
   text:       'var(--d-text)',
@@ -83,7 +84,7 @@ async function LogsList({
   if (rows.length === 0) {
     return (
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 40, marginBottom: 10 }}>📋</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: 'var(--d-muted)' }}><ClipboardList size={48} /></div>
         <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>No logs found</p>
         <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
           {action || resource ? 'Try a different filter.' : 'Audit events are logged automatically as users take actions.'}
@@ -210,7 +211,7 @@ export default async function AdminAuditLogsPage({
         {(action || resource) && (
           <a href="/admin/audit-logs"
             style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--color-surface-2)', fontSize: 13, color: C.muted, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-            Clear ✕
+            Clear ×
           </a>
         )}
       </form>

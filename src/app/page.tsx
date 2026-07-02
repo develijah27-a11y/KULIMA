@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { CloudRain, TrendingUp, Users, Microscope, Package, BarChart3, Globe, Leaf, ShoppingCart, Store } from 'lucide-react';
+import { CloudRain, TrendingUp, Users, Microscope, Package, BarChart3, Globe, Leaf, ShoppingCart, Store, Check } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -99,7 +99,7 @@ export default function Home() {
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {points.map(p => (
                     <li key={p} style={{ display: 'flex', gap: 8, fontSize: 13, color: '#374151', fontWeight: 600 }}>
-                      <span style={{ color: accent, fontWeight: 900 }}>✓</span>
+                      <span style={{ color: accent, display: 'flex', flexShrink: 0 }}><Check size={12} /></span>
                       {p}
                     </li>
                   ))}

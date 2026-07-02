@@ -2,7 +2,7 @@ import type { JSX, ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Search, Car, Truck, Package, X as XIcon, Zap, Snowflake, User } from 'lucide-react';
+import { Search, Car, Truck, Package, X as XIcon, Zap, Snowflake, User, CheckCircle2 } from 'lucide-react';
 import { PayDeliveryButton } from '@/app/buyer/deliveries/PayDeliveryButton';
 
 const C = {
@@ -154,7 +154,7 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
       )}
       {paid && (
         <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: 'var(--color-success-bg)', color: 'var(--color-success)', flexShrink: 0 }}>
-          ✓ Paid
+          <CheckCircle2 size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />Paid
         </span>
       )}
     </div>

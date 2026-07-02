@@ -333,7 +333,7 @@ async function SupplierScorecard({ userId }: { userId: string }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-sm font-black" style={{ color }}>★ {score}</span>
+                  <span className="text-sm font-black" style={{ color, display: 'flex', alignItems: 'center', gap: 3 }}><Star size={12} />{score}</span>
                 </div>
               </div>
             );

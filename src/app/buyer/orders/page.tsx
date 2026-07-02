@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Leaf, ClipboardList, CheckCircle2, Truck, Package, Star, X, AlertTriangle, FileText } from 'lucide-react';
+import { Leaf, ClipboardList, CheckCircle2, Truck, Package, Star, X, AlertTriangle, FileText, Check } from 'lucide-react';
 import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
@@ -106,7 +106,7 @@ function Pipeline({ status }: { status: string }) {
                 boxShadow: active ? `0 0 0 3px ${C.greenBg}` : 'none',
                 transition: 'all 0.3s',
               }}>
-                {done ? <span style={{ color: '#fff', fontSize: 10, fontWeight: 700 }}>✓</span>
+                {done ? <span style={{ display: 'flex', color: '#fff' }}><Check size={10} /></span>
                       : <span style={{ display: 'flex', color: done ? '#fff' : 'var(--color-text-muted)' }}>{s.icon}</span>}
               </div>
               <span style={{ fontSize: 9, color: active ? C.green : done ? C.greenMed : C.muted, fontWeight: active || done ? 700 : 400, whiteSpace: 'nowrap' }}>

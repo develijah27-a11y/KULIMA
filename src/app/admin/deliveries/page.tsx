@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { ClipboardList, Truck, CheckCircle2, AlertTriangle, CreditCard, Banknote } from 'lucide-react';
+import { ClipboardList, Truck, CheckCircle2, AlertTriangle, CreditCard, Banknote, Package, Car } from 'lucide-react';
 
 const C = {
   text:        'var(--d-text)',
@@ -260,9 +260,9 @@ async function DeliveriesList({ status }: { status: string }) {
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-[10px]" style={{ color: C.muted }}>📦 {requesterName}</span>
+                  <span className="text-[10px]" style={{ color: C.muted, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Package size={10} />{requesterName}</span>
                   {transporterName
-                    ? <span className="text-[10px]" style={{ color: C.muted }}>🚗 {transporterName}</span>
+                    ? <span className="text-[10px]" style={{ color: C.muted, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Car size={10} />{transporterName}</span>
                     : <span className="text-[10px]" style={{ color: C.amber }}>No driver yet</span>
                   }
                 </div>

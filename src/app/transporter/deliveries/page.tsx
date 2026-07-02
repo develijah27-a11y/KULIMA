@@ -1,6 +1,8 @@
 ﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import type { JSX } from 'react';
+import { Bell, Truck, Snowflake, Zap } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -81,7 +83,7 @@ export default async function TransporterDeliveriesPage({
         {tabs.map(t => (
           <a key={t} href={`/transporter/deliveries?tab=${t}`}
             style={{ padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: tab === t ? C.green : 'var(--color-surface-2)', color: tab === t ? '#fff' : C.muted }}>
-            {t === 'assignments' ? '🔔 My Jobs' : t === 'available' ? 'Browse' : t === 'active' ? 'Active' : 'Completed'}
+            {t === 'assignments' ? <><Bell size={11} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />My Jobs</> : t === 'available' ? 'Browse' : t === 'active' ? 'Active' : 'Completed'}
           </a>
         ))}
       </div>
@@ -89,7 +91,7 @@ export default async function TransporterDeliveriesPage({
       {/* List */}
       {rows.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '40px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 10 }}>🚛</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: 'var(--d-muted)' }}><Truck size={48} /></div>
           <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>
             {tab === 'assignments'
               ? 'No jobs assigned to you yet — make sure your vehicle district is set'
@@ -109,12 +111,12 @@ export default async function TransporterDeliveriesPage({
               const d     = isAssignment ? row.delivery : (tab === 'my_bids' ? row.delivery : row);
               const st    = STATUS_CFG[isAssignment ? (row.status === 'accepted' ? 'accepted' : 'open') : (tab === 'my_bids' ? row.status : d?.status)] ?? STATUS_CFG.open;
               const price = isAssignment ? (d?.driver_earnings ?? d?.estimated_fare) : (tab === 'my_bids' ? row.price : d?.agreed_price);
-              const typeIcon = d?.delivery_type === 'cold' ? '❄️' : d?.delivery_type === 'fast' ? '⚡' : '🚛';
+              const typeIcon: JSX.Element = d?.delivery_type === 'cold' ? <Snowflake size={14} style={{ color: '#0EA5E9' }} /> : d?.delivery_type === 'fast' ? <Zap size={14} style={{ color: 'var(--color-harvest)' }} /> : <Truck size={14} style={{ color: 'var(--color-primary)' }} />;
               return (
                 <div key={row.id} style={{ padding: '15px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                      {isAssignment && <span style={{ fontSize: 14 }}>{typeIcon}</span>}
+                      {isAssignment && <span style={{ display: 'flex' }}>{typeIcon}</span>}
                       <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>
                         {d?.pickup_district ?? '—'} → {d?.dropoff_district ?? '—'}
                       </p>

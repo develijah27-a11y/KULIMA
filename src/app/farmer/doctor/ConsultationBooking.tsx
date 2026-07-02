@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
+import { Smartphone, Car } from 'lucide-react';
 
 interface Consultation {
   id: string;
@@ -94,18 +95,18 @@ export function ConsultationBooking({ walletBalance, consultations }: Props) {
         {/* Type selector */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
           {([
-            { id: 'remote', label: 'Remote Consultation', sub: 'Video / voice call', fee: 15000, icon: '📱' },
-            { id: 'farm_visit', label: 'Farm Visit', sub: 'Pathologist visits your farm', fee: 50000, icon: '🚗' },
-          ] as const).map(opt => {
+            { id: 'remote', label: 'Remote Consultation', sub: 'Video / voice call', fee: 15000, icon: <Smartphone size={18} /> as ReactNode },
+            { id: 'farm_visit', label: 'Farm Visit', sub: 'Pathologist visits your farm', fee: 50000, icon: <Car size={18} /> as ReactNode },
+          ]).map(opt => {
             const sel = type === opt.id;
             return (
-              <button key={opt.id} onClick={() => setType(opt.id)} style={{
+              <button key={opt.id} onClick={() => setType(opt.id as any)} style={{
                 padding: '13px 14px', borderRadius: 12, textAlign: 'left', cursor: 'pointer',
                 background: sel ? 'var(--color-primary-bg)' : 'var(--d-page)',
                 border: `2px solid ${sel ? C.green : C.border}`,
                 transition: 'all 0.15s',
               }}>
-                <p style={{ fontSize: 18, margin: '0 0 4px' }}>{opt.icon}</p>
+                <div style={{ display: 'flex', marginBottom: '4px', color: sel ? C.green : C.muted }}>{opt.icon}</div>
                 <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: '0 0 2px' }}>{opt.label}</p>
                 <p style={{ fontSize: 11, color: C.muted, margin: '0 0 6px' }}>{opt.sub}</p>
                 <p style={{ fontSize: 12, fontWeight: 800, color: C.green, margin: 0 }}>UGX {opt.fee.toLocaleString()}</p>
@@ -183,7 +184,7 @@ export function ConsultationBooking({ walletBalance, consultations }: Props) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 3 }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>
-                      {c.type === 'farm_visit' ? '🚗 Farm Visit' : '📱 Remote'}
+                      {c.type === 'farm_visit' ? <><Car size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Farm Visit</> : <><Smartphone size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Remote</>}
                     </p>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: st.bg, color: st.color }}>{st.label}</span>
                   </div>

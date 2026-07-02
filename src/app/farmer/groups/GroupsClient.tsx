@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { Users, X, Check, Leaf, Settings } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -116,9 +117,9 @@ function MemberPanel({ group, onClose }: { group: Group; onClose: () => void }) 
       {/* Header */}
       <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>
-          👥 {group.name} — Members
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Users size={14} />{group.name} — Members</span>
         </p>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: C.muted }}>✕</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex' }}><X size={16} /></button>
       </div>
 
       {/* Add member (leader only) */}
@@ -146,7 +147,7 @@ function MemberPanel({ group, onClose }: { group: Group; onClose: () => void }) 
           <p style={{ margin: '6px 0 0', fontSize: 11, color: C.muted }}>
             The person must already have a Kulima account with that phone number.
           </p>
-          {success && <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-success)', fontWeight: 600 }}>✓ {success}</p>}
+          {success && <div style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Check size={12} />{success}</div>}
           {error  && <p style={{ margin: '8px 0 0', fontSize: 12, color: C.red }}>{error}</p>}
         </div>
       )}
@@ -292,7 +293,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
       {tab === 'mine' && (
         myGroups.length === 0 ? (
           <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-            <p style={{ fontSize: 40, marginBottom: 10 }}>👥</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: C.muted }}><Users size={48} /></div>
             <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>You're not in any group yet</p>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Browse existing groups or create one for your community.</p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16 }}>
@@ -310,7 +311,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
                 return (
                   <div key={g.id}>
                     <div style={{ padding: '16px 20px', borderBottom: i < myGroups.length - 1 || isPanelOpen ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>👥</div>
+                      <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.green, flexShrink: 0 }}><Users size={22} /></div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                           <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>{g.name}</p>
@@ -329,7 +330,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
                         <button
                           onClick={() => setPanel(isPanelOpen ? null : g.id)}
                           style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: isPanelOpen ? C.green : 'transparent', color: isPanelOpen ? '#fff' : C.muted, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                          {isLeader ? '⚙ Manage' : '👥 Members'}
+                          {isLeader ? <><Settings size={11} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Manage</> : <><Users size={11} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Members</>}
                         </button>
                         {!isLeader && (
                           <button disabled={loading === g.id} onClick={() => leave(g.id)}
@@ -356,7 +357,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
       {tab === 'browse' && (
         browseable.length === 0 ? (
           <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-            <p style={{ fontSize: 40, marginBottom: 10 }}>🌱</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: C.muted }}><Leaf size={48} /></div>
             <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>No groups to join</p>
             <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>You're already in all available groups, or none exist yet.</p>
             <button onClick={() => setTab('create')} style={{ marginTop: 16, padding: '9px 18px', borderRadius: 10, border: 'none', background: C.green, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -367,7 +368,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
           <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
             {browseable.map((g, i) => (
               <div key={g.id} style={{ padding: '16px 20px', borderBottom: i < browseable.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>👥</div>
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.green, flexShrink: 0 }}><Users size={22} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 3px' }}>{g.name}</p>
                   {g.description && <p style={{ fontSize: 12, color: C.muted, margin: '0 0 2px' }}>{g.description}</p>}

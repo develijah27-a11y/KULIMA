@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PathologistLazy as PathologistClient } from './PathologistLazy';
 import { ConsultationBooking } from './ConsultationBooking';
+import { Leaf } from 'lucide-react';
 
 export default async function PathologistPage() {
   const supabase = await createClient();
@@ -46,7 +47,7 @@ export default async function PathologistPage() {
           background: 'var(--color-warning-bg)', border: '1px solid var(--color-warning-border)', borderRadius: '10px',
           fontSize: '12px', color: 'var(--color-warning)', fontWeight: 600,
         }}>
-          🌿 Covers 6 major Uganda crop diseases
+          <Leaf size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Covers 6 major Uganda crop diseases
         </div>
       </div>
 

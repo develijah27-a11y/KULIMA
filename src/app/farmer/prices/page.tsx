@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import { DISTRICT_NAMES } from '@/lib/districts';
-import { Leaf, Flame } from 'lucide-react';
+import { Leaf, Flame, AlertTriangle, BarChart3, Lightbulb } from 'lucide-react';
 import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
@@ -332,7 +332,7 @@ async function RegionalPrices({ region }: { region: 'east_africa' | 'global' }) 
       {/* Disclaimer */}
       <div style={{ background: 'var(--color-harvest-bg)', borderRadius: 10, padding: '12px 16px', border: '1px solid var(--color-warning-border)' }}>
         <p style={{ fontSize: 12, color: 'var(--color-harvest)', margin: 0, lineHeight: 1.5 }}>
-          ⚠️ <strong>Reference prices only.</strong> Actual transaction prices depend on grade, quantity, buyer relationship, and current exchange rates.
+          <AlertTriangle size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} /><strong>Reference prices only.</strong> Actual transaction prices depend on grade, quantity, buyer relationship, and current exchange rates.
           {region === 'global' && ' Global prices are futures/OTC benchmark prices converted at 1 USD = UGX 3,800.'}
           {region === 'east_africa' && ' East Africa prices are regional exchange/auction averages.'}
           Always verify with your off-taker or export agent before contracting.
@@ -341,7 +341,7 @@ async function RegionalPrices({ region }: { region: 'east_africa' | 'global' }) 
 
       {prices.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.shadow }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>📊</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><BarChart3 size={48} /></div>
           <p style={{ fontSize: 15, fontWeight: 700, color: C.text }}>No prices available yet</p>
           <p style={{ fontSize: 13, color: C.muted }}>Run the migration in Supabase to load price data.</p>
         </div>
@@ -403,7 +403,7 @@ export default async function PricesPage({
           </p>
         </div>
         <Link href="/farmer/planting" style={{ padding: '8px 14px', background: 'var(--color-primary-bg)', color: C.greenMed, borderRadius: 10, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
-          🌱 Planting Plan →
+          Planting Plan →
         </Link>
       </div>
 
@@ -448,7 +448,7 @@ export default async function PricesPage({
 
       {/* Selling tip */}
       <div style={{ background: 'var(--color-primary-bg)', borderRadius: 14, padding: '14px 18px', border: '1px solid var(--color-primary-muted)' }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: C.greenMed, margin: '0 0 4px' }}>💡 Know Your Value</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, color: C.greenMed, margin: '0 0 4px' }}><Lightbulb size={12} />Know Your Value</div>
         <p style={{ fontSize: 12, color: 'var(--color-success)', lineHeight: 1.5, margin: 0 }}>
           Uganda's export crops earn 2–4× more than local market prices. If you grow coffee, tea, or vanilla — connect with certified exporters and UCDA to access export premiums. Use the Finance Calculator to estimate your actual profit at different price levels.
         </p>

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Leaf, ShoppingCart, Truck, Store, Microscope, Package, Globe } from 'lucide-react';
+import { Leaf, ShoppingCart, Truck, Store, Microscope, Package, Globe, Check } from 'lucide-react';
 
 type RoleId = 'farmer' | 'buyer' | 'transporter' | 'supplier' | 'pathologist' | 'offtaker';
 
@@ -185,7 +185,7 @@ export default function RoleSelectionPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  ✓
+                  <Check size={10} />
                 </span>
               )}
 
