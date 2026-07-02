@@ -58,9 +58,9 @@ export default async function TransporterColdChainPage() {
     <div className="max-w-2xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Cold Chain Logs
+          Cool Transport Logs
         </h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Refrigerated delivery history and compliance records</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>Your refrigerated delivery history</p>
       </div>
 
       {/* Cold-capable vehicle badge */}
@@ -68,7 +68,7 @@ export default async function TransporterColdChainPage() {
         <div style={{ background: 'var(--color-sky-bg)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
           <span style={{ display: 'flex', color: 'var(--color-sky)' }}><Snowflake size={22} /></span>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.blue, margin: '0 0 2px' }}>Cold Chain Certified Vehicle</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.blue, margin: '0 0 2px' }}>Cool Transport Certified Vehicle</p>
             <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{vehicle.make} {vehicle.model} · {vehicle.plate_number}</p>
           </div>
         </div>

@@ -11,17 +11,17 @@ import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 
 const OFFTAKER_NAV = [
   { href: '/offtaker/dashboard',    icon: 'dashboard',    label: 'Dashboard' },
-  // ── Procurement
-  { href: '/offtaker/contracts',    icon: 'contracts',    label: 'Contracts',       divider: true, sectionLabel: 'Procurement' },
-  { href: '/offtaker/pipeline',     icon: 'pipeline',     label: 'Supply Pipeline' },
-  { href: '/offtaker/scorecard',    icon: 'scorecard',    label: 'Supplier Scorecard' },
-  // ── Analytics
-  { href: '/offtaker/spend',        icon: 'spend',        label: 'Spend Analytics', divider: true, sectionLabel: 'Analytics' },
-  { href: '/offtaker/quality',      icon: 'quality',      label: 'Quality & Compliance' },
+  // ── Buying
+  { href: '/offtaker/contracts',    icon: 'contracts',    label: 'Agreements',      divider: true, sectionLabel: 'Buying' },
+  { href: '/offtaker/pipeline',     icon: 'pipeline',     label: 'My Suppliers' },
+  { href: '/offtaker/scorecard',    icon: 'scorecard',    label: 'Rate Farmers' },
+  // ── Reports
+  { href: '/offtaker/spend',        icon: 'spend',        label: 'My Spending',     divider: true, sectionLabel: 'Reports' },
+  { href: '/offtaker/quality',      icon: 'quality',      label: 'Crop Quality' },
   { href: '/offtaker/risk',         icon: 'risk-alerts',  label: 'Risk Alerts' },
-  // ── Communication
-  { href: '/offtaker/messages',     icon: 'messages',     label: 'Messages',        divider: true, sectionLabel: 'Communication' },
-  { href: '/offtaker/invoices',     icon: 'invoices',     label: 'Invoices' },
+  // ── Talk
+  { href: '/offtaker/messages',     icon: 'messages',     label: 'Messages',        divider: true, sectionLabel: 'Talk' },
+  { href: '/offtaker/invoices',     icon: 'invoices',     label: 'Payment Requests' },
   // ── Account
   { href: '/offtaker/wallet',       icon: 'wallet',       label: 'Wallet',          divider: true, sectionLabel: 'Account' },
   { href: '/offtaker/notifications',icon: 'notifications',label: 'Notifications' },
@@ -49,7 +49,7 @@ export default async function OfftakerLayout({ children }: { children: React.Rea
     const primaryRole: string = (profileRes.data as any).role ?? '';
     if (!userRoles.includes('offtaker') && primaryRole !== 'offtaker' && primaryRole !== 'admin') redirect('/dashboard');
 
-    profile = { name: profileRes.data.full_name ?? 'Offtaker', role: 'Offtaker' };
+    profile = { name: profileRes.data.full_name ?? 'Buyer', role: 'Bulk Buyer' };
     location = profileRes.data.location ?? '';
     roles = userRoles;
     unreadCount = unreadRes.count ?? 0;

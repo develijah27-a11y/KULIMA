@@ -17,9 +17,9 @@ export const ROLE_META: Record<string, { icon: JSX.Element; label: string; href:
   farmer:      { icon: <Leaf size={14} />,         label: 'Farmer',         href: '/farmer/dashboard' },
   buyer:       { icon: <ShoppingCart size={14} />, label: 'Buyer',          href: '/buyer/dashboard' },
   transporter: { icon: <Truck size={14} />,        label: 'Transporter',    href: '/transporter/dashboard' },
-  supplier:    { icon: <Store size={14} />,         label: 'Input Supplier', href: '/supplier/dashboard' },
-  pathologist: { icon: <Microscope size={14} />,   label: 'Pathologist',    href: '/pathologist/dashboard' },
-  offtaker:    { icon: <Package size={14} />,      label: 'Offtaker',       href: '/offtaker/dashboard' },
+  supplier:    { icon: <Store size={14} />,         label: 'Agro-dealer',    href: '/supplier/dashboard' },
+  pathologist: { icon: <Microscope size={14} />,   label: 'Crop Doctor',    href: '/pathologist/dashboard' },
+  offtaker:    { icon: <Package size={14} />,      label: 'Bulk Buyer',     href: '/offtaker/dashboard' },
   groups:      { icon: <Users size={14} />,         label: 'Groups',         href: '/groups/dashboard' },
 };
 

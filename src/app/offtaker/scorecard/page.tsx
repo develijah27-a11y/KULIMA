@@ -25,18 +25,18 @@ export default async function SupplierScorecardPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Supplier Scorecard ⭐</h1>
-          <p className="text-sm mt-1" style={{ color: C.muted }}>Reliability and quality ratings for your farmer partners</p>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Farmer Ratings</h1>
+          <p className="text-sm mt-1" style={{ color: C.muted }}>How reliable and good each farmer is</p>
         </div>
       </div>
 
       {rows.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
           <p style={{ fontSize: 40, marginBottom: 12 }}>⭐</p>
-          <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No scorecards yet</p>
-          <p style={{ fontSize: 13, color: C.muted, marginTop: 4, maxWidth: 320, margin: '4px auto' }}>Rate your farmer suppliers after each completed contract to build up a reliability database.</p>
+          <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No ratings yet</p>
+          <p style={{ fontSize: 13, color: C.muted, marginTop: 4, maxWidth: 320, margin: '4px auto' }}>Rate a farmer after each completed deal to build a record.</p>
           <Link href="/offtaker/contracts" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', background: C.greenMed, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-            View Contracts →
+            View Deals →
           </Link>
         </div>
       ) : (

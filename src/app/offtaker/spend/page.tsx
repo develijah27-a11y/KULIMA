@@ -50,18 +50,18 @@ export default async function SpendAnalyticsPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Spend Analytics
+          My Spending
         </h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Procurement spend breakdown and budget tracking</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>How much you have spent on produce</p>
       </div>
 
       {/* Key metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
         {[
-          { label: 'Total Spend',     value: `UGX ${Math.round(totalSpend).toLocaleString()}`,    sub: `${completed.length} completed contracts`, color: C.blue },
-          { label: 'Pipeline Value',  value: `UGX ${Math.round(pipelineValue).toLocaleString()}`, sub: `${active.length} active contracts`,    color: 'var(--color-success)' },
-          { label: 'Total Volume',    value: `${Math.round(totalKg).toLocaleString()} kg`,        sub: 'All time',                              color: 'var(--color-harvest)' },
-          { label: 'Avg Price / kg',  value: totalKg > 0 ? `UGX ${Math.round(totalSpend / totalKg).toLocaleString()}` : '—', sub: 'Blended average', color: '#7C3AED' },
+          { label: 'Total Spent',     value: `UGX ${Math.round(totalSpend).toLocaleString()}`,    sub: `${completed.length} completed deals`,  color: C.blue },
+          { label: 'Active Deals',    value: `UGX ${Math.round(pipelineValue).toLocaleString()}`, sub: `${active.length} deals running now`,    color: 'var(--color-success)' },
+          { label: 'Total Bought',    value: `${Math.round(totalKg).toLocaleString()} kg`,        sub: 'All time',                              color: 'var(--color-harvest)' },
+          { label: 'Avg Price / kg',  value: totalKg > 0 ? `UGX ${Math.round(totalSpend / totalKg).toLocaleString()}` : '—', sub: 'Average price paid', color: '#7C3AED' },
         ].map(({ label, value, sub, color }) => (
           <div key={label} style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '16px' }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>

@@ -17,16 +17,16 @@ const FARMER_NAV = [
   { href: '/farmer/inputs',      icon: 'inventory',    label: 'My Inputs' },
   { href: '/farmer/deliveries',  icon: 'deliveries',   label: 'Deliveries' },
   { href: '/farmer/inventory',   icon: 'inventory',    label: 'Inventory' },
-  { href: '/farmer/prices',      icon: 'prices',       label: 'Live Prices' },
+  { href: '/farmer/prices',      icon: 'prices',       label: 'Market Prices' },
   // ── Farm
   { href: '/farmer/farm',        icon: 'farm',         label: 'My Farm',      divider: true, sectionLabel: 'Farm' },
   { href: '/farmer/farm/workers',icon: 'workers',      label: 'Workers' },
-  { href: '/farmer/finance',     icon: 'finance',      label: 'Finance' },
+  { href: '/farmer/finance',     icon: 'finance',      label: 'Money & Loans' },
   { href: '/farmer/planting',    icon: 'planting',     label: 'Planting' },
-  { href: '/farmer/doctor',      icon: 'doctor',       label: 'Pathologist' },
+  { href: '/farmer/doctor',      icon: 'doctor',       label: 'Crop Doctor' },
   // ── Community
   { href: '/farmer/groups',      icon: 'groups',       label: 'Farmer Groups', divider: true, sectionLabel: 'Community' },
-  { href: '/farmer/geocluster',  icon: 'geocluster',   label: 'GeoCluster' },
+  { href: '/farmer/geocluster',  icon: 'geocluster',   label: 'Farmers Near Me' },
   { href: '/farmer/weather',     icon: 'weather',      label: 'Weather' },
   // ── Account
   { href: '/farmer/wallet',      icon: 'wallet',       label: 'Wallet',       divider: true, sectionLabel: 'Account' },

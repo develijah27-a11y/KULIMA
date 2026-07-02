@@ -12,15 +12,15 @@ import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 const PATHOLOGIST_NAV = [
   { href: '/pathologist/dashboard',       icon: 'dashboard',      label: 'Dashboard' },
   // ── Cases
-  { href: '/pathologist/cases',           icon: 'case-queue',     label: 'Case Queue',      divider: true, sectionLabel: 'Cases' },
-  { href: '/pathologist/cases/urgent',    icon: 'urgent-cases',   label: 'Urgent Cases' },
+  { href: '/pathologist/cases',           icon: 'case-queue',     label: 'New Cases',       divider: true, sectionLabel: 'Cases' },
+  { href: '/pathologist/cases/urgent',    icon: 'urgent-cases',   label: 'Urgent' },
   { href: '/pathologist/cases/mine',      icon: 'my-cases',       label: 'My Cases' },
   { href: '/pathologist/cases/resolved',  icon: 'resolved',       label: 'Resolved' },
-  // ── Intelligence
-  { href: '/pathologist/geocluster',      icon: 'geo-map',        label: 'GeoCluster Map',  divider: true, sectionLabel: 'Intelligence' },
-  { href: '/pathologist/alerts',          icon: 'disease-alerts', label: 'Disease Alerts' },
-  // ── Account
-  { href: '/pathologist/consultations',    icon: 'consultations',  label: 'Consultations',   divider: true, sectionLabel: 'Work' },
+  // ── Insights
+  { href: '/pathologist/geocluster',      icon: 'geo-map',        label: 'Disease Map',     divider: true, sectionLabel: 'Insights' },
+  { href: '/pathologist/alerts',          icon: 'disease-alerts', label: 'Alerts' },
+  // ── Work
+  { href: '/pathologist/consultations',    icon: 'consultations',  label: 'Farmer Requests', divider: true, sectionLabel: 'Work' },
   // ── Account
   { href: '/pathologist/profile',         icon: 'profile',        label: 'My Profile',      divider: true, sectionLabel: 'Account' },
   { href: '/pathologist/wallet',          icon: 'earnings',       label: 'Wallet & Earnings' },
@@ -49,7 +49,7 @@ export default async function PathologistLayout({ children }: { children: React.
     const primaryRole: string = (profileRes.data as any).role ?? '';
     if (!userRoles.includes('pathologist') && primaryRole !== 'pathologist' && primaryRole !== 'admin') redirect('/dashboard');
 
-    profile = { name: profileRes.data.full_name ?? 'Pathologist', role: 'Plant Pathologist' };
+    profile = { name: profileRes.data.full_name ?? 'Crop Doctor', role: 'Crop Doctor' };
     location = profileRes.data.location ?? '';
     roles = userRoles;
     unreadCount = unreadRes.count ?? 0;

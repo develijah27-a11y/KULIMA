@@ -55,13 +55,13 @@ async function BuyerStats({ userId }: { userId: string }) {
   ]);
 
   const stats = [
-    { label: 'Market Listings', value: listingsRes.count ?? 0,    sub: 'Available now',         icon: <ShoppingBag size={18} />,   border: C.greenBright },
-    { label: 'Pending Offers',  value: pendingRes.count ?? 0,     sub: 'Awaiting farmer reply',  icon: <MessageCircle size={18} />, border: C.amber },
-    { label: 'Active Orders',   value: ordersRes.count ?? 0,      sub: 'Accepted deals',         icon: <CheckCircle2 size={18} />,  border: C.blue },
+    { label: 'Farmers Selling', value: listingsRes.count ?? 0,    sub: 'Available to buy now',   icon: <ShoppingBag size={18} />,   border: C.greenBright },
+    { label: 'My Offers',       value: pendingRes.count ?? 0,     sub: 'Waiting for farmer reply',icon: <MessageCircle size={18} />, border: C.amber },
+    { label: 'My Orders',       value: ordersRes.count ?? 0,      sub: 'Deals accepted',         icon: <CheckCircle2 size={18} />,  border: C.blue },
     {
       label: 'Wallet Balance',
       value: `UGX ${Math.round(walletRes?.data?.balance ?? 0).toLocaleString()}`,
-      sub: 'Available funds',
+      sub: 'Money in your wallet',
       icon: <CreditCard size={18} />,
       border: C.purple,
     },
@@ -149,16 +149,16 @@ async function ActiveOffers({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Active Offers</p>
-          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Your recent negotiations</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>My Offers</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Your recent price talks with farmers</p>
         </div>
         <Link href="/buyer/requests" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
           <MessageCircle size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
-          <p className="text-sm font-medium" style={{ color: C.muted }}>No active offers</p>
-          <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Browse the market and make an offer to a farmer</p>
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No offers yet</p>
+          <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Browse the market and make an offer to buy produce</p>
           <Link href="/buyer/listings" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
             Browse Market →
           </Link>
@@ -228,7 +228,7 @@ async function RecentDeliveries({ userId }: { userId: string }) {
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
           <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent Deliveries</p>
-          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Your transport requests</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Produce being transported to you</p>
         </div>
         <Link href="/buyer/deliveries" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
@@ -284,8 +284,8 @@ async function FreshListings() {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Fresh Listings</p>
-          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Latest from farmers — click to make an offer</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>New Produce</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Fresh from farmers — tap to make an offer</p>
         </div>
         <Link href="/buyer/listings" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Browse all →</Link>
       </div>
@@ -415,8 +415,8 @@ async function SpendingSummary({ userId }: { userId: string }) {
           <DollarSign size={20} />
         </div>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#60a5fa' }}>Procurement Summary</p>
-          <p className="text-sm font-bold text-white">Your purchasing activity overview</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#60a5fa' }}>Buying Summary</p>
+          <p className="text-sm font-bold text-white">How much you have spent on produce</p>
         </div>
         <Link href="/buyer/orders" className="text-xs font-bold px-3 py-1.5 rounded-lg shrink-0 ml-auto" style={{ background: 'rgba(59,130,246,0.2)', color: '#93c5fd', textDecoration: 'none' }}>
           View orders →
@@ -450,7 +450,7 @@ async function WelcomeHeader({ userId }: { userId: string }) {
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
           Welcome back, {firstName}
         </h1>
-        <p className="text-sm mt-0.5" style={{ color: C.muted }}>Buyer Hub · {profile?.location ?? 'Uganda'}</p>
+        <p className="text-sm mt-0.5" style={{ color: C.muted }}>Buyer · {profile?.location ?? 'Uganda'}</p>
       </div>
       <Link href="/buyer/listings"
         className="px-4 py-2 rounded-xl text-sm font-bold text-white"

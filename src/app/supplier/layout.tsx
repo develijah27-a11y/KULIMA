@@ -12,13 +12,13 @@ import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 const SUPPLIER_NAV = [
   { href: '/supplier/dashboard',   icon: 'dashboard',    label: 'Dashboard' },
   // ── Products
-  { href: '/supplier/catalogue',   icon: 'catalogue',    label: 'My Catalogue',  divider: true, sectionLabel: 'Products' },
-  { href: '/supplier/orders',      icon: 'orders',       label: 'Incoming Orders' },
+  { href: '/supplier/catalogue',   icon: 'catalogue',    label: 'My Products',     divider: true, sectionLabel: 'Products' },
+  { href: '/supplier/orders',      icon: 'orders',       label: 'New Orders' },
   { href: '/supplier/returns',     icon: 'orders',       label: 'Returns' },
-  { href: '/supplier/flash-deals', icon: 'flash-deals',  label: 'Flash Deals' },
-  // ── Intelligence
-  { href: '/supplier/demand',      icon: 'demand',       label: 'Demand Intel',  divider: true, sectionLabel: 'Intelligence' },
-  { href: '/supplier/coverage',    icon: 'coverage',     label: 'Coverage Zones' },
+  { href: '/supplier/flash-deals', icon: 'flash-deals',  label: 'Quick Deals' },
+  // ── Market Info
+  { href: '/supplier/demand',      icon: 'demand',       label: 'What Farmers Need', divider: true, sectionLabel: 'Market Info' },
+  { href: '/supplier/coverage',    icon: 'coverage',     label: 'My Service Area' },
   // ── Account
   { href: '/supplier/wallet',      icon: 'wallet',       label: 'Wallet',        divider: true, sectionLabel: 'Account' },
   { href: '/supplier/notifications',icon: 'notifications',label: 'Notifications' },
@@ -46,7 +46,7 @@ export default async function SupplierLayout({ children }: { children: React.Rea
     const primaryRole: string = (profileRes.data as any).role ?? '';
     if (!userRoles.includes('supplier') && primaryRole !== 'supplier' && primaryRole !== 'admin') redirect('/dashboard');
 
-    profile = { name: profileRes.data.full_name ?? 'Supplier', role: 'Input Supplier' };
+    profile = { name: profileRes.data.full_name ?? 'Agro-dealer', role: 'Agro-dealer' };
     location = profileRes.data.location ?? '';
     roles = userRoles;
     unreadCount = unreadRes.count ?? 0;

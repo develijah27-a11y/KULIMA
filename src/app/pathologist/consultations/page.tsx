@@ -33,10 +33,10 @@ export default async function PathologistConsultationsPage() {
     <div className="max-w-2xl mx-auto">
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 22, fontWeight: 900, color: 'var(--d-text)', margin: 0, letterSpacing: '-0.03em' }}>
-          My Consultations
+          Farmer Requests
         </h1>
         <p style={{ fontSize: 13, color: 'var(--d-muted)', margin: '3px 0 0' }}>
-          Farmer consultation requests assigned to you
+          Farmers who need your help — assigned to you
         </p>
       </div>
 

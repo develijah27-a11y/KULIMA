@@ -61,9 +61,9 @@ export default async function GeoClusterPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          GeoCluster Map
+          Farmers Near Me
         </h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Disease outbreaks and price hotspots across Uganda — last 30 days</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>Disease outbreaks and crop prices by district — last 30 days</p>
       </div>
 
       {/* Summary stats */}

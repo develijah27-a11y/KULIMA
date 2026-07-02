@@ -223,9 +223,9 @@ async function QuickStats({ userId }: { userId: string }) {
 
   const stats = [
     {
-      label: 'Active Listings',
+      label: 'My Produce',
       value: `${listingsRes.count ?? 0}`,
-      sub: 'Available to buyers',
+      sub: 'Buyers can see these',
       icon: <Package size={18} />,
       color: C.greenBright,
       border: C.greenBright,
@@ -239,9 +239,9 @@ async function QuickStats({ userId }: { userId: string }) {
       border: priceTrend !== null && priceTrend < 0 ? C.red : C.amber,
     },
     {
-      label: 'Farm Value',
+      label: 'Farm Worth',
       value: '—',
-      sub: 'Add inventory to calculate',
+      sub: 'Add items to see value',
       icon: <Home size={18} />,
       color: C.blue,
       border: C.blue,
@@ -249,7 +249,7 @@ async function QuickStats({ userId }: { userId: string }) {
     {
       label: 'Alerts',
       value: `${alertCount.count ?? 0}`,
-      sub: hasAlerts ? 'Unread notifications' : 'All clear',
+      sub: hasAlerts ? 'You have new messages' : 'All clear',
       icon: hasAlerts ? <Bell size={18} /> : <CheckCircle2 size={18} />,
       color: hasAlerts ? C.red : C.greenBright,
       border: hasAlerts ? C.red : C.greenBright,
@@ -289,7 +289,7 @@ async function AIBanner({ userId }: { userId: string }) {
         <Sprout size={20} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-primary-muted)' }}>AI Recommendation</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-primary-muted)' }}>Farm Tip</p>
         <p className="text-sm font-bold text-white leading-snug">{season.currentTask}</p>
         <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
           {season.season} · {season.daysLeft} days remaining · {crop.charAt(0).toUpperCase() + crop.slice(1)} season
@@ -340,14 +340,14 @@ async function MarketPricesTable({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Market Prices Today
+          Today's Prices
         </p>
         <Link href="/farmer/prices" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
       {sorted.length === 0 ? (
         <div className="px-5 py-8 text-center">
           <BarChart3 size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
-          <p className="text-sm font-medium" style={{ color: C.muted }}>No price data yet</p>
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No price data yet.</p>
         </div>
       ) : (
         <div className="divide-y" style={{ borderColor: C.border }}>
@@ -461,7 +461,7 @@ async function RecentOffers({ userId }: { userId: string }) {
         <div className="px-5 py-8 text-center">
           <MessageCircle size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
           <p className="text-sm font-medium" style={{ color: C.muted }}>No offers yet</p>
-          <p className="text-xs mt-1" style={{ color: C.muted }}>Create a listing to attract buyers</p>
+          <p className="text-xs mt-1" style={{ color: C.muted }}>Add your produce to start getting offers from buyers</p>
         </div>
       ) : (
         <div className="divide-y" style={{ borderColor: C.border }}>
@@ -523,7 +523,7 @@ async function FinanceOverview({ userId }: { userId: string }) {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: C.border }}>
         <div className="p-4 sm:p-5 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>AgriScore</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Farm Score</p>
           <p className="text-3xl font-black mb-1" style={{ color: scoreColor, letterSpacing: '-0.04em' }}>{score}</p>
           <p className="text-xs font-semibold mb-3" style={{ color: scoreColor }}>{scoreLabel}</p>
           <div className="h-1.5 rounded-full mb-1" style={{ background: 'var(--color-surface-2)' }}>
@@ -535,15 +535,15 @@ async function FinanceOverview({ userId }: { userId: string }) {
           </div>
         </div>
         <div className="p-4 sm:p-5 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Loan Eligibility</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Can I Get a Loan?</p>
           <p className="text-base font-bold mb-1" style={{ color: scoreColor }}>{eligibility}</p>
-          <p className="text-xs mb-3" style={{ color: C.muted }}>You can apply for a loan</p>
+          <p className="text-xs mb-3" style={{ color: C.muted }}>You qualify — apply now</p>
           <div className="h-1.5 rounded-full" style={{ background: 'var(--color-surface-2)' }}>
             <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: scoreColor, borderRadius: '9999px' }} />
           </div>
         </div>
         <div className="p-4 sm:p-5 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Recommended Limit</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>You Can Borrow Up To</p>
           <p className="text-xl font-black mb-1" style={{ color: C.text, letterSpacing: '-0.03em' }}>
             UGX {loanLimit}
           </p>
@@ -553,7 +553,7 @@ async function FinanceOverview({ userId }: { userId: string }) {
             className="mt-3 block text-xs font-bold px-3 py-1.5 rounded-lg text-center"
             style={{ background: 'var(--color-primary-bg)', color: C.greenMed }}
           >
-            Apply for loan →
+            Apply Now →
           </a>
         </div>
       </div>
@@ -573,7 +573,7 @@ async function DiseasePanel({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Disease & Risk Alerts
+          Crop Disease Alerts
         </p>
       </div>
       <div className="divide-y" style={{ borderColor: C.border }}>
@@ -666,11 +666,11 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Create Listing',   href: '/farmer/marketplace/new',  icon: <Pencil size={20} />,      bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
-    { label: 'Add Record',       href: '/farmer/farm',             icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
+    { label: 'Sell Produce',     href: '/farmer/marketplace/new',  icon: <Pencil size={20} />,      bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
+    { label: 'Farm Records',     href: '/farmer/farm',             icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
     { label: 'Check Weather',    href: '/farmer/weather',          icon: <Cloud size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
-    { label: 'Scan Disease',     href: '/farmer/doctor',           icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
-    { label: 'Apply for Loan',   href: '/farmer/finance',          icon: <DollarSign size={20} />,    bg: 'var(--color-success-bg)',  color: 'var(--color-success)' },
+    { label: 'Crop Doctor',      href: '/farmer/doctor',           icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
+    { label: 'Get a Loan',       href: '/farmer/finance',          icon: <DollarSign size={20} />,    bg: 'var(--color-success-bg)',  color: 'var(--color-success)' },
     { label: 'Book Delivery',    href: '/farmer/deliveries/new',   icon: <Truck size={20} />,         bg: '#F5F3FF',                  color: '#7C3AED' },
   ];
 

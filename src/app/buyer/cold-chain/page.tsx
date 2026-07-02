@@ -45,9 +45,9 @@ export default async function BuyerColdChainPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Cold Chain Storage
+            Cool Transport
           </h1>
-          <p className="text-sm mt-1" style={{ color: C.muted }}>Refrigerated deliveries — perishable produce tracking</p>
+          <p className="text-sm mt-1" style={{ color: C.muted }}>Refrigerated deliveries — keeps your produce fresh</p>
         </div>
         <Link href="/buyer/deliveries/new"
           style={{ padding: '9px 16px', background: C.blue, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>

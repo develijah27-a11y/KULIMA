@@ -52,17 +52,17 @@ export default async function QualityControlPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Quality Control
+          Crop Quality
         </h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Delivery fulfilment and produce quality tracking</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>Check how well farmers have delivered produce</p>
       </div>
 
       {/* Summary metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
         {[
-          { label: 'Fulfilment Rate',   value: `${completionRate}%`, color: completionRate >= 80 ? 'var(--color-success)' : completionRate >= 60 ? 'var(--color-harvest)' : 'var(--color-danger)' },
+          { label: 'Delivery Rate',     value: `${completionRate}%`, color: completionRate >= 80 ? 'var(--color-success)' : completionRate >= 60 ? 'var(--color-harvest)' : 'var(--color-danger)' },
           { label: 'Volume Received',   value: `${Math.round(totalKg).toLocaleString()} kg`, color: C.blue },
-          { label: 'Active Contracts',  value: `${active.length}`, color: 'var(--color-primary)' },
+          { label: 'Active Deals',      value: `${active.length}`, color: 'var(--color-primary)' },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: C.cardBg, borderRadius: 12, boxShadow: C.cardShadow, padding: '14px 16px', textAlign: 'center' }}>
             <p style={{ fontSize: 22, fontWeight: 900, color, margin: '0 0 3px', letterSpacing: '-0.02em' }}>{value}</p>

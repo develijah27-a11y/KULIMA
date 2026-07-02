@@ -16,7 +16,7 @@ const C = {
 const TYPE_META: Record<string, { icon: ReactNode; label: string; color: string; bg: string }> = {
   standard: { icon: <Truck size={22} />,    label: 'Standard',    color: C.green, bg: C.greenBg },
   fast:     { icon: <Zap size={22} />,      label: 'Express',     color: C.amber, bg: C.amberBg },
-  cold:     { icon: <Snowflake size={22} />, label: 'Cold Chain',  color: C.blue,  bg: C.blueBg  },
+  cold:     { icon: <Snowflake size={22} />, label: 'Cool Transport', color: C.blue,  bg: C.blueBg  },
 };
 
 const DISTRICTS = [

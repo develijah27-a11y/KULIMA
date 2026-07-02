@@ -61,10 +61,10 @@ async function OfftakerStats({ userId }: { userId: string }) {
   const uniqueSuppliers = new Set(suppliersData.map((r: any) => r.farmer_id)).size;
 
   const stats = [
-    { label: 'Active Contracts',  value: contractsCount,                                      icon: <FileText size={18} />,   sub: 'Current agreements',      border: C.greenBright },
-    { label: 'Suppliers',         value: uniqueSuppliers,                                     icon: <Users size={18} />,      sub: 'Active farmers supplying', border: C.blue },
-    { label: 'Pending Payments',  value: pendingPayCount,                                     icon: <CreditCard size={18} />, sub: 'Awaiting settlement',      border: pendingPayCount ? C.amber : C.muted },
-    { label: 'Wallet Balance',    value: `UGX ${Math.round(walletBal).toLocaleString()}`,     icon: <DollarSign size={18} />, sub: 'Available funds',          border: C.purple },
+    { label: 'Active Deals',       value: contractsCount,                                      icon: <FileText size={18} />,   sub: 'Running agreements',       border: C.greenBright },
+    { label: 'My Farmers',        value: uniqueSuppliers,                                     icon: <Users size={18} />,      sub: 'Farmers supplying you',    border: C.blue },
+    { label: 'Unpaid Bills',      value: pendingPayCount,                                     icon: <CreditCard size={18} />, sub: 'Not yet paid',             border: pendingPayCount ? C.amber : C.muted },
+    { label: 'Wallet Balance',    value: `UGX ${Math.round(walletBal).toLocaleString()}`,     icon: <DollarSign size={18} />, sub: 'Money in your wallet',     border: C.purple },
   ];
 
   return (
@@ -85,10 +85,10 @@ async function OfftakerStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'New Contract',   href: '/offtaker/pipeline/new',    icon: <FileText size={20} />,  bg: 'var(--color-primary-bg)', color: C.green  },
-    { label: 'Browse Supply',  href: '/offtaker/pipeline',        icon: <Search size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
-    { label: 'Rate Supplier',  href: '/offtaker/scorecard',       icon: <Star size={20} />,      bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'Analytics',      href: '/offtaker/spend',           icon: <BarChart3 size={20} />, bg: '#F5F3FF',                 color: C.purple },
+    { label: 'New Deal',        href: '/offtaker/pipeline/new',    icon: <FileText size={20} />,  bg: 'var(--color-primary-bg)', color: C.green  },
+    { label: 'Find Farmers',   href: '/offtaker/pipeline',        icon: <Search size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'Rate Farmer',    href: '/offtaker/scorecard',       icon: <Star size={20} />,      bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'My Reports',     href: '/offtaker/spend',           icon: <BarChart3 size={20} />, bg: '#F5F3FF',                 color: C.purple },
     { label: 'Send Offer',     href: '/offtaker/pipeline',        icon: <Send size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
     { label: 'Book Delivery',  href: '/offtaker/deliveries/new',  icon: <Truck size={20} />,     bg: '#F0FDF4',                 color: C.green  },
   ];
@@ -145,9 +145,9 @@ async function MarketIntelligence() {
           <TrendingUp size={20} />
         </div>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#60a5fa' }}>Market Intelligence</p>
-          <p className="text-sm font-bold text-white">Live price movement across key crops</p>
-          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>Lock contracts now when prices favour your margins</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#60a5fa' }}>Price Trends</p>
+          <p className="text-sm font-bold text-white">Latest crop prices</p>
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>Agree deals now when prices are good for you</p>
         </div>
       </div>
 
@@ -167,7 +167,7 @@ async function MarketIntelligence() {
           })}
         </div>
       ) : (
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Connect to live market data to see price intelligence</p>
+        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>No price data available yet</p>
       )}
     </div>
   );
@@ -188,18 +188,18 @@ async function ActiveContracts({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Active Contracts</p>
-          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Sorted by delivery date</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Active Deals</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Closest delivery date first</p>
         </div>
         <Link href="/offtaker/pipeline" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-10 text-center">
           <FileText size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
-          <p className="text-sm font-bold" style={{ color: C.text }}>No active contracts yet</p>
-          <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Create forward contracts with farmers to secure your supply pipeline</p>
+          <p className="text-sm font-bold" style={{ color: C.text }}>No active deals yet</p>
+          <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Create agreements with farmers to secure your supply</p>
           <Link href="/offtaker/pipeline/new" className="inline-block px-4 py-2 rounded-lg text-xs font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
-            Create First Contract →
+            Create First Deal →
           </Link>
         </div>
       ) : (
@@ -252,15 +252,15 @@ async function AvailableSupply() {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Available Supply</p>
-          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Active farmer listings you can contract</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Farmers Selling</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Produce ready to buy now</p>
         </div>
         <Link href="/offtaker/pipeline" className="text-xs font-semibold" style={{ color: C.greenMed }}>Browse all →</Link>
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-8 text-center">
           <Leaf size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
-          <p className="text-sm font-medium" style={{ color: C.muted }}>No active listings right now</p>
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No farmers selling right now</p>
         </div>
       ) : (
         <div className="divide-y" style={{ borderColor: C.border }}>
@@ -305,16 +305,16 @@ async function SupplierScorecard({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Supplier Scorecard</p>
-          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Your top-rated farmer partners</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Farmer Ratings</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Your best-performing farmers</p>
         </div>
         <Link href="/offtaker/scorecard" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
       {rows.length === 0 ? (
         <div className="px-5 py-8 text-center">
           <Star size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
-          <p className="text-sm font-medium" style={{ color: C.muted }}>No scorecards yet</p>
-          <p className="text-xs mt-1" style={{ color: C.muted }}>Rate your suppliers after each completed contract</p>
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No ratings yet</p>
+          <p className="text-xs mt-1" style={{ color: C.muted }}>Rate a farmer after each completed deal</p>
         </div>
       ) : (
         <div className="divide-y" style={{ borderColor: C.border }}>
@@ -358,9 +358,9 @@ export default async function OfftakerDashboardPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Supply Command, {firstName}
+            Welcome back, {firstName}
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: C.muted }}>Offtaker Hub · {profile?.location ?? 'Uganda'}</p>
+          <p className="text-sm mt-0.5" style={{ color: C.muted }}>Bulk Buyer · {profile?.location ?? 'Uganda'}</p>
         </div>
         <Link href="/offtaker/pipeline/new" className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: C.blue, textDecoration: 'none' }}>
           + New Contract
