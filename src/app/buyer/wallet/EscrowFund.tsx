@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2 } from 'lucide-react';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', green: 'var(--color-primary)' };
 
@@ -41,7 +42,7 @@ export function EscrowFundButton({ offerId, amount, cropType, balance }: Props) 
   }
 
   if (done) {
-    return <p style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 12 }}>✓ Escrow funded — deal secured</p>;
+    return <p style={{ color: 'var(--color-success)', fontWeight: 700, fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}><CheckCircle2 size={12} />Escrow funded — deal secured</p>;
   }
 
   return (

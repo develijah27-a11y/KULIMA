@@ -58,7 +58,7 @@ export default async function PathologistConsultationsPage() {
 
       {list.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: 'var(--d-card)', borderRadius: 18, boxShadow: 'var(--d-shadow-card)' }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>🩺</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4"/><circle cx="20" cy="10" r="2"/></svg></div>
           <p style={{ fontWeight: 800, fontSize: 16, color: 'var(--d-text)', marginBottom: 6 }}>No consultations yet</p>
           <p style={{ fontSize: 13, color: 'var(--d-muted)' }}>
             When farmers book consultations, they will appear here. Make sure your profile is complete to be matched.
@@ -82,7 +82,7 @@ export default async function PathologistConsultationsPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
                       <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--d-text)', margin: 0 }}>
-                        {c.type === 'farm_visit' ? '🚗 Farm Visit' : '📱 Remote Consultation'}
+                        {c.type === 'farm_visit' ? 'Farm Visit' : 'Remote Consultation'}
                       </p>
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: st.bg, color: st.color, flexShrink: 0 }}>
                         {st.label}
@@ -121,7 +121,7 @@ export default async function PathologistConsultationsPage() {
                         border: '1.5px solid var(--color-primary)',
                       }}
                     >
-                      💬 Open Chat with Farmer
+                      Open Chat with Farmer
                     </Link>
                   </div>
                 )}

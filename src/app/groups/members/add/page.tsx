@@ -51,7 +51,7 @@ export default function AddMemberPage() {
     <div className="max-w-xl mx-auto space-y-5">
       <Link href="/groups/members" style={{ fontSize: 13, color: C.muted, textDecoration: 'none' }}>← Members</Link>
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Add Member 👤</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Add Member</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Register a new member into your farmer group</p>
       </div>
 

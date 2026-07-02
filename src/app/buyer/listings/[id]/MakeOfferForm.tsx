@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2, Check, AlertTriangle } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -67,7 +68,7 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
   if (success) {
     return (
       <div style={{ textAlign: 'center', padding: '24px 0' }}>
-        <p style={{ fontSize: 36, marginBottom: 8 }}>✅</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, color: 'var(--color-success)' }}><CheckCircle2 size={40} /></div>
         <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>Offer Submitted!</p>
         <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>The farmer will respond within 24–48 hours.</p>
       </div>
@@ -105,7 +106,7 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
                 disabled={acceptingCounter}
                 style={{ flex: 1, padding: '10px', background: C.green, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
               >
-                {acceptingCounter ? '...' : `✓ Accept UGX ${Math.round(existingOffer.counter_price).toLocaleString()}`}
+                {acceptingCounter ? '...' : <><Check size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Accept UGX {Math.round(existingOffer.counter_price).toLocaleString()}</>}
               </button>
               <button
                 style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger-bg)', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
@@ -157,12 +158,12 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
         />
         {price && delta !== null && !below70 && (
           <p style={{ fontSize: 11, marginTop: 4, color: delta >= 0 ? 'var(--color-success)' : 'var(--color-harvest)', fontWeight: 600 }}>
-            {delta >= 0 ? `✓ +${delta}% above asking` : `${delta}% below asking — fair offer`}
+            {delta >= 0 ? <><Check size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />+{delta}% above asking</> : `${delta}% below asking — fair offer`}
           </p>
         )}
         {below70 && (
           <p style={{ fontSize: 11, marginTop: 4, color: 'var(--color-danger)', fontWeight: 600 }}>
-            ⚠ Below minimum — must be at least UGX {minAllowed.toLocaleString()}
+            <AlertTriangle size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />Below minimum — must be at least UGX {minAllowed.toLocaleString()}
           </p>
         )}
       </div>
@@ -182,7 +183,7 @@ export function MakeOfferForm({ listingId, askingPrice, marketPrice, existingOff
 
       {error && (
         <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, border: '1px solid var(--color-danger-bg)' }}>
-          <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>⚠ {error}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-danger)', fontSize: 13 }}><AlertTriangle size={13} />{error}</div>
         </div>
       )}
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2 } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -77,7 +78,7 @@ export function ProfileEditForm({ initial }: Props) {
       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
         {success && (
           <span style={{ fontSize: 12, color: 'var(--color-success)', fontWeight: 600 }}>
-            ✓ Profile saved
+            <CheckCircle2 size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Profile saved
           </span>
         )}
         <button

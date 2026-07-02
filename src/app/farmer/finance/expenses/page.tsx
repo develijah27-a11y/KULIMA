@@ -105,7 +105,7 @@ export default async function ExpensesPage() {
             textDecoration: 'none',
           }}
         >
-          🧮 Open Calculator
+          Open Calculator
         </Link>
       </div>
 

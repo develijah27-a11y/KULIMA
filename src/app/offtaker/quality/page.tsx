@@ -122,7 +122,7 @@ export default async function QualityControlPage() {
 
       {/* Grade logging coming soon */}
       <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '16px 20px', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-        <span style={{ fontSize: 22, flexShrink: 0 }}>🧪</span>
+        <span style={{ display: 'flex', flexShrink: 0, color: 'var(--color-sky)' }}><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11l-5 5h13l-5-5V3"/></svg></span>
         <div>
           <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 4px' }}>Digital Grade Logging — Coming Soon</p>
           <p style={{ fontSize: 12, color: C.muted, margin: '0 0 10px' }}>Attach moisture readings, photos, and lab results to each contract delivery batch.</p>
@@ -132,7 +132,7 @@ export default async function QualityControlPage() {
 
       {rows.length === 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>🔬</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18h8"/><path d="M3 22h18"/><path d="M14 22a7 7 0 1 0 0-14h-1"/><path d="M9 14h2"/><path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"/><path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"/></svg></div>
           <p style={{ fontWeight: 700, fontSize: 15, color: C.text, marginBottom: 6 }}>No contract data yet</p>
           <p style={{ fontSize: 13, color: C.muted }}>Quality metrics will appear as you receive produce against contracts.</p>
         </div>

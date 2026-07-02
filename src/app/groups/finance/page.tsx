@@ -35,7 +35,7 @@ export default async function GroupFinancePage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Group Finance 💰</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Group Finance</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>Track contributions, expenses, and group funds</p>
         </div>
         <Link href="/groups/finance/record" style={{ padding: '8px 16px', background: C.greenMed, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -61,7 +61,7 @@ export default async function GroupFinancePage() {
 
       {rows.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '50px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>💰</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No records yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Start recording contributions, expenses, and income to track your group finances.</p>
           <Link href="/groups/finance/record" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', background: C.greenMed, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>

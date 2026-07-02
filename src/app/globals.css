@@ -126,72 +126,74 @@
   --d-subtle:      var(--color-surface-2);
 }
 
-/* ─── Dark mode ─── */
+/* ─── Dark mode ───
+   Neutral graphite base (not a green wash) — green stays an accent only,
+   used the way modern dev tools (Vercel/Linear/GitHub) run dark themes. */
 .dark {
-  --color-bg:            #0D1F12;
-  --color-surface:       #132416;
-  --color-surface-2:     #1C3420;
-  --color-surface-3:     #243D28;
+  --color-bg:            #0A0B0D;
+  --color-surface:       #131417;
+  --color-surface-2:     #1B1D21;
+  --color-surface-3:     #24262B;
 
   --color-primary:       #4ADE80;
   --color-primary-hover: #22C55E;
-  --color-primary-muted: #166534;
-  --color-primary-bg:    #14532D;
+  --color-primary-muted: #15803D;
+  --color-primary-bg:    #10241A;
   --color-primary-dark:  #BBF7D0;
 
   --color-harvest:       #FCD34D;
   --color-harvest-hover: #FDE68A;
   --color-harvest-muted: #D97706;
-  --color-harvest-bg:    #1C1600;
+  --color-harvest-bg:    #1E1608;
 
   --color-sky:           #38BDF8;
   --color-sky-hover:     #7DD3FC;
   --color-sky-muted:     #0EA5E9;
-  --color-sky-bg:        #001524;
+  --color-sky-bg:        #0B1A24;
 
-  --color-soil:          #060F08;
-  --color-soil-mid:      #0D1F12;
+  --color-soil:          #06070A;
+  --color-soil-mid:      #0D1219;
 
-  /* ── Sidebar dark — near-black forest, bright green accents ── */
-  --color-sidebar:         #0C1A11;
-  --color-sidebar-hover:   #122216;
-  --color-sidebar-text:    rgba(240, 253, 244, 0.92);
-  --color-sidebar-muted:   rgba(240, 253, 244, 0.42);
-  --color-sidebar-divider: rgba(255, 255, 255, 0.07);
+  /* ── Sidebar dark — near-black graphite, distinct from page bg, green only as accent ── */
+  --color-sidebar:         #0C0D10;
+  --color-sidebar-hover:   #17191D;
+  --color-sidebar-text:    rgba(255, 255, 255, 0.92);
+  --color-sidebar-muted:   rgba(255, 255, 255, 0.45);
+  --color-sidebar-divider: rgba(255, 255, 255, 0.08);
   --color-sidebar-active:  rgba(74, 222, 128, 0.14);
   --color-sidebar-badge:   rgba(74, 222, 128, 0.22);
 
-  --color-text:          #F0FDF4;
-  --color-text-muted:    #A3B8A7;
-  --color-text-hint:     #5A7A5E;
-  --color-text-on-dark:  #F0FDF4;
+  --color-text:          #F2F3F5;
+  --color-text-muted:    #9CA3AF;
+  --color-text-hint:     #6B7280;
+  --color-text-on-dark:  #F2F3F5;
 
   --color-border:        rgba(255, 255, 255, 0.08);
   --color-border-mid:    rgba(255, 255, 255, 0.13);
   --color-border-strong: rgba(255, 255, 255, 0.20);
 
   --color-success:       #4ADE80;
-  --color-success-bg:    #052E16;
-  --color-success-border:#166534;
+  --color-success-bg:    #0F2418;
+  --color-success-border:#15803D;
 
   --color-warning:       #FCD34D;
-  --color-warning-bg:    #1C1400;
+  --color-warning-bg:    #1E1608;
   --color-warning-border:#78350F;
 
   --color-danger:        #F87171;
-  --color-danger-bg:     #2D0707;
+  --color-danger-bg:     #241010;
   --color-danger-border: #7F1D1D;
 
   --color-info:          #38BDF8;
-  --color-info-bg:       #001A2E;
+  --color-info-bg:       #0B1A24;
   --color-info-border:   #0C4A6E;
 
   --color-offline:       #9CA3AF;
   --color-offline-bg:    #1F2937;
   --color-syncing:       #FCD34D;
-  --color-syncing-bg:    #1C1400;
+  --color-syncing-bg:    #1E1608;
   --color-synced:        #4ADE80;
-  --color-synced-bg:     #052E16;
+  --color-synced-bg:     #0F2418;
 
   --shadow-card:  0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-modal: 0 8px 40px rgba(0, 0, 0, 0.70);
@@ -257,8 +259,8 @@ body {
   min-height: 100vh;
 }
 .dark body, .dark {
-  background-image: radial-gradient(ellipse at 0% 0%, rgba(34,197,94,0.08) 0%, transparent 55%),
-                    radial-gradient(ellipse at 100% 100%, rgba(14,165,233,0.05) 0%, transparent 55%);
+  background-image: radial-gradient(ellipse at 0% 0%, rgba(34,197,94,0.05) 0%, transparent 55%),
+                    radial-gradient(ellipse at 100% 100%, rgba(14,165,233,0.04) 0%, transparent 55%);
 }
 
 /* Performance: Use CSS containment for isolated components */
@@ -379,7 +381,7 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97) translateZ(0); }
 }
 
 .dark .skeleton {
-  background: #132416;
+  background: #131417;
 }
 
 .dark .skeleton::after {
@@ -403,7 +405,7 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97) translateZ(0); }
 }
 
 .dark .dash-skeleton {
-  background: #0D1F12;
+  background: #131417;
 }
 
 .dark .dash-skeleton::after {
@@ -439,7 +441,7 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97) translateZ(0); }
   border: 1px solid rgba(255, 255, 255, 0.60);
 }
 .dark .card {
-  background: rgba(19, 36, 22, 0.78);
+  background: rgba(19, 20, 23, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 2px 16px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
 }
@@ -453,7 +455,7 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97) translateZ(0); }
   border: 1px solid rgba(255, 255, 255, 0.60);
 }
 .dark .dash-card {
-  background: rgba(19, 36, 22, 0.78);
+  background: rgba(19, 20, 23, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 2px 16px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.25);
 }
@@ -861,7 +863,7 @@ input.auth-input:-webkit-autofill:active {
   border: 1px solid rgba(255, 255, 255, 0.28);
 }
 .dark .glass {
-  background: rgba(13, 31, 18, 0.84);
+  background: rgba(10, 11, 13, 0.84);
   border: 1px solid rgba(255, 255, 255, 0.09);
 }
 
@@ -874,7 +876,7 @@ input.auth-input:-webkit-autofill:active {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 .dark .glass-card {
-  background: rgba(19, 36, 22, 0.80);
+  background: rgba(19, 20, 23, 0.80);
   border: 1px solid rgba(255, 255, 255, 0.09);
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
 }
@@ -887,7 +889,7 @@ input.auth-input:-webkit-autofill:active {
   box-shadow: 0 1px 14px rgba(0, 0, 0, 0.06);
 }
 .dark .glass-topbar {
-  background: rgba(13, 31, 18, 0.88) !important;
+  background: rgba(10, 11, 13, 0.88) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
   box-shadow: 0 1px 14px rgba(0, 0, 0, 0.30);
 }
@@ -900,19 +902,19 @@ input.auth-input:-webkit-autofill:active {
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.07) !important;
 }
 .dark .glass-nav {
-  background: rgba(13, 31, 18, 0.93) !important;
+  background: rgba(10, 11, 13, 0.93) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35) !important;
 }
 
-/* Deep forest emerald sidebar — light: rich emerald, dark: near-black with green depth */
+/* Sidebar — light: rich emerald brand colour, dark: near-black graphite (green kept as an accent, not a wash) */
 .glass-sidebar {
   background: #1C3D2A !important;
   border-right: 1px solid rgba(255, 255, 255, 0.09) !important;
   box-shadow: 2px 0 32px rgba(0, 0, 0, 0.22);
 }
 .dark .glass-sidebar {
-  background: #0C1A11 !important;
+  background: #0C0D10 !important;
   border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
   box-shadow: 2px 0 32px rgba(0, 0, 0, 0.55);
 }
@@ -926,7 +928,7 @@ input.auth-input:-webkit-autofill:active {
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 .dark .glass-modal {
-  background: rgba(13, 31, 18, 0.90);
+  background: rgba(15, 16, 19, 0.90);
   border: 1px solid rgba(255, 255, 255, 0.10);
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
 }

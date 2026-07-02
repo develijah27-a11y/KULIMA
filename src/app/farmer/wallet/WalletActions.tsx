@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2 } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -57,7 +58,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
   if (success) {
     return (
       <div style={{ textAlign: 'center', padding: '20px 0' }}>
-        <p style={{ fontSize: 32, marginBottom: 8 }}>✅</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, color: 'var(--color-success)' }}><CheckCircle2 size={40} /></div>
         <p style={{ color: C.text, fontWeight: 700, fontSize: 14, marginBottom: 4 }}>
           {mode === 'deposit' ? 'Deposit Initiated' : 'Withdrawal Sent'}
         </p>

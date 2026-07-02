@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { AlertTriangle, Check } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -126,9 +127,9 @@ export function CreateListingForm({ marketPrice, farmerDistrict }: Props) {
           />
           {marketPrice && price > 0 && (
             <p style={{ fontSize: 11, marginTop: 4, color: low ? 'var(--color-danger)' : high ? 'var(--color-harvest)' : 'var(--color-success)', fontWeight: 600 }}>
-              {low  ? `⚠ ${Math.round((price / marketPrice - 1) * 100)}% below market — buyers may hesitate` :
-               high ? `↑ ${Math.round((price / marketPrice - 1) * 100)}% above market` :
-               `✓ Within market range (UGX ${marketPrice.toLocaleString()}/kg)`}
+              {low  ? <><AlertTriangle size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />{Math.round((price / marketPrice - 1) * 100)}% below market — buyers may hesitate</> :
+               high ? <>↑ {Math.round((price / marketPrice - 1) * 100)}% above market</> :
+               <><Check size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />Within market range (UGX {marketPrice.toLocaleString()}/kg)</>}
             </p>
           )}
         </div>
@@ -176,7 +177,7 @@ export function CreateListingForm({ marketPrice, farmerDistrict }: Props) {
 
       {error && (
         <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, border: '1px solid var(--color-danger)' }}>
-          <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>⚠ {error}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-danger)', fontSize: 13 }}><AlertTriangle size={13} />{error}</div>
         </div>
       )}
 

@@ -31,12 +31,12 @@ export default async function GeoMapPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Outbreak GeoMap 🗺️</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Outbreak GeoMap</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Disease case distribution across Uganda districts</p>
       </div>
 
       <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 16, padding: '28px', textAlign: 'center' }}>
-        <p style={{ fontSize: 36, marginBottom: 12 }}>🗺️</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'rgba(255,255,255,0.5)' }}><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg></div>
         <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Interactive Map Coming Soon</p>
         <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, maxWidth: 320, margin: '0 auto' }}>
           A visual heat map of disease outbreaks by district will be available in the next update.

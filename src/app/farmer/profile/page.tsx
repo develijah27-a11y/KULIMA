@@ -5,6 +5,7 @@ import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { TrustScore } from '@/components/trust/TrustScore';
 import { type VerificationLevel } from '@/lib/trust';
 import { ProfileEditForm } from './ProfileEditForm';
+import { Lock, ArrowUp, Leaf } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -106,7 +107,7 @@ export default async function FarmerProfilePage() {
               }}
             >
               <p className="text-sm font-bold" style={{ color: C.green, margin: 0 }}>
-                {level === 'grey' ? '🔒 Get verified to unlock deals & financing →' : '⬆ Upgrade your verification →'}
+                {level === 'grey' ? <><Lock size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Get verified to unlock deals &amp; financing →</> : <><ArrowUp size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Upgrade your verification →</>}
               </p>
             </Link>
           )}
@@ -142,7 +143,7 @@ export default async function FarmerProfilePage() {
         </div>
         {farms.length === 0 ? (
           <div className="px-5 py-8 text-center">
-            <p className="text-3xl mb-2">🌱</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, color: 'var(--d-muted)' }}><Leaf size={40} /></div>
             <p className="text-sm" style={{ color: C.muted }}>No farms registered yet</p>
             <Link href="/farmer/farm" className="text-xs font-semibold mt-2 inline-block" style={{ color: 'var(--color-primary-hover)', textDecoration: 'none' }}>Add your first farm →</Link>
           </div>

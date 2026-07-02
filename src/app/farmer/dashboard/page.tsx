@@ -131,23 +131,23 @@ async function WeatherCard({ userId }: { userId: string }) {
 
   return (
     <Card>
-      <div className="grid grid-cols-3 divide-x" style={{ borderColor: C.border }}>
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: C.border }}>
         {/* Temperature */}
-        <div className="p-5">
+        <div className="p-4 sm:p-5 min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Current Weather</p>
-          <div className="flex items-end gap-2">
-            <span className="text-4xl font-black" style={{ color: C.text, letterSpacing: '-0.04em' }}>{weather.now.temp}°C</span>
+          <div className="flex items-end gap-2 flex-wrap">
+            <span className="text-3xl sm:text-4xl font-black" style={{ color: C.text, letterSpacing: '-0.04em' }}>{weather.now.temp}°C</span>
             <span className="mb-1"><WeatherIcon code={weather.now.icon} size={32} /></span>
           </div>
           <p className="text-sm capitalize mt-1" style={{ color: C.muted }}>{weather.now.description}</p>
-          <div className="flex gap-4 mt-3">
+          <div className="flex gap-4 mt-3 flex-wrap">
             <span className="text-xs flex items-center gap-1" style={{ color: C.muted }}><Droplets size={11} /> {weather.now.humidity}%</span>
             <span className="text-xs flex items-center gap-1" style={{ color: C.muted }}><Wind size={11} /> {weather.now.wind.toFixed(1)} m/s</span>
           </div>
         </div>
 
         {/* Rain forecast */}
-        <div className="p-5">
+        <div className="p-4 sm:p-5 min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Rain Forecast</p>
           {(() => {
             const rainItem = weather.forecast.find((f) => (f.rain?.['3h'] ?? 0) > 0);
@@ -176,7 +176,7 @@ async function WeatherCard({ userId }: { userId: string }) {
         </div>
 
         {/* Date */}
-        <div className="p-5">
+        <div className="p-4 sm:p-5 min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Today</p>
           <div className="mb-1"><Calendar size={28} strokeWidth={1.5} style={{ color: C.blue }} /></div>
           <p className="text-sm font-bold leading-snug" style={{ color: C.text }}>{todayDate}</p>
@@ -521,8 +521,8 @@ async function FinanceOverview({ userId }: { userId: string }) {
           Finance Overview
         </p>
       </div>
-      <div className="grid grid-cols-3 divide-x" style={{ borderColor: C.border }}>
-        <div className="p-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: C.border }}>
+        <div className="p-4 sm:p-5 min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>AgriScore</p>
           <p className="text-3xl font-black mb-1" style={{ color: scoreColor, letterSpacing: '-0.04em' }}>{score}</p>
           <p className="text-xs font-semibold mb-3" style={{ color: scoreColor }}>{scoreLabel}</p>
@@ -534,7 +534,7 @@ async function FinanceOverview({ userId }: { userId: string }) {
             <span className="text-[10px]" style={{ color: C.muted }}>850</span>
           </div>
         </div>
-        <div className="p-5">
+        <div className="p-4 sm:p-5 min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Loan Eligibility</p>
           <p className="text-base font-bold mb-1" style={{ color: scoreColor }}>{eligibility}</p>
           <p className="text-xs mb-3" style={{ color: C.muted }}>You can apply for a loan</p>
@@ -542,7 +542,7 @@ async function FinanceOverview({ userId }: { userId: string }) {
             <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, background: scoreColor, borderRadius: '9999px' }} />
           </div>
         </div>
-        <div className="p-5">
+        <div className="p-4 sm:p-5 min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Recommended Limit</p>
           <p className="text-xl font-black mb-1" style={{ color: C.text, letterSpacing: '-0.03em' }}>
             UGX {loanLimit}

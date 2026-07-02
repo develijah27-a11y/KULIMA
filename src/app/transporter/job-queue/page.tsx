@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, X } from 'lucide-react';
+import { CheckCircle2, X, Truck, Zap, Snowflake, MapPin, Calendar, Map } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -13,10 +13,10 @@ const C = {
   red: 'var(--color-danger)',
 };
 
-const TYPE_META: Record<string, { icon: string; label: string; color: string; bg: string }> = {
-  standard: { icon: '🚛', label: 'Standard',    color: C.green, bg: C.greenBg },
-  fast:     { icon: '⚡', label: 'Express',     color: C.amber, bg: C.amberBg },
-  cold:     { icon: '❄️', label: 'Cold Chain',  color: C.blue,  bg: C.blueBg  },
+const TYPE_META: Record<string, { icon: ReactNode; label: string; color: string; bg: string }> = {
+  standard: { icon: <Truck size={22} />,    label: 'Standard',    color: C.green, bg: C.greenBg },
+  fast:     { icon: <Zap size={22} />,      label: 'Express',     color: C.amber, bg: C.amberBg },
+  cold:     { icon: <Snowflake size={22} />, label: 'Cold Chain',  color: C.blue,  bg: C.blueBg  },
 };
 
 const DISTRICTS = [
@@ -83,7 +83,7 @@ function JobCard({ job, onAccepted }: { job: Job; onAccepted: (id: string) => vo
       <div style={{ padding: '18px 20px' }}>
         {/* Route header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 14 }}>
-          <div style={{ width: 46, height: 46, borderRadius: 14, background: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+          <div style={{ width: 46, height: 46, borderRadius: 14, background: meta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: meta.color, flexShrink: 0 }}>
             {meta.icon}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -100,7 +100,7 @@ function JobCard({ job, onAccepted }: { job: Job; onAccepted: (id: string) => vo
               {job.distance_km ? ` · ${job.distance_km} km` : ''}
             </p>
             {job.pickup_location && (
-              <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>📍 {job.pickup_location}</p>
+              <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 3 }}><MapPin size={11} />{job.pickup_location}</p>
             )}
           </div>
 
@@ -117,12 +117,12 @@ function JobCard({ job, onAccepted }: { job: Job; onAccepted: (id: string) => vo
 
         {/* Date + notes */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
-          <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 999, background: 'var(--color-surface-2)', color: C.muted, fontWeight: 600 }}>
-            📅 {new Date(job.pickup_date).toLocaleDateString('en-UG', { weekday: 'short', day: 'numeric', month: 'short' })}
+          <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 999, background: 'var(--color-surface-2)', color: C.muted, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Calendar size={11} />{new Date(job.pickup_date).toLocaleDateString('en-UG', { weekday: 'short', day: 'numeric', month: 'short' })}
           </span>
           {job.distance_km && (
-            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 999, background: 'var(--color-surface-2)', color: C.muted, fontWeight: 600 }}>
-              🗺 {job.distance_km} km
+            <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 999, background: 'var(--color-surface-2)', color: C.muted, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Map size={11} />{job.distance_km} km
             </span>
           )}
         </div>
@@ -146,7 +146,7 @@ function JobCard({ job, onAccepted }: { job: Job; onAccepted: (id: string) => vo
             letterSpacing: '-0.01em',
           }}
         >
-          {pending ? '⏳ Claiming job…' : `🚛 Accept Job — UGX ${Math.round(job.driver_earnings ?? job.estimated_fare ?? 0).toLocaleString()}`}
+          {pending ? 'Claiming job…' : <><Truck size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 6 }} />Accept Job — UGX {Math.round(job.driver_earnings ?? job.estimated_fare ?? 0).toLocaleString()}</>}
         </button>
       </div>
     </div>
@@ -212,9 +212,9 @@ export default function JobQueuePage() {
           <select value={type} onChange={e => setType(e.target.value)}
             style={{ flex: 1, minWidth: 110, padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13 }}>
             <option value="">All Types</option>
-            <option value="standard">🚛 Standard</option>
-            <option value="fast">⚡ Express</option>
-            <option value="cold">❄️ Cold Chain</option>
+            <option value="standard">Standard</option>
+            <option value="fast">Express</option>
+            <option value="cold">Cold Chain</option>
           </select>
           <input value={cargo} onChange={e => setCargo(e.target.value)} placeholder="Cargo (e.g. maize)"
             style={{ flex: 1, minWidth: 110, padding: '9px 12px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13 }} />
@@ -234,7 +234,7 @@ export default function JobQueuePage() {
         </div>
       ) : jobs.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: '52px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>🚛</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><Truck size={48} /></div>
           <p style={{ fontWeight: 800, fontSize: 16, color: C.text }}>No open jobs right now</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>New jobs appear here when farmers confirm orders.</p>
           <button onClick={loadJobs} style={{ marginTop: 16, padding: '10px 20px', background: C.green, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>

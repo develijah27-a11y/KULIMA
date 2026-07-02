@@ -84,7 +84,7 @@ async function FlagList({ status, sev }: { status: string; sev: string }) {
   if (rows.length === 0) {
     return (
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 40, marginBottom: 10 }}>🛡️</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg></div>
         <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>No fraud flags</p>
         <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
           {status || sev ? 'Try a different filter.' : 'The platform looks clean.'}

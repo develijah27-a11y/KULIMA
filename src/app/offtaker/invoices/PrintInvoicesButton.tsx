@@ -1,5 +1,7 @@
 'use client';
 
+import { Printer } from 'lucide-react';
+
 export function PrintInvoicesButton() {
   return (
     <button
@@ -18,7 +20,7 @@ export function PrintInvoicesButton() {
         gap: 6,
       }}
     >
-      🖨️ Print / Save PDF
+      <Printer size={14} />Print / Save PDF
     </button>
   );
 }

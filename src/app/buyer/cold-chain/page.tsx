@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { Snowflake } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -50,7 +51,7 @@ export default async function BuyerColdChainPage() {
         </div>
         <Link href="/buyer/deliveries/new"
           style={{ padding: '9px 16px', background: C.blue, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-          ❄️ Book Cold
+          <Snowflake size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Book Cold
         </Link>
       </div>
 
@@ -74,7 +75,7 @@ export default async function BuyerColdChainPage() {
       {active.length > 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
           <div style={{ padding: '12px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span>❄️</span>
+            <span style={{ display: 'flex', color: 'var(--color-sky)' }}><Snowflake size={16} /></span>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Active Cold Deliveries</p>
           </div>
           {active.map((d: any, i: number) => {
@@ -88,7 +89,7 @@ export default async function BuyerColdChainPage() {
                   <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
                 </div>
                 <p style={{ fontSize: 12, color: C.muted, margin: '0 0 3px' }}>
-                  ❄️ {d.cargo_type ?? 'Perishable'} · {d.cargo_kg} kg · {d.distance_km ? `${d.distance_km} km` : ''}
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4, color: 'var(--color-sky)' }}><Snowflake size={12} /></span>{d.cargo_type ?? 'Perishable'} · {d.cargo_kg} kg · {d.distance_km ? `${d.distance_km} km` : ''}
                 </p>
                 {d.transporter && (
                   <p style={{ fontSize: 11, color: C.blue, margin: 0 }}>
@@ -128,7 +129,7 @@ export default async function BuyerColdChainPage() {
 
       {rows.length === 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>🧊</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><Snowflake size={48} /></div>
           <p style={{ fontWeight: 700, fontSize: 16, color: C.text, marginBottom: 6 }}>No cold chain deliveries yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginBottom: 18 }}>Book a cold chain delivery to transport perishables like fish, dairy, or fresh produce while maintaining temperature.</p>
           <Link href="/buyer/deliveries/new"

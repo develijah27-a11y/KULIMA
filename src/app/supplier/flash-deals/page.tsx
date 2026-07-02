@@ -337,7 +337,7 @@ export default function FlashDealsPage() {
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 6 }}>No active flash deals</p>
           <p style={{ fontSize: 13, color: C.muted }}>
             {candidates.length > 0
-              ? 'Click "⚡ New Deal" to launch a time-limited promotion.'
+              ? 'Click "New Deal" to launch a time-limited promotion.'
               : 'Add products to your catalogue and restock before running flash deals.'}
           </p>
         </div>

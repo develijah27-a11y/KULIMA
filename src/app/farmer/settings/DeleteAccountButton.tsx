@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 
 export function DeleteAccountButton() {
   const [confirming, setConfirming] = useState(false);
@@ -71,7 +72,7 @@ export function DeleteAccountButton() {
         borderTop: '1px solid var(--d-border)',
       }}
     >
-      <span style={{ fontSize: 20, width: 36, textAlign: 'center', flexShrink: 0 }}>🗑️</span>
+      <span style={{ width: 36, display: 'flex', justifyContent: 'center', flexShrink: 0, color: 'var(--color-danger)' }}><Trash2 size={20} /></span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>
           Delete Account

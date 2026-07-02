@@ -104,7 +104,7 @@ export default async function VerifyPage() {
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '24px' }}>
         {currentLevel === 'gold' ? (
           <div style={{ textAlign: 'center', padding: '32px 0' }}>
-            <p style={{ fontSize: 48 }}>🌟</p>
+            <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--color-harvest)' }}><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             <p style={{ color: C.text, fontWeight: 700, fontSize: 18, margin: '12px 0 4px' }}>Enterprise Verified</p>
             <p style={{ color: C.muted, fontSize: 14 }}>You have the highest verification level on Kulima.</p>
           </div>

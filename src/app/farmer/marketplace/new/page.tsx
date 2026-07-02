@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { CreateListingForm } from './CreateListingForm';
+import { ShieldCheck } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -49,7 +50,7 @@ export default async function NewListingPage() {
 
       {/* Price shield info */}
       <div style={{ background: 'var(--color-primary-bg)', border: '1px solid var(--color-primary-muted)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 10 }}>
-        <span style={{ fontSize: 18, flexShrink: 0 }}>🛡</span>
+        <ShieldCheck size={18} style={{ flexShrink: 0, color: 'var(--color-success)' }} />
         <p style={{ fontSize: 13, color: 'var(--color-success)', margin: 0 }}>
           <strong>Price protection active.</strong> Buyers cannot offer below 70% of your asking price. We also alert you if your price is significantly below market.
         </p>

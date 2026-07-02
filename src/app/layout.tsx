@@ -46,7 +46,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
         <meta name="theme-color" content="#22C55E" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0D1F12" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#0A0B0D" media="(prefers-color-scheme: dark)" />
         {/* Preconnect to external origins — reduces DNS lookup time */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

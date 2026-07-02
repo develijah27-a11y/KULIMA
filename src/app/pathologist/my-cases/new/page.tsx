@@ -52,7 +52,7 @@ export default function NewCasePage() {
         <Link href="/pathologist/my-cases" style={{ fontSize: 13, color: C.muted, textDecoration: 'none' }}>← My Cases</Link>
       </div>
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>File Disease Case 📝</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>File Disease Case</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Document a disease case for tracking and follow-up</p>
       </div>
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16, background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px' }}>

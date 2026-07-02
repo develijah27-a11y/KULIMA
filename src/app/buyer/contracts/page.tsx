@@ -58,7 +58,7 @@ export default async function BuyerContractsPage() {
 
       {rows.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>📄</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></div>
           <p style={{ fontWeight: 800, fontSize: 16, color: C.text, marginBottom: 6 }}>No contracts yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginBottom: 8, maxWidth: 340, margin: '0 auto 20px' }}>
             Forward contracts let you lock in prices with farmers before harvest — reducing price risk and guaranteeing supply.

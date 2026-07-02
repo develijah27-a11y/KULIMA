@@ -22,7 +22,7 @@ export default async function PathologistProfilePage() {
   return (
     <div className="max-w-xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Professional Profile 🩺</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Professional Profile</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Your pathologist credentials and public profile</p>
       </div>
 

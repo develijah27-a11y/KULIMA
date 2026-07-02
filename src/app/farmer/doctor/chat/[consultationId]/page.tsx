@@ -46,7 +46,7 @@ export default async function FarmerConsultationChatPage({
           Consultation Chat
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--d-muted)' }}>
-          {consultation.type === 'farm_visit' ? '🚗 Farm Visit' : '📱 Remote'} · {consultation.status}
+          {consultation.type === 'farm_visit' ? 'Farm Visit' : 'Remote'} · {consultation.status}
         </p>
       </div>
       <DirectMessageClient

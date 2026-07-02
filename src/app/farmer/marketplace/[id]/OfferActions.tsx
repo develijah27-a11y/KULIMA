@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState, useTransition } from 'react';
+import { Check, X, ArrowUpDown } from 'lucide-react';
 
 const C = { border: 'var(--d-border)', muted: 'var(--d-muted)', green: 'var(--color-primary)' };
 
@@ -99,21 +100,21 @@ export function OfferActions({ offerId, askingPrice, offeredPrice, onDone }: Pro
         onClick={() => startTransition(() => act('accept'))}
         style={{ padding: '7px 14px', background: 'var(--color-success-bg)', color: 'var(--color-success)', border: '1px solid var(--color-primary-muted)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
       >
-        ✓ Accept UGX {offeredPrice.toLocaleString()}
+        <Check size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Accept UGX {offeredPrice.toLocaleString()}
       </button>
       <button
         onClick={() => setMode('counter')}
         disabled={isPending}
         style={{ padding: '7px 14px', background: 'var(--color-sky-bg)', color: '#0284C7', border: '1px solid #BFDBFE', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
       >
-        ↕ Counter
+        <ArrowUpDown size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Counter
       </button>
       <button
         onClick={() => setMode('reject')}
         disabled={isPending}
         style={{ padding: '7px 14px', background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
       >
-        ✗ Reject
+        <X size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Reject
       </button>
     </div>
   );

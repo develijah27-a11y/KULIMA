@@ -33,7 +33,7 @@ export default async function PathologistConsultationChatPage({
       <div style={{ marginBottom: 16, padding: '12px 16px', background: 'var(--color-primary-bg)', borderRadius: 12, display: 'flex', gap: 14, justifyContent: 'space-between', flexWrap: 'wrap' }}>
         <div>
           <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--color-primary)', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            {consultation.type === 'farm_visit' ? '🚗 Farm Visit Request' : '📱 Remote Consultation'}
+            {consultation.type === 'farm_visit' ? 'Farm Visit Request' : 'Remote Consultation'}
           </p>
           <p style={{ fontSize: 13, color: 'var(--d-text)', margin: 0 }}>
             {farmer?.location ?? consultation.farmer_district ?? 'Unknown district'}

@@ -1,6 +1,7 @@
 ﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { WalletActions } from './WalletActions';
+import { Banknote } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -133,7 +134,7 @@ export default async function FarmerWalletPage() {
 
         {txns.length === 0 ? (
           <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-            <p style={{ fontSize: 32, marginBottom: 8 }}>💸</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, color: 'var(--d-muted)' }}><Banknote size={40} /></div>
             <p style={{ color: C.muted, fontSize: 13 }}>No transactions yet. Deposit to get started.</p>
           </div>
         ) : (

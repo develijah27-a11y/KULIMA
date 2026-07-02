@@ -105,7 +105,7 @@ export default async function AdminUsersPage({
           </button>
           {q && (
             <a href={filterUrl({ q: '' })} style={{ padding: '9px 14px', background: 'var(--color-surface-2)', borderRadius: 10, fontSize: 13, color: C.muted, textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-              Clear ✕
+              Clear ×
             </a>
           )}
         </form>
@@ -139,7 +139,7 @@ export default async function AdminUsersPage({
 
         {rows.length === 0 ? (
           <div className="py-16 text-center">
-            <p className="text-4xl mb-3">🔍</p>
+            <div className="flex justify-center mb-3" style={{ color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
             <p className="text-sm font-semibold" style={{ color: C.text }}>No users found</p>
             <p className="text-xs mt-1" style={{ color: C.muted }}>Try adjusting your search or role filter</p>
           </div>

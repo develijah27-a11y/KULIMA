@@ -1,11 +1,12 @@
 ﻿'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, type ReactNode } from 'react';
 import {
   CROP_PROFILES, COST_CATEGORIES, COST_LABELS, SEASONS,
   getDefaultCosts, calculateFarmFinancials,
   type FarmCalcResult,
 } from '@/lib/farm-finance';
+import { TrendingUp, CheckCircle2, AlertTriangle, XCircle, Lightbulb, Save } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -15,11 +16,11 @@ const C = {
   shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)',
 };
 
-const VERDICT_CFG = {
-  highly_profitable: { bg: 'var(--color-primary-bg)',  border: 'var(--color-primary-muted)', color: 'var(--color-success)', icon: '🚀', label: 'Highly Profitable' },
-  profitable:        { bg: 'var(--color-success-bg)',  border: 'var(--color-success)',        color: 'var(--color-success)', icon: '✅', label: 'Profitable'        },
-  marginal:          { bg: 'var(--color-harvest-bg)',  border: 'var(--color-harvest)',        color: 'var(--color-harvest)', icon: '⚠️', label: 'Marginal'          },
-  loss:              { bg: 'var(--color-danger-bg)',   border: 'var(--color-danger)',         color: 'var(--color-danger)',  icon: '❌', label: 'Likely a Loss'     },
+const VERDICT_CFG: Record<string, { bg: string; border: string; color: string; icon: ReactNode; label: string }> = {
+  highly_profitable: { bg: 'var(--color-primary-bg)',  border: 'var(--color-primary-muted)', color: 'var(--color-success)', icon: <TrendingUp size={24} />,    label: 'Highly Profitable' },
+  profitable:        { bg: 'var(--color-success-bg)',  border: 'var(--color-success)',        color: 'var(--color-success)', icon: <CheckCircle2 size={24} />,  label: 'Profitable'        },
+  marginal:          { bg: 'var(--color-harvest-bg)',  border: 'var(--color-harvest)',        color: 'var(--color-harvest)', icon: <AlertTriangle size={24} />, label: 'Marginal'          },
+  loss:              { bg: 'var(--color-danger-bg)',   border: 'var(--color-danger)',         color: 'var(--color-danger)',  icon: <XCircle size={24} />,       label: 'Likely a Loss'     },
 };
 
 const NUM_INPUTS: Record<string, string> = {
@@ -146,7 +147,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
         {/* ── Crop & Farm Setup ── */}
         <section style={{ background: C.cardBg, borderRadius: '16px', boxShadow: C.shadow, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-primary-bg)' }}>
-            <p style={{ fontSize: '14px', fontWeight: 800, color: C.green }}>🌾 Step 1 — Crop & Farm Setup</p>
+            <p style={{ fontSize: '14px', fontWeight: 800, color: C.green }}>Step 1 — Crop &amp; Farm Setup</p>
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
@@ -171,7 +172,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                         cursor: 'pointer',
                       }}
                     >
-                      {p.emoji} {p.name}
+                      {p.name}
                     </button>
                   );
                 })}
@@ -263,14 +264,14 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                     cursor: 'pointer',
                   }}
                 >
-                  💧 {irrigated ? 'Irrigated ✓' : 'Rain-fed'}
+                  {irrigated ? 'Irrigated' : 'Rain-fed'}
                 </button>
               </div>
             </div>
 
             {/* Agronomy tip */}
             <div style={{ background: 'var(--color-harvest-bg)', borderRadius: '10px', padding: '10px 14px', display: 'flex', gap: '8px' }}>
-              <span style={{ fontSize: '16px', flexShrink: 0 }}>💡</span>
+              <span style={{ display: 'flex', flexShrink: 0, color: 'var(--color-harvest)' }}><Lightbulb size={16} /></span>
               <p style={{ fontSize: '12px', color: 'var(--color-harvest)', lineHeight: '1.5' }}>{profile.agronomy}</p>
             </div>
           </div>
@@ -279,20 +280,20 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
         {/* ── Input Costs ── */}
         <section style={{ background: C.cardBg, borderRadius: '16px', boxShadow: C.shadow, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-sky-bg)' }}>
-            <p style={{ fontSize: '14px', fontWeight: 800, color: C.blue }}>💸 Step 2 — Input Costs</p>
+            <p style={{ fontSize: '14px', fontWeight: 800, color: C.blue }}>Step 2 — Input Costs</p>
             <p style={{ fontSize: '12px', color: C.muted, marginTop: '2px' }}>
               Pre-filled with Uganda averages for {ha} ha · Edit to match your actual costs
             </p>
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '0' }}>
             {/* Group: Seeds */}
-            <CostGroup label="Seeds & Planting Material" icon="🌱" costKeys={['seeds']} costs={costs} setCosts={setCosts} inp={inp} />
-            <CostGroup label="Land Preparation" icon="🚜" costKeys={['landPrep']} costs={costs} setCosts={setCosts} inp={inp} />
-            <CostGroup label="Fertilizers" icon="💊" costKeys={['dap', 'can', 'lime']} costs={costs} setCosts={setCosts} inp={inp} />
-            <CostGroup label="Crop Protection" icon="🧴" costKeys={['herbicide', 'fungicide', 'pesticide']} costs={costs} setCosts={setCosts} inp={inp} />
-            <CostGroup label="Labor" icon="👷" costKeys={['laborPlanting', 'laborWeeding', 'laborHarvest', 'laborProcessing']} costs={costs} setCosts={setCosts} inp={inp} />
-            <CostGroup label="Transport & Storage" icon="🚛" costKeys={['transport', 'packaging', 'irrigation', 'storage']} costs={costs} setCosts={setCosts} inp={inp} />
-            <CostGroup label="Other" icon="➕" costKeys={['insurance', 'other']} costs={costs} setCosts={setCosts} inp={inp} />
+            <CostGroup label="Seeds & Planting Material" costKeys={['seeds']} costs={costs} setCosts={setCosts} inp={inp} />
+            <CostGroup label="Land Preparation" costKeys={['landPrep']} costs={costs} setCosts={setCosts} inp={inp} />
+            <CostGroup label="Fertilizers" costKeys={['dap', 'can', 'lime']} costs={costs} setCosts={setCosts} inp={inp} />
+            <CostGroup label="Crop Protection" costKeys={['herbicide', 'fungicide', 'pesticide']} costs={costs} setCosts={setCosts} inp={inp} />
+            <CostGroup label="Labor" costKeys={['laborPlanting', 'laborWeeding', 'laborHarvest', 'laborProcessing']} costs={costs} setCosts={setCosts} inp={inp} />
+            <CostGroup label="Transport & Storage" costKeys={['transport', 'packaging', 'irrigation', 'storage']} costs={costs} setCosts={setCosts} inp={inp} />
+            <CostGroup label="Other" costKeys={['insurance', 'other']} costs={costs} setCosts={setCosts} inp={inp} />
 
             {/* Custom items */}
             {customCosts.map((item, i) => (
@@ -343,7 +344,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
         {/* ── Market price input ── */}
         <section style={{ background: C.cardBg, borderRadius: '16px', boxShadow: C.shadow, overflow: 'hidden' }}>
           <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-harvest-bg)' }}>
-            <p style={{ fontSize: '14px', fontWeight: 800, color: C.amber }}>📊 Step 3 — Market & Selling Price</p>
+            <p style={{ fontSize: '14px', fontWeight: 800, color: C.amber }}>Step 3 — Market &amp; Selling Price</p>
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
@@ -382,7 +383,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
             {/* Verdict */}
             <div style={{ borderRadius: '16px', padding: '20px', background: verdictCfg!.bg, border: `2px solid ${verdictCfg!.border}` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '24px' }}>{verdictCfg!.icon}</span>
+                <span style={{ display: 'flex', color: verdictCfg!.color }}>{verdictCfg!.icon}</span>
                 <p style={{ fontSize: '16px', fontWeight: 800, color: verdictCfg!.color }}>{verdictCfg!.label}</p>
               </div>
               <p style={{ fontSize: '13px', color: C.text, lineHeight: '1.5' }}>{result.verdictMessage}</p>
@@ -427,8 +428,8 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                 { label: 'Profit Margin',          value: marketPriceNum > 0 ? `${result.marginPct.realistic}%` : '—', color: result.marginPct.realistic >= 0 ? C.greenMed : C.red },
                 { label: 'Return on Investment',   value: `${result.roiPct}%`,                          color: result.roiPct >= 0 ? C.greenMed : C.red },
                 { label: 'Cost per kg',            value: `UGX ${fmt(result.costPerKgRealistic)}/kg`,   color: C.text },
-                { label: '⚠ Break-even Price',    value: `UGX ${fmt(result.breakEvenPricePerKg)}/kg`, color: C.amber },
-                { label: '✅ Suggested Sell Price', value: `UGX ${fmt(result.suggestedPricePerKg)}/kg`, color: C.blue, big: true },
+                { label: 'Break-even Price',    value: `UGX ${fmt(result.breakEvenPricePerKg)}/kg`, color: C.amber },
+                { label: 'Suggested Sell Price', value: `UGX ${fmt(result.suggestedPricePerKg)}/kg`, color: C.blue, big: true },
               ].map(({ label, value, color, big }, i) => (
                 <div
                   key={label}
@@ -436,7 +437,7 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                     padding: big ? '12px 16px' : '10px 16px',
                     borderBottom: i < 7 ? `1px solid ${C.border}` : 'none',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: label.includes('Suggested') ? 'var(--color-sky-bg)' : label.includes('break-even') || label.includes('Break-even') ? 'var(--color-harvest-bg)' : 'transparent',
+                    background: label.includes('Suggested') ? 'var(--color-sky-bg)' : label.includes('Break-even') ? 'var(--color-harvest-bg)' : 'transparent',
                   }}
                 >
                   <p style={{ fontSize: '12px', fontWeight: 600, color: C.muted }}>{label}</p>
@@ -477,12 +478,12 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
                 width: '100%',
               }}
             >
-              {saved ? '✓ Saved to Farm Plans' : saving ? 'Saving…' : '💾 Save This Plan'}
+              {saved ? <><CheckCircle2 size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 6 }} />Saved to Farm Plans</> : saving ? 'Saving…' : <><Save size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 6 }} />Save This Plan</>}
             </button>
           </>
         ) : (
           <div style={{ background: C.cardBg, borderRadius: '16px', boxShadow: C.shadow, padding: '40px 24px', textAlign: 'center' }}>
-            <p style={{ fontSize: '32px', marginBottom: '12px' }}>🧮</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg></div>
             <p style={{ fontSize: '15px', fontWeight: 700, color: C.text, marginBottom: '8px' }}>Results appear here</p>
             <p style={{ fontSize: '13px', color: C.muted, lineHeight: '1.5' }}>Fill in your farm details and costs — results update instantly</p>
           </div>
@@ -503,10 +504,9 @@ export function CalculatorClient({ marketPrices, primaryCrop }: Props) {
 // ─── Cost group sub-component ───────────────────────────────────────────────
 
 function CostGroup({
-  label, icon, costKeys, costs, setCosts, inp,
+  label, costKeys, costs, setCosts, inp,
 }: {
   label: string;
-  icon: string;
   costKeys: string[];
   costs: Record<string, string>;
   setCosts: React.Dispatch<React.SetStateAction<Record<string, string>>>;
@@ -527,7 +527,7 @@ function CostGroup({
         }}
       >
         <span style={{ fontSize: '13px', fontWeight: 700, color: C.text }}>
-          {icon} {label}
+          {label}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {groupTotal > 0 && (

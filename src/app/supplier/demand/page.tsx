@@ -48,7 +48,7 @@ export default async function SupplierDemandPage() {
     <div className="max-w-4xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-          Demand Intelligence 📡
+          Demand Intelligence
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>
           Live signal from {rows.length} active farmer listings — stock these inputs to match market demand
@@ -113,7 +113,7 @@ export default async function SupplierDemandPage() {
 
       {rows.length === 0 && (
         <div style={{ textAlign: 'center', padding: '60px 24px', background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
-          <p style={{ fontSize: 40, marginBottom: 12 }}>📡</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No market data yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Demand intelligence will appear as farmers create listings.</p>
         </div>

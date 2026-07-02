@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Polyline, Polygon } from 'leaflet';
+import { MapPin, Check } from 'lucide-react';
 
 interface Props {
   onBoundaryChange: (coords: [number, number][], areaHa: number) => void;
@@ -179,7 +180,7 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
         {!walking ? (
           <button type="button" onClick={startWalk} disabled={!mapReady}
             style={{ padding: '9px 16px', background: mapReady ? 'var(--color-primary)' : 'var(--color-surface-2)', color: mapReady ? '#fff' : 'var(--d-muted)', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: mapReady ? 'pointer' : 'not-allowed' }}>
-            📍 {mapReady ? 'Start GPS Walk' : 'Loading map…'}
+            <MapPin size={13} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />{mapReady ? 'Start GPS Walk' : 'Loading map…'}
           </button>
         ) : (
           <button type="button" onClick={stopWalk}
@@ -197,14 +198,14 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
 
         {areaHa > 0 && (
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-success)', marginLeft: 4 }}>
-            ✓ {areaHa.toFixed(2)} hectares
+            <Check size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />{areaHa.toFixed(2)} hectares
           </span>
         )}
       </div>
 
       {status && (
         <p style={{ fontSize: 12, color: walking ? 'var(--color-harvest)' : 'var(--color-success)', fontWeight: 600, marginBottom: 8 }}>
-          {walking && <span style={{ marginRight: 6 }}>🔴</span>}{status}
+          {walking && <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--color-danger)', marginRight: 6, verticalAlign: 'middle' }} />}{status}
         </p>
       )}
       {error && <p style={{ fontSize: 12, color: 'var(--color-danger)', marginBottom: 8 }}>{error}</p>}

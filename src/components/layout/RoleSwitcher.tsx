@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Settings, Leaf, ShoppingCart, Truck, Store, Microscope, Package, Users, Loader2 } from 'lucide-react';
 
 const SIDEBAR_LIGHT = '#1C3D2A';
-const SIDEBAR_DARK  = '#0C1A11';
+const SIDEBAR_DARK  = '#0C0D10';
 
 function getSidebarBg() {
   if (typeof window === 'undefined') return SIDEBAR_LIGHT;

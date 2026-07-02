@@ -165,7 +165,7 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
         )}
         {!loading && messages.length === 0 && (
           <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-            <p style={{ fontSize: 40, marginBottom: 10 }}>💬</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
             <p style={{ fontWeight: 700, fontSize: 15, color: C.text, marginBottom: 4 }}>No messages yet</p>
             <p style={{ fontSize: 13, color: C.muted }}>Start the conversation — your group members can see messages in real time.</p>
           </div>

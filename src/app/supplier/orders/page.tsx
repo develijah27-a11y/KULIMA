@@ -119,7 +119,7 @@ export default function SupplierOrdersPage() {
           <div className="p-8 text-center" style={{ color: C.muted, fontSize: 14 }}>Loading orders…</div>
         ) : filtered.length === 0 ? (
           <div className="p-10 text-center">
-            <p style={{ fontSize: 32, marginBottom: 12 }}>📭</p>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
             <p style={{ fontWeight: 700, color: C.text, marginBottom: 4 }}>No {tab !== 'all' ? tab : ''} orders</p>
             <p style={{ fontSize: 13, color: C.muted }}>Orders from buyers will appear here</p>
           </div>
@@ -133,7 +133,7 @@ export default function SupplierOrdersPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
                       <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                        🧪
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)' }}><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11l-5 5h13l-5-5V3"/></svg>
                       </div>
                       <div>
                         <p style={{ fontWeight: 700, color: C.text, fontSize: 14, marginBottom: 2 }}>{order.product_name}</p>

@@ -67,7 +67,7 @@ export default async function DeliveryDetailPage({ params }: { params: Promise<{
 
         {delivery.notes && (
           <p style={{ fontSize: 12, color: C.muted, marginTop: 14, padding: '10px 12px', background: '#F9FAFB', borderRadius: 8 }}>
-            📝 {delivery.notes}
+            {delivery.notes}
           </p>
         )}
       </div>

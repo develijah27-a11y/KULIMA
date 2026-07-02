@@ -35,7 +35,7 @@ export default async function UrgentCasesPage() {
 
       {list.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--color-text-muted)', fontSize: 14 }}>
-          No urgent cases right now ✓
+          No urgent cases right now
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { Check, AlertTriangle } from 'lucide-react';
 
 const GPSWalkMap = dynamic(() => import('./GPSWalkMap').then(m => m.GPSWalkMap), {
   ssr: false,
@@ -152,7 +153,7 @@ export function NewFarmForm() {
         <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
           Farm Boundary
           {boundary.length < 3 && <span style={{ color: C.muted, fontWeight: 400, fontSize: 12, marginLeft: 6 }}>(optional — walk your farm with GPS)</span>}
-          {boundary.length >= 3 && <span style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: 12, marginLeft: 6 }}>✓ {boundary.length} points captured</span>}
+          {boundary.length >= 3 && <span style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: 12, marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={11} />{boundary.length} points captured</span>}
         </label>
         <GPSWalkMap onBoundaryChange={onBoundaryChange} />
       </div>
@@ -172,7 +173,7 @@ export function NewFarmForm() {
 
       {error && (
         <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, border: '1px solid var(--color-danger)' }}>
-          <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>⚠ {error}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--color-danger)', fontSize: 13 }}><AlertTriangle size={13} />{error}</div>
         </div>
       )}
 

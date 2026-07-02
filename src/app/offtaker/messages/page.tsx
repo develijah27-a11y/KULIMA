@@ -70,7 +70,7 @@ export default async function MessagesPage() {
                     href={`tel:${farmer.phone_number}`}
                     style={{ padding: '6px 14px', background: 'var(--color-sky-bg)', color: C.blue, borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}
                   >
-                    📞 Call
+                    Call
                   </a>
                 )}
               </div>
@@ -104,7 +104,7 @@ export default async function MessagesPage() {
 
       {uniqueFarmers.length === 0 && notifs.length === 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>💬</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
           <p style={{ fontWeight: 700, fontSize: 16, color: C.text, marginBottom: 6 }}>No contacts yet</p>
           <p style={{ fontSize: 13, color: C.muted }}>Your farmer contacts from active contracts will appear here.</p>
         </div>

@@ -56,7 +56,7 @@ export default function NewContractPage() {
         <Link href="/offtaker/pipeline" style={{ fontSize: 13, color: C.muted, textDecoration: 'none' }}>← Supply Pipeline</Link>
       </div>
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>New Contract 📄</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>New Contract</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Create a forward contract with a farmer supplier</p>
       </div>
 

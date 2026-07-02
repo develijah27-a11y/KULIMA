@@ -94,7 +94,7 @@ async function DisputeList({ status }: { status: string }) {
   if (rows.length === 0) {
     return (
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 40, marginBottom: 10 }}>⚖️</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21H17"/><path d="M12 3v18"/><path d="M3 7h2c2 0 4-1 6-2 2 1 4 2 6 2h2"/></svg></div>
         <p style={{ color: C.text, fontWeight: 700, fontSize: 15 }}>No disputes</p>
         <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>
           {status ? 'No disputes with this status.' : 'All transactions are going smoothly.'}
@@ -124,7 +124,7 @@ async function DisputeList({ status }: { status: string }) {
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   {d.complainant_id && (
                     <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>
-                      👤 {nameMap[d.complainant_id] ?? d.complainant_id.slice(0, 8)}
+                      {nameMap[d.complainant_id] ?? d.complainant_id.slice(0, 8)}
                     </p>
                   )}
                   {d.respondent_id && (
@@ -135,7 +135,7 @@ async function DisputeList({ status }: { status: string }) {
                   <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>{timeAgo(d.created_at)}</p>
                 </div>
                 {d.resolution && (
-                  <p style={{ fontSize: 11, color: 'var(--color-success)', marginTop: 4 }}>✓ {d.resolution}</p>
+                  <p style={{ fontSize: 11, color: 'var(--color-success)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{d.resolution}</p>
                 )}
               </div>
               <DisputeActions disputeId={d.id} currentStatus={d.status} />

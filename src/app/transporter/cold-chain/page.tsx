@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { Snowflake, AlertTriangle, Thermometer } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -65,7 +66,7 @@ export default async function TransporterColdChainPage() {
       {/* Cold-capable vehicle badge */}
       {vehicle ? (
         <div style={{ background: 'var(--color-sky-bg)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ fontSize: 22 }}>❄️</span>
+          <span style={{ display: 'flex', color: 'var(--color-sky)' }}><Snowflake size={22} /></span>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.blue, margin: '0 0 2px' }}>Cold Chain Certified Vehicle</p>
             <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{vehicle.make} {vehicle.model} · {vehicle.plate_number}</p>
@@ -73,7 +74,7 @@ export default async function TransporterColdChainPage() {
         </div>
       ) : (
         <div style={{ background: 'var(--color-harvest-bg)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ fontSize: 20 }}>⚠️</span>
+          <span style={{ display: 'flex', color: 'var(--color-harvest)' }}><AlertTriangle size={20} /></span>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-harvest)', margin: '0 0 2px' }}>No Cold-Capable Vehicle Registered</p>
             <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>Enable "Cold chain capable" on your vehicle to receive refrigerated jobs.</p>
@@ -101,7 +102,7 @@ export default async function TransporterColdChainPage() {
       {activeRows.length > 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
           <div style={{ padding: '12px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span>❄️</span>
+            <span style={{ display: 'flex', color: 'var(--color-sky)' }}><Snowflake size={16} /></span>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Active Cold Jobs</p>
           </div>
           {activeRows.map((d: any, i: number) => {
@@ -136,7 +137,7 @@ export default async function TransporterColdChainPage() {
             <div key={d.id} style={{ padding: '13px 18px', borderBottom: i < historyRows.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: '0 0 2px' }}>
-                  ❄️ {d.pickup_district} → {d.dropoff_district}
+                  <span style={{ display: 'inline-flex', verticalAlign: 'middle', marginRight: 4, color: 'var(--color-sky)' }}><Snowflake size={12} /></span>{d.pickup_district} → {d.dropoff_district}
                 </p>
                 <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
                   {d.cargo_kg} kg · {d.delivered_at ? new Date(d.delivered_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: '2-digit' }) : ''}
@@ -159,7 +160,7 @@ export default async function TransporterColdChainPage() {
 
       {activeRows.length === 0 && historyRows.length === 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <p style={{ fontSize: 48, marginBottom: 12 }}>🌡️</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><Thermometer size={48} /></div>
           <p style={{ fontWeight: 700, fontSize: 16, color: C.text, marginBottom: 6 }}>No cold chain deliveries yet</p>
           <p style={{ fontSize: 13, color: C.muted }}>
             {vehicle ? 'Enable your vehicle and accept cold delivery requests from the Active Jobs page.' : 'Register a cold-capable vehicle to start receiving refrigerated delivery requests.'}

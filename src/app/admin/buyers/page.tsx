@@ -35,7 +35,7 @@ async function BuyersList() {
   if (rows.length === 0) {
     return (
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-        <p style={{ fontSize: 48, marginBottom: 12 }}>🛒</p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></div>
         <p style={{ color: C.text, fontWeight: 700, fontSize: 16 }}>No buyers yet</p>
         <p style={{ color: C.muted, fontSize: 14, marginTop: 4 }}>Buyers will appear here once they register with the buyer role.</p>
       </div>
