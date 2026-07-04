@@ -103,22 +103,15 @@ export async function POST(req: Request) {
 
   // Notify the requester that a driver is on their way
   try {
-    const { data: requesterProfile } = await (admin.from as any)('profiles')
-      .select('id')
-      .eq('user_id', delivery.requester_id)
-      .single();
-
     const typeLabel = delivery.delivery_type === 'cold' ? '❄️ Cold' : delivery.delivery_type === 'fast' ? '⚡ Fast' : '🚛 Standard';
 
-    if (requesterProfile) {
-      await (admin.from as any)('notifications').insert({
-        farmer_id: requesterProfile.id,
-        type:      'delivery',
-        title:     'Driver Accepted Your Delivery',
-        body:      `${typeLabel} driver is on the way for your ${delivery.cargo_kg}kg shipment from ${delivery.pickup_district} → ${delivery.dropoff_district}.`,
-        read:      false,
-      });
-    }
+    await (admin.from as any)('notifications').insert({
+      user_id: delivery.requester_id,
+      type:    'delivery',
+      title:   'Driver Accepted Your Delivery',
+      body:    `${typeLabel} driver is on the way for your ${delivery.cargo_kg}kg shipment from ${delivery.pickup_district} → ${delivery.dropoff_district}.`,
+      read:    false,
+    });
   } catch { /* non-critical */ }
 
   return NextResponse.json({ success: true, message: 'Delivery accepted! Head to the pickup location.' });

@@ -116,11 +116,11 @@ export async function POST(req: Request) {
       if (driverProfiles && driverProfiles.length > 0) {
         const typeLabel = delivery_type === 'cold' ? '❄️ Cold' : delivery_type === 'fast' ? '⚡ Fast' : '🚛 Standard';
         const notifications = driverProfiles.map((p: any) => ({
-          farmer_id: p.id,
-          type:      'delivery',
-          title:     'New Delivery Request',
-          body:      `${typeLabel} · ${cargo_kg}kg from ${pickup_district} → ${dropoff_district} · UGX ${fare.totalFare.toLocaleString()}`,
-          read:      false,
+          user_id: p.user_id,
+          type:    'delivery',
+          title:   'New Delivery Request',
+          body:    `${typeLabel} · ${cargo_kg}kg from ${pickup_district} → ${dropoff_district} · UGX ${fare.totalFare.toLocaleString()}`,
+          read:    false,
         }));
         await (admin.from as any)('notifications').insert(notifications);
       }
@@ -173,20 +173,13 @@ export async function PATCH(req: Request) {
         .single();
 
       if (delivery?.requester_id) {
-        const { data: requesterProfile } = await (admin.from as any)('profiles')
-          .select('id')
-          .eq('user_id', delivery.requester_id)
-          .single();
-
-        if (requesterProfile) {
-          await (admin.from as any)('notifications').insert({
-            farmer_id: requesterProfile.id,
-            type:      'delivery',
-            title:     'Delivery Arrived!',
-            body:      `Your goods have been delivered. Please confirm and pay UGX ${Number(delivery.estimated_fare).toLocaleString()} to release the driver.`,
-            read:      false,
-          });
-        }
+        await (admin.from as any)('notifications').insert({
+          user_id: delivery.requester_id,
+          type:    'delivery',
+          title:   'Delivery Arrived!',
+          body:    `Your goods have been delivered. Please confirm and pay UGX ${Number(delivery.estimated_fare).toLocaleString()} to release the driver.`,
+          read:    false,
+        });
       }
     } catch { /* non-critical */ }
 

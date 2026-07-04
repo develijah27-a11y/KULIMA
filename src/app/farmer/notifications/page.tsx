@@ -26,13 +26,10 @@ export default async function FarmerNotificationsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
-  if (!profile) redirect('/auth/signin');
-
   const { data } = await supabase
     .from('notifications')
     .select('*')
-    .eq('farmer_id', profile.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(60);
 
@@ -40,13 +37,13 @@ export default async function FarmerNotificationsPage() {
   const unread = notifications.filter(n => !n.read).length;
 
   if (unread > 0) {
-    await supabase.from('notifications').update({ read: true }).eq('farmer_id', profile.id).eq('read', false);
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Notifications
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>

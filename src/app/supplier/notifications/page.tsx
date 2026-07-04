@@ -9,12 +9,9 @@ export default async function SupplierNotificationsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
-  if (!profile) redirect('/auth/signin');
-
   const { data } = await supabase.from('notifications')
     .select('*')
-    .eq('farmer_id', profile.id)
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -24,7 +21,7 @@ export default async function SupplierNotificationsPage() {
   if (unread > 0) {
     await supabase.from('notifications')
       .update({ read: true })
-      .eq('farmer_id', profile.id)
+      .eq('user_id', user.id)
       .eq('read', false);
   }
 

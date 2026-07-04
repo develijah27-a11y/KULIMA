@@ -14,12 +14,23 @@ export async function GET(req: Request) {
     const forecast = w.data?.forecast ?? [];
     const rainDays = (forecast as any[]).filter((d: any) => (d.pop ?? 0) > 0.6);
     if (rainDays.length > 0 && w.location_key) {
-      // Put notification for farmers in region
-      supabase.from('notifications').insert({
-        farmer_id: w.location_key, type: 'rain', title: '🌧️ Rain arriving',
-        body: rainDays[0]?.weather?.[0]?.description ?? 'Heavy rain expected',
-        sent_at: new Date().toISOString(), read: false,
-      });
+      // Notify all farmers in this district
+      supabase.from('profiles')
+        .select('user_id')
+        .eq('district', w.location_key)
+        .eq('role', 'farmer')
+        .then(({ data: farmers }) => {
+          if (!farmers?.length) return;
+          supabase.from('notifications').insert(
+            farmers.map((f: any) => ({
+              user_id: f.user_id,
+              type:    'rain',
+              title:   'Rain arriving in your area',
+              body:    rainDays[0]?.weather?.[0]?.description ?? 'Heavy rain expected in the next few days',
+              read:    false,
+            }))
+          );
+        });
     }
   });
 

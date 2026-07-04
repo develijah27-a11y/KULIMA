@@ -118,20 +118,13 @@ export async function POST(req: Request) {
 
   // Notify the driver of payment
   try {
-    const { data: driverProfile } = await (admin.from as any)('profiles')
-      .select('id')
-      .eq('user_id', delivery.transporter_id)
-      .single();
-
-    if (driverProfile) {
-      await (admin.from as any)('notifications').insert({
-        farmer_id: driverProfile.id,
-        type:      'delivery',
-        title:     'Payment Received',
-        body:      `UGX ${driverEarnings.toLocaleString()} has been added to your wallet for the ${delivery.pickup_district} → ${delivery.dropoff_district} delivery.`,
-        read:      false,
-      });
-    }
+    await (admin.from as any)('notifications').insert({
+      user_id: delivery.transporter_id,
+      type:    'delivery',
+      title:   'Payment Received',
+      body:    `UGX ${driverEarnings.toLocaleString()} has been added to your wallet for the ${delivery.pickup_district} → ${delivery.dropoff_district} delivery.`,
+      read:    false,
+    });
   } catch { /* non-critical */ }
 
   return NextResponse.json({ success: true, driverEarnings, commissionAmount: commissionAmt });
