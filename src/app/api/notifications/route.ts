@@ -30,9 +30,7 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ success: false }, { status: 401 });
 
-    const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
-    if (!profile) return NextResponse.json({ success: false }, { status: 404 });
-    await supabase.from('notifications').insert({ farmer_id: profile.id, type, title: t ?? '', body: m ?? '', sent_at: new Date().toISOString(), read: false });
+    await supabase.from('notifications').insert({ user_id: user.id, type, title: t ?? '', body: m ?? '', sent_at: new Date().toISOString(), read: false });
     return NextResponse.json({ success: true });
   } catch { return NextResponse.json({ success: false }, { status: 500 }); }
 }

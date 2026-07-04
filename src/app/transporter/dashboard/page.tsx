@@ -1,6 +1,7 @@
 import { Suspense, cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdmin } from '@supabase/supabase-js';
 import Link from 'next/link';
 import {
   Truck, Zap, Snowflake, Inbox, DollarSign, CreditCard, Car,
@@ -97,17 +98,17 @@ async function TransporterStats({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Job Queue',   href: '/transporter/job-queue',  icon: <Inbox size={20} />,     bg: 'var(--color-primary-bg)', color: C.green  },
-    { label: 'Active Jobs', href: '/transporter/active',     icon: <Truck size={20} />,     bg: 'var(--color-sky-bg)',     color: C.blue   },
-    { label: 'Earnings',    href: '/transporter/wallet',     icon: <DollarSign size={20} />, bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'My Vehicle',  href: '/transporter/vehicle',    icon: <Car size={20} />,       bg: '#EDE9FE',                 color: C.purple },
-    { label: 'Cold Chain',  href: '/transporter/cold-chain', icon: <Snowflake size={20} />, bg: 'var(--color-danger-bg)',  color: C.red    },
+    { label: 'Available Jobs', href: '/transporter/job-queue',  icon: <Inbox size={20} />,     bg: 'var(--color-primary-bg)', color: C.green  },
+    { label: 'Active Jobs',    href: '/transporter/active',     icon: <Truck size={20} />,     bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'Earnings',       href: '/transporter/wallet',     icon: <DollarSign size={20} />, bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'My Vehicle',     href: '/transporter/vehicle',    icon: <Car size={20} />,       bg: '#EDE9FE',                 color: C.purple },
+    { label: 'Cool Transport', href: '/transporter/cold-chain', icon: <Snowflake size={20} />, bg: 'var(--color-danger-bg)',  color: C.red    },
   ];
 
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
@@ -128,8 +129,11 @@ function QuickActions() {
 // ── Vehicle status card ───────────────────────────────────────────────────────
 
 async function VehicleCard({ userId }: { userId: string }) {
-  const supabase = await createClient();
-  const { data: vehicle } = await (supabase.from as any)('vehicles')
+  const admin = createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+  const { data: vehicle } = await (admin.from as any)('vehicles')
     .select('id, plate_number, vehicle_type, capacity_kg, is_available, is_cold_capable, make_model')
     .eq('user_id', userId)
     .maybeSingle();
@@ -163,7 +167,7 @@ async function VehicleCard({ userId }: { userId: string }) {
             </p>
             {vehicle.is_cold_capable && (
               <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: 'var(--color-sky-bg)', color: C.blue, display: 'flex', alignItems: 'center', gap: 3 }}>
-                <Snowflake size={10} /> Cold Chain
+                <Snowflake size={10} /> Cool Transport
               </span>
             )}
           </div>
@@ -215,7 +219,7 @@ async function OpenJobs({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             {pendingRows.length > 0 ? `${pendingRows.length} Matched for You` : 'Available Jobs'}
           </p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>
@@ -323,7 +327,7 @@ async function MyActiveJobs({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>My Active Jobs</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>My Active Jobs</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>{rows.length} job{rows.length !== 1 ? 's' : ''} in progress</p>
         </div>
         <Link href="/transporter/active" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Manage →</Link>
@@ -380,7 +384,7 @@ async function EarningsHistory({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent Earnings</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Recent Earnings</p>
           <p className="text-xs mt-0.5" style={{ color: C.green, fontWeight: 700 }}>
             UGX {Math.round(paidTotal).toLocaleString()} received
           </p>
@@ -444,7 +448,7 @@ export default async function TransporterDashboard() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             Good to go, {firstName}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>Driver Hub · {profile?.location ?? 'Uganda'}</p>

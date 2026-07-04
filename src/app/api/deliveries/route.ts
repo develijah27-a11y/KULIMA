@@ -91,8 +91,7 @@ export async function POST(req: Request) {
   try {
     let vehicleQuery = (admin.from as any)('vehicles')
       .select('user_id')
-      .eq('is_available', true)
-      .contains('districts', [pickup_district]);
+      .eq('is_available', true);
 
     if (delivery_type === 'cold') vehicleQuery = vehicleQuery.eq('is_cold_capable', true);
 
