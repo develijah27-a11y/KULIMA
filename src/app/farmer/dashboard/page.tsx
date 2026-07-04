@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { fetchWeatherForFarmer, type ServerWeatherData } from '@/lib/weather-server';
+import { getDistrict } from '@/lib/districts';
 import { buildSeasonalPlan, generateDiseaseAlerts, type InsightSeverity } from '@/lib/agri-intel';
 import { generatePlantingAlerts } from '@/lib/planting-calendar';
 import {
@@ -115,8 +116,17 @@ function WeatherIcon({ code, size = 28 }: { code: string; size?: number }) {
 
 async function WeatherCard({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
-  const lat: number = profile?.latitude ?? 0.3476;
-  const lon: number = profile?.longitude ?? 32.5825;
+
+  let lat = 0.3476, lon = 32.5825, locationName = 'Kampala';
+  if (profile?.latitude && profile?.longitude) {
+    lat = profile.latitude;
+    lon = profile.longitude;
+    locationName = profile.location ?? 'Your Location';
+  } else if (profile?.location) {
+    const d = getDistrict(profile.location);
+    if (d) { lat = d.lat; lon = d.lng; locationName = d.name; }
+  }
+
   const weather = await getWeatherCached(lat, lon);
 
   const dailyMap: Record<string, { high: number; low: number; icon: string }> = {};
@@ -134,7 +144,12 @@ async function WeatherCard({ userId }: { userId: string }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x" style={{ borderColor: C.border }}>
         {/* Temperature */}
         <div className="p-4 sm:p-5 min-w-0">
-          <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Current Weather</p>
+          <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+            <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: C.muted }}>Weather · {locationName}</p>
+            {weather.source === 'fallback' && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.3)' }}>Seasonal estimate</span>
+            )}
+          </div>
           <div className="flex items-end gap-2 flex-wrap">
             <span className="text-3xl sm:text-4xl font-black" style={{ color: C.text, letterSpacing: '-0.04em' }}>{weather.now.temp}°C</span>
             <span className="mb-1"><WeatherIcon code={weather.now.icon} size={32} /></span>
@@ -389,8 +404,13 @@ async function MarketPricesTable({ userId }: { userId: string }) {
 
 async function WeatherForecast({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
-  const lat = profile?.latitude ?? 0.3476;
-  const lon = profile?.longitude ?? 32.5825;
+  let lat = 0.3476, lon = 32.5825;
+  if (profile?.latitude && profile?.longitude) {
+    lat = profile.latitude; lon = profile.longitude;
+  } else if (profile?.location) {
+    const d = getDistrict(profile.location);
+    if (d) { lat = d.lat; lon = d.lng; }
+  }
   const weather = await getWeatherCached(lat, lon);
 
   const dailyMap: Record<string, { high: number; low: number; icon: string; rain: boolean }> = {};
