@@ -64,6 +64,17 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
+        // Brand assets (icons/favicon/splash/logos) are NOT content-hashed —
+        // unlike /_next/static, their filenames stay the same across deploys
+        // even when the image content changes. A 1-year immutable cache here
+        // means a logo/icon update can stay invisible to already-cached
+        // clients for a year. Overrides the broader static-media rule above
+        // with a short, revalidating cache instead. Bump the ?v= query param
+        // on these files when you change their content for an instant bust.
+        source: '/(icons|favicon|splash|logos)/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' }],
+      },
+      {
         // Next.js content-hashed JS/CSS chunks — immutable, 1 year
         source: '/_next/static/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],

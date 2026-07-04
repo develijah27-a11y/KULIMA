@@ -38,7 +38,7 @@ export function OptimizedImage({
   priority = false,
   sizes,
   objectFit = 'cover',
-  fallback = '/icons/icon.svg',
+  fallback = '/icons/icon.svg?v=2',
 }: OptimizedImageProps) {
   const [imgSrc, setImgSrc] = useState(src);
   const [isLoading, setIsLoading] = useState(true);

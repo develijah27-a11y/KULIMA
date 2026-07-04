@@ -41,10 +41,14 @@ export default function RootLayout({
       <head>
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
+        {/* ?v=2 cache-busts the AgriNova rebrand icons — these paths aren't
+            content-hashed, and the old files were served with a 1-year
+            immutable Cache-Control, so browsers/CDN need a new URL to notice
+            the change. Bump this version any time icon.svg's content changes. */}
+        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=2" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=2" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=2" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=2" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
