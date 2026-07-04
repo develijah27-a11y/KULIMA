@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, type FormEvent, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
-import { Truck, Zap, Snowflake, MapPin, Clock, Briefcase, CheckCircle2, Megaphone, AlertTriangle } from 'lucide-react';
+import { Truck, Zap, Snowflake, MapPin, Clock, CheckCircle2, Megaphone, AlertTriangle } from 'lucide-react';
 import type { DeliveryType, FareBreakdown } from '@/lib/delivery-pricing';
 
 const C = {
@@ -271,8 +271,6 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11, color: C.muted }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={10} /> Distance: ~{fare.distanceKm} km</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock size={10} /> ETA: {fare.etaLabel}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Truck size={10} /> Driver earns: UGX {fare.driverEarnings.toLocaleString()}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Briefcase size={10} /> App commission: UGX {fare.commissionAmount.toLocaleString()}</span>
               </div>
               <p style={{ fontSize: 10, color: C.muted, margin: '8px 0 0', borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
                 Final price is fixed — no negotiation. Driver is paid after you confirm delivery.

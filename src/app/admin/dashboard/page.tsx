@@ -19,7 +19,7 @@ const C = {
   amber:      'var(--color-harvest)',
   red:        'var(--color-danger)',
   blue:       'var(--color-sky)',
-  violet:     '#8B5CF6',
+  violet:     'var(--color-purple)',
   indigo:     '#6366F1',
   orange:     'var(--color-harvest)',
   cardShadow: 'var(--d-shadow-card)',
@@ -35,10 +35,10 @@ const ROLE_CFG: Record<string, { color: string; bg: string; label: string }> = {
   farmer:      { color: 'var(--color-success)',  bg: 'var(--color-success-bg)',  label: 'Farmer' },
   buyer:       { color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)',  label: 'Buyer' },
   transporter: { color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)',      label: 'Transporter' },
-  supplier:    { color: '#7C3AED',               bg: '#EDE9FE',                  label: 'Supplier' },
+  supplier:    { color: 'var(--color-purple)',   bg: 'var(--color-purple-bg)',   label: 'Supplier' },
   pathologist: { color: 'var(--color-danger)',   bg: 'var(--color-danger-bg)',   label: 'Pathologist' },
-  offtaker:    { color: '#0891B2',               bg: '#CFFAFE',                  label: 'Offtaker' },
-  groups:      { color: '#65A30D',               bg: '#ECFCCB',                  label: 'Group' },
+  offtaker:    { color: 'var(--color-cyan)',     bg: 'var(--color-cyan-bg)',     label: 'Offtaker' },
+  groups:      { color: 'var(--color-lime)',     bg: 'var(--color-lime-bg)',     label: 'Group' },
   admin:       { color: 'var(--d-muted)',         bg: 'var(--color-surface-2)',   label: 'Admin' },
 };
 
@@ -510,13 +510,13 @@ function SystemHealth() {
 // ─── Admin Quick Actions ───────────────────────────────────────────────────────
 function AdminTools() {
   const tools = [
-    { href: '/admin/users',        icon: <Users size={20} />,        label: 'Manage Users',   sub: 'Search, edit roles, suspend',      bg: '#EDE9FE',                   color: C.violet  },
+    { href: '/admin/users',        icon: <Users size={20} />,        label: 'Manage Users',   sub: 'Search, edit roles, suspend',      bg: 'var(--color-purple-bg)',     color: C.violet  },
     { href: '/admin/verification', icon: <ShieldCheck size={20} />,  label: 'KYC Queue',      sub: 'Approve/reject verifications',     bg: 'var(--color-danger-bg)',     color: C.red     },
     { href: '/admin/prices',       icon: <BarChart3 size={20} />,    label: 'Market Prices',  sub: 'Update crop price data',           bg: 'var(--color-success-bg)',    color: C.greenMed },
     { href: '/admin/alert',        icon: <Bell size={20} />,         label: 'Send Alert',     sub: 'Broadcast notifications',          bg: 'var(--color-sky-bg)',        color: C.blue    },
     { href: '/admin/buyers',       icon: <ShoppingCart size={20} />, label: 'Buyer Accounts', sub: 'Review buyer registrations',       bg: 'var(--color-harvest-bg)',    color: C.amber   },
-    { href: '/admin/deliveries',   icon: <Truck size={20} />,        label: 'Deliveries',     sub: 'Uber-style delivery tracking',     bg: '#EDE9FE',                   color: '#7C3AED' },
-    { href: '/admin/analytics',    icon: <TrendingUp size={20} />,   label: 'Analytics',      sub: 'Growth, revenue & trends',         bg: '#CFFAFE',                   color: '#0891B2' },
+    { href: '/admin/deliveries',   icon: <Truck size={20} />,        label: 'Deliveries',     sub: 'Uber-style delivery tracking',     bg: 'var(--color-purple-bg)',     color: 'var(--color-purple)' },
+    { href: '/admin/analytics',    icon: <TrendingUp size={20} />,   label: 'Analytics',      sub: 'Growth, revenue & trends',         bg: 'var(--color-cyan-bg)',       color: 'var(--color-cyan)' },
   ];
 
   return (

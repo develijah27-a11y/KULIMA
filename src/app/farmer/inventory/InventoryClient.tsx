@@ -50,7 +50,7 @@ const CATS: { key: Category; label: string; icon: ReactNode; color: string; bg: 
   { key: 'all',         label: 'All Items',   icon: <Package size={14} />,     color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
   { key: 'seeds',       label: 'Seeds',       icon: <Leaf size={14} />,        color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
   { key: 'fertilizers', label: 'Fertilizers', icon: <FlaskConical size={14} />,color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)' },
-  { key: 'pesticides',  label: 'Pesticides',  icon: <ShieldCheck size={14} />, color: '#7C3AED',              bg: '#EDE9FE' },
+  { key: 'pesticides',  label: 'Pesticides',  icon: <ShieldCheck size={14} />, color: 'var(--color-purple)', bg: 'var(--color-purple-bg)' },
   { key: 'tools',       label: 'Tools',       icon: <Wrench size={14} />,      color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   { key: 'harvest',     label: 'Harvest',     icon: <Wheat size={14} />,       color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   { key: 'other',       label: 'Other',       icon: <Pin size={14} />,         color: 'var(--d-muted)',       bg: 'var(--color-surface-2)' },

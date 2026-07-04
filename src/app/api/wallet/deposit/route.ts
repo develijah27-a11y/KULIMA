@@ -16,8 +16,14 @@ export async function POST(req: Request) {
 
   const flwSecret = process.env.FLUTTERWAVE_SECRET_KEY;
 
-  // ── Simulation mode for testing (no Flutterwave key configured) ──────────
+  // ── Simulation mode for local testing only — never in production. Without
+  // this guard, a missing/unset key in a deployed environment silently
+  // credits real wallet balances with no payment ever taking place. ─────────
   if (!flwSecret) {
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Payment service not configured. Mobile money deposits are not available yet.' }, { status: 503 });
+    }
+
     // Directly credit the wallet — for dev/testing only
     const { data: wallet, error: wErr } = await (supabase.from as any)('wallets')
       .select('id, balance')

@@ -12,7 +12,7 @@ const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)',
   green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: '#7C3AED',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: 'var(--color-purple)',
 } as const;
 
 const Card = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
@@ -31,7 +31,7 @@ const STATUS_CFG: Record<string, { color: string; bg: string; label: string; ico
   open:       { color: C.green,  bg: 'var(--color-primary-bg)', label: 'Open',       icon: <Unlock size={10} /> },
   assigned:   { color: C.blue,   bg: 'var(--color-sky-bg)',     label: 'Assigned',   icon: <Car size={10} /> },
   in_transit: { color: C.amber,  bg: 'var(--color-harvest-bg)', label: 'In Transit', icon: <Navigation size={10} /> },
-  delivered:  { color: C.purple, bg: '#EDE9FE',                 label: 'Delivered',  icon: <CheckCircle2 size={10} /> },
+  delivered:  { color: C.purple, bg: 'var(--color-purple-bg)',  label: 'Delivered',  icon: <CheckCircle2 size={10} /> },
   cancelled:  { color: C.red,    bg: 'var(--color-danger-bg)',  label: 'Cancelled',  icon: <X size={10} /> },
 };
 
@@ -101,7 +101,7 @@ function QuickActions() {
     { label: 'Available Jobs', href: '/transporter/job-queue',  icon: <Inbox size={20} />,     bg: 'var(--color-primary-bg)', color: C.green  },
     { label: 'Active Jobs',    href: '/transporter/active',     icon: <Truck size={20} />,     bg: 'var(--color-sky-bg)',     color: C.blue   },
     { label: 'Earnings',       href: '/transporter/wallet',     icon: <DollarSign size={20} />, bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'My Vehicle',     href: '/transporter/vehicle',    icon: <Car size={20} />,       bg: '#EDE9FE',                 color: C.purple },
+    { label: 'My Vehicle',     href: '/transporter/vehicle',    icon: <Car size={20} />,       bg: 'var(--color-purple-bg)', color: C.purple },
     { label: 'Cool Transport', href: '/transporter/cold-chain', icon: <Snowflake size={20} />, bg: 'var(--color-danger-bg)',  color: C.red    },
   ];
 

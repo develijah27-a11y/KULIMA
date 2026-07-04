@@ -16,7 +16,7 @@ const STATUS_CFG = {
   countered: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Farmer Countered' },
   accepted:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Accepted' },
   rejected:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Rejected' },
-  completed: { color: '#7C3AED',              bg: '#EDE9FE',                 label: 'Completed' },
+  completed: { color: 'var(--color-purple)', bg: 'var(--color-purple-bg)', label: 'Completed' },
 } as const;
 
 

@@ -43,9 +43,13 @@ export function WalletActions({ balance }: Props) {
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Request failed');
-      setSuccess(mode === 'deposit'
-        ? 'A payment prompt has been sent to your phone. Approve it to complete the deposit.'
-        : 'Withdrawal initiated. Funds will arrive within 5 minutes.');
+      if (mode === 'deposit') {
+        setSuccess(json.simulated
+          ? json.message
+          : 'A payment prompt has been sent to your phone. Approve it to complete the deposit.');
+      } else {
+        setSuccess('Withdrawal initiated. Funds will arrive within 5 minutes.');
+      }
       router.refresh();
     } catch (err: any) {
       setError(err.message);

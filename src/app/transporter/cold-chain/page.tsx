@@ -10,7 +10,7 @@ const C = {
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   assigned:   { label: 'En Route to Pickup', color: C.blue,                 bg: 'var(--color-sky-bg)' },
   in_transit: { label: 'In Transit',         color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
-  delivered:  { label: 'Delivered',          color: '#7C3AED',              bg: '#EDE9FE' },
+  delivered:  { label: 'Delivered',          color: 'var(--color-purple)', bg: 'var(--color-purple-bg)' },
 };
 
 export default async function TransporterColdChainPage() {

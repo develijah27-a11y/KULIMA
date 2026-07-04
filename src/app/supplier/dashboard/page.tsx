@@ -12,7 +12,7 @@ import {
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: '#7C3AED',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: 'var(--color-purple)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -94,9 +94,9 @@ function QuickActions() {
     { label: 'Add Product',     href: '/supplier/catalogue',      icon: <Plus size={20} />,          bg: 'var(--color-primary-bg)', color: C.green  },
     { label: 'View Orders',     href: '/supplier/orders',         icon: <ClipboardList size={20} />,  bg: 'var(--color-sky-bg)',     color: C.blue   },
     { label: 'Update Prices',   href: '/supplier/catalogue',      icon: <DollarSign size={20} />,     bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'Demand Map',      href: '/supplier/demand',         icon: <Map size={20} />,             bg: '#F5F3FF',                 color: C.purple },
+    { label: 'Demand Map',      href: '/supplier/demand',         icon: <Map size={20} />,             bg: 'var(--color-purple-bg)',  color: C.purple },
     { label: 'Analytics',       href: '/supplier/analytics',      icon: <BarChart3 size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
-    { label: 'Book Delivery',   href: '/supplier/deliveries/new', icon: <Truck size={20} />,          bg: '#F0FDF4',                 color: C.green  },
+    { label: 'Book Delivery',   href: '/supplier/deliveries/new', icon: <Truck size={20} />,          bg: 'var(--color-primary-bg)', color: C.green  },
   ];
 
   return (

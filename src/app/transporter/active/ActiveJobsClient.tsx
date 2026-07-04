@@ -138,9 +138,6 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                     <p style={{ fontSize: 20, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
                       UGX {Number(d?.driver_earnings ?? 0).toLocaleString()}
                     </p>
-                    <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>
-                      Total fare: UGX {Number(d?.estimated_fare ?? 0).toLocaleString()} · 10% app commission deducted
-                    </p>
                   </div>
 
                   {/* Location details */}

@@ -15,7 +15,7 @@ const STATUS_CFG: Record<string, { icon: JSX.Element; label: string; color: stri
   open:       { icon: <Search size={10} />,   label: 'Finding Driver',    color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   assigned:   { icon: <Car size={10} />,      label: 'Driver Coming',     color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)' },
   in_transit: { icon: <Truck size={10} />,    label: 'On the Way',        color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
-  delivered:  { icon: <Package size={10} />,  label: 'Arrived — Pay Now', color: '#7C3AED',              bg: '#EDE9FE' },
+  delivered:  { icon: <Package size={10} />,  label: 'Arrived — Pay Now', color: 'var(--color-purple)', bg: 'var(--color-purple-bg)' },
   cancelled:  { icon: <XIcon size={10} />,    label: 'Cancelled',         color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)' },
 };
 
@@ -102,11 +102,11 @@ function Section({ title, count, highlight, children }: { title: string; count: 
     <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
       <div style={{
         padding: '12px 18px', borderBottom: `1px solid ${C.border}`,
-        background: highlight ? '#EDE9FE' : 'transparent',
+        background: highlight ? 'var(--color-purple-bg)' : 'transparent',
         display: 'flex', alignItems: 'center', gap: 8,
       }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: highlight ? '#7C3AED' : C.text, margin: 0 }}>{title}</p>
-        <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 999, background: highlight ? '#DDD6FE' : 'var(--color-surface-2)', color: highlight ? '#7C3AED' : C.muted }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: highlight ? 'var(--color-purple)' : C.text, margin: 0 }}>{title}</p>
+        <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 999, background: highlight ? 'var(--color-purple-bg)' : 'var(--color-surface-2)', color: highlight ? 'var(--color-purple)' : C.muted }}>
           {count}
         </span>
       </div>

@@ -63,7 +63,7 @@ export default async function TransporterDeliveriesPage({
     open:      { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Open' },
     assigned:  { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Assigned' },
     in_transit:{ color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'In Transit' },
-    delivered: { color: '#7C3AED',              bg: '#EDE9FE',                 label: 'Delivered' },
+    delivered: { color: 'var(--color-purple)',  bg: 'var(--color-purple-bg)', label: 'Delivered' },
     pending:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Bid Pending' },
     accepted:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Bid Accepted' },
     rejected:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Bid Rejected' },

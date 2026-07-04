@@ -12,7 +12,7 @@ const C = {
   amber: 'var(--color-harvest)', amberBg: 'var(--color-harvest-bg)',
   red: 'var(--color-danger)', redBg: 'var(--color-danger-bg)',
   blue: 'var(--color-sky)', blueBg: 'var(--color-sky-bg)',
-  purple: '#7C3AED', purpleBg: '#EDE9FE',
+  purple: 'var(--color-purple)', purpleBg: 'var(--color-purple-bg)',
 };
 
 

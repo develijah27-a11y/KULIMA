@@ -36,6 +36,25 @@
   --color-sky-muted:     #7DD3FC;
   --color-sky-bg:        #F0F9FF;
 
+  /* ── Purple — Vehicles / equipment ──
+     Used for: vehicle info, equipment tiles, misc secondary accents */
+  --color-purple:        #7C3AED;
+  --color-purple-hover:  #6D28D9;
+  --color-purple-muted:  #C4B5FD;
+  --color-purple-bg:     #EDE9FE;
+
+  /* ── Cyan — Offtaker role accent ── */
+  --color-cyan:          #0891B2;
+  --color-cyan-hover:    #0E7490;
+  --color-cyan-muted:    #67E8F9;
+  --color-cyan-bg:       #CFFAFE;
+
+  /* ── Lime — Group role accent ── */
+  --color-lime:          #65A30D;
+  --color-lime-hover:    #4D7C0F;
+  --color-lime-muted:    #BEF264;
+  --color-lime-bg:       #ECFCCB;
+
   /* ── Soil — Dark landing background ── */
   --color-soil:          #0D1F12;   /* deep forest — used by landing page */
   --color-soil-mid:      #1A3120;
@@ -150,6 +169,21 @@
   --color-sky-hover:     #7DD3FC;
   --color-sky-muted:     #0EA5E9;
   --color-sky-bg:        #0B1A24;
+
+  --color-purple:        #A78BFA;   /* brighter for dark-surface legibility */
+  --color-purple-hover:  #C4B5FD;
+  --color-purple-muted:  #7C3AED;
+  --color-purple-bg:     #1E1B3D;
+
+  --color-cyan:          #22D3EE;
+  --color-cyan-hover:    #67E8F9;
+  --color-cyan-muted:    #0891B2;
+  --color-cyan-bg:       #0A2A30;
+
+  --color-lime:          #A3E635;
+  --color-lime-hover:    #BEF264;
+  --color-lime-muted:    #65A30D;
+  --color-lime-bg:       #1F2A0A;
 
   --color-soil:          #06070A;
   --color-soil-mid:      #0D1219;

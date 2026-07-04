@@ -28,7 +28,7 @@ const SEVERITY_CFG = {
 const COMMON_DISEASES = [
   { name: 'Fall Armyworm',        crop: 'Maize',    color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
   { name: 'Northern Leaf Blight', crop: 'Maize',    color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
-  { name: 'Bacterial Wilt',       crop: 'Tomato',   color: '#7C3AED',              bg: '#F5F3FF'                 },
+  { name: 'Bacterial Wilt',       crop: 'Tomato',   color: 'var(--color-purple)', bg: 'var(--color-purple-bg)'  },
   { name: 'Mosaic Virus',         crop: 'Cassava',  color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
   { name: 'Coffee Berry Disease', crop: 'Coffee',   color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   { name: 'Bean Anthracnose',     crop: 'Beans',    color: 'var(--color-success)', bg: 'var(--color-primary-bg)' },

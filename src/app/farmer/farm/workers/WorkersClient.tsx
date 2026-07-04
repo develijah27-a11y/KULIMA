@@ -15,7 +15,7 @@ export const WORKER_ROLES: { value: string; label: string; color: string; bg: st
   { value: 'farm_manager',          label: 'Farm Manager',          color: 'var(--color-primary)', bg: 'var(--color-success-bg)' },
   { value: 'field_worker',          label: 'Field Worker',          color: 'var(--color-info)',    bg: 'var(--color-sky-bg)'     },
   { value: 'irrigation_specialist', label: 'Irrigation Specialist', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
-  { value: 'pest_controller',       label: 'Pest Controller',       color: '#7C3AED',              bg: '#EDE9FE'                 },
+  { value: 'pest_controller',       label: 'Pest Controller',       color: 'var(--color-purple)', bg: 'var(--color-purple-bg)'  },
   { value: 'harvester',             label: 'Harvester',             color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   { value: 'driver',                label: 'Driver / Transport',    color: 'var(--d-muted)',       bg: 'var(--color-surface-2)'  },
   { value: 'watchman',              label: 'Watchman / Security',   color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },

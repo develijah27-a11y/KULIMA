@@ -11,7 +11,7 @@ import {
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: '#7C3AED',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: 'var(--color-purple)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -88,9 +88,9 @@ function QuickActions() {
     { label: 'New Deal',        href: '/offtaker/pipeline/new',    icon: <FileText size={20} />,  bg: 'var(--color-primary-bg)', color: C.green  },
     { label: 'Find Farmers',   href: '/offtaker/pipeline',        icon: <Search size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
     { label: 'Rate Farmer',    href: '/offtaker/scorecard',       icon: <Star size={20} />,      bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'My Reports',     href: '/offtaker/spend',           icon: <BarChart3 size={20} />, bg: '#F5F3FF',                 color: C.purple },
+    { label: 'My Reports',     href: '/offtaker/spend',           icon: <BarChart3 size={20} />, bg: 'var(--color-purple-bg)',  color: C.purple },
     { label: 'Send Offer',     href: '/offtaker/pipeline',        icon: <Send size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
-    { label: 'Book Delivery',  href: '/offtaker/deliveries/new',  icon: <Truck size={20} />,     bg: '#F0FDF4',                 color: C.green  },
+    { label: 'Book Delivery',  href: '/offtaker/deliveries/new',  icon: <Truck size={20} />,     bg: 'var(--color-primary-bg)', color: C.green  },
   ];
 
   return (

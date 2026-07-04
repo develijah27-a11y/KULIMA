@@ -11,7 +11,7 @@ import {
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: '#7C3AED',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', purple: 'var(--color-purple)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -83,7 +83,7 @@ function QuickActions() {
   const actions = [
     { label: 'Triage Case',     href: '/pathologist/case-queue',      icon: <Stethoscope size={20} />, bg: 'var(--color-danger-bg)',  color: C.red    },
     { label: 'File Report',     href: '/pathologist/my-cases/new',    icon: <FileText size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
-    { label: 'Disease Library', href: '/pathologist/disease-alerts',  icon: <BookOpen size={20} />,    bg: '#F5F3FF',                 color: C.purple },
+    { label: 'Disease Library', href: '/pathologist/disease-alerts',  icon: <BookOpen size={20} />,    bg: 'var(--color-purple-bg)', color: C.purple },
     { label: 'Outbreak Map',    href: '/pathologist/geo-map',         icon: <Map size={20} />,         bg: 'var(--color-harvest-bg)', color: C.amber  },
     { label: 'My Cases',        href: '/pathologist/my-cases',        icon: <Folder size={20} />,      bg: 'var(--color-primary-bg)', color: C.green  },
   ];

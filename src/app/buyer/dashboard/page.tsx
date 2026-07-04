@@ -11,7 +11,7 @@ const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenBright: 'var(--color-primary-muted)', greenMed: 'var(--color-primary-hover)',
   amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)',
-  cardShadow: 'var(--d-shadow-card)', purple: '#7C3AED',
+  cardShadow: 'var(--d-shadow-card)', purple: 'var(--color-purple)',
 } as const;
 
 const CROP_COLORS: Record<string, string> = {
@@ -90,7 +90,7 @@ function QuickActions() {
     { label: 'Browse Market', href: '/buyer/listings',   icon: <ShoppingBag size={20} />,   bg: 'var(--color-primary-bg)', color: C.green  },
     { label: 'My Orders',     href: '/buyer/orders',     icon: <Package size={20} />,       bg: 'var(--color-sky-bg)',     color: C.blue   },
     { label: 'My Offers',     href: '/buyer/requests',   icon: <MessageCircle size={20} />, bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'Deliveries',    href: '/buyer/deliveries', icon: <Truck size={20} />,         bg: '#EDE9FE',                 color: C.purple },
+    { label: 'Deliveries',    href: '/buyer/deliveries', icon: <Truck size={20} />,         bg: 'var(--color-purple-bg)', color: C.purple },
     { label: 'Wallet',        href: '/buyer/wallet',     icon: <CreditCard size={20} />,    bg: 'var(--color-success-bg)', color: 'var(--color-success)' },
   ];
 
@@ -219,7 +219,7 @@ async function RecentDeliveries({ userId }: { userId: string }) {
     open:       { label: 'Finding Driver',  color: C.amber,  bg: 'var(--color-harvest-bg)' },
     assigned:   { label: 'Driver Assigned', color: C.blue,   bg: 'var(--color-sky-bg)' },
     in_transit: { label: 'On the Way',      color: C.green,  bg: 'var(--color-primary-bg)' },
-    delivered:  { label: 'Delivered',       color: C.purple, bg: '#EDE9FE' },
+    delivered:  { label: 'Delivered',       color: C.purple, bg: 'var(--color-purple-bg)' },
     cancelled:  { label: 'Cancelled',       color: C.red,    bg: 'var(--color-danger-bg)' },
   };
 
