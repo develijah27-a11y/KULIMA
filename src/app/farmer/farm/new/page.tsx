@@ -19,7 +19,7 @@ export default async function NewFarmPage() {
         <Link href="/farmer/farm" style={{ color: C.muted, fontSize: 13, textDecoration: 'none' }}>
           ← My Farms
         </Link>
-        <h1 className="text-xl font-black mt-2" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black mt-2" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Register Farm
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Add farm details and optionally map its GPS boundary</p>

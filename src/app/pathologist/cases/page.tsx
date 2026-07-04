@@ -80,8 +80,8 @@ export default async function PathologistCasesPage({
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Case Queue
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+            New Cases
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>{rows.length} cases · {counts.open} open · {counts.critical} high/critical</p>
         </div>

@@ -39,7 +39,7 @@ export default async function SupplierWalletPage() {
     <div className="max-w-xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>My Wallet</h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Kulima Pay — UGX</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>AgriNova Pay — UGX</p>
       </div>
 
       <div style={{ background: C.green, borderRadius: 20, padding: '24px 24px 20px', color: '#fff' }}>

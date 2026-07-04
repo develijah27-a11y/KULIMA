@@ -3,7 +3,7 @@ export type VerificationStatus = 'pending' | 'approved' | 'rejected';
 
 export const BADGE_CONFIG = {
   grey:  { label: 'Phone Verified',  color: '#6B7280', bg: '#F3F4F6', border: '#E5E7EB', description: 'Phone number confirmed on signup' },
-  green: { label: 'ID Verified',     color: '#059669', bg: '#D1FAE5', border: '#A7F3D0', description: 'National ID verified by Kulima' },
+  green: { label: 'ID Verified',     color: '#059669', bg: '#D1FAE5', border: '#A7F3D0', description: 'National ID verified by AgriNova' },
   blue:  { label: 'KYC Verified',    color: '#0284C7', bg: 'var(--color-sky-bg)', border: '#BFDBFE', description: 'Full identity and business verified' },
   gold:  { label: 'Enterprise',      color: '#D97706', bg: '#FEF3C7', border: '#FDE68A', description: 'Enterprise-grade verification complete' },
 } as const;
@@ -49,7 +49,7 @@ export function getRequiredDocs(level: 'green' | 'blue' | 'gold', role: string):
       base.push({ key: 'driving_permit', label: 'Driving Permit',     accept: 'image/*,application/pdf' });
       base.push({ key: 'vehicle_reg',    label: 'Vehicle Registration', accept: 'image/*,application/pdf' });
     }
-    if (role === 'doctor')
+    if (role === 'pathologist')
       base.push({ key: 'qualifications', label: 'Professional Qualifications', accept: 'image/*,application/pdf' });
     return base;
   }

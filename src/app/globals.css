@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════
-   KULIMA AGRICULTURAL DESIGN SYSTEM
+   AGRINOVA DESIGN SYSTEM
    Colours rooted in the farm: growth green, harvest gold,
    sky blue, earth brown — each hue earns its place.
    ═══════════════════════════════════════════════════════════════════ */
@@ -9,25 +9,25 @@
 /* ─── Light mode ─── */
 :root {
   /* ── Page backgrounds ── */
-  --color-bg:            #F8FAF8;   /* warm off-white — like clean paper */
+  --color-bg:            #F8FAFC;   /* AgriNova background light */
   --color-surface:       #FFFFFF;   /* pure white cards */
-  --color-surface-2:     #F0F7F1;   /* faint green tint for hover / alt rows */
-  --color-surface-3:     #E8F5EA;   /* slightly deeper for secondary surfaces */
+  --color-surface-2:     #EAF6EE;   /* faint green tint for hover / alt rows */
+  --color-surface-3:     #DEF0E3;   /* slightly deeper for secondary surfaces */
 
-  /* ── Primary — Growth Green ──
+  /* ── Primary — AgriNova Green ──
      Used for: primary buttons, active nav, checkmarks, positive trends */
-  --color-primary:       #22C55E;
-  --color-primary-hover: #16A34A;
-  --color-primary-muted: #86EFAC;
-  --color-primary-bg:    #F0FDF4;
-  --color-primary-dark:  #14532D;
+  --color-primary:       #166B3A;   /* AgriNova Primary Green */
+  --color-primary-hover: #2FA34F;   /* AgriNova Secondary Green */
+  --color-primary-muted: #7CC576;   /* AgriNova Fresh Green */
+  --color-primary-bg:    #EAF6EE;
+  --color-primary-dark:  #0F4C2A;
 
-  /* ── Harvest — Amber / Gold ──
+  /* ── Harvest — Orange ──
      Used for: prices, money, wallet, earnings, crop yields */
-  --color-harvest:       #D97706;
-  --color-harvest-hover: #B45309;
-  --color-harvest-muted: #FCD34D;
-  --color-harvest-bg:    #FFFBEB;
+  --color-harvest:       #FFA726;   /* AgriNova Harvest Orange */
+  --color-harvest-hover: #FB8C00;
+  --color-harvest-muted: #FFCC80;
+  --color-harvest-bg:    #FFF7E6;   /* AgriNova Warm Cream */
 
   /* ── Sky — Blue ──
      Used for: weather, water, rain, forecast, logistics */
@@ -41,17 +41,17 @@
   --color-soil-mid:      #1A3120;
 
   /* ── Sidebar — Deep Forest Emerald ── */
-  --color-sidebar:         #1C3D2A;
-  --color-sidebar-hover:   #244D35;
+  --color-sidebar:         #0F4C2A;
+  --color-sidebar-hover:   #145C34;
   --color-sidebar-text:    #F0FDF4;
   --color-sidebar-muted:   rgba(240, 253, 244, 0.55);
   --color-sidebar-divider: rgba(255, 255, 255, 0.10);
-  --color-sidebar-active:  rgba(74, 222, 128, 0.18);
-  --color-sidebar-badge:   rgba(74, 222, 128, 0.28);
+  --color-sidebar-active:  rgba(124, 197, 118, 0.22);
+  --color-sidebar-badge:   rgba(124, 197, 118, 0.30);
 
   /* ── Text ── */
   --color-text:          #111827;   /* near-black for maximum legibility */
-  --color-text-muted:    #4B5563;   /* medium gray */
+  --color-text-muted:    #64748B;   /* AgriNova Slate Gray */
   --color-text-hint:     #9CA3AF;   /* light gray for placeholders */
   --color-text-on-dark:  #F9FAFB;   /* white text on dark backgrounds */
 
@@ -61,49 +61,49 @@
   --color-border-strong: rgba(0, 0, 0, 0.18);
 
   /* ── Semantic: Success (green) ── */
-  --color-success:       #16A34A;
+  --color-success:       #22C55E;   /* AgriNova Success */
   --color-success-bg:    #DCFCE7;
   --color-success-border:#BBF7D0;
 
   /* ── Semantic: Warning (amber) ── */
-  --color-warning:       #D97706;
+  --color-warning:       #F59E0B;   /* AgriNova Warning */
   --color-warning-bg:    #FEF3C7;
   --color-warning-border:#FDE68A;
 
   /* ── Semantic: Danger / Disease (red) ── */
-  --color-danger:        #DC2626;
+  --color-danger:        #EF4444;   /* AgriNova Error */
   --color-danger-bg:     #FEF2F2;
   --color-danger-border: #FECACA;
 
   /* ── Semantic: Info / Weather (blue) ── */
-  --color-info:          #0EA5E9;
-  --color-info-bg:       #F0F9FF;
-  --color-info-border:   #BAE6FD;
+  --color-info:          #3B82F6;   /* AgriNova Info */
+  --color-info-bg:       #EFF6FF;
+  --color-info-border:   #BFDBFE;
 
   /* ── Sync / Offline states ── */
-  --color-offline:       #6B7280;
+  --color-offline:       #64748B;
   --color-offline-bg:    #F3F4F6;
-  --color-syncing:       #D97706;
+  --color-syncing:       #F59E0B;
   --color-syncing-bg:    #FEF3C7;
-  --color-synced:        #16A34A;
+  --color-synced:        #22C55E;
   --color-synced-bg:     #DCFCE7;
 
   /* ── Shadows ── */
   --shadow-xs:    0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-card:  0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.07);
   --shadow-modal: 0 8px 40px rgba(0, 0, 0, 0.16);
-  --shadow-green: 0 4px 16px rgba(34, 197, 94, 0.20);
+  --shadow-green: 0 4px 16px rgba(22, 107, 58, 0.24);
 
   /* ── Radius ── */
   --radius-sm:   8px;
   --radius-md:   12px;
   --radius-lg:   16px;
-  --radius-card: 14px;
+  --radius-card: 18px;
   --radius-pill: 99px;
 
   /* ── Typography ── */
-  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-body:    'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Poppins', 'Inter', system-ui, sans-serif;
+  --font-body:    'Poppins', 'Inter', system-ui, sans-serif;
   --font-mono:    'DM Mono', monospace;
 
   /* ── Backward-compat aliases (used by older components) ── */
@@ -127,24 +127,24 @@
 }
 
 /* ─── Dark mode ───
-   Neutral graphite base (not a green wash) — green stays an accent only,
-   used the way modern dev tools (Vercel/Linear/GitHub) run dark themes. */
+   Slate base (AgriNova Background Dark #0F172A) — not a green wash;
+   green stays an accent only, designed for dark surfaces, not inverted. */
 .dark {
-  --color-bg:            #0A0B0D;
-  --color-surface:       #131417;
-  --color-surface-2:     #1B1D21;
-  --color-surface-3:     #24262B;
+  --color-bg:            #0F172A;   /* AgriNova background dark */
+  --color-surface:       #1E293B;
+  --color-surface-2:     #263449;
+  --color-surface-3:     #2F3F5C;
 
-  --color-primary:       #4ADE80;
-  --color-primary-hover: #22C55E;
-  --color-primary-muted: #15803D;
-  --color-primary-bg:    #10241A;
+  --color-primary:       #7CC576;   /* AgriNova Fresh Green — brighter for dark-surface legibility */
+  --color-primary-hover: #2FA34F;   /* AgriNova Secondary Green */
+  --color-primary-muted: #1F5C34;
+  --color-primary-bg:    #0F2B1C;
   --color-primary-dark:  #BBF7D0;
 
-  --color-harvest:       #FCD34D;
-  --color-harvest-hover: #FDE68A;
-  --color-harvest-muted: #D97706;
-  --color-harvest-bg:    #1E1608;
+  --color-harvest:       #FFA726;   /* AgriNova Harvest Orange — already legible on dark */
+  --color-harvest-hover: #FFB74D;
+  --color-harvest-muted: #FB8C00;
+  --color-harvest-bg:    #2A1B05;
 
   --color-sky:           #38BDF8;
   --color-sky-hover:     #7DD3FC;
@@ -154,19 +154,19 @@
   --color-soil:          #06070A;
   --color-soil-mid:      #0D1219;
 
-  /* ── Sidebar dark — near-black graphite, distinct from page bg, green only as accent ── */
-  --color-sidebar:         #0C0D10;
-  --color-sidebar-hover:   #17191D;
+  /* ── Sidebar dark — slate, distinct from page bg, green only as accent ── */
+  --color-sidebar:         #0B1220;
+  --color-sidebar-hover:   #16223A;
   --color-sidebar-text:    rgba(255, 255, 255, 0.92);
   --color-sidebar-muted:   rgba(255, 255, 255, 0.45);
   --color-sidebar-divider: rgba(255, 255, 255, 0.08);
-  --color-sidebar-active:  rgba(74, 222, 128, 0.14);
-  --color-sidebar-badge:   rgba(74, 222, 128, 0.22);
+  --color-sidebar-active:  rgba(124, 197, 118, 0.16);
+  --color-sidebar-badge:   rgba(124, 197, 118, 0.24);
 
-  --color-text:          #F2F3F5;
-  --color-text-muted:    #9CA3AF;
-  --color-text-hint:     #6B7280;
-  --color-text-on-dark:  #F2F3F5;
+  --color-text:          #F1F5F9;
+  --color-text-muted:    #94A3B8;
+  --color-text-hint:     #64748B;
+  --color-text-on-dark:  #F1F5F9;
 
   --color-border:        rgba(255, 255, 255, 0.08);
   --color-border-mid:    rgba(255, 255, 255, 0.13);
@@ -184,11 +184,11 @@
   --color-danger-bg:     #241010;
   --color-danger-border: #7F1D1D;
 
-  --color-info:          #38BDF8;
-  --color-info-bg:       #0B1A24;
-  --color-info-border:   #0C4A6E;
+  --color-info:          #60A5FA;
+  --color-info-bg:       #0F1F3D;
+  --color-info-border:   #1E3A6E;
 
-  --color-offline:       #9CA3AF;
+  --color-offline:       #94A3B8;
   --color-offline-bg:    #1F2937;
   --color-syncing:       #FCD34D;
   --color-syncing-bg:    #1E1608;
@@ -413,7 +413,7 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97) translateZ(0); }
 }
 
 .orange-skeleton {
-  background: #1A0800;
+  background: var(--color-soil-mid);
   position: relative;
   overflow: hidden;
   border-radius: 12px;
@@ -638,8 +638,8 @@ input.auth-input:focus,
 select.auth-input:focus,
 textarea.auth-input:focus {
   background: #FFFFFF !important;
-  border-color: #F97316 !important;
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15) !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18) !important;
 }
 input.auth-input:disabled { opacity: 0.5; cursor: not-allowed; }
 /* Force black bold text even when browser autofills the field */
@@ -658,8 +658,8 @@ input.auth-input:-webkit-autofill:active {
   min-height: 50px;
   padding: 0.875rem 1.5rem;
   border-radius: 12px;
-  background: #F97316;
-  color: #FFFFFF;
+  background: var(--color-primary);
+  color: #06210F;
   font-family: var(--font-body);
   font-size: 0.9375rem;
   font-weight: 700;
@@ -667,54 +667,11 @@ input.auth-input:-webkit-autofill:active {
   transition: background 80ms ease, opacity 80ms ease, transform 80ms ease, box-shadow 80ms ease;
   cursor: pointer;
   border: none;
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
 }
-.auth-btn:hover:not(:disabled)  { background: #EA580C; box-shadow: 0 4px 18px rgba(249, 115, 22, 0.45); }
+.auth-btn:hover:not(:disabled)  { background: var(--color-primary-hover); box-shadow: 0 4px 18px rgba(34, 197, 94, 0.45); }
 .auth-btn:active:not(:disabled) { transform: scale(0.99); }
 .auth-btn:disabled              { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-
-/* ── Landing page buttons ── */
-.landing-btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0.875rem 1.75rem;
-  border-radius: 12px;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  background: #F97316;
-  color: #FFFFFF;
-  transition: background 0.15s, box-shadow 0.15s, transform 80ms ease;
-  letter-spacing: -0.01em;
-  border: none;
-  text-decoration: none;
-}
-.landing-btn-primary:hover  { background: #EA580C; }
-.landing-btn-primary:active { transform: scale(0.97); }
-
-.glow-orange { box-shadow: 0 4px 24px rgba(249, 115, 22, 0.40); }
-
-.landing-btn-outline {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.875rem 1.75rem;
-  border-radius: 12px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  border: 1.5px solid rgba(255, 247, 237, 0.22);
-  color: rgba(255, 247, 237, 0.75);
-  transition: background 0.15s, border-color 0.15s;
-  letter-spacing: -0.01em;
-  text-decoration: none;
-  background: transparent;
-}
-.landing-btn-outline:hover {
-  background: rgba(255, 247, 237, 0.08);
-  border-color: rgba(255, 247, 237, 0.35);
-  color: #FFF7ED;
-}
 
 /* ═══════════════════════════════════════════════════════════════════
    UTILITY CLASSES

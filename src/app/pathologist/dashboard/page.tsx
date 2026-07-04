@@ -91,7 +91,7 @@ function QuickActions() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
@@ -135,7 +135,7 @@ async function CaseQueue() {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Pending Case Queue</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Pending Cases</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>{rows.length} cases awaiting triage</p>
         </div>
         <Link href="/pathologist/case-queue" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
@@ -200,7 +200,7 @@ function DiseaseAlertPanel() {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Seasonal Disease Alerts</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Seasonal Disease Alerts</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>High-risk diseases active this month</p>
         </div>
         <Link href="/pathologist/disease-alerts" className="text-xs font-semibold" style={{ color: C.greenMed }}>Library →</Link>
@@ -248,7 +248,7 @@ async function RecentScans() {
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent AI Scans</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Recent AI Scans</p>
         <Link href="/pathologist/my-cases" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
       {rows.length === 0 ? (
@@ -302,7 +302,7 @@ function OutbreakSummary() {
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Active Outbreak Hotspots</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Active Outbreak Hotspots</p>
         <Link href="/pathologist/geo-map" className="text-xs font-semibold" style={{ color: C.greenMed }}>Full map →</Link>
       </div>
       <div className="divide-y" style={{ borderColor: C.border }}>
@@ -339,7 +339,7 @@ export default async function PathologistDashboardPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             Dr. {firstName}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>Plant Disease Hub · {profile?.location ?? 'Uganda'}</p>

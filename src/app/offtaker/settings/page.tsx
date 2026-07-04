@@ -15,18 +15,18 @@ const SECTIONS = [
     ],
   },
   {
-    title: 'Procurement',
+    title: 'Buying',
     items: [
       { label: 'My Contracts', desc: 'View and manage forward purchase agreements', icon: <FileText size={20} />, href: '/offtaker/contracts' },
-      { label: 'Supply Pipeline', desc: 'Track committed volumes from farmers', icon: <Leaf size={20} />, href: '/offtaker/pipeline' },
-      { label: 'Supplier Scorecard', desc: 'Rate and review your farmer suppliers', icon: <Star size={20} />, href: '/offtaker/scorecard' },
+      { label: 'Find Farmers', desc: 'Track committed volumes from farmers', icon: <Leaf size={20} />, href: '/offtaker/pipeline' },
+      { label: 'Rate Farmers', desc: 'Rate and review your farmer suppliers', icon: <Star size={20} />, href: '/offtaker/scorecard' },
     ],
   },
   {
-    title: 'Analytics',
+    title: 'Reports',
     items: [
-      { label: 'Spend Analytics', desc: 'Breakdown of spend by crop and time period', icon: <BarChart3 size={20} />, href: '/offtaker/spend' },
-      { label: 'Quality & Compliance', desc: 'Fulfilment rates and quality standards tracking', icon: <ShieldCheck size={20} />, href: '/offtaker/quality' },
+      { label: 'My Spending', desc: 'Breakdown of spend by crop and time period', icon: <BarChart3 size={20} />, href: '/offtaker/spend' },
+      { label: 'Crop Quality', desc: 'Delivery rates and quality standards tracking', icon: <ShieldCheck size={20} />, href: '/offtaker/quality' },
       { label: 'Risk Alerts', desc: 'Supply risk flags and early warnings', icon: <AlertTriangle size={20} />, href: '/offtaker/risk' },
     ],
   },
@@ -44,7 +44,7 @@ function SignOutInline() {
       </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
-        <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
+        <p style={{ fontSize: 12, color: C.muted }}>Log out of your AgriNova account</p>
       </div>
       <span style={{ color: C.muted, fontSize: 16 }}>›</span>
     </button>

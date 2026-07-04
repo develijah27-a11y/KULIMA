@@ -321,7 +321,7 @@ export default async function AdminDeliveriesPage({
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-black" style={{ color: 'var(--d-text)', letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: 'var(--d-text)', letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Delivery Management
         </h1>
         <p className="text-sm mt-0.5" style={{ color: 'var(--d-muted)' }}>

@@ -168,7 +168,7 @@ export default async function FarmerMarketplacePage({
     <div className="max-w-2xl mx-auto space-y-5">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             My Listings
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>Manage your produce offers</p>
@@ -189,7 +189,7 @@ export default async function FarmerMarketplacePage({
       <div style={{ background: 'var(--color-primary-bg)', border: '1px solid var(--color-primary-muted)', borderRadius: 12, padding: '10px 16px', display: 'flex', gap: 10, alignItems: 'center' }}>
         <ShieldCheck size={16} style={{ color: '#065F46', flexShrink: 0 }} />
         <p style={{ fontSize: 12, color: '#065F46', margin: 0 }}>
-          Kulima alerts you if any offer is more than 30% below your asking price.
+          AgriNova alerts you if any offer is more than 30% below your asking price.
         </p>
       </div>
 

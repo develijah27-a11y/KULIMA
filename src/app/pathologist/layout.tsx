@@ -25,6 +25,7 @@ const PATHOLOGIST_NAV = [
   { href: '/pathologist/profile',         icon: 'profile',        label: 'My Profile',      divider: true, sectionLabel: 'Account' },
   { href: '/pathologist/wallet',          icon: 'earnings',       label: 'Wallet & Earnings' },
   { href: '/pathologist/notifications',   icon: 'notifications',  label: 'Notifications' },
+  { href: '/pathologist/verify',          icon: 'verify',         label: 'Get Verified' },
   { href: '/pathologist/settings',        icon: 'settings',       label: 'Settings' },
 ];
 

@@ -37,7 +37,7 @@ export default async function OfftakerContractsPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Contracts</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Contracts</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>{rows.length} contract{rows.length !== 1 ? 's' : ''} · {active.length} active</p>
         </div>
         <Link href="/offtaker/pipeline/new" style={{ padding: '8px 16px', background: C.blue, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>

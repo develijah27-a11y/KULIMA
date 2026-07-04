@@ -13,13 +13,13 @@ function SignInContent() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Sign in to your Kulima account"
+      subtitle="Sign in to your AgriNova account"
       footer={
         <span>
           Don&apos;t have an account?{' '}
           <Link
             href="/auth/signup"
-            style={{ color: '#F97316', fontWeight: 700 }}
+            style={{ color: 'var(--color-primary)', fontWeight: 700 }}
           >
             Create one
           </Link>

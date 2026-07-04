@@ -18,7 +18,7 @@ const serwist = new Serwist({
     {
       matcher: ({ request }) => request.headers.get('RSC') === '1',
       handler: new StaleWhileRevalidate({
-        cacheName: 'kulima-rsc',
+        cacheName: 'agrinova-rsc',
         plugins: [new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 300 })],
       }),
     },
@@ -27,7 +27,7 @@ const serwist = new Serwist({
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/weather'),
       handler: new StaleWhileRevalidate({
-        cacheName: 'kulima-weather',
+        cacheName: 'agrinova-weather',
         plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 1800 })],
       }),
     },
@@ -38,7 +38,7 @@ const serwist = new Serwist({
         url.pathname.startsWith('/api/cash-crop-prices')
       ),
       handler: new StaleWhileRevalidate({
-        cacheName: 'kulima-prices',
+        cacheName: 'agrinova-prices',
         plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 300 })],
       }),
     },
@@ -51,7 +51,7 @@ const serwist = new Serwist({
         url.pathname.startsWith('/api/planting')
       ),
       handler: new NetworkFirst({
-        cacheName: 'kulima-farmer',
+        cacheName: 'agrinova-farmer',
         networkTimeoutSeconds: 5,
         plugins: [new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 86400 })],
       }),
@@ -61,14 +61,14 @@ const serwist = new Serwist({
     {
       matcher: ({ request }) => request.destination === 'image',
       handler: new CacheFirst({
-        cacheName: 'kulima-images',
+        cacheName: 'agrinova-images',
         plugins: [new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 2592000 })],
       }),
     },
     {
       matcher: ({ url }) => url.origin === 'https://fonts.googleapis.com',
       handler: new CacheFirst({
-        cacheName: 'kulima-fonts',
+        cacheName: 'agrinova-fonts',
         plugins: [new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 31536000 })],
       }),
     },
@@ -78,7 +78,7 @@ const serwist = new Serwist({
     {
       matcher: ({ request }) => request.mode === 'navigate',
       handler: new NetworkFirst({
-        cacheName: 'kulima-pages',
+        cacheName: 'agrinova-pages',
         networkTimeoutSeconds: 3,
         plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 86400 })],
       }),

@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createFarmSchema, farmQuerySchema } from '@/features/farms/validation/farm.schema';
 import { createFarm, getFarmsByUser } from '@/features/farms/services/farm.service';
 import { getCurrentUser } from '@/features/auth/services/auth.service';
@@ -71,6 +72,8 @@ export async function POST(request: NextRequest) {
 
     const farm = await createFarm({ userId: user.id, ...validation.data });
 
+    revalidatePath('/farmer/dashboard');
+    revalidatePath('/farmer/farm');
     return NextResponse.json({ success: true, data: { farm } }, { status: 201 });
   } catch (error) {
     const { response, statusCode } = handleError(error);

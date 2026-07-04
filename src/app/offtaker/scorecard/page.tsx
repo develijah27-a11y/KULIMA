@@ -25,7 +25,7 @@ export default async function SupplierScorecardPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Farmer Ratings</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Farmer Ratings</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>How reliable and good each farmer is</p>
         </div>
       </div>

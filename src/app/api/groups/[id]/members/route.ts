@@ -53,7 +53,7 @@ export async function POST(req: Request, { params }: Ctx) {
     .limit(1)
     .single();
 
-  if (!found) return NextResponse.json({ error: 'No farmer found with that phone number. They must be registered on Kulima first.' }, { status: 404 });
+  if (!found) return NextResponse.json({ error: 'No farmer found with that phone number. They must be registered on AgriNova first.' }, { status: 404 });
   if (found.id === myProfile.id) return NextResponse.json({ error: 'You are already a member of this group.' }, { status: 400 });
 
   const { error } = await (supabase.from as any)('farmer_group_members').insert({

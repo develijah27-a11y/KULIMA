@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { WalletActions } from './WalletActions';
 import { EscrowFundButton } from './EscrowFund';
+import { Banknote } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -64,10 +65,10 @@ export default async function BuyerWalletPage() {
   return (
     <div className="max-w-xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           My Wallet
         </h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Kulima Pay — UGX</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>AgriNova Pay — UGX</p>
       </div>
 
       {/* Balance card */}
@@ -75,7 +76,7 @@ export default async function BuyerWalletPage() {
         <p style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>
           Available Balance
         </p>
-        <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           UGX {Math.round(balance).toLocaleString()}
         </p>
         {escrowBalance > 0 && (

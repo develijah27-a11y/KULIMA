@@ -143,7 +143,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         setError('Your email address is not confirmed yet. Please check your inbox and click the confirmation link, then try signing in again.');
       } else {
         // Only log errors that aren't expected auth failures
-        console.error('[Kulima Auth] Unexpected error during', mode, ':', err);
+        console.error('[AgriNova Auth] Unexpected error during', mode, ':', err);
         setError(msg);
       }
     } finally {
@@ -153,7 +153,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   if (clearingSession) {
     return (
-      <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF', fontSize: 14 }}>
+      <div style={{ textAlign: 'center', padding: '32px 0', color: 'rgba(240,253,244,0.55)', fontSize: 14 }}>
         Preparing sign-up form…
       </div>
     );
@@ -177,7 +177,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         <>
           <div>
             <label htmlFor="fullName" className="block text-sm mb-1.5"
-              style={{ color: '#000000', fontWeight: 800 }}>
+              style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>
               Full name
             </label>
             <input
@@ -193,8 +193,8 @@ export function AuthForm({ mode }: AuthFormProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="phoneNumber" className="block text-sm mb-1.5"
-                style={{ color: '#000000', fontWeight: 800 }}>
-                Phone <span className="ml-1 text-xs" style={{ color: '#6B7280', fontWeight: 600 }}>optional</span>
+                style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>
+                Phone <span className="ml-1 text-xs" style={{ color: 'rgba(240,253,244,0.45)', fontWeight: 600 }}>optional</span>
               </label>
               <input
                 id="phoneNumber" type="tel" value={phoneNumber}
@@ -206,8 +206,8 @@ export function AuthForm({ mode }: AuthFormProps) {
             </div>
             <div>
               <label htmlFor="location" className="block text-sm mb-1.5"
-                style={{ color: '#000000', fontWeight: 800 }}>
-                District <span className="ml-1 text-xs" style={{ color: '#6B7280', fontWeight: 600 }}>optional</span>
+                style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>
+                District <span className="ml-1 text-xs" style={{ color: 'rgba(240,253,244,0.45)', fontWeight: 600 }}>optional</span>
               </label>
               <input
                 id="location" type="text" value={location}
@@ -226,7 +226,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       {/* Email */}
       <div>
         <label htmlFor="email" className="block text-sm mb-1.5"
-          style={{ color: '#000000', fontWeight: 800 }}>
+          style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>
           Email address
         </label>
         <input
@@ -242,10 +242,10 @@ export function AuthForm({ mode }: AuthFormProps) {
       {/* Password */}
       <div>
         <label htmlFor="password" className="block text-sm mb-1.5"
-          style={{ color: '#000000', fontWeight: 800 }}>
+          style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>
           Password
           {mode === 'signup' && (
-            <span className="ml-1 text-xs" style={{ color: '#6B7280', fontWeight: 600 }}>
+            <span className="ml-1 text-xs" style={{ color: 'rgba(240,253,244,0.45)', fontWeight: 600 }}>
               min. 6 characters
             </span>
           )}

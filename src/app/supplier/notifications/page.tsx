@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getOrCreateProfile } from '@/lib/supabase/get-profile';
 import { Bell } from 'lucide-react';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
@@ -8,10 +9,11 @@ export default async function SupplierNotificationsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
+const profile = await getOrCreateProfile(supabase, user);
 
   const { data } = await supabase.from('notifications')
     .select('*')
-    .eq('user_id', user.id)
+    .eq('farmer_id', profile?.id ?? '')
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -21,7 +23,7 @@ export default async function SupplierNotificationsPage() {
   if (unread > 0) {
     await supabase.from('notifications')
       .update({ read: true })
-      .eq('user_id', user.id)
+      .eq('farmer_id', profile?.id ?? '')
       .eq('read', false);
   }
 

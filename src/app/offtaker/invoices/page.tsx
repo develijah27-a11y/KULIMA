@@ -27,7 +27,7 @@ export default async function InvoicesPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Invoices</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Invoices</h1>
         {rows.length > 0 && <PrintInvoicesButton />}
       </div>
       <p className="text-sm" style={{ color: C.muted }}>{rows.length} completed contracts · {unpaid.length} awaiting payment</p>

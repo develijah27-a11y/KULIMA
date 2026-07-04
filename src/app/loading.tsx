@@ -1,8 +1,8 @@
 export default function GlobalLoading() {
   return (
-    <div style={{ background: '#1A0800', minHeight: '100vh', display: 'flex' }}>
+    <div style={{ background: 'var(--color-soil)', minHeight: '100vh', display: 'flex' }}>
       {/* Sidebar skeleton */}
-      <div style={{ width: 220, minHeight: '100vh', background: '#200E00', borderRight: '1px solid rgba(249,115,22,0.08)', padding: '20px 16px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ width: 220, minHeight: '100vh', background: 'var(--color-soil-mid)', borderRight: '1px solid rgba(74,222,128,0.08)', padding: '20px 16px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {/* Logo */}
         <div className="orange-skeleton" style={{ height: 40, width: '70%', marginBottom: 16 }} />
         {/* Nav items */}
@@ -27,7 +27,7 @@ export default function GlobalLoading() {
       {/* Main content skeleton */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top bar */}
-        <div style={{ height: 64, background: '#200E00', borderBottom: '1px solid rgba(249,115,22,0.08)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ height: 64, background: 'var(--color-soil-mid)', borderBottom: '1px solid rgba(74,222,128,0.08)', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className="orange-skeleton" style={{ height: 20, width: 220 }} />
           <div style={{ display: 'flex', gap: 10 }}>
             <div className="orange-skeleton" style={{ height: 36, width: 36, borderRadius: 99 }} />

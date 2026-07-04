@@ -38,7 +38,7 @@ export default async function RiskManagementPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Risk Management</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Risk Management</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Monitor procurement risks and supply chain exposure</p>
       </div>
 

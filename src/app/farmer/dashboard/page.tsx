@@ -339,7 +339,7 @@ async function MarketPricesTable({ userId }: { userId: string }) {
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Today's Prices
         </p>
         <Link href="/farmer/prices" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
@@ -409,7 +409,7 @@ async function WeatherForecast({ userId }: { userId: string }) {
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Weather Forecast
         </p>
         <Link href="/farmer/weather" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Details →</Link>
@@ -454,7 +454,7 @@ async function RecentOffers({ userId }: { userId: string }) {
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent Offers</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Recent Offers</p>
         <Link href="/farmer/marketplace" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
       {rows.length === 0 ? (
@@ -515,7 +515,7 @@ async function FinanceOverview({ userId }: { userId: string }) {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Farm Score
         </p>
       </div>
@@ -546,7 +546,7 @@ async function DiseasePanel({ userId }: { userId: string }) {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Crop Disease Alerts
         </p>
       </div>
@@ -600,7 +600,7 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             Planting Alerts
           </p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>
@@ -650,7 +650,7 @@ function QuickActions() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (

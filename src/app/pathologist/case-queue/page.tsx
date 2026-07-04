@@ -42,7 +42,7 @@ export default async function CaseQueuePage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Case Queue</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>New Cases</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>{rows.length} pending case{rows.length !== 1 ? 's' : ''} awaiting triage</p>
         </div>
         <Link href="/pathologist/my-cases/new" style={{ padding: '8px 16px', background: C.red, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>

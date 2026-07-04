@@ -42,7 +42,7 @@ async function UserGrowthChart() {
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>User Growth — 30 Days</p>
+            <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>User Growth — 30 Days</p>
             <p className="text-xs mt-0.5" style={{ color: C.muted }}>New registrations per day</p>
           </div>
           <div className="text-right">
@@ -104,7 +104,7 @@ async function GmvChart() {
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>GMV — 8 Weeks</p>
+            <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>GMV — 8 Weeks</p>
             <p className="text-xs mt-0.5" style={{ color: C.muted }}>Gross market value of completed trades</p>
           </div>
           <div className="text-right">
@@ -160,7 +160,7 @@ async function CropDemand() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Crop Supply Ranking</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Crop Supply Ranking</p>
         <p className="text-xs mt-0.5" style={{ color: C.muted }}>Active listing volume by crop type</p>
       </div>
       {sorted.length === 0 ? (
@@ -217,7 +217,7 @@ async function PlatformFunnel() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Platform Funnel</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Platform Funnel</p>
         <p className="text-xs mt-0.5" style={{ color: C.muted }}>User journey from signup to completed deal</p>
       </div>
       <div className="p-5 space-y-4">
@@ -268,7 +268,7 @@ async function TopDistricts() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Top Districts</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Top Districts</p>
         <p className="text-xs mt-0.5" style={{ color: C.muted }}>By active listings and user count</p>
       </div>
       {sorted.length === 0 ? (
@@ -305,7 +305,7 @@ export default async function AdminAnalyticsPage() {
   return (
     <div className="space-y-5 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Platform Analytics</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Platform Analytics</h1>
         <p className="text-sm mt-0.5" style={{ color: C.muted }}>Growth, revenue, and marketplace trends</p>
       </div>
 

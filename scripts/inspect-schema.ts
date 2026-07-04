@@ -62,7 +62,7 @@ interface ForeignKeyInfo {
 
 async function inspectSchema(): Promise<void> {
   console.log('='.repeat(80));
-  console.log('KULIMA AGRITECH DATABASE SCHEMA INSPECTION');
+  console.log('AGRINOVA AGRITECH DATABASE SCHEMA INSPECTION');
   console.log('='.repeat(80));
   console.log();
 

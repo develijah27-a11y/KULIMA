@@ -71,7 +71,7 @@ export default function AdminAlertPage() {
     width: '100%', padding: '10px 14px', borderRadius: 10,
     border: `1px solid ${C.border}`, background: C.inputBg,
     color: C.inputText, fontSize: 14, outline: 'none',
-    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    fontFamily: "'Poppins', 'Inter', system-ui, sans-serif",
   };
 
   const labelStyle: React.CSSProperties = {
@@ -85,7 +85,7 @@ export default function AdminAlertPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Broadcast Alert
         </h1>
         <p className="text-sm mt-0.5" style={{ color: C.muted }}>Send a notification to users across the platform</p>
@@ -174,7 +174,7 @@ export default function AdminAlertPage() {
               background: (state === 'sending' || !title.trim() || !body.trim()) ? 'var(--color-surface-2)' : C.greenMed,
               color: (state === 'sending' || !title.trim() || !body.trim()) ? C.muted : '#fff',
               fontSize: 14, fontWeight: 700, cursor: 'pointer',
-              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontFamily: "'Poppins', 'Inter', system-ui, sans-serif",
               transition: 'background 0.15s ease',
             }}
           >

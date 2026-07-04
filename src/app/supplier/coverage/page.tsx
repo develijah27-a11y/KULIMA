@@ -24,7 +24,7 @@ export default async function SupplierCoveragePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>My Service Area</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>My Service Area</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Districts where you deliver farm supplies</p>
       </div>
 
@@ -52,7 +52,7 @@ export default async function SupplierCoveragePage() {
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
         <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}` }}>
           <p className="text-sm font-bold" style={{ color: C.text }}>All Uganda Districts</p>
-          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Farmers from these districts are active on Kulima</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Farmers from these districts are active on AgriNova</p>
         </div>
         <div style={{ padding: '16px 20px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {DISTRICTS.map(d => (

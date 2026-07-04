@@ -38,7 +38,7 @@ export default async function OfftakerWalletPage() {
     <div className="max-w-xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Wallet</h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Procurement escrow and payments — Kulima Pay</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>Contract escrow and payments — AgriNova Pay</p>
       </div>
 
       <div style={{ background: 'linear-gradient(135deg, #0C1C35 0%, #1e3a5f 100%)', borderRadius: 20, padding: '24px 24px 20px', color: '#fff' }}>
@@ -49,7 +49,7 @@ export default async function OfftakerWalletPage() {
         )}
         {escrowBalance === 0 && <div style={{ marginBottom: 16 }} />}
         <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 14px', display: 'inline-block' }}>
-          <p style={{ fontSize: 9, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', margin: '0 0 3px' }}>Total Procurement Spend</p>
+          <p style={{ fontSize: 9, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', margin: '0 0 3px' }}>Total Spend</p>
           <p style={{ fontSize: 15, fontWeight: 800, margin: 0 }}>UGX {Math.round(totalSpent).toLocaleString()}</p>
         </div>
       </div>

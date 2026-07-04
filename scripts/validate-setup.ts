@@ -131,7 +131,7 @@ async function validateTypeScriptSetup() {
 }
 
 function printResults() {
-  console.log('\n🔍 Kulima Setup Validation Results\n');
+  console.log('\n🔍 AgriNova Setup Validation Results\n');
   console.log('═'.repeat(60));
 
   const categories = [...new Set(results.map(r => r.category))];

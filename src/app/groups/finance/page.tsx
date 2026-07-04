@@ -35,7 +35,7 @@ export default async function GroupFinancePage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Group Finance</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Group Finance</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>Track contributions, expenses, and group funds</p>
         </div>
         <Link href="/groups/finance/record" style={{ padding: '8px 16px', background: C.greenMed, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -52,7 +52,7 @@ export default async function GroupFinancePage() {
         ].map(({ label, value, color }) => (
           <div key={label} style={{ background: C.cardBg, borderRadius: 12, boxShadow: C.cardShadow, padding: '14px' }}>
             <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
-            <p style={{ fontSize: 15, fontWeight: 900, color, margin: 0, letterSpacing: '-0.02em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <p style={{ fontSize: 15, fontWeight: 900, color, margin: 0, letterSpacing: '-0.02em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
               {(value < 0 ? '-' : '')}UGX {Math.abs(value).toLocaleString()}
             </p>
           </div>

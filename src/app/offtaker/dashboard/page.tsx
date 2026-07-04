@@ -96,7 +96,7 @@ function QuickActions() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
@@ -188,7 +188,7 @@ async function ActiveContracts({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Active Deals</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Active Deals</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>Closest delivery date first</p>
         </div>
         <Link href="/offtaker/pipeline" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
@@ -252,7 +252,7 @@ async function AvailableSupply() {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Farmers Selling</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Farmers Selling</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>Produce ready to buy now</p>
         </div>
         <Link href="/offtaker/pipeline" className="text-xs font-semibold" style={{ color: C.greenMed }}>Browse all →</Link>
@@ -305,7 +305,7 @@ async function SupplierScorecard({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Farmer Ratings</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Farmer Ratings</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>Your best-performing farmers</p>
         </div>
         <Link href="/offtaker/scorecard" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
@@ -357,7 +357,7 @@ export default async function OfftakerDashboardPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             Welcome back, {firstName}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>Bulk Buyer · {profile?.location ?? 'Uganda'}</p>

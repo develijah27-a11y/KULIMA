@@ -36,14 +36,14 @@ export default async function SeasonPlannerPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Season Planner</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Season Planner</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Coordinate your group's planting and harvest calendar</p>
       </div>
 
       {/* Current Season */}
       <div style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%)', borderRadius: 16, padding: '20px', color: '#fff' }}>
         <p style={{ fontSize: 11, fontWeight: 700, opacity: 0.8, margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Current Season</p>
-        <p style={{ fontSize: 22, fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{currentSeason.name} · {currentSeason.months}</p>
+        <p style={{ fontSize: 22, fontWeight: 900, margin: '0 0 4px', letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>{currentSeason.name} · {currentSeason.months}</p>
         <p style={{ fontSize: 13, opacity: 0.85, margin: '0 0 16px' }}>{currentSeason.desc}</p>
         <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 8, height: 8, marginBottom: 6, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${progress}%`, background: '#fff', borderRadius: 8, transition: 'width 0.5s' }} />

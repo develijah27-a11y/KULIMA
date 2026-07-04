@@ -14,7 +14,7 @@ export default function SignUpPage() {
           Already have an account?{' '}
           <Link
             href="/auth/signin"
-            style={{ color: '#F97316', fontWeight: 700 }}
+            style={{ color: 'var(--color-primary)', fontWeight: 700 }}
           >
             Sign in
           </Link>

@@ -98,7 +98,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             My Products
           </h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>{products.length} product{products.length !== 1 ? 's' : ''} listed</p>
@@ -215,7 +215,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
       {modal !== null && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, overflowY: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '32px 16px' }}>
           <div style={{ background: C.cardBg, borderRadius: 20, padding: 24, width: '100%', maxWidth: 520 }}>
-            <p className="text-base font-black mb-5" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            <p className="text-base font-black mb-5" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
               {isEdit ? 'Edit Product' : 'Add Product'}
             </p>
 

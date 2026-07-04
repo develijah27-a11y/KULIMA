@@ -128,7 +128,7 @@ export function ConsultationBooking({ walletBalance, consultations }: Props) {
             maxLength={500}
             style={{
               width: '100%', borderRadius: 10, border: `1.5px solid ${C.border}`, padding: '9px 12px',
-              fontSize: 12, fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: 12, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif",
               color: C.text, background: 'var(--d-page)', outline: 'none', resize: 'none',
             }}
           />

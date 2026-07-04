@@ -21,13 +21,13 @@ const SECTIONS = [
     title: 'Vehicle & Fleet',
     items: [
       { label: 'My Vehicle', desc: 'Update truck type, plate, capacity and cold chain status', icon: <Truck size={20} />, href: '/transporter/vehicle' },
-      { label: 'Cold Chain Logs', desc: 'Temperature compliance records for perishable loads', icon: <Snowflake size={20} />, href: '/transporter/cold-chain' },
+      { label: 'Cool Transport Logs', desc: 'Temperature compliance records for perishable loads', icon: <Snowflake size={20} />, href: '/transporter/cold-chain' },
     ],
   },
   {
     title: 'Jobs',
     items: [
-      { label: 'Job Queue', desc: 'Browse and filter open delivery requests', icon: <Inbox size={20} />, href: '/transporter/job-queue' },
+      { label: 'Available Jobs', desc: 'Browse and filter open delivery requests', icon: <Inbox size={20} />, href: '/transporter/job-queue' },
       { label: 'Active Jobs', desc: 'Manage current assignments and update status', icon: <Map size={20} />, href: '/transporter/active' },
       { label: 'Completed Deliveries', desc: 'View your full delivery history', icon: <CheckCircle2 size={20} />, href: '/transporter/deliveries' },
     ],
@@ -49,7 +49,7 @@ function SignOutInline() {
       </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
-        <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
+        <p style={{ fontSize: 12, color: C.muted }}>Log out of your AgriNova account</p>
       </div>
       <span style={{ color: C.muted, fontSize: 16 }}>›</span>
     </button>

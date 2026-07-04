@@ -1,5 +1,5 @@
 export function initTheme() {
-  const saved = localStorage.getItem('kulima-theme');
+  const saved = localStorage.getItem('agrinova-theme');
   // Default to light unless the user explicitly chose dark
   const isDark = saved === 'dark';
   document.documentElement.classList.toggle('dark', isDark);
@@ -7,7 +7,7 @@ export function initTheme() {
 
 export function toggleTheme() {
   const isDark = document.documentElement.classList.toggle('dark');
-  localStorage.setItem('kulima-theme', isDark ? 'dark' : 'light');
+  localStorage.setItem('agrinova-theme', isDark ? 'dark' : 'light');
   return isDark;
 }
 

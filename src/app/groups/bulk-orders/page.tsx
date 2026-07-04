@@ -37,7 +37,7 @@ export default async function BulkOrdersPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Bulk Orders</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Bulk Orders</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>Pool with your group to get supplier discounts on farm inputs</p>
         </div>
       </div>

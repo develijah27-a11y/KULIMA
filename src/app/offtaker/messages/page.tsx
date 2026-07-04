@@ -39,7 +39,7 @@ export default async function MessagesPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Messages</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Messages</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Your farmer contacts and system activity</p>
       </div>
 

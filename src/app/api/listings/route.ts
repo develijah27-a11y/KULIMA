@@ -1,4 +1,5 @@
 ﻿import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
 
@@ -65,6 +66,8 @@ export async function POST(req: Request) {
   const { data, error } = await (supabase.from as any)('listings').insert(insertPayload).select().single();
 
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  revalidatePath('/farmer/dashboard');
+  revalidatePath('/farmer/marketplace');
   return NextResponse.json({ success: true, data });
 }
 
@@ -84,5 +87,7 @@ export async function PATCH(req: Request) {
     .eq('id', id)
     .eq('farmer_id', profile.id);
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  revalidatePath('/farmer/dashboard');
+  revalidatePath('/farmer/marketplace');
   return NextResponse.json({ success: true });
 }

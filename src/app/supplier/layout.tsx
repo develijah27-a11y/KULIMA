@@ -22,6 +22,7 @@ const SUPPLIER_NAV = [
   // ── Account
   { href: '/supplier/wallet',      icon: 'wallet',       label: 'Wallet',        divider: true, sectionLabel: 'Account' },
   { href: '/supplier/notifications',icon: 'notifications',label: 'Notifications' },
+  { href: '/supplier/verify',      icon: 'verify',       label: 'Get Verified' },
   { href: '/supplier/settings',    icon: 'settings',     label: 'Settings' },
 ];
 

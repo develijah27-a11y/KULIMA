@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
@@ -26,6 +27,8 @@ export async function POST(req: Request) {
   }).select('id').single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath('/transporter/dashboard');
+  revalidatePath('/transporter/vehicle');
   return NextResponse.json({ success: true, vehicleId: data.id });
 }
 
@@ -44,5 +47,7 @@ export async function PATCH(req: Request) {
 
   const { error } = await (supabase.from as any)('vehicles').update(safe).eq('id', id).eq('user_id', user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  revalidatePath('/transporter/dashboard');
+  revalidatePath('/transporter/vehicle');
   return NextResponse.json({ success: true });
 }

@@ -10,7 +10,7 @@ const SECTIONS = [
     title: 'Account',
     items: [
       { label: 'Business Profile', desc: 'Update your company name and contact details', icon: <Store size={20} />, href: '/farmer/profile' },
-      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and Kulima Pay balance', icon: <CreditCard size={20} />, href: '/supplier/wallet' },
+      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and AgriNova Pay balance', icon: <CreditCard size={20} />, href: '/supplier/wallet' },
       { label: 'Notifications', desc: 'Order alerts and low-stock warnings', icon: <Bell size={20} />, href: '/supplier/notifications' },
     ],
   },
@@ -18,14 +18,14 @@ const SECTIONS = [
     title: 'Products',
     items: [
       { label: 'Product Catalogue', desc: 'Add, edit, and update stock for your products', icon: <Package size={20} />, href: '/supplier/catalogue' },
-      { label: 'Flash Deals', desc: 'Create time-limited discounts to move stock fast', icon: <Zap size={20} />, href: '/supplier/flash-deals' },
+      { label: 'Quick Deals', desc: 'Offer lower prices to move stock quickly', icon: <Zap size={20} />, href: '/supplier/flash-deals' },
       { label: 'Pending Orders', desc: 'View and fulfil incoming farmer orders', icon: <ShoppingCart size={20} />, href: '/supplier/orders' },
     ],
   },
   {
     title: 'Coverage & Analytics',
     items: [
-      { label: 'Coverage Zones', desc: 'Set the districts where you supply products', icon: <MapPin size={20} />, href: '/supplier/coverage' },
+      { label: 'My Service Area', desc: 'Set the districts where you supply products', icon: <MapPin size={20} />, href: '/supplier/coverage' },
       { label: 'Demand Map', desc: 'See where farmers are looking for your products', icon: <Map size={20} />, href: '/supplier/demand' },
       { label: 'Analytics', desc: 'Sales performance and revenue trends', icon: <BarChart3 size={20} />, href: '/supplier/analytics' },
     ],
@@ -44,7 +44,7 @@ function SignOutInline() {
       </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
-        <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
+        <p style={{ fontSize: 12, color: C.muted }}>Log out of your AgriNova account</p>
       </div>
       <span style={{ color: C.muted, fontSize: 16 }}>›</span>
     </button>

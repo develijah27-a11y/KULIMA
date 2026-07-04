@@ -33,7 +33,7 @@ export default function SupplierError({
           fontSize: 16,
           fontWeight: 800,
           color: 'var(--d-text)',
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontFamily: "'Poppins', 'Inter', system-ui, sans-serif",
         }}
       >
         Something went wrong

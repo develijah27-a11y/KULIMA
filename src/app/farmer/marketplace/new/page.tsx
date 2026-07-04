@@ -40,11 +40,11 @@ export default async function NewListingPage() {
       </div>
 
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Post a Listing
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>
-          Your produce will be visible to all verified buyers on Kulima.
+          Your produce will be visible to all verified buyers on AgriNova.
         </p>
       </div>
 

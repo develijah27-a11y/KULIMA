@@ -18,7 +18,7 @@ const SECTIONS = [
     title: 'Cases',
     items: [
       { label: 'My Cases', desc: 'View and manage your assigned diagnoses', icon: <Microscope size={20} />, href: '/pathologist/my-cases' },
-      { label: 'Case Queue', desc: 'Browse unassigned disease reports needing review', icon: <ClipboardList size={20} />, href: '/pathologist/case-queue' },
+      { label: 'New Cases', desc: 'Browse new farmer disease reports needing review', icon: <ClipboardList size={20} />, href: '/pathologist/case-queue' },
       { label: 'Disease Alerts', desc: 'Active outbreak warnings across all districts', icon: <AlertOctagon size={20} />, href: '/pathologist/disease-alerts' },
     ],
   },
@@ -42,7 +42,7 @@ function SignOutInline() {
       </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
-        <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
+        <p style={{ fontSize: 12, color: C.muted }}>Log out of your AgriNova account</p>
       </div>
       <span style={{ color: C.muted, fontSize: 16 }}>›</span>
     </button>

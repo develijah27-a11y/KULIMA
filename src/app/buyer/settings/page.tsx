@@ -13,7 +13,7 @@ const SECTIONS = [
     title: 'Account',
     items: [
       { label: 'Edit Profile', desc: 'Update your name, contact details and location', icon: <User size={20} />, href: '/farmer/profile' },
-      { label: 'Wallet & Payments', desc: 'Manage your mobile money and Kulima Pay balance', icon: <CreditCard size={20} />, href: '/buyer/wallet' },
+      { label: 'Wallet & Payments', desc: 'Manage your mobile money and AgriNova Pay balance', icon: <CreditCard size={20} />, href: '/buyer/wallet' },
       { label: 'Notifications', desc: 'View and manage your alerts and updates', icon: <Bell size={20} />, href: '/buyer/notifications' },
     ],
   },
@@ -26,9 +26,9 @@ const SECTIONS = [
     ],
   },
   {
-    title: 'Cold Chain',
+    title: 'Cool Transport',
     items: [
-      { label: 'Cold Chain Storage', desc: 'Refrigerated delivery history and bookings', icon: <Snowflake size={20} />, href: '/buyer/cold-chain' },
+      { label: 'Cool Transport', desc: 'Refrigerated delivery history and bookings', icon: <Snowflake size={20} />, href: '/buyer/cold-chain' },
     ],
   },
 ];
@@ -48,7 +48,7 @@ function SignOutInline() {
       </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
-        <p style={{ fontSize: 12, color: C.muted }}>Log out of your Kulima account</p>
+        <p style={{ fontSize: 12, color: C.muted }}>Log out of your AgriNova account</p>
       </div>
       <span style={{ color: C.muted, fontSize: 16 }}>›</span>
     </button>

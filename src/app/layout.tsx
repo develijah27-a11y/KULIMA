@@ -8,14 +8,14 @@ import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { ServiceWorkerRegistrar } from "@/components/shared/ServiceWorkerRegistrar";
 
 export const metadata: Metadata = {
-  title: "Kulima — Smart Farm Management for Uganda",
+  title: "AgriNova — Smart Farm Management for Uganda",
   description:
     "Real-time weather forecasts, market prices, crop disease detection, and buyer connections — all in one platform for Ugandan smallholder farmers.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Kulima",
+    title: "AgriNova",
   },
 };
 
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 const themeScript = `
 (function(){
   try {
-    var saved = localStorage.getItem('kulima-theme');
+    var saved = localStorage.getItem('agrinova-theme');
     var sysDark = matchMedia('(prefers-color-scheme: dark)').matches;
     var isDark = saved ? saved === 'dark' : sysDark;
     document.documentElement.classList.toggle('dark', isDark);
@@ -42,11 +42,14 @@ export default function RootLayout({
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
-        <meta name="theme-color" content="#22C55E" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0A0B0D" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#166B3A" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)" />
         {/* Preconnect to external origins — reduces DNS lookup time */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -55,12 +58,12 @@ export default function RootLayout({
         {/* display=swap in the URL prevents font from blocking render */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=DM+Mono:wght@400&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400&display=swap"
         />
       </head>
       <body
         className={cn("min-h-screen antialiased")}
-        style={{ background: '#1A0800', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
+        style={{ background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
       >
         <AuthProvider>{children}</AuthProvider>
         <ToastContainer />

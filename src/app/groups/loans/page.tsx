@@ -34,7 +34,7 @@ export default async function GroupLoansPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Group Loans</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Group Loans</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Internal lending to help members bridge seasonal cash gaps</p>
       </div>
 
@@ -42,7 +42,7 @@ export default async function GroupLoansPage() {
         <div style={{ padding: '14px 18px', borderRadius: 12, background: 'var(--color-sky-bg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <p style={{ fontSize: 11, fontWeight: 700, color: C.blue, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Outstanding Loans</p>
-            <p style={{ fontSize: 20, fontWeight: 900, color: C.blue, margin: 0, letterSpacing: '-0.02em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>UGX {outstanding.toLocaleString()}</p>
+            <p style={{ fontSize: 20, fontWeight: 900, color: C.blue, margin: 0, letterSpacing: '-0.02em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>UGX {outstanding.toLocaleString()}</p>
           </div>
           <span style={{ display: 'flex', color: C.blue }}><Users size={28} /></span>
         </div>

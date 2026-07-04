@@ -102,7 +102,7 @@ function QuickActions() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
@@ -156,7 +156,7 @@ async function DemandIntelligence() {
           <Radio size={20} />
         </div>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--color-primary-muted)' }}>Demand Intelligence</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--color-primary-muted)' }}>What Farmers Need</p>
           <p className="text-sm font-bold text-white">What farmers near you are growing</p>
           <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>Stock these inputs to match current market demand</p>
         </div>
@@ -211,7 +211,7 @@ async function RecentOrders({ profileId }: { profileId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent Orders</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Recent Orders</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>Incoming from farmers & buyers</p>
         </div>
         <Link href="/supplier/orders" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
@@ -265,7 +265,7 @@ async function CataloguePreview({ profileId }: { profileId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Your Catalogue</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Your Catalogue</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>Sorted by lowest stock first</p>
         </div>
         <Link href="/supplier/catalogue" className="text-xs font-semibold" style={{ color: C.greenMed }}>Manage →</Link>
@@ -324,7 +324,7 @@ function GettingStarted() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Getting Started</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Getting Started</p>
         <p className="text-xs mt-0.5" style={{ color: C.muted }}>Complete these steps to start receiving orders</p>
       </div>
       <div className="divide-y" style={{ borderColor: C.border }}>
@@ -357,7 +357,7 @@ export default async function SupplierDashboardPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             Welcome, {firstName}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>

@@ -60,7 +60,7 @@ export default async function GeoClusterPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Farmers Near Me
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Disease outbreaks and crop prices by district — last 30 days</p>

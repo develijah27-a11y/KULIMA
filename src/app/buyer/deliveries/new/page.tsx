@@ -39,7 +39,7 @@ export default async function RequestDeliveryPage({
     <div className="max-w-xl mx-auto space-y-5">
       <div>
         <Link href="/buyer/offers" style={{ color: C.muted, fontSize: 13, textDecoration: 'none' }}>← My Offers</Link>
-        <h1 className="text-xl font-black mt-2" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black mt-2" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Request Delivery
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Find a transporter for your goods</p>

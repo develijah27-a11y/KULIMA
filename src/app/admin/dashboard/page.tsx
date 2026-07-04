@@ -130,7 +130,7 @@ async function RoleBreakdown() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>User Roles</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>User Roles</p>
         <p className="text-xs mt-0.5" style={{ color: C.muted }}>{total.toLocaleString()} total accounts</p>
       </div>
       <div className="p-5 space-y-3">
@@ -184,7 +184,7 @@ async function GrowthSparkline() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>7-Day Signups</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>7-Day Signups</p>
         <p className="text-xs mt-0.5" style={{ color: C.muted }}>New user registrations per day</p>
       </div>
       <div className="px-5 py-5">
@@ -224,7 +224,7 @@ async function RecentRegistrations() {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent Registrations</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Recent Registrations</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>Newest users across all roles</p>
         </div>
         <Link href="/admin/users" className="text-xs font-semibold" style={{ color: C.greenMed }}>All users →</Link>
@@ -287,7 +287,7 @@ async function PendingActions() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Pending Actions</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Pending Actions</p>
         <p className="text-xs mt-0.5" style={{ color: C.muted }}>Items requiring admin attention</p>
       </div>
       <div className="divide-y" style={{ borderColor: C.border }}>
@@ -328,7 +328,7 @@ async function MarketplaceActivity() {
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Marketplace Activity</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Marketplace Activity</p>
         <span className="text-xs" style={{ color: C.muted }}>Latest offers</span>
       </div>
       {rows.length === 0 ? (
@@ -384,7 +384,7 @@ async function DistrictActivity() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Top Districts</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Top Districts</p>
         <p className="text-xs mt-0.5" style={{ color: C.muted }}>Active listings by location</p>
       </div>
       {sorted.length === 0 ? (
@@ -440,7 +440,7 @@ async function MarketPriceSummary() {
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Market Prices</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Market Prices</p>
         <Link href="/admin/prices" className="text-xs font-semibold" style={{ color: C.greenMed }}>Update →</Link>
       </div>
       {summary.length === 0 ? (
@@ -489,7 +489,7 @@ function SystemHealth() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>System Health</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>System Health</p>
         <p className="text-xs mt-0.5" style={{ color: C.muted }}>All service status</p>
       </div>
       <div className="divide-y" style={{ borderColor: C.border }}>
@@ -573,10 +573,10 @@ export default async function AdminDashboardPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             Platform Command Centre
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: C.muted }}>{dayLabel} · KULIMA Admin</p>
+          <p className="text-sm mt-0.5" style={{ color: C.muted }}>{dayLabel} · AgriNova Admin</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ background: 'var(--color-primary)' }} />

@@ -25,6 +25,7 @@ const OFFTAKER_NAV = [
   // ── Account
   { href: '/offtaker/wallet',       icon: 'wallet',       label: 'Wallet',          divider: true, sectionLabel: 'Account' },
   { href: '/offtaker/notifications',icon: 'notifications',label: 'Notifications' },
+  { href: '/offtaker/verify',       icon: 'verify',       label: 'Get Verified' },
   { href: '/offtaker/settings',     icon: 'settings',     label: 'Settings' },
 ];
 

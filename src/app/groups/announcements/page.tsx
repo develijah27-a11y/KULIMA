@@ -39,7 +39,7 @@ export default async function AnnouncementsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Announcements</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Announcements</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Important updates for all group members</p>
       </div>
 

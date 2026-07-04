@@ -49,7 +49,7 @@ export default async function SpendAnalyticsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           My Spending
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>How much you have spent on produce</p>

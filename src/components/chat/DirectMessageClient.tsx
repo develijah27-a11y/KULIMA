@@ -246,7 +246,7 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
           style={{
             flex: 1, resize: 'none', border: `1.5px solid ${C.border}`,
             borderRadius: 12, padding: '10px 13px', fontSize: 13,
-            fontFamily: "'Plus Jakarta Sans', sans-serif", color: C.text,
+            fontFamily: "'Poppins', 'Inter', system-ui, sans-serif", color: C.text,
             background: 'var(--d-page)', outline: 'none',
             minHeight: 44, maxHeight: 120, lineHeight: 1.5,
           }}

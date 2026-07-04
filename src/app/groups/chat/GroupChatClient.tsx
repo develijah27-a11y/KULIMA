@@ -226,7 +226,7 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
             borderRadius: 12,
             padding: '10px 14px',
             fontSize: 13,
-            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontFamily: "'Poppins', 'Inter', system-ui, sans-serif",
             color: C.text,
             background: 'var(--d-input-bg, var(--d-page))',
             outline: 'none',

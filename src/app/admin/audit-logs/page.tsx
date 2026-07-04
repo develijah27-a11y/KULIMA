@@ -185,7 +185,7 @@ export default async function AdminAuditLogsPage({
   return (
     <div className="space-y-5 max-w-6xl mx-auto">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Audit Logs
         </h1>
         <p className="text-sm mt-0.5" style={{ color: C.muted }}>Admin actions and system events</p>

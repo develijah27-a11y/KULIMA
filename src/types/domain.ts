@@ -1,5 +1,5 @@
 
-// Types for Kulima-specific tables — extend with DB types generated after migration
+// Types for AgriNova-specific tables — extend with DB types generated after migration
 
 export interface MarketPrice {
   id: string;

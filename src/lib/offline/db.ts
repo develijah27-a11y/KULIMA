@@ -1,6 +1,6 @@
 import { openDB, DBSchema, type IDBPDatabase } from 'idb';
 
-interface KulimaOfflineDB extends DBSchema {
+interface AgriNovaOfflineDB extends DBSchema {
   outbox: {
     key: string;
     value: {
@@ -40,11 +40,13 @@ interface KulimaOfflineDB extends DBSchema {
   };
 }
 
-let dbInstance: IDBPDatabase<KulimaOfflineDB> | null = null;
+let dbInstance: IDBPDatabase<AgriNovaOfflineDB> | null = null;
 
-export async function getOfflineDB(): Promise<IDBPDatabase<KulimaOfflineDB>> {
+export async function getOfflineDB(): Promise<IDBPDatabase<AgriNovaOfflineDB>> {
   if (dbInstance) return dbInstance;
-  dbInstance = await openDB<KulimaOfflineDB>('kulima-offline', 1, {
+  // NOTE: keep the physical IndexedDB name 'kulima-offline' unchanged — renaming it
+  // would orphan any farmer's already-queued offline outbox actions (unsynced data).
+  dbInstance = await openDB<AgriNovaOfflineDB>('kulima-offline', 1, {
     upgrade(db) {
       const outbox = db.createObjectStore('outbox', { keyPath: 'id' });
       outbox.createIndex('by-type', 'type');

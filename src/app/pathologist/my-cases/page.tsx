@@ -40,7 +40,7 @@ export default async function MyCasesPage() {
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>My Cases</h1>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>My Cases</h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>{rows.length} case{rows.length !== 1 ? 's' : ''} assigned to you</p>
         </div>
         <Link href="/pathologist/my-cases/new" style={{ padding: '8px 16px', background: C.red, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -54,7 +54,7 @@ export default async function MyCasesPage() {
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No cases yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>Cases assigned to you from the queue will appear here.</p>
           <Link href="/pathologist/case-queue" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', background: C.red, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
-            Go to Case Queue →
+            Go to New Cases →
           </Link>
         </div>
       ) : (

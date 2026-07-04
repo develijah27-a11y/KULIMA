@@ -200,7 +200,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             Farm Inventory
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>
@@ -458,7 +458,7 @@ export function InventoryClient({ initialItems, profile }: Props) {
           >
             {/* Modal header */}
             <div className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-              <p className="font-black" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              <p className="font-black" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
                 {editingItem ? 'Edit Item' : 'Add Inventory Item'}
               </p>
               <button onClick={() => setShowForm(false)} className="text-xl leading-none" style={{ color: C.muted }}>×</button>

@@ -108,7 +108,7 @@ const DASHBOARD_ROOTS = [
   '/offtaker/dashboard', '/groups/dashboard',
 ];
 
-const COLLAPSED_KEY = 'kulima-sidebar-collapsed';
+const COLLAPSED_KEY = 'agrinova-sidebar-collapsed';
 
 function getInitialCollapsed(): boolean {
   if (typeof window === 'undefined') return false;
@@ -179,7 +179,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
             fontFamily: 'var(--font-display)',
           }}
         >
-          K
+          A
         </div>
         {!collapsed && (
           <span
@@ -189,7 +189,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
               whiteSpace: 'nowrap', overflow: 'hidden',
             }}
           >
-            Kulima
+            AgriNova
           </span>
         )}
       </div>

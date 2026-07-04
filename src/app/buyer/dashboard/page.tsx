@@ -97,7 +97,7 @@ function QuickActions() {
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Quick Actions</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Quick Actions</p>
       </div>
       <div className="grid grid-cols-5 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
@@ -149,7 +149,7 @@ async function ActiveOffers({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>My Offers</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>My Offers</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>Your recent price talks with farmers</p>
         </div>
         <Link href="/buyer/requests" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
@@ -227,7 +227,7 @@ async function RecentDeliveries({ userId }: { userId: string }) {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Recent Deliveries</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Recent Deliveries</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>Produce being transported to you</p>
         </div>
         <Link href="/buyer/deliveries" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
@@ -284,7 +284,7 @@ async function FreshListings() {
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
-          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>New Produce</p>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>New Produce</p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>Fresh from farmers — tap to make an offer</p>
         </div>
         <Link href="/buyer/listings" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Browse all →</Link>
@@ -355,7 +355,7 @@ async function MarketPulse() {
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Market Pulse</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Market Pulse</p>
         <Link href="/buyer/listings" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Browse market →</Link>
       </div>
       <div className="grid grid-cols-2 divide-x divide-y" style={{ borderColor: C.border }}>
@@ -447,7 +447,7 @@ async function WelcomeHeader({ userId }: { userId: string }) {
   return (
     <div className="flex items-start justify-between">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Welcome back, {firstName}
         </h1>
         <p className="text-sm mt-0.5" style={{ color: C.muted }}>Buyer · {profile?.location ?? 'Uganda'}</p>

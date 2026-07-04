@@ -78,7 +78,7 @@ export async function POST(req: Request) {
         account_bank: PROVIDER_BANK[provider],
         account_number: normalizedPhone,
         amount,
-        narration: 'Kulima Pay withdrawal',
+        narration: 'AgriNova Pay withdrawal',
         currency: 'UGX',
         reference: txRef,
       }),

@@ -80,7 +80,7 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
-      <Link href="/pathologist/cases" style={{ color: C.muted, fontSize: 13, textDecoration: 'none' }}>← Back to Case Queue</Link>
+      <Link href="/pathologist/cases" style={{ color: C.muted, fontSize: 13, textDecoration: 'none' }}>← Back to New Cases</Link>
 
       {/* Case summary */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
@@ -89,7 +89,7 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
             <Leaf size={26} />
           </div>
           <div>
-            <h1 className="text-lg font-black" style={{ color: C.text, letterSpacing: '-0.02em', margin: '0 0 4px', fontFamily: "'Plus Jakarta Sans', sans-serif", textTransform: 'capitalize' }}>
+            <h1 className="text-lg font-black" style={{ color: C.text, letterSpacing: '-0.02em', margin: '0 0 4px', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif", textTransform: 'capitalize' }}>
               {c.crop_type} Disease Report
             </h1>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -141,7 +141,7 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
       {/* Diagnosis section */}
       {(canDiagnose || c.diagnosis) && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
-          <p style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 16px', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Diagnosis & Treatment</p>
+          <p style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 16px', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Diagnosis & Treatment</p>
 
           {canDiagnose && (
             <div style={{ marginBottom: 12 }}>

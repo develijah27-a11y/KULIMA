@@ -118,7 +118,7 @@ export default async function AdminVerificationPage({
   return (
     <div className="space-y-5 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           KYC Verification Queue
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Review and approve user identity documents.</p>

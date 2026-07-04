@@ -67,7 +67,7 @@ export default async function FarmerProfilePage() {
   return (
     <div className="space-y-5 max-w-2xl mx-auto">
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           My Profile
         </h1>
         <ProfileEditForm initial={editInitial} />

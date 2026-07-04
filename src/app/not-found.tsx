@@ -30,7 +30,7 @@ export default function NotFound() {
         style={{
           fontSize: 96, fontWeight: 900, letterSpacing: '-0.05em',
           color: 'var(--color-primary)', lineHeight: 1, marginBottom: 8,
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontFamily: "'Poppins', 'Inter', system-ui, sans-serif",
         }}
       >
         404

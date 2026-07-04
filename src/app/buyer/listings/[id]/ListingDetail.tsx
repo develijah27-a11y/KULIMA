@@ -392,7 +392,7 @@ export function ListingDetail({
         <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
           <span style={{ display: 'flex', flexShrink: 0, color: '#065F46' }}><ShieldCheck size={18} /></span>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#065F46', margin: 0 }}>Kulima Buyer Protection</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#065F46', margin: 0 }}>AgriNova Buyer Protection</p>
             <p style={{ fontSize: 11, color: '#065F46', margin: '3px 0 0', opacity: 0.85 }}>
               Funds are held in escrow until you confirm receipt. Quality disputes handled within 48 hours.
             </p>
