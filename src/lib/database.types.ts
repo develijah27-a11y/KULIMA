@@ -368,30 +368,36 @@ export interface Database {
       notifications: {
         Row: {
           id: string
-          farmer_id: string
+          farmer_id: string | null
+          user_id: string | null
           type: string
           title: string
           body: string
+          data: Json | null
           read: boolean
           sent_at: string
           created_at: string
         }
         Insert: {
           id?: string
-          farmer_id: string
+          farmer_id?: string | null
+          user_id?: string | null
           type: string
           title: string
           body: string
+          data?: Json | null
           read?: boolean
           sent_at?: string
           created_at?: string
         }
         Update: {
           id?: string
-          farmer_id?: string
+          farmer_id?: string | null
+          user_id?: string | null
           type?: string
           title?: string
           body?: string
+          data?: Json | null
           read?: boolean
           sent_at?: string
           created_at?: string
@@ -401,6 +407,12 @@ export interface Database {
             foreignKeyName: "notifications_farmer_id_fkey"
             columns: ["farmer_id"]
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
             referencedColumns: ["id"]
           }
         ]

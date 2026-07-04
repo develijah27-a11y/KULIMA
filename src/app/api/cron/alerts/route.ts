@@ -16,14 +16,14 @@ export async function GET(req: Request) {
     if (rainDays.length > 0 && w.location_key) {
       // Notify all farmers in this district
       supabase.from('profiles')
-        .select('id')
+        .select('user_id')
         .eq('district', w.location_key)
         .eq('role', 'farmer')
         .then(({ data: farmers }) => {
           if (!farmers?.length) return;
           supabase.from('notifications').insert(
             farmers.map((f: any) => ({
-              farmer_id: f.id,
+              user_id: f.user_id,
               type:    'rain',
               title:   'Rain arriving in your area',
               body:    rainDays[0]?.weather?.[0]?.description ?? 'Heavy rain expected in the next few days',
