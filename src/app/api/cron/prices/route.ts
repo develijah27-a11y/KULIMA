@@ -1,15 +1,211 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// Vercel cron — run at 7AM EAT daily
+// Vercel cron — runs daily at 07:00 EAT (04:00 UTC)
+// Fetches real global commodity prices and stores them in market_prices
+// so farmers see the same reference prices shown on Google/international markets.
+//
+// Price sources (tried in order):
+//   1. Alpha Vantage   — set ALPHAVANTAGE_API_KEY in Vercel env vars (free tier OK)
+//   2. World Bank API  — free, no key, monthly data (used as fallback)
+//
+// Exchange rate:
+//   open.er-api.com — free, no key, daily USD/UGX rate
+
+// ── Types ────────────────────────────────────────────────────────────────
+
+interface CommoditySpec {
+  fn: string;          // Alpha Vantage function name
+  crop: string;        // crop_type for market_prices table
+  market: string;      // market_name for market_prices table
+  // Converts the raw number from the API to kg, then we multiply by USD rate
+  toKg: (raw: number) => number;
+  // World Bank indicator code (fallback)
+  wbIndicator?: string;
+}
+
+// ── Commodity definitions ─────────────────────────────────────────────────
+
+const COMMODITIES: CommoditySpec[] = [
+  {
+    fn: 'CORN',
+    crop: 'maize',
+    market: 'World Market (CBOT)',
+    toKg: (cents) => (cents / 100) / 25.4012,   // cents/bushel → USD/kg
+    wbIndicator: 'PMAIZMMT_USD',
+  },
+  {
+    fn: 'COFFEE',
+    crop: 'coffee',
+    market: 'World Market (ICE)',
+    toKg: (cents) => (cents / 100) / 0.453592,  // cents/lb → USD/kg
+    wbIndicator: 'PCOFFOTM_USD',
+  },
+  {
+    fn: 'COTTON',
+    crop: 'cotton',
+    market: 'World Market (ICE)',
+    toKg: (cents) => (cents / 100) / 0.453592,
+    wbIndicator: 'PCOTTINDUM_USD',
+  },
+  {
+    fn: 'SUGAR',
+    crop: 'sugar',
+    market: 'World Market (ICE)',
+    toKg: (cents) => (cents / 100) / 0.453592,
+    wbIndicator: 'PSUGAISAUSDM',
+  },
+  {
+    fn: 'WHEAT',
+    crop: 'wheat',
+    market: 'World Market (CBOT)',
+    toKg: (cents) => (cents / 100) / 27.2155,   // cents/bushel → USD/kg
+    wbIndicator: 'PWHEAMTUSDM',
+  },
+  {
+    fn: 'RICE',
+    crop: 'rice',
+    market: 'World Market (CBOT)',
+    toKg: (cents) => (cents / 100) / 45.3592,   // cents/cwt (100lb) → USD/kg
+    wbIndicator: 'PRICENPQUSDM',
+  },
+];
+
+// ── Exchange rate (free, no key) ──────────────────────────────────────────
+
+async function getUsdToUgx(): Promise<number> {
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD', {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) throw new Error('rate fetch failed');
+    const json = await res.json();
+    const rate = typeof json.rates?.UGX === 'number' ? json.rates.UGX : null;
+    return rate && rate > 2000 ? rate : 3750;
+  } catch {
+    return 3750; // Bank of Uganda approximate rate as fallback
+  }
+}
+
+// ── Alpha Vantage (primary source, free API key required) ─────────────────
+
+async function fetchFromAlphaVantage(
+  spec: CommoditySpec,
+  apiKey: string,
+  usdToUgx: number,
+): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `https://www.alphavantage.co/query?function=${spec.fn}&apikey=${apiKey}&interval=monthly`,
+      { next: { revalidate: 3600 } },
+    );
+    if (!res.ok) return null;
+    const json = await res.json();
+    // Alpha Vantage rate-limit returns a "Note" field instead of data
+    if (!Array.isArray(json.data) || json.data.length === 0) return null;
+    const recent = (json.data as Array<{ date: string; value: string }>)
+      .find(d => d.value && d.value !== '.');
+    if (!recent) return null;
+    const raw = parseFloat(recent.value);
+    if (!isFinite(raw) || raw <= 0) return null;
+    const usdPerKg = spec.toKg(raw);
+    return Math.round(usdPerKg * usdToUgx);
+  } catch {
+    return null;
+  }
+}
+
+// ── World Bank (fallback, free, no key, monthly) ──────────────────────────
+// World Bank returns USD per metric tonne for most commodities.
+
+async function fetchFromWorldBank(
+  spec: CommoditySpec,
+  usdToUgx: number,
+): Promise<number | null> {
+  if (!spec.wbIndicator) return null;
+  try {
+    const url =
+      `https://api.worldbank.org/v2/en/country/all/indicator/${spec.wbIndicator}` +
+      `?format=json&mrv=2&per_page=5`;
+    const res = await fetch(url, { next: { revalidate: 86400 } });
+    if (!res.ok) return null;
+    const json = await res.json();
+    // World Bank API wraps data in a 2-element array: [meta, rows]
+    const rows: Array<{ value: number | null; date: string }> = json[1] ?? [];
+    const recent = rows.find(r => r.value !== null && r.value !== undefined);
+    if (!recent || !recent.value) return null;
+    // World Bank prices are usually in USD per metric tonne
+    const usdPerTonne = recent.value;
+    const usdPerKg = usdPerTonne / 1000;
+    return Math.round(usdPerKg * usdToUgx);
+  } catch {
+    return null;
+  }
+}
+
+// ── Main cron handler ─────────────────────────────────────────────────────
+
 export async function GET(req: Request) {
   const v = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
-  if (v !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (v !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-  const apiKey = process.env.OPENWEATHER_API_KEY;
-  if (!apiKey) return NextResponse.json({ success: true, note: 'No OPENWEATHER_API_KEY set — prices skipped' });
+  const avKey = process.env.ALPHAVANTAGE_API_KEY ?? '';
+  const [usdToUgx, supabase] = await Promise.all([
+    getUsdToUgx(),
+    createClient(),
+  ]);
 
-  // Placeholder: In production, fetch official UCE/NAADS CSV and insert into market_prices
-  // Implementation depends on the specific CSV source URL format
-  return NextResponse.json({ success: true, note: 'Prices cron ran — insert CSV ingest here' });
+  const inserted: string[] = [];
+  const skipped: string[] = [];
+  const errors: string[] = [];
+
+  for (const spec of COMMODITIES) {
+    try {
+      let priceUgx: number | null = null;
+      let source = 'world-market';
+
+      if (avKey) {
+        priceUgx = await fetchFromAlphaVantage(spec, avKey, usdToUgx);
+        if (priceUgx) source = 'alphavantage';
+      }
+
+      if (!priceUgx) {
+        priceUgx = await fetchFromWorldBank(spec, usdToUgx);
+        if (priceUgx) source = 'world-bank';
+      }
+
+      if (!priceUgx || priceUgx <= 0) {
+        skipped.push(spec.crop);
+        continue;
+      }
+
+      const { error } = await (supabase.from as any)('market_prices').insert({
+        crop_type:    spec.crop,
+        price_per_kg: priceUgx,
+        market_name:  spec.market,
+        district:     null,
+        source,
+        recorded_at:  new Date().toISOString(),
+      });
+
+      if (error) {
+        errors.push(`${spec.crop}: ${error.message}`);
+      } else {
+        inserted.push(`${spec.crop} @ UGX ${priceUgx.toLocaleString()}/kg (${source})`);
+      }
+    } catch (err: any) {
+      errors.push(`${spec.crop}: ${err?.message ?? 'unknown error'}`);
+    }
+  }
+
+  return NextResponse.json({
+    success: true,
+    usdToUgx,
+    source: avKey ? 'alphavantage+world-bank' : 'world-bank-only',
+    inserted,
+    skipped,
+    errors,
+  });
 }

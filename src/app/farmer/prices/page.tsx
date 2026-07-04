@@ -135,7 +135,7 @@ async function UgandaLocalPrices({
   const [profileRes, pricesRes, demandRes, cashPricesRes] = await Promise.all([
     supabase.from('profiles').select('primary_crop').eq('user_id', userId).single(),
     (supabase.from as any)('market_prices')
-      .select('crop_type, price_per_kg, market_name, district, recorded_at')
+      .select('crop_type, price_per_kg, market_name, district, recorded_at, source')
       .gte('recorded_at', new Date(Date.now() - 7 * 86400000).toISOString())
       .order('recorded_at', { ascending: false }).limit(300),
     (supabase.from as any)('crop_demand_signals').select('*'),
@@ -152,19 +152,33 @@ async function UgandaLocalPrices({
   const demandMap: Record<string, any> = {};
   demand.forEach((d: any) => { demandMap[d.crop_type] = d; });
 
+  const GLOBAL_SOURCES = new Set(['world-market', 'alphavantage', 'world-bank']);
   const filtered = district ? allPrices.filter((p: any) => p.district === district) : allPrices;
   const cropMap: Record<string, any> = {};
   for (const p of filtered) {
     const k = p.crop_type?.toLowerCase();
     if (!k || (cropFilter && k !== cropFilter)) continue;
-    if (!cropMap[k]) cropMap[k] = { price: p.price_per_kg, market: p.market_name, district: p.district ?? 'National' };
+    if (!cropMap[k]) cropMap[k] = {
+      price: p.price_per_kg,
+      market: p.market_name,
+      district: p.district ?? 'National',
+      source: p.source ?? 'admin',
+      recorded_at: p.recorded_at,
+    };
   }
 
+  // National average uses only locally-recorded prices (excludes global exchange refs)
+  const localPrices = allPrices.filter((p: any) => !GLOBAL_SOURCES.has(p.source));
   const nationalAvg: Record<string, number[]> = {};
-  for (const p of allPrices) {
+  for (const p of localPrices) {
     const k = p.crop_type?.toLowerCase();
     if (k) { if (!nationalAvg[k]) nationalAvg[k] = []; nationalAvg[k].push(p.price_per_kg); }
   }
+
+  // Most recent local-price update for the header
+  const lastLocalUpdate = localPrices[0]?.recorded_at
+    ? new Date(localPrices[0].recorded_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })
+    : 'this week';
   const avgMap: Record<string, number> = {};
   for (const [c, vals] of Object.entries(nationalAvg)) {
     avgMap[c] = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
@@ -242,7 +256,7 @@ async function UgandaLocalPrices({
             <p style={{ fontSize: 14, fontWeight: 700, color: C.text }}>
               {district ? `${district} — Local Market` : 'Uganda — All Markets'}
             </p>
-            <p style={{ fontSize: 11, color: C.muted }}>Updated this week · UGX/kg</p>
+            <p style={{ fontSize: 11, color: C.muted }}>Updated {lastLocalUpdate} · UGX/kg</p>
           </div>
           {cropEntries.map(([crop, info]: any, i: number) => {
             const color = COLOR[crop] ?? C.greenMed;
@@ -261,6 +275,7 @@ async function UgandaLocalPrices({
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, textTransform: 'capitalize' }}>{crop.replace(/_/g,' ')}</p>
                     {isPrimary && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-success-bg)', color: 'var(--color-success)' }}>YOUR CROP</span>}
                     {dm?.offer_count_30d > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>IN DEMAND</span>}
+                    {GLOBAL_SOURCES.has(info.source) && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(96,165,250,0.12)', color: 'var(--color-sky)' }}>GLOBAL REF</span>}
                   </div>
                   <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{info.market} · {info.district}</p>
                 </div>

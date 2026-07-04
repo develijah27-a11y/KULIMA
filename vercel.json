@@ -2,5 +2,15 @@
   "buildCommand": "next build",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "regions": ["cdg1"]
+  "regions": ["cdg1"],
+  "crons": [
+    {
+      "path": "/api/cron/prices",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/alerts",
+      "schedule": "0 */6 * * *"
+    }
+  ]
 }
