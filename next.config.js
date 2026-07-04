@@ -45,6 +45,18 @@ const nextConfig = {
     ],
   },
   async headers() {
+    const securityHeaders = [
+      { key: 'X-DNS-Prefetch-Control',   value: 'on' },
+      { key: 'X-Content-Type-Options',   value: 'nosniff' },
+      { key: 'X-Frame-Options',          value: 'DENY' },
+      { key: 'Referrer-Policy',          value: 'strict-origin-when-cross-origin' },
+      // Restrict powerful browser APIs — geolocation is self-origin only (used by weather)
+      { key: 'Permissions-Policy',       value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()' },
+    ];
+    // HSTS: tell browsers to always use HTTPS for 2 years (production only)
+    if (!isDev) {
+      securityHeaders.push({ key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' });
+    }
     return [
       {
         // Static media — immutable, 1 year
@@ -57,12 +69,9 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
-        // Security + DNS prefetch enabled for all pages
+        // Security headers on every page and API response
         source: '/(.*)',
-        headers: [
-          { key: 'X-DNS-Prefetch-Control', value: 'on' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-        ],
+        headers: securityHeaders,
       },
     ];
   },

@@ -5,10 +5,12 @@ import { useSearchParams } from 'next/navigation';
 import { AuthForm } from '@/features/auth/components/AuthForm';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
 import { Suspense } from 'react';
+import { ShieldCheck, AlertCircle } from 'lucide-react';
 
 function SignInContent() {
   const params = useSearchParams();
-  const error = params.get('error');
+  const error  = params.get('error');
+  const reason = params.get('reason');
 
   return (
     <AuthLayout
@@ -26,9 +28,29 @@ function SignInContent() {
         </span>
       }
     >
+      {/* Session-expired security notice */}
+      {reason === 'session_expired' && (
+        <div
+          className="rounded-xl px-4 py-3 text-sm mb-4 flex items-start gap-3"
+          style={{
+            background: 'rgba(251,191,36,0.10)',
+            border: '1px solid rgba(251,191,36,0.30)',
+            color: '#FDE68A',
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          <ShieldCheck size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>
+            For your security, sessions expire after 12 hours. Please sign in again to continue.
+          </span>
+        </div>
+      )}
+
+      {/* Generic error param */}
       {error && (
         <div
-          className="rounded-xl px-4 py-3 text-sm mb-4 whitespace-pre-line"
+          className="rounded-xl px-4 py-3 text-sm mb-4 flex items-start gap-3 whitespace-pre-line"
           style={{
             background: 'rgba(239,68,68,0.12)',
             border: '1px solid rgba(239,68,68,0.35)',
@@ -36,11 +58,15 @@ function SignInContent() {
           }}
           role="alert"
         >
-          {error === 'missing_token'
-            ? 'Invalid confirmation link. Please sign in or request a new confirmation email.'
-            : error}
+          <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>
+            {error === 'missing_token'
+              ? 'Invalid confirmation link. Please sign in or request a new confirmation email.'
+              : error}
+          </span>
         </div>
       )}
+
       <AuthForm mode="signin" />
     </AuthLayout>
   );
