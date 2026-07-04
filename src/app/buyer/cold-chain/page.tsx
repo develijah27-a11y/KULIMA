@@ -12,7 +12,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> =
   open:       { label: 'Finding Driver',  color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   assigned:   { label: 'Driver Assigned', color: C.blue,                 bg: 'var(--color-sky-bg)' },
   in_transit: { label: 'In Transit',      color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
-  delivered:  { label: 'Delivered',       color: '#7C3AED',              bg: '#EDE9FE' },
+  delivered:  { label: 'Delivered',       color: 'var(--color-purple)', bg: 'var(--color-purple-bg)' },
   cancelled:  { label: 'Cancelled',       color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)' },
 };
 

@@ -15,13 +15,13 @@ const C = {
   amber:       'var(--color-harvest)',
   red:         'var(--color-danger)',
   blue:        'var(--color-sky)',
-  violet:      '#7C3AED',
+  violet:      'var(--color-purple)',
 } as const;
 
 const STATUS_CFG = {
   open:       { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Open'       },
   assigned:   { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Assigned'   },
-  in_transit: { color: '#7C3AED',              bg: '#EDE9FE',                  label: 'In Transit' },
+  in_transit: { color: 'var(--color-purple)',  bg: 'var(--color-purple-bg)',  label: 'In Transit' },
   delivered:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Delivered'  },
   cancelled:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Cancelled'  },
 } as const;

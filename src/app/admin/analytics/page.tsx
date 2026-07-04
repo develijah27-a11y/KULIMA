@@ -8,7 +8,7 @@ import { getCropColor } from '@/lib/crop-photos';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', violet: '#7C3AED',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', violet: 'var(--color-purple)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 

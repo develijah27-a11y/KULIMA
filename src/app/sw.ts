@@ -8,6 +8,18 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
 
+  // When a navigation can't be served from the network or any runtime
+  // cache (offline + never visited before), show the in-app offline
+  // screen instead of the browser's native "no internet" error.
+  fallbacks: {
+    entries: [
+      {
+        url: '/offline',
+        matcher: ({ request }) => request.mode === 'navigate',
+      },
+    ],
+  },
+
   runtimeCaching: [
     // ── RSC payloads ──────────────────────────────────────────────────────────
     // Both prefetch (Next-Router-Prefetch: 1) and navigation (no prefetch header)

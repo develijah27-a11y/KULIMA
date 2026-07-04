@@ -1,5 +1,5 @@
 {
-  "buildCommand": "next build",
+  "buildCommand": "next build && node scripts/build-sw.mjs",
   "outputDirectory": ".next",
   "framework": "nextjs",
   "regions": ["cdg1"],

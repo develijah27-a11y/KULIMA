@@ -11,7 +11,7 @@ const C = {
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   draft:     { label: 'Draft',     color: C.muted,                bg: 'var(--color-surface-2)' },
   active:    { label: 'Active',    color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
-  completed: { label: 'Completed', color: '#7C3AED',              bg: '#EDE9FE' },
+  completed: { label: 'Completed', color: 'var(--color-purple)', bg: 'var(--color-purple-bg)' },
   cancelled: { label: 'Cancelled', color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)' },
 };
 
@@ -47,8 +47,8 @@ export default async function BuyerContractsPage() {
             <p style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-success)', margin: '0 0 2px', letterSpacing: '-0.02em' }}>{active.length}</p>
             <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-success)', margin: 0 }}>Active Contracts</p>
           </div>
-          <div style={{ background: '#EDE9FE', borderRadius: 12, padding: '14px 16px' }}>
-            <p style={{ fontSize: 22, fontWeight: 900, color: '#7C3AED', margin: '0 0 2px', letterSpacing: '-0.02em' }}>
+          <div style={{ background: 'var(--color-purple-bg)', borderRadius: 12, padding: '14px 16px' }}>
+            <p style={{ fontSize: 22, fontWeight: 900, color: 'var(--color-purple)', margin: '0 0 2px', letterSpacing: '-0.02em' }}>
               {totalValue > 0 ? `UGX ${Math.round(totalValue / 1000000).toFixed(1)}M` : `${completed.length}`}
             </p>
             <p style={{ fontSize: 11, fontWeight: 600, color: '#7C3AED', margin: 0 }}>{totalValue > 0 ? 'Pipeline Value' : 'Completed'}</p>

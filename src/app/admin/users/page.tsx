@@ -5,7 +5,7 @@ import Link from 'next/link';
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', greenBright: 'var(--color-primary-muted)',
-  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', violet: '#7C3AED',
+  amber: 'var(--color-harvest)', red: 'var(--color-danger)', blue: 'var(--color-sky)', violet: 'var(--color-purple)',
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
@@ -13,10 +13,10 @@ const ROLE_CFG: Record<string, { color: string; bg: string; label: string }> = {
   farmer:      { color: 'var(--color-success)',  bg: 'var(--color-success-bg)',  label: 'Farmer' },
   buyer:       { color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)',  label: 'Buyer' },
   transporter: { color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)',      label: 'Transporter' },
-  supplier:    { color: '#7C3AED',               bg: '#EDE9FE',                  label: 'Supplier' },
+  supplier:    { color: 'var(--color-purple)',   bg: 'var(--color-purple-bg)',   label: 'Supplier' },
   pathologist: { color: 'var(--color-danger)',   bg: 'var(--color-danger-bg)',   label: 'Pathologist' },
-  offtaker:    { color: '#0891B2',               bg: '#CFFAFE',                  label: 'Offtaker' },
-  groups:      { color: '#65A30D',               bg: '#ECFCCB',                  label: 'Group Admin' },
+  offtaker:    { color: 'var(--color-cyan)',     bg: 'var(--color-cyan-bg)',     label: 'Offtaker' },
+  groups:      { color: 'var(--color-lime)',     bg: 'var(--color-lime-bg)',     label: 'Group Admin' },
   admin:       { color: 'var(--d-muted)',         bg: 'var(--color-surface-2)',   label: 'Admin' },
 };
 
