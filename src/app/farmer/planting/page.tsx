@@ -8,6 +8,7 @@ import {
 } from '@/lib/planting-calendar';
 import type { JSX } from 'react';
 import { Leaf, Clock, Wrench, ClipboardList, Sun } from 'lucide-react';
+import { SeasonProblemCard } from './SeasonProblemCard';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -28,14 +29,21 @@ const URGENCY_CFG: Record<string, { bg: string; color: string; border: string }>
 const ALERT_TYPE_ICON: Record<string, JSX.Element> = {
   plant_now:    <Leaf size={20} />,
   plant_soon:   <Clock size={20} />,
+  weed_now:     <Wrench size={20} />,
   harvest_now:  <Leaf size={20} />,
   harvest_soon: <Clock size={20} />,
   prepare:      <Wrench size={20} />,
 };
 
+const SEASON_TEXT: Record<string, string> = {
+  rains1: 'March–May rains',
+  rains2: 'September–November rains',
+  irrigated: 'irrigated/dry season',
+};
+
 const PHASE_CFG: Record<string, { bg: string; color: string; icon: JSX.Element }> = {
   planting: { bg: 'var(--color-success-bg)', color: 'var(--color-success)', icon: <Leaf size={28} /> },
-  growing:  { bg: 'var(--color-sky-bg)',     color: 'var(--color-sky)',     icon: <Leaf size={28} /> },
+  weeding:  { bg: 'var(--color-lime-bg)',    color: 'var(--color-lime)',    icon: <Wrench size={28} /> },
   harvest:  { bg: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', icon: <Leaf size={28} /> },
   dry:      { bg: 'var(--color-surface-2)',  color: 'var(--d-muted)',       icon: <Sun size={28} /> },
 };
@@ -199,6 +207,9 @@ export default async function PlantingPage() {
           </div>
         </div>
 
+        {/* Season not going as expected? */}
+        <SeasonProblemCard farmerCrops={farmerCrops} seasonName={season.name} />
+
         {/* Planting alerts */}
         {alerts.length > 0 && (
           <Card>
@@ -255,7 +266,7 @@ export default async function PlantingPage() {
                       </div>
                       <p style={{ fontSize: '13px', color: C.muted, lineHeight: '1.5' }}>{alert.message}</p>
                       <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
-                        Season {alert.season}
+                        {SEASON_TEXT[alert.season] ?? alert.season}
                         {alert.daysUntil > 0 ? ` · Starts in ${alert.daysUntil} days` : ' · Action required now'}
                       </p>
                     </div>
@@ -269,10 +280,12 @@ export default async function PlantingPage() {
         {/* Calendar legend */}
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
           {[
-            { color: 'var(--color-success-bg)', border: '#34D399', label: 'Plant (Season A)' },
-            { color: 'var(--color-harvest-bg)', border: '#FCD34D', label: 'Harvest (Season A)' },
-            { color: 'var(--color-sky-bg)', border: '#93C5FD', label: 'Plant (Season B)' },
-            { color: '#FDE8D8', border: '#FDBA74', label: 'Harvest (Season B)' },
+            { color: 'var(--color-success-bg)', border: '#34D399', label: 'Plant (Mar–May rains)' },
+            { color: 'var(--color-lime-bg)', border: '#A3E635', label: 'Weed (Mar–May rains)' },
+            { color: 'var(--color-harvest-bg)', border: '#FCD34D', label: 'Harvest (Mar–May rains)' },
+            { color: 'var(--color-sky-bg)', border: '#93C5FD', label: 'Plant (Sep–Nov rains)' },
+            { color: 'var(--color-cyan-bg)', border: '#67E8F9', label: 'Weed (Sep–Nov rains)' },
+            { color: '#FDE8D8', border: '#FDBA74', label: 'Harvest (Sep–Nov rains)' },
           ].map((item) => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: item.color, border: `1.5px solid ${item.border}` }} />

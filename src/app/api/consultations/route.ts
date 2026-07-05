@@ -7,8 +7,10 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 
-const REMOTE_FEE_UGX  = 15000;  // UGX 15,000 for remote consultation
-const VISIT_FEE_UGX   = 50000;  // UGX 50,000 for farm visit
+// Platform defaults used only when a pathologist hasn't set their own rate —
+// pathologists can set remote_fee_ugx / visit_fee_ugx on their own profile.
+const REMOTE_FEE_UGX  = 15000;
+const VISIT_FEE_UGX   = 50000;
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -54,17 +56,6 @@ export async function POST(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  const feeUgx = type === 'farm_visit' ? VISIT_FEE_UGX : REMOTE_FEE_UGX;
-
-  // Check farmer wallet balance
-  const { data: wallet } = await (db.from as any)('wallets')
-    .select('id, balance').eq('user_id', user.id).single();
-  if (!wallet || Number(wallet.balance) < feeUgx) {
-    return NextResponse.json({
-      error: `Insufficient wallet balance. Remote consultation costs UGX ${REMOTE_FEE_UGX.toLocaleString()}, farm visit costs UGX ${VISIT_FEE_UGX.toLocaleString()}.`,
-    }, { status: 400 });
-  }
-
   // Get farmer's district for region-matching
   const { data: farmerProfile } = await (db.from as any)('profiles')
     .select('location').eq('user_id', user.id).single();
@@ -72,7 +63,7 @@ export async function POST(req: Request) {
 
   // Match nearest pathologist (same district first, then any available)
   const { data: matchedPaths } = await (db.from as any)('profiles')
-    .select('id, user_id, full_name, location')
+    .select('id, user_id, full_name, location, remote_fee_ugx, visit_fee_ugx')
     .eq('role', 'pathologist')
     .order('location', { ascending: true })
     .limit(10);
@@ -84,6 +75,22 @@ export async function POST(req: Request) {
     return aMatch - bMatch;
   });
   const assigned = sorted[0] ?? null;
+
+  // The fee is whatever the matched pathologist has set for this
+  // consultation type — each crop doctor decides their own price. Falls
+  // back to the platform default only if they haven't set one, or if no
+  // pathologist could be matched yet.
+  const assignedFee = type === 'farm_visit' ? assigned?.visit_fee_ugx : assigned?.remote_fee_ugx;
+  const feeUgx = Number(assignedFee) > 0 ? Number(assignedFee) : (type === 'farm_visit' ? VISIT_FEE_UGX : REMOTE_FEE_UGX);
+
+  // Check farmer wallet balance
+  const { data: wallet } = await (db.from as any)('wallets')
+    .select('id, balance').eq('user_id', user.id).single();
+  if (!wallet || Number(wallet.balance) < feeUgx) {
+    return NextResponse.json({
+      error: `Insufficient wallet balance. This ${type === 'farm_visit' ? 'farm visit' : 'remote consultation'} costs UGX ${feeUgx.toLocaleString()}.`,
+    }, { status: 400 });
+  }
 
   // Deduct fee from farmer wallet
   const { error: deductErr } = await (db.from as any)('wallets').update({

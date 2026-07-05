@@ -7,18 +7,34 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const { full_name, phone_number, location, primary_crop } = body;
+  const { full_name, phone_number, location, primary_crop, remote_fee_ugx, visit_fee_ugx } = body;
 
   if (!full_name?.trim()) {
     return NextResponse.json({ ok: false, error: 'Full name is required' }, { status: 400 });
   }
 
-  const { error } = await supabase.from('profiles').update({
+  const update: Record<string, unknown> = {
     full_name:    full_name.trim(),
     phone_number: phone_number?.trim() || null,
     location:     location?.trim()     || null,
     primary_crop: primary_crop?.trim() || null,
-  }).eq('user_id', user.id);
+  };
+  // Pathologist-set consultation rates — each crop doctor decides their own
+  // price. Only touch these fields when explicitly provided.
+  if (remote_fee_ugx !== undefined) {
+    if (remote_fee_ugx !== null && Number(remote_fee_ugx) <= 0) {
+      return NextResponse.json({ ok: false, error: 'Remote fee must be greater than 0' }, { status: 400 });
+    }
+    update.remote_fee_ugx = remote_fee_ugx === null ? null : Number(remote_fee_ugx);
+  }
+  if (visit_fee_ugx !== undefined) {
+    if (visit_fee_ugx !== null && Number(visit_fee_ugx) <= 0) {
+      return NextResponse.json({ ok: false, error: 'Farm visit fee must be greater than 0' }, { status: 400 });
+    }
+    update.visit_fee_ugx = visit_fee_ugx === null ? null : Number(visit_fee_ugx);
+  }
+
+  const { error } = await supabase.from('profiles').update(update).eq('user_id', user.id);
 
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
 

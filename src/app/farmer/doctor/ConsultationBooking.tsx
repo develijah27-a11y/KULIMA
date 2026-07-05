@@ -44,8 +44,11 @@ export function ConsultationBooking({ walletBalance, consultations }: Props) {
   const [loading, setLoading] = useState(false);
   const [result, setResult]   = useState<{ ok: boolean; msg: string; pathologist?: string; convId?: string } | null>(null);
 
-  const fee = type === 'farm_visit' ? 50000 : 15000;
-  const canAfford = walletBalance >= fee;
+  // Each pathologist sets their own price — this is only an estimate shown
+  // before matching. The actual fee charged is whatever the matched
+  // pathologist has set, surfaced in the result once booked.
+  const estimatedFee = type === 'farm_visit' ? 50000 : 15000;
+  const canAfford = walletBalance >= estimatedFee;
 
   const book = async () => {
     if (!canAfford || loading) return;
@@ -60,11 +63,12 @@ export function ConsultationBooking({ walletBalance, consultations }: Props) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Booking failed');
       const pathName = json.assigned?.name ?? null;
+      const feeText = `UGX ${Number(json.feeDeducted ?? estimatedFee).toLocaleString()}`;
       setResult({
         ok: true,
         msg: pathName
-          ? `Consultation booked! ${pathName} has been matched. Open chat to connect.`
-          : 'Booked! We are matching you with the nearest pathologist.',
+          ? `Consultation booked! ${pathName} has been matched — their fee of ${feeText} was deducted from your wallet. Open chat to connect.`
+          : `Booked at an estimated ${feeText}! We are matching you with the nearest pathologist.`,
         pathologist: json.data?.pathologist_id ?? null,
         convId: json.data?.id,
       });
@@ -109,7 +113,7 @@ export function ConsultationBooking({ walletBalance, consultations }: Props) {
                 <div style={{ display: 'flex', marginBottom: '4px', color: sel ? C.green : C.muted }}>{opt.icon}</div>
                 <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: '0 0 2px' }}>{opt.label}</p>
                 <p style={{ fontSize: 11, color: C.muted, margin: '0 0 6px' }}>{opt.sub}</p>
-                <p style={{ fontSize: 12, fontWeight: 800, color: C.green, margin: 0 }}>UGX {opt.fee.toLocaleString()}</p>
+                <p style={{ fontSize: 12, fontWeight: 800, color: C.green, margin: 0 }}>from UGX {opt.fee.toLocaleString()}</p>
               </button>
             );
           })}
@@ -167,7 +171,7 @@ export function ConsultationBooking({ walletBalance, consultations }: Props) {
             transition: 'background 0.15s',
           }}
         >
-          {loading ? 'Booking…' : `Book Consultation — UGX ${fee.toLocaleString()}`}
+          {loading ? 'Booking…' : `Book Consultation — from UGX ${estimatedFee.toLocaleString()}`}
         </button>
       </div>
 

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { RateSettings } from './RateSettings';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -13,7 +14,7 @@ export default async function PathologistProfilePage() {
   if (!user) redirect('/auth/signin');
 
   const { data: profile } = await supabase.from('profiles')
-    .select('full_name, location, verification_level, trust_score, primary_crop, phone_number')
+    .select('full_name, location, verification_level, trust_score, primary_crop, phone_number, remote_fee_ugx, visit_fee_ugx')
     .eq('user_id', user.id)
     .single();
 

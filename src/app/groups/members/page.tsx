@@ -15,7 +15,7 @@ export default async function GroupMembersPage() {
   if (!user) redirect('/auth/signin');
 
   const { data: members } = await (supabase.from as any)('group_members')
-    .select('id, full_name, phone_number, district, role, joined_at, contribution_total')
+    .select('id, full_name, phone_number, district, role, joined_at, contribution_total, farmer_id')
     .eq('admin_id', user.id)
     .order('role')
     .order('full_name')
@@ -78,8 +78,17 @@ export default async function GroupMembersPage() {
                       {m.full_name?.[0]?.toUpperCase() ?? 'M'}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: '0 0 2px' }}>{m.full_name ?? 'Member'}</p>
-                      <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{m.district} · Joined {new Date(m.joined_at ?? Date.now()).toLocaleDateString('en-UG', { month: 'short', year: 'numeric' })}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0 }}>{m.full_name ?? 'Member'}</p>
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: '1px 7px', borderRadius: 999,
+                          background: m.farmer_id ? 'var(--color-success-bg)' : 'var(--color-surface-2)',
+                          color: m.farmer_id ? 'var(--color-success)' : C.muted,
+                        }}>
+                          {m.farmer_id ? 'On AgriNova' : 'Not on app'}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{m.district} · Joined {new Date(m.joined_at ?? Date.now()).toLocaleDateString('en-UG', { month: 'short', year: 'numeric' })}</p>
                     </div>
                     {m.contribution_total > 0 && (
                       <p style={{ fontSize: 12, fontWeight: 700, color: C.greenMed, margin: 0 }}>UGX {(m.contribution_total ?? 0).toLocaleString()}</p>

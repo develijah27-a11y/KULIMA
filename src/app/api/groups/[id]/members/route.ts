@@ -48,13 +48,35 @@ export async function POST(req: Request, { params }: Ctx) {
   // Find the profile by phone (try both formats)
   const { data: found } = await supabase
     .from('profiles')
-    .select('id, full_name, phone_number')
+    .select('id, user_id, full_name, phone_number, location')
     .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+256${normalizedPhone.slice(1)}`)
     .limit(1)
     .single();
 
   if (!found) return NextResponse.json({ error: 'No farmer found with that phone number. They must be registered on AgriNova first.' }, { status: 404 });
   if (found.id === myProfile.id) return NextResponse.json({ error: 'You are already a member of this group.' }, { status: 400 });
+
+  const { data: group } = await (supabase.from as any)('farmer_groups').select('name, district').eq('id', groupId).single();
+
+  // Same-district check — collecting produce for one shipment only works
+  // if everyone contributing is actually local to the group.
+  if (group?.district && (found as any).location && group.district !== (found as any).location) {
+    return NextResponse.json({
+      error: `${found.full_name} is registered in ${(found as any).location}, not ${group.district}. Group members must be in the same district.`,
+    }, { status: 400 });
+  }
+
+  // One-group-per-farmer check — give a clear message before hitting the DB constraint
+  const { data: existingMembership } = await (supabase.from as any)('farmer_group_members')
+    .select('group_id, farmer_groups(name)')
+    .eq('farmer_id', found.id)
+    .maybeSingle();
+  if (existingMembership) {
+    const existingGroupName = (existingMembership as any).farmer_groups?.name ?? 'another group';
+    return NextResponse.json({
+      error: `${found.full_name} is already a member of ${existingGroupName} and can only belong to one group at a time.`,
+    }, { status: 409 });
+  }
 
   const { error } = await (supabase.from as any)('farmer_group_members').insert({
     group_id:  groupId,
@@ -66,6 +88,17 @@ export async function POST(req: Request, { params }: Ctx) {
     if (error.code === '23505') return NextResponse.json({ error: `${found.full_name} is already in this group.` }, { status: 409 });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Notify the added member
+  try {
+    await (supabase.from as any)('notifications').insert({
+      user_id: (found as any).user_id,
+      type: 'group',
+      title: 'Added to a farmer group',
+      body: `You've been added to ${group?.name ?? 'a farmer group'}. Open Farmer Groups to see it.`,
+      read: false,
+    });
+  } catch { /* non-critical */ }
 
   return NextResponse.json({ success: true, member: { id: found.id, full_name: found.full_name, role } });
 }
