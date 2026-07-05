@@ -21,31 +21,42 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
   );
 }
 
+interface PlatformWallet { balance: number; account_number: string; owner_name: string | null; }
+interface AdminOption { user_id: string; full_name: string | null; }
+
 export default function AdminCommissionPage() {
   const [rate, setRate]     = useState(2.5);
   const [minFee, setMinFee] = useState(500);
   const [maxFee, setMaxFee] = useState(0);
+  const [walletUserId, setWalletUserId] = useState<string | null>(null);
+  const [platformWallet, setPlatformWallet] = useState<PlatformWallet | null>(null);
+  const [admins, setAdmins] = useState<AdminOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast]   = useState<{ msg: string; ok: boolean } | null>(null);
   const [pending, start]    = useTransition();
+  const [walletPending, startWallet] = useTransition();
 
   function showToast(msg: string, ok: boolean) {
     setToast({ msg, ok });
     setTimeout(() => setToast(null), 3500);
   }
 
-  useEffect(() => {
-    fetch('/api/admin/commission')
+  function refresh() {
+    return fetch('/api/admin/commission')
       .then(r => r.json())
       .then(json => {
         if (json.data) {
           setRate(json.data.rate_percent ?? 2.5);
           setMinFee(json.data.min_fee_ugx ?? 500);
           setMaxFee(json.data.max_fee_ugx ?? 0);
+          setWalletUserId(json.data.platform_wallet_user_id ?? null);
         }
-      })
-      .finally(() => setLoading(false));
-  }, []);
+        setPlatformWallet(json.platformWallet ?? null);
+        setAdmins(json.admins ?? []);
+      });
+  }
+
+  useEffect(() => { refresh().finally(() => setLoading(false)); }, []);
 
   function handleSave() {
     start(async () => {
@@ -57,6 +68,20 @@ export default function AdminCommissionPage() {
       const json = await res.json();
       if (json.success) showToast('Commission settings saved', true);
       else showToast(json.error ?? 'Failed to save', false);
+    });
+  }
+
+  function handleWalletChange(userId: string) {
+    setWalletUserId(userId);
+    startWallet(async () => {
+      const res = await fetch('/api/admin/commission', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rate_percent: rate, min_fee_ugx: minFee, max_fee_ugx: maxFee || null, platform_wallet_user_id: userId }),
+      });
+      const json = await res.json();
+      if (json.success) { showToast('Platform wallet updated', true); refresh(); }
+      else showToast(json.error ?? 'Failed to update platform wallet', false);
     });
   }
 
@@ -85,6 +110,46 @@ export default function AdminCommissionPage() {
         <div style={{ background: C.cardBg, borderRadius: 18, height: 200, boxShadow: C.cardShadow }} className="dash-skeleton" />
       ) : (
         <>
+          {/* Platform wallet */}
+          <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 18, padding: '22px 24px', color: '#fff' }}>
+            <p style={{ fontSize: 11, fontWeight: 700, opacity: 0.65, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 10px' }}>
+              Platform Wallet — Commission Collected
+            </p>
+            {platformWallet ? (
+              <>
+                <p style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 6px' }}>
+                  UGX {Math.round(platformWallet.balance).toLocaleString()}
+                </p>
+                <p style={{ fontSize: 12, opacity: 0.75, margin: '0 0 4px' }}>
+                  {platformWallet.owner_name ?? 'Admin'} · Account {platformWallet.account_number}
+                </p>
+              </>
+            ) : (
+              <p style={{ fontSize: 13, opacity: 0.85, margin: '0 0 4px' }}>
+                No platform wallet configured yet — commission fees are being logged but not credited anywhere. Pick an admin account below.
+              </p>
+            )}
+            <div style={{ marginTop: 14 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, opacity: 0.7, display: 'block', marginBottom: 6 }}>
+                Receiving admin account
+              </label>
+              <select
+                value={walletUserId ?? ''}
+                disabled={walletPending}
+                onChange={e => handleWalletChange(e.target.value)}
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.25)',
+                  background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 13, fontWeight: 600,
+                }}
+              >
+                <option value="" style={{ color: '#111' }}>Not configured</option>
+                {admins.map(a => (
+                  <option key={a.user_id} value={a.user_id} style={{ color: '#111' }}>{a.full_name ?? a.user_id}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: 24 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 20px' }}>Rate Configuration</p>
 

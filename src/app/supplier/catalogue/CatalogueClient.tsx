@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Leaf, FlaskConical, Wrench, Settings, Package, Store } from 'lucide-react';
+import { CameraCapture } from '@/components/ui/CameraCapture';
 
 function getCatIcon(category: string, size = 22) {
   const cat = category?.toLowerCase();
@@ -36,12 +37,13 @@ interface Product {
   min_order_qty: number;
   district?: string;
   is_available: boolean;
+  image_url?: string;
   created_at: string;
 }
 
 const EMPTY: Omit<Product,'id'|'created_at'> = {
   name:'', category:'seeds', description:'', price_per_unit:0,
-  unit:'kg', stock_qty:0, min_order_qty:1, district:'', is_available:true,
+  unit:'kg', stock_qty:0, min_order_qty:1, district:'', is_available:true, image_url:'',
 };
 
 export function CatalogueClient({ products: initial }: { products: Product[] }) {
@@ -57,6 +59,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
 
   async function save() {
     if (!modal?.name || !modal.price_per_unit) { setError('Name and price are required.'); return; }
+    if (!modal.image_url) { setError('Take a live photo of the product before saving.'); return; }
     setSaving(true); setError('');
     try {
       const method = isEdit ? 'PATCH' : 'POST';
@@ -156,8 +159,8 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
             const lowStock = p.stock_qty < 5 && p.is_available;
             return (
               <div key={p.id} style={{ padding: '16px 20px', borderBottom: i < visible.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: lowStock ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: lowStock ? C.red : C.green }}>
-                  {getCatIcon(p.category)}
+                <div style={{ width: 44, height: 44, borderRadius: 10, background: lowStock ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: lowStock ? C.red : C.green, overflow: 'hidden' }}>
+                  {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : getCatIcon(p.category)}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -222,6 +225,24 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
             {error && <p style={{ color: C.red, fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
             <div style={{ display: 'grid', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Product Photo *</label>
+                {modal.image_url ? (
+                  <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden' }}>
+                    <img src={modal.image_url} alt="Captured product" style={{ width: '100%', display: 'block' }} />
+                    <button
+                      type="button"
+                      onClick={() => setModal(m => ({ ...m!, image_url: '' }))}
+                      style={{ position: 'absolute', top: 8, right: 8, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Retake
+                    </button>
+                  </div>
+                ) : (
+                  <CameraCapture onCaptured={(url) => setModal(m => ({ ...m!, image_url: url }))} label="Take a photo of the product" />
+                )}
+              </div>
+
               {([
                 { label: 'Product Name *', key: 'name', type: 'text', placeholder: 'e.g. Pioneer DH04 Maize Seed' },
                 { label: 'Price per Unit (UGX) *', key: 'price_per_unit', type: 'number', placeholder: '0' },

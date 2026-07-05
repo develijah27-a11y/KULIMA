@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { WalletActions } from '@/app/farmer/wallet/WalletActions';
+import { AccountNumberBadge } from '@/components/wallet/AccountNumberBadge';
 import { Banknote } from 'lucide-react';
 
 const C = {
@@ -44,6 +45,7 @@ export default async function OfftakerWalletPage() {
       <div style={{ background: 'linear-gradient(135deg, #0C1C35 0%, #1e3a5f 100%)', borderRadius: 20, padding: '24px 24px 20px', color: '#fff' }}>
         <p style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Available Balance</p>
         <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px' }}>UGX {Math.round(balance).toLocaleString()}</p>
+        <AccountNumberBadge accountNumber={wallet?.account_number} dark />
         {escrowBalance > 0 && (
           <p style={{ fontSize: 12, opacity: 0.65, margin: '0 0 16px' }}>+ UGX {Math.round(escrowBalance).toLocaleString()} held in contract escrow</p>
         )}

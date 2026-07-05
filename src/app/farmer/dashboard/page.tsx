@@ -6,6 +6,8 @@ import { fetchWeatherForFarmer, type ServerWeatherData } from '@/lib/weather-ser
 import { getDistrict } from '@/lib/districts';
 import { buildSeasonalPlan, generateDiseaseAlerts, type InsightSeverity } from '@/lib/agri-intel';
 import { generatePlantingAlerts } from '@/lib/planting-calendar';
+import { VerificationBanner } from '@/components/trust/VerificationBanner';
+import { type VerificationLevel } from '@/lib/trust';
 import {
   Package, DollarSign, Home, Bell, CheckCircle2, Sprout,
   Sun, Moon, Cloud, CloudSun, CloudRain, CloudLightning, Snowflake,
@@ -21,7 +23,7 @@ const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from('profiles')
-    .select('full_name, primary_crop, phone_number, location, latitude, longitude, id')
+    .select('full_name, primary_crop, phone_number, location, latitude, longitude, id, verification_level')
     .eq('user_id', userId)
     .single();
   return data as any;
@@ -238,7 +240,7 @@ async function QuickStats({ userId }: { userId: string }) {
 
   const stats = [
     {
-      label: 'My Produce',
+      label: 'Produce',
       value: `${listingsRes.count ?? 0}`,
       sub: 'Buyers can see these',
       icon: <Package size={18} />,
@@ -692,6 +694,19 @@ function QuickActions() {
   );
 }
 
+// ─── Streaming: Verification prompt ──────────────────────────────────────────
+
+async function VerifyPrompt({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  return (
+    <VerificationBanner
+      level={(profile?.verification_level as VerificationLevel) ?? 'none'}
+      verifyHref="/farmer/verify"
+      requiredDocsLabel="national ID and a selfie"
+    />
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function FarmerDashboardPage() {
@@ -702,6 +717,11 @@ export default async function FarmerDashboardPage() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
+
+      {/* 0 · Verification prompt */}
+      <Suspense fallback={null}>
+        <VerifyPrompt userId={userId} />
+      </Suspense>
 
       {/* 1 · Weather card */}
       <Suspense fallback={<div className="dash-skeleton h-36 rounded-xl" />}>

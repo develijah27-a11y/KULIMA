@@ -20,7 +20,7 @@ const SECTIONS = [
   {
     title: 'Sourcing',
     items: [
-      { label: 'My Orders', desc: 'Track all your purchases from farmers', icon: <Package size={20} />, href: '/buyer/orders' },
+      { label: 'Orders', desc: 'Track all your purchases from farmers', icon: <Package size={20} />, href: '/buyer/orders' },
       { label: 'Contracts', desc: 'Manage forward purchase agreements', icon: <FileText size={20} />, href: '/buyer/contracts' },
       { label: 'Deliveries', desc: 'Track your transport and delivery requests', icon: <Truck size={20} />, href: '/buyer/deliveries' },
     ],

@@ -1,7 +1,8 @@
 ﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { WalletActions } from './WalletActions';
+import { WalletActions } from '@/app/farmer/wallet/WalletActions';
 import { EscrowFundButton } from './EscrowFund';
+import { AccountNumberBadge } from '@/components/wallet/AccountNumberBadge';
 import { Banknote } from 'lucide-react';
 
 const C = {
@@ -79,6 +80,7 @@ export default async function BuyerWalletPage() {
         <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           UGX {Math.round(balance).toLocaleString()}
         </p>
+        <AccountNumberBadge accountNumber={wallet?.account_number} dark />
         {escrowBalance > 0 && (
           <p style={{ fontSize: 12, opacity: 0.65, margin: '0 0 20px' }}>
             + UGX {Math.round(escrowBalance).toLocaleString()} locked in escrow
@@ -100,7 +102,7 @@ export default async function BuyerWalletPage() {
 
       {/* Actions */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 20 }}>
-        <WalletActions balance={balance} />
+        <WalletActions balance={balance} escrowBalance={escrowBalance} />
       </div>
 
       {/* Unfunded accepted deals */}

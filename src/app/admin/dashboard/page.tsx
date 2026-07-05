@@ -99,7 +99,7 @@ async function PlatformKPIs() {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       {kpis.map(({ label, value, sub, icon, border, color, alert }) => (
-        <div key={label} style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '18px 16px', position: 'relative' }}>
+        <div key={label} style={{ background: C.cardBg, borderRadius: '14px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '18px 16px', position: 'relative' }}>
           {alert && <div style={{ position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: '50%', background: C.red, boxShadow: `0 0 0 3px rgba(230,57,70,0.2)` }} />}
           <div className="flex items-start justify-between mb-2">
             <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: C.muted }}>{label}</p>
@@ -268,7 +268,7 @@ async function PendingActions() {
   const [kycRes, offersRes, reportsRes, deliveriesRes] = await Promise.allSettled([
     (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     (supabase.from as any)('offers').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    (supabase.from as any)('disease_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    (supabase.from as any)('disease_reports').select('id', { count: 'exact', head: true }).eq('status', 'reported'),
     (supabase.from as any)('delivery_requests').select('id', { count: 'exact', head: true }).eq('status', 'open'),
   ]);
 
@@ -280,7 +280,7 @@ async function PendingActions() {
   const items = [
     { label: 'KYC Verifications',  count: kycCount,        href: '/admin/verification', icon: <CreditCard size={16} />,    urgency: kycCount > 5 },
     { label: 'Open Buyer Offers',  count: offersCount,     href: '/admin/buyers',       icon: <MessageCircle size={16} />, urgency: false },
-    { label: 'Disease Reports',    count: reportsCount,    href: '/admin/dashboard',    icon: <Microscope size={16} />,    urgency: reportsCount > 0 },
+    { label: 'Disease Reports',    count: reportsCount,    href: '/admin/disease-reports', icon: <Microscope size={16} />, urgency: reportsCount > 0 },
     { label: 'Open Delivery Jobs', count: deliveriesCount, href: '/admin/deliveries',   icon: <Truck size={16} />,         urgency: false },
   ];
 
@@ -474,28 +474,47 @@ async function MarketPriceSummary() {
 }
 
 // ─── System Health ────────────────────────────────────────────────────────────
-function SystemHealth() {
+// Each check is a real, cheap signal rather than a hardcoded "all good" list:
+// - Database: an actual query has to succeed
+// - Storage: bucket list has to succeed
+// - Weather / Mobile Money: the API keys they require are actually configured
+// - Price Cron: the daily job has to have written a row recently
+async function SystemHealth() {
+  const supabase = await createClient();
+
+  const [dbCheck, storageCheck, latestPrice] = await Promise.allSettled([
+    supabase.from('profiles').select('id').limit(1),
+    supabase.storage.listBuckets(),
+    supabase.from('market_prices').select('recorded_at').order('recorded_at', { ascending: false }).limit(1).single(),
+  ]);
+
+  const dbOk = dbCheck.status === 'fulfilled' && !dbCheck.value.error;
+  const storageOk = storageCheck.status === 'fulfilled' && !storageCheck.value.error;
+
+  const lastPriceAt = latestPrice.status === 'fulfilled' ? (latestPrice.value.data as any)?.recorded_at : null;
+  const priceCronOk = !!lastPriceAt && (Date.now() - new Date(lastPriceAt).getTime()) < 36 * 3600 * 1000;
+
   const services = [
-    { name: 'Authentication (Supabase)', ok: true },
-    { name: 'PostgreSQL Database',       ok: true },
-    { name: 'File Storage',              ok: true },
-    { name: 'Notifications',             ok: true },
-    { name: 'Weather API',               ok: true },
-    { name: 'Mobile Money (Flutterwave)', ok: true },
-    { name: 'Disease AI Scanner',        ok: true },
-    { name: 'Cron Jobs (price/alerts)',   ok: true },
+    { name: 'Database',                   ok: dbOk },
+    { name: 'File Storage',               ok: storageOk },
+    { name: 'Weather API',                ok: !!process.env.OPENWEATHER_API_KEY },
+    { name: 'Mobile Money (Flutterwave)', ok: !!process.env.FLUTTERWAVE_SECRET_KEY },
+    { name: 'Daily Price Cron',           ok: priceCronOk, detail: lastPriceAt ? `last ran ${new Date(lastPriceAt).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}` : 'never ran' },
   ];
 
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>System Health</p>
-        <p className="text-xs mt-0.5" style={{ color: C.muted }}>All service status</p>
+        <p className="text-xs mt-0.5" style={{ color: C.muted }}>Live checks, not a static list</p>
       </div>
       <div className="divide-y" style={{ borderColor: C.border }}>
-        {services.map(({ name, ok }) => (
+        {services.map(({ name, ok, detail }) => (
           <div key={name} className="px-5 py-2.5 flex items-center justify-between">
-            <p className="text-xs" style={{ color: C.text }}>{name}</p>
+            <div>
+              <p className="text-xs" style={{ color: C.text }}>{name}</p>
+              {detail && <p className="text-[10px] mt-0.5" style={{ color: C.muted }}>{detail}</p>}
+            </div>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full" style={{ background: ok ? 'var(--color-primary)' : C.red }} />
               <span className="text-[10px] font-semibold" style={{ color: ok ? 'var(--color-primary)' : C.red }}>{ok ? 'Online' : 'Down'}</span>
@@ -517,6 +536,8 @@ function AdminTools() {
     { href: '/admin/buyers',       icon: <ShoppingCart size={20} />, label: 'Buyer Accounts', sub: 'Review buyer registrations',       bg: 'var(--color-harvest-bg)',    color: C.amber   },
     { href: '/admin/deliveries',   icon: <Truck size={20} />,        label: 'Deliveries',     sub: 'Uber-style delivery tracking',     bg: 'var(--color-purple-bg)',     color: 'var(--color-purple)' },
     { href: '/admin/analytics',    icon: <TrendingUp size={20} />,   label: 'Analytics',      sub: 'Growth, revenue & trends',         bg: 'var(--color-cyan-bg)',       color: 'var(--color-cyan)' },
+    { href: '/admin/commission',   icon: <CreditCard size={20} />,   label: 'Platform Wallet', sub: 'Commission balance & account no.', bg: 'var(--color-primary-bg)',    color: C.green   },
+    { href: '/admin/disease-reports', icon: <Microscope size={20} />, label: 'Disease Reports', sub: 'Assign & track crop cases',       bg: 'var(--color-warning-bg)',    color: 'var(--color-warning)' },
   ];
 
   return (
@@ -633,7 +654,9 @@ export default async function AdminDashboardPage() {
         <Suspense fallback={<div className="dash-skeleton h-56 rounded-xl" />}>
           <MarketPriceSummary />
         </Suspense>
-        <SystemHealth />
+        <Suspense fallback={<div className="dash-skeleton h-56 rounded-xl" />}>
+          <SystemHealth />
+        </Suspense>
       </div>
 
     </div>

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { AlertTriangle, Check } from 'lucide-react';
+import { CameraCapture } from '@/components/ui/CameraCapture';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -30,6 +31,7 @@ export function CreateListingForm({ priceMap, farmerDistrict }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const [priceTouched, setPriceTouched] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
   const [form, setForm]       = useState({
     cropType:     '',
     quantityKg:   '',
@@ -62,6 +64,9 @@ export function CreateListingForm({ priceMap, farmerDistrict }: Props) {
     if (!form.cropType || !form.quantityKg || !form.askingPrice || !form.district) {
       setError('Please fill all required fields'); return;
     }
+    if (!imageUrl) {
+      setError('Take a live photo of your produce before posting'); return;
+    }
     setLoading(true); setError('');
     try {
       const res = await fetch('/api/listings', {
@@ -74,6 +79,7 @@ export function CreateListingForm({ priceMap, farmerDistrict }: Props) {
           district:     form.district,
           availableFrom: form.availableFrom,
           notes:        form.notes || undefined,
+          imageUrl,
         }),
       });
       const json = await res.json();
@@ -88,6 +94,27 @@ export function CreateListingForm({ priceMap, farmerDistrict }: Props) {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* Photo — required, live camera capture only */}
+      <div>
+        <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
+          Photo of Your Produce *
+        </label>
+        {imageUrl ? (
+          <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden' }}>
+            <img src={imageUrl} alt="Captured produce" style={{ width: '100%', display: 'block' }} />
+            <button
+              type="button"
+              onClick={() => setImageUrl('')}
+              style={{ position: 'absolute', top: 8, right: 8, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+            >
+              Retake
+            </button>
+          </div>
+        ) : (
+          <CameraCapture onCaptured={setImageUrl} label="Take a photo of your produce" />
+        )}
+      </div>
 
       {/* Crop type */}
       <div>

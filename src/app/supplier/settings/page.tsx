@@ -25,7 +25,7 @@ const SECTIONS = [
   {
     title: 'Coverage & Analytics',
     items: [
-      { label: 'My Service Area', desc: 'Set the districts where you supply products', icon: <MapPin size={20} />, href: '/supplier/coverage' },
+      { label: 'Service Area', desc: 'Set the districts where you supply products', icon: <MapPin size={20} />, href: '/supplier/coverage' },
       { label: 'Demand Map', desc: 'See where farmers are looking for your products', icon: <Map size={20} />, href: '/supplier/demand' },
       { label: 'Analytics', desc: 'Sales performance and revenue trends', icon: <BarChart3 size={20} />, href: '/supplier/analytics' },
     ],

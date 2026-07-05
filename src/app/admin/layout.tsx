@@ -15,6 +15,7 @@ const ADMIN_NAV = [
   { href: '/admin/buyers',       icon: 'marketplace',  label: 'Buyers' },
   { href: '/admin/disputes',     icon: 'dispute',      label: 'Disputes' },
   { href: '/admin/deliveries',   icon: 'deliveries',   label: 'Deliveries' },
+  { href: '/admin/disease-reports', icon: 'disease-alerts', label: 'Disease Reports' },
   { href: '/admin/wallets',      icon: 'finance',      label: 'Wallets' },
   { href: '/admin/fraud',        icon: 'alert',        label: 'Fraud Flags' },
   { href: '/admin/commission',   icon: 'finance',      label: 'Commission', divider: true, sectionLabel: 'Settings' },

@@ -6,6 +6,8 @@ import {
   ShoppingBag, MessageCircle, CheckCircle2, CreditCard, Package,
   Truck, Snowflake, Zap, DollarSign, Leaf, Clock, RefreshCw,
 } from 'lucide-react';
+import { VerificationBanner } from '@/components/trust/VerificationBanner';
+import { type VerificationLevel } from '@/lib/trust';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -27,7 +29,7 @@ const Card = ({ children, style = {} }: { children: React.ReactNode; style?: Rea
 
 const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('full_name, location, id').eq('user_id', userId).single();
+  const { data } = await supabase.from('profiles').select('full_name, location, id, verification_level').eq('user_id', userId).single();
   return data as any;
 });
 
@@ -56,8 +58,8 @@ async function BuyerStats({ userId }: { userId: string }) {
 
   const stats = [
     { label: 'Farmers Selling', value: listingsRes.count ?? 0,    sub: 'Available to buy now',   icon: <ShoppingBag size={18} />,   border: C.greenBright },
-    { label: 'My Offers',       value: pendingRes.count ?? 0,     sub: 'Waiting for farmer reply',icon: <MessageCircle size={18} />, border: C.amber },
-    { label: 'My Orders',       value: ordersRes.count ?? 0,      sub: 'Deals accepted',         icon: <CheckCircle2 size={18} />,  border: C.blue },
+    { label: 'Offers',       value: pendingRes.count ?? 0,     sub: 'Waiting for farmer reply',icon: <MessageCircle size={18} />, border: C.amber },
+    { label: 'Orders',       value: ordersRes.count ?? 0,      sub: 'Deals accepted',         icon: <CheckCircle2 size={18} />,  border: C.blue },
     {
       label: 'Wallet Balance',
       value: `UGX ${Math.round(walletRes?.data?.balance ?? 0).toLocaleString()}`,
@@ -88,8 +90,8 @@ async function BuyerStats({ userId }: { userId: string }) {
 function QuickActions() {
   const actions = [
     { label: 'Browse Market', href: '/buyer/listings',   icon: <ShoppingBag size={20} />,   bg: 'var(--color-primary-bg)', color: C.green  },
-    { label: 'My Orders',     href: '/buyer/orders',     icon: <Package size={20} />,       bg: 'var(--color-sky-bg)',     color: C.blue   },
-    { label: 'My Offers',     href: '/buyer/requests',   icon: <MessageCircle size={20} />, bg: 'var(--color-harvest-bg)', color: C.amber  },
+    { label: 'Orders',     href: '/buyer/orders',     icon: <Package size={20} />,       bg: 'var(--color-sky-bg)',     color: C.blue   },
+    { label: 'Offers',     href: '/buyer/requests',   icon: <MessageCircle size={20} />, bg: 'var(--color-harvest-bg)', color: C.amber  },
     { label: 'Deliveries',    href: '/buyer/deliveries', icon: <Truck size={20} />,         bg: 'var(--color-purple-bg)', color: C.purple },
     { label: 'Wallet',        href: '/buyer/wallet',     icon: <CreditCard size={20} />,    bg: 'var(--color-success-bg)', color: 'var(--color-success)' },
   ];
@@ -461,6 +463,19 @@ async function WelcomeHeader({ userId }: { userId: string }) {
   );
 }
 
+// ── Streaming: Verification prompt ─────────────────────────────────────────────
+
+async function VerifyPrompt({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  return (
+    <VerificationBanner
+      level={(profile?.verification_level as VerificationLevel) ?? 'none'}
+      verifyHref="/buyer/verify"
+      requiredDocsLabel="national ID, a selfie, and business registration"
+    />
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function BuyerDashboardPage() {
@@ -471,6 +486,10 @@ export default async function BuyerDashboardPage() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
+
+      <Suspense fallback={null}>
+        <VerifyPrompt userId={userId} />
+      </Suspense>
 
       <Suspense fallback={
         <div className="flex items-start justify-between">

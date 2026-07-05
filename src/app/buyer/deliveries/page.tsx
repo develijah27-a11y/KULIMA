@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { PayDeliveryButton } from './PayDeliveryButton';
+import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import type { JSX } from 'react';
 import { Truck, Search, Car, Package, Snowflake, Zap, CheckCircle2, User } from 'lucide-react';
 
@@ -149,11 +150,14 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
 
         {/* Driver info */}
         {d.transporter && (
-          <p style={{ fontSize: 11, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <p style={{ fontSize: 11, color: C.muted, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
             <User size={11} />Driver: {d.transporter.full_name ?? 'Assigned'}
             {d.transporter.phone_number && ` · ${d.transporter.phone_number}`}
           </p>
         )}
+
+        {/* Live location — helps the driver find you without a phone call while driving */}
+        <ShareLocationButton deliveryId={d.id} active={['open', 'assigned'].includes(d.status)} />
       </div>
 
       {/* Pay button */}

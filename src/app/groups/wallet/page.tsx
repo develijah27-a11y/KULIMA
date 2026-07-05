@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Banknote, Plus, ArrowUpRight, Settings, ClipboardList, Wallet } from 'lucide-react';
+import { AccountNumberBadge } from '@/components/wallet/AccountNumberBadge';
 import type { JSX } from 'react';
 
 const C = {
@@ -29,7 +30,7 @@ export default async function GroupsWalletPage() {
   const [groupRes, txnsRes, contribRes] = await Promise.allSettled([
     leaderProfile
       ? (supabase.from as any)('farmer_groups')
-          .select('id, name, wallet_balance')
+          .select('id, name, wallet_balance, wallet_account_number')
           .eq('leader_id', (leaderProfile as any).id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -67,9 +68,10 @@ export default async function GroupsWalletPage() {
         <p style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>
           Group Wallet Balance
         </p>
-        <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 20px' }}>
+        <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px' }}>
           UGX {Math.round(walletBalance).toLocaleString()}
         </p>
+        <div style={{ marginBottom: 16 }}><AccountNumberBadge accountNumber={group?.wallet_account_number} dark /></div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 14px' }}>
             <p style={{ fontSize: 9, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', margin: '0 0 3px' }}>

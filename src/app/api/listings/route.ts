@@ -42,10 +42,14 @@ export async function POST(req: Request) {
   const quantityKg    = body.quantityKg    ?? body.quantity_kg;
   const askingPrice   = body.askingPrice   ?? body.asking_price;
   const availableFrom = body.availableFrom ?? body.available_from;
+  const imageUrl      = body.imageUrl      ?? body.image_url;
   const { district, notes, is_group_listing } = body;
 
   if (!cropType || !quantityKg || !askingPrice || !district) {
     return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+  }
+  if (!imageUrl) {
+    return NextResponse.json({ success: false, error: 'A live photo of your produce is required' }, { status: 400 });
   }
 
   const insertPayload: Record<string, unknown> = {
@@ -56,6 +60,7 @@ export async function POST(req: Request) {
     available_from: availableFrom ?? new Date().toISOString().slice(0, 10),
     district,
     notes:          notes ?? null,
+    image_url:      imageUrl,
     status:         'active',
   };
   if (is_group_listing) {

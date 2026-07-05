@@ -17,7 +17,7 @@ const SECTIONS = [
   {
     title: 'Cases',
     items: [
-      { label: 'My Cases', desc: 'View and manage your assigned diagnoses', icon: <Microscope size={20} />, href: '/pathologist/my-cases' },
+      { label: 'Cases', desc: 'View and manage your assigned diagnoses', icon: <Microscope size={20} />, href: '/pathologist/my-cases' },
       { label: 'New Cases', desc: 'Browse new farmer disease reports needing review', icon: <ClipboardList size={20} />, href: '/pathologist/case-queue' },
       { label: 'Disease Alerts', desc: 'Active outbreak warnings across all districts', icon: <AlertOctagon size={20} />, href: '/pathologist/disease-alerts' },
     ],

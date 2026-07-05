@@ -7,6 +7,8 @@ import {
   Search, Star, BarChart3, Send,
   TrendingUp, Leaf, Clock, Truck,
 } from 'lucide-react';
+import { VerificationBanner } from '@/components/trust/VerificationBanner';
+import { type VerificationLevel } from '@/lib/trust';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -28,7 +30,7 @@ const Card = ({ children, style = {} }: { children: React.ReactNode; style?: Rea
 
 const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('full_name, location, id').eq('user_id', userId).single();
+  const { data } = await supabase.from('profiles').select('full_name, location, id, verification_level').eq('user_id', userId).single();
   return data as any;
 });
 
@@ -62,7 +64,7 @@ async function OfftakerStats({ userId }: { userId: string }) {
 
   const stats = [
     { label: 'Active Deals',       value: contractsCount,                                      icon: <FileText size={18} />,   sub: 'Running agreements',       border: C.greenBright },
-    { label: 'My Farmers',        value: uniqueSuppliers,                                     icon: <Users size={18} />,      sub: 'Farmers supplying you',    border: C.blue },
+    { label: 'Farmers',        value: uniqueSuppliers,                                     icon: <Users size={18} />,      sub: 'Farmers supplying you',    border: C.blue },
     { label: 'Unpaid Bills',      value: pendingPayCount,                                     icon: <CreditCard size={18} />, sub: 'Not yet paid',             border: pendingPayCount ? C.amber : C.muted },
     { label: 'Wallet Balance',    value: `UGX ${Math.round(walletBal).toLocaleString()}`,     icon: <DollarSign size={18} />, sub: 'Money in your wallet',     border: C.purple },
   ];
@@ -88,7 +90,7 @@ function QuickActions() {
     { label: 'New Deal',        href: '/offtaker/pipeline/new',    icon: <FileText size={20} />,  bg: 'var(--color-primary-bg)', color: C.green  },
     { label: 'Find Farmers',   href: '/offtaker/pipeline',        icon: <Search size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
     { label: 'Rate Farmer',    href: '/offtaker/scorecard',       icon: <Star size={20} />,      bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'My Reports',     href: '/offtaker/spend',           icon: <BarChart3 size={20} />, bg: 'var(--color-purple-bg)',  color: C.purple },
+    { label: 'Reports',     href: '/offtaker/spend',           icon: <BarChart3 size={20} />, bg: 'var(--color-purple-bg)',  color: C.purple },
     { label: 'Send Offer',     href: '/offtaker/pipeline',        icon: <Send size={20} />,      bg: 'var(--color-danger-bg)',  color: C.red    },
     { label: 'Book Delivery',  href: '/offtaker/deliveries/new',  icon: <Truck size={20} />,     bg: 'var(--color-primary-bg)', color: C.green  },
   ];
@@ -354,6 +356,12 @@ export default async function OfftakerDashboardPage() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
+
+      <VerificationBanner
+        level={(profile?.verification_level as VerificationLevel) ?? 'none'}
+        verifyHref="/offtaker/verify"
+        requiredDocsLabel="national ID and a selfie"
+      />
 
       <div className="flex items-start justify-between">
         <div>

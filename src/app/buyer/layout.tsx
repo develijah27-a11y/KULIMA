@@ -15,8 +15,8 @@ const BUYER_NAV = [
   // ── Sourcing
   { href: '/buyer/listings',        icon: 'marketplace',  label: 'Browse Market',    divider: true, sectionLabel: 'Buying' },
   { href: '/buyer/group-listings',  icon: 'groups',       label: 'Group Produce' },
-  { href: '/buyer/requests',        icon: 'requests',     label: 'My Requests' },
-  { href: '/buyer/orders',       icon: 'orders',       label: 'My Orders' },
+  { href: '/buyer/requests',        icon: 'requests',     label: 'Requests' },
+  { href: '/buyer/orders',       icon: 'orders',       label: 'Orders' },
   { href: '/buyer/favourites',   icon: 'favourites',   label: 'Saved Items' },
   { href: '/buyer/contracts',    icon: 'contracts',    label: 'Agreements' },
   // ── Logistics

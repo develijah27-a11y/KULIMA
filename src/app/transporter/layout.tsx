@@ -17,7 +17,7 @@ const TRANSPORTER_NAV = [
   { href: '/transporter/active',     icon: 'active-jobs',  label: 'Active Jobs' },
   { href: '/transporter/deliveries', icon: 'deliveries',   label: 'Completed' },
   // ── Fleet
-  { href: '/transporter/vehicle',    icon: 'farm',         label: 'My Fleet',       divider: true, sectionLabel: 'Fleet' },
+  { href: '/transporter/vehicle',    icon: 'farm',         label: 'Fleet',       divider: true, sectionLabel: 'Fleet' },
   { href: '/transporter/cold-chain', icon: 'cold-logs',    label: 'Cool Transport Logs' },
   // ── Account
   { href: '/transporter/wallet',     icon: 'earnings',     label: 'Wallet & Earnings', divider: true, sectionLabel: 'Account' },

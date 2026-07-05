@@ -103,7 +103,7 @@ function QuickActions() {
     { label: 'Available Jobs', href: '/transporter/job-queue',  icon: <Inbox size={20} />,     bg: 'var(--color-primary-bg)', color: C.green  },
     { label: 'Active Jobs',    href: '/transporter/active',     icon: <Truck size={20} />,     bg: 'var(--color-sky-bg)',     color: C.blue   },
     { label: 'Earnings',       href: '/transporter/wallet',     icon: <DollarSign size={20} />, bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'My Vehicle',     href: '/transporter/vehicle',    icon: <Car size={20} />,       bg: 'var(--color-purple-bg)', color: C.purple },
+    { label: 'Vehicle',     href: '/transporter/vehicle',    icon: <Car size={20} />,       bg: 'var(--color-purple-bg)', color: C.purple },
     { label: 'Cool Transport', href: '/transporter/cold-chain', icon: <Snowflake size={20} />, bg: 'var(--color-danger-bg)',  color: C.red    },
   ];
 

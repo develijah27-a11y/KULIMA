@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { WalletActions } from '@/app/farmer/wallet/WalletActions';
+import { AccountNumberBadge } from '@/components/wallet/AccountNumberBadge';
 import { Banknote } from 'lucide-react';
 
 const C = {
@@ -44,7 +45,8 @@ export default async function SupplierWalletPage() {
 
       <div style={{ background: C.green, borderRadius: 20, padding: '24px 24px 20px', color: '#fff' }}>
         <p style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Available Balance</p>
-        <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 20px' }}>UGX {Math.round(balance).toLocaleString()}</p>
+        <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px' }}>UGX {Math.round(balance).toLocaleString()}</p>
+        <div style={{ marginBottom: 16 }}><AccountNumberBadge accountNumber={wallet?.account_number} dark /></div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 14px' }}>
             <p style={{ fontSize: 9, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', margin: '0 0 3px' }}>Total Received</p>

@@ -13,14 +13,14 @@ import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 const FARMER_NAV = [
   { href: '/farmer/dashboard',   icon: 'dashboard',    label: 'Dashboard' },
   // ── Market
-  { href: '/farmer/marketplace', icon: 'my-listings',  label: 'My Listings',  divider: true, sectionLabel: 'Market' },
-  { href: '/farmer/orders',      icon: 'orders',       label: 'My Orders' },
-  { href: '/farmer/inputs',      icon: 'inventory',    label: 'My Inputs' },
+  { href: '/farmer/marketplace', icon: 'my-listings',  label: 'Listings',  divider: true, sectionLabel: 'Market' },
+  { href: '/farmer/orders',      icon: 'orders',       label: 'Orders' },
+  { href: '/farmer/inputs',      icon: 'inventory',    label: 'Inputs' },
   { href: '/farmer/deliveries',  icon: 'deliveries',   label: 'Deliveries' },
   { href: '/farmer/inventory',   icon: 'inventory',    label: 'Inventory' },
   { href: '/farmer/prices',      icon: 'prices',       label: 'Market Prices' },
   // ── Farm
-  { href: '/farmer/farm',        icon: 'farm',         label: 'My Farm',      divider: true, sectionLabel: 'Farm' },
+  { href: '/farmer/farm',        icon: 'farm',         label: 'Farm',      divider: true, sectionLabel: 'Farm' },
   { href: '/farmer/farm/workers',icon: 'workers',      label: 'Workers' },
   { href: '/farmer/finance',     icon: 'finance',      label: 'Money & Loans' },
   { href: '/farmer/planting',    icon: 'planting',     label: 'Planting' },

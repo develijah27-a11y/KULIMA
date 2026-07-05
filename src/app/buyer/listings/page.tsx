@@ -37,7 +37,7 @@ export default async function BuyerListingsPage({
 
   // Fetch listings with farmer profile
   let query = (supabase.from as any)('listings')
-    .select('id, crop_type, quantity_kg, asking_price, district, created_at, available_from, farmer_id, farmer:profiles(id, full_name, location, verification_level, trust_score)')
+    .select('id, crop_type, quantity_kg, asking_price, district, created_at, available_from, farmer_id, image_url, farmer:profiles(id, full_name, location, verification_level, trust_score)')
     .eq('status', 'active');
 
   if (crop)     query = query.eq('crop_type', crop);
@@ -158,7 +158,7 @@ export default async function BuyerListingsPage({
             const farmer   = l.farmer ?? {};
             const priceDelta = market ? Math.round(((l.asking_price - market) / market) * 100) : null;
 
-            const photoUrl  = getCropPhotoUrl(k, 400, 220);
+            const photoUrl  = l.image_url || getCropPhotoUrl(k, 400, 220);
             const gradient  = getCropGradient(k);
 
             return (

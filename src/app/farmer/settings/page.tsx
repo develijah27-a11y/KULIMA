@@ -12,7 +12,7 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'My Profile', desc: 'View and edit your name, phone, and location', icon: <User size={20} />, href: '/farmer/profile' },
+      { label: 'Profile', desc: 'View and edit your name, phone, and location', icon: <User size={20} />, href: '/farmer/profile' },
       { label: 'Wallet & Finance', desc: 'Manage your balance, deposits, and withdrawals', icon: <CreditCard size={20} />, href: '/farmer/wallet' },
       { label: 'Notifications', desc: 'Price alerts, offer updates, and farm reminders', icon: <Bell size={20} />, href: '/farmer/notifications' },
     ],
@@ -20,9 +20,9 @@ const SECTIONS = [
   {
     title: 'Farm & Market',
     items: [
-      { label: 'My Listings', desc: 'Manage crops you have listed for sale', icon: <Leaf size={20} />, href: '/farmer/marketplace' },
-      { label: 'My Orders', desc: 'Track orders from buyers', icon: <Package size={20} />, href: '/farmer/orders' },
-      { label: 'My Farm', desc: 'Update farm details, size, and crop history', icon: <Tractor size={20} />, href: '/farmer/farm' },
+      { label: 'Listings', desc: 'Manage crops you have listed for sale', icon: <Leaf size={20} />, href: '/farmer/marketplace' },
+      { label: 'Orders', desc: 'Track orders from buyers', icon: <Package size={20} />, href: '/farmer/orders' },
+      { label: 'Farm', desc: 'Update farm details, size, and crop history', icon: <Tractor size={20} />, href: '/farmer/farm' },
       { label: 'Planting Calendar', desc: 'Record planting and expected harvest dates', icon: <CalendarDays size={20} />, href: '/farmer/planting' },
       { label: 'Finance & Loans', desc: 'View loans, repayments, and financial history', icon: <Banknote size={20} />, href: '/farmer/finance' },
     ],

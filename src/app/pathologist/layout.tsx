@@ -15,7 +15,7 @@ const PATHOLOGIST_NAV = [
   // ── Cases
   { href: '/pathologist/cases',           icon: 'case-queue',     label: 'New Cases',       divider: true, sectionLabel: 'Cases' },
   { href: '/pathologist/cases/urgent',    icon: 'urgent-cases',   label: 'Urgent' },
-  { href: '/pathologist/cases/mine',      icon: 'my-cases',       label: 'My Cases' },
+  { href: '/pathologist/cases/mine',      icon: 'my-cases',       label: 'Cases' },
   { href: '/pathologist/cases/resolved',  icon: 'resolved',       label: 'Resolved' },
   // ── Insights
   { href: '/pathologist/geocluster',      icon: 'geo-map',        label: 'Disease Map',     divider: true, sectionLabel: 'Insights' },
@@ -23,7 +23,7 @@ const PATHOLOGIST_NAV = [
   // ── Work
   { href: '/pathologist/consultations',    icon: 'consultations',  label: 'Farmer Requests', divider: true, sectionLabel: 'Work' },
   // ── Account
-  { href: '/pathologist/profile',         icon: 'profile',        label: 'My Profile',      divider: true, sectionLabel: 'Account' },
+  { href: '/pathologist/profile',         icon: 'profile',        label: 'Profile',      divider: true, sectionLabel: 'Account' },
   { href: '/pathologist/wallet',          icon: 'earnings',       label: 'Wallet & Earnings' },
   { href: '/pathologist/notifications',   icon: 'notifications',  label: 'Notifications' },
   { href: '/pathologist/verify',          icon: 'verify',         label: 'Get Verified' },

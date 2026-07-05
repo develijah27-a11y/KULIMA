@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle } from 'lucide-react';
+import { NavigateButton } from '@/components/delivery/NavigateButton';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -234,6 +235,17 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                       {isInTransit && d.dropoff_location && <p style={{ margin: 0 }}>{d.dropoff_location}, {d.dropoff_district}</p>}
                     </div>
                   )}
+
+                  <div style={{ marginBottom: 10 }}>
+                    <NavigateButton
+                      deliveryId={d.id}
+                      fallbackAddress={
+                        isInTransit
+                          ? `${d.dropoff_location ?? ''}, ${d.dropoff_district}`
+                          : `${d.pickup_location ?? ''}, ${d.pickup_district}`
+                      }
+                    />
+                  </div>
 
                   {isAssigned && (
                     <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'start_transit')}

@@ -8,6 +8,8 @@ import {
   Radio, Leaf, Wrench, Droplets, Recycle, Settings,
   Store, MapPin, Bell, Inbox, Sprout, FlaskConical, Truck,
 } from 'lucide-react';
+import { VerificationBanner } from '@/components/trust/VerificationBanner';
+import { type VerificationLevel } from '@/lib/trust';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -24,7 +26,7 @@ const Card = ({ children, style = {} }: { children: React.ReactNode; style?: Rea
 
 const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('full_name, location, id').eq('user_id', userId).single();
+  const { data } = await supabase.from('profiles').select('full_name, location, id, verification_level').eq('user_id', userId).single();
   return data as any;
 });
 
@@ -354,6 +356,12 @@ export default async function SupplierDashboardPage() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
+
+      <VerificationBanner
+        level={(profile?.verification_level as VerificationLevel) ?? 'none'}
+        verifyHref="/supplier/verify"
+        requiredDocsLabel="national ID, a selfie, and business registration"
+      />
 
       <div className="flex items-start justify-between">
         <div>

@@ -15,7 +15,7 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
   const [listingRes, priceRes, offerRes, orderRes] = await Promise.all([
     (supabase.from as any)('listings')
       .select(`
-        id, farmer_id, crop_type, quantity_kg, asking_price, district, available_from, notes, quality_grade,
+        id, farmer_id, crop_type, quantity_kg, asking_price, district, available_from, notes, quality_grade, image_url,
         farmer:profiles(full_name, location, verification_level, trust_score)
       `)
       .eq('id', id)
@@ -82,7 +82,7 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
         existingOffer={(offerRes as any).data ?? null}
         hasActiveOrder={!!(orderRes as any).data}
         gradient={getCropGradient(k)}
-        photoUrl={getCropPhotoUrl(k, 600, 300)}
+        photoUrl={listing.image_url || getCropPhotoUrl(k, 600, 300)}
         cropColor={getCropColor(k)}
       />
     </div>

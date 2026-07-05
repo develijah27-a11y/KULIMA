@@ -17,7 +17,7 @@ const SECTIONS = [
   {
     title: 'Buying',
     items: [
-      { label: 'My Contracts', desc: 'View and manage forward purchase agreements', icon: <FileText size={20} />, href: '/offtaker/contracts' },
+      { label: 'Contracts', desc: 'View and manage forward purchase agreements', icon: <FileText size={20} />, href: '/offtaker/contracts' },
       { label: 'Find Farmers', desc: 'Track committed volumes from farmers', icon: <Leaf size={20} />, href: '/offtaker/pipeline' },
       { label: 'Rate Farmers', desc: 'Rate and review your farmer suppliers', icon: <Star size={20} />, href: '/offtaker/scorecard' },
     ],
@@ -25,7 +25,7 @@ const SECTIONS = [
   {
     title: 'Reports',
     items: [
-      { label: 'My Spending', desc: 'Breakdown of spend by crop and time period', icon: <BarChart3 size={20} />, href: '/offtaker/spend' },
+      { label: 'Spending', desc: 'Breakdown of spend by crop and time period', icon: <BarChart3 size={20} />, href: '/offtaker/spend' },
       { label: 'Crop Quality', desc: 'Delivery rates and quality standards tracking', icon: <ShieldCheck size={20} />, href: '/offtaker/quality' },
       { label: 'Risk Alerts', desc: 'Supply risk flags and early warnings', icon: <AlertTriangle size={20} />, href: '/offtaker/risk' },
     ],

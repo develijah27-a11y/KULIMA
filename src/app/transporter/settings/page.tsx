@@ -20,7 +20,7 @@ const SECTIONS = [
   {
     title: 'Vehicle & Fleet',
     items: [
-      { label: 'My Vehicle', desc: 'Update truck type, plate, capacity and cold chain status', icon: <Truck size={20} />, href: '/transporter/vehicle' },
+      { label: 'Vehicle', desc: 'Update truck type, plate, capacity and cold chain status', icon: <Truck size={20} />, href: '/transporter/vehicle' },
       { label: 'Cool Transport Logs', desc: 'Temperature compliance records for perishable loads', icon: <Snowflake size={20} />, href: '/transporter/cold-chain' },
     ],
   },

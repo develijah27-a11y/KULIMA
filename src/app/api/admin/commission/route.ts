@@ -37,19 +37,38 @@ export async function GET() {
     return NextResponse.json({ error: dbErr.message }, { status: 500 });
   }
 
-  return NextResponse.json({ data: data ?? { rate_percent: 2.5, min_fee_ugx: 500, max_fee_ugx: null } });
+  let platformWallet: { balance: number; account_number: string; owner_name: string | null } | null = null;
+  if (data?.platform_wallet_user_id) {
+    const [{ data: wallet }, { data: owner }] = await Promise.all([
+      (db.from as any)('wallets').select('balance, account_number').eq('user_id', data.platform_wallet_user_id).maybeSingle(),
+      (db.from as any)('profiles').select('full_name').eq('user_id', data.platform_wallet_user_id).maybeSingle(),
+    ]);
+    if (wallet) platformWallet = { balance: Number(wallet.balance), account_number: wallet.account_number, owner_name: owner?.full_name ?? null };
+  }
+
+  // Candidate admin accounts the platform wallet can be assigned to
+  const { data: admins } = await (db.from as any)('profiles')
+    .select('user_id, full_name')
+    .eq('role', 'admin')
+    .order('created_at', { ascending: true });
+
+  return NextResponse.json({
+    data: data ?? { rate_percent: 2.5, min_fee_ugx: 500, max_fee_ugx: null, platform_wallet_user_id: null },
+    platformWallet,
+    admins: admins ?? [],
+  });
 }
 
 export async function PUT(req: Request) {
   const { user, error, status } = await requireAdmin();
   if (!user) return NextResponse.json({ error }, { status });
 
-  let body: { rate_percent?: number; min_fee_ugx?: number; max_fee_ugx?: number | null };
+  let body: { rate_percent?: number; min_fee_ugx?: number; max_fee_ugx?: number | null; platform_wallet_user_id?: string | null };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { rate_percent, min_fee_ugx, max_fee_ugx } = body;
+  const { rate_percent, min_fee_ugx, max_fee_ugx, platform_wallet_user_id } = body;
   if (rate_percent === undefined || min_fee_ugx === undefined) {
     return NextResponse.json({ error: 'rate_percent and min_fee_ugx are required' }, { status: 400 });
   }
@@ -62,6 +81,14 @@ export async function PUT(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+  // Carry over the existing platform wallet designation unless the caller
+  // explicitly passed a new one — the previous version of this route always
+  // dropped it here, silently disconnecting commission collection on every
+  // rate change.
+  const { data: current } = await (db.from as any)('platform_commission')
+    .select('platform_wallet_user_id').eq('active', true).maybeSingle();
+  const nextWalletUserId = platform_wallet_user_id !== undefined ? platform_wallet_user_id : (current?.platform_wallet_user_id ?? null);
+
   // Deactivate existing active row, then insert new one (audit trail preserved)
   await (db.from as any)('platform_commission').update({ active: false }).eq('active', true);
 
@@ -69,7 +96,9 @@ export async function PUT(req: Request) {
     rate_percent,
     min_fee_ugx,
     max_fee_ugx: max_fee_ugx ?? null,
+    platform_wallet_user_id: nextWalletUserId,
     active: true,
+    updated_by: user.id,
     updated_at: new Date().toISOString(),
   }).select().single();
 

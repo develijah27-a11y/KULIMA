@@ -7,6 +7,8 @@ import {
   Stethoscope, FileText, BookOpen, Map, Folder,
   Leaf, AlertTriangle,
 } from 'lucide-react';
+import { VerificationBanner } from '@/components/trust/VerificationBanner';
+import { type VerificationLevel } from '@/lib/trust';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -23,7 +25,7 @@ const Card = ({ children, style = {} }: { children: React.ReactNode; style?: Rea
 
 const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('full_name, location, id').eq('user_id', userId).single();
+  const { data } = await supabase.from('profiles').select('full_name, location, id, verification_level').eq('user_id', userId).single();
   return data as any;
 });
 
@@ -85,7 +87,7 @@ function QuickActions() {
     { label: 'File Report',     href: '/pathologist/my-cases/new',    icon: <FileText size={20} />,    bg: 'var(--color-sky-bg)',     color: C.blue   },
     { label: 'Disease Library', href: '/pathologist/disease-alerts',  icon: <BookOpen size={20} />,    bg: 'var(--color-purple-bg)', color: C.purple },
     { label: 'Outbreak Map',    href: '/pathologist/geo-map',         icon: <Map size={20} />,         bg: 'var(--color-harvest-bg)', color: C.amber  },
-    { label: 'My Cases',        href: '/pathologist/my-cases',        icon: <Folder size={20} />,      bg: 'var(--color-primary-bg)', color: C.green  },
+    { label: 'Cases',        href: '/pathologist/my-cases',        icon: <Folder size={20} />,      bg: 'var(--color-primary-bg)', color: C.green  },
   ];
 
   return (
@@ -338,6 +340,12 @@ export default async function PathologistDashboardPage() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
+
+      <VerificationBanner
+        level={(profile?.verification_level as VerificationLevel) ?? 'none'}
+        verifyHref="/pathologist/verify"
+        requiredDocsLabel="national ID, a selfie, and your professional qualifications"
+      />
 
       <div className="flex items-start justify-between">
         <div>
