@@ -9,7 +9,7 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Professional Profile', desc: 'Update your name, credentials, and specialisation', icon: <Stethoscope size={20} />, href: '/farmer/profile' },
+      { label: 'Professional Profile', desc: 'Update your name, consultation pricing, and specialisation', icon: <Stethoscope size={20} />, href: '/pathologist/profile' },
       { label: 'Wallet & Earnings', desc: 'Manage consultation payments and withdrawals', icon: <Banknote size={20} />, href: '/pathologist/wallet' },
       { label: 'Notifications', desc: 'Case alerts and outbreak warnings', icon: <Bell size={20} />, href: '/pathologist/notifications' },
     ],

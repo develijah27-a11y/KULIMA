@@ -38,8 +38,8 @@ export function getUgandaSeason(month: number): {
   };
 
   const NAMES: Record<string, string> = {
-    A: 'Season A (Long Rains)',
-    B: 'Season B (Short Rains)',
+    A: 'Rainy Season (March–May)',
+    B: 'Rainy Season (September–November)',
     dry1: 'Dry Season (Dec–Feb)',
     dry2: 'Dry Season (Jun–Sep)',
   };
@@ -79,14 +79,14 @@ export function buildSeasonalPlan(month: number, primaryCrop?: string): Seasonal
     },
     dry1: {
       recommendedCrops: ['Onion', 'Tomato (irrigated)', 'Capsicum', 'Watermelon'],
-      currentTask: 'Irrigate if possible. Harvest Season B crops & dry properly.',
-      nextTask: 'Prepare land and inputs for Season A planting in March.',
+      currentTask: 'Irrigate if possible. Harvest September–November crops & dry properly.',
+      nextTask: 'Prepare land and inputs for the March rains.',
       urgency: 'warning',
     },
     dry2: {
       recommendedCrops: ['Sweet Potato', 'Cassava', 'Watermelon (irrigated)'],
-      currentTask: 'Harvest Season A crops. Dry and store maize at <13% moisture.',
-      nextTask: 'Prepare nurseries for Season B seedlings (tomato, cabbage).',
+      currentTask: 'Harvest March–May crops. Dry and store maize at <13% moisture.',
+      nextTask: 'Prepare nurseries for the September rains (tomato, cabbage).',
       urgency: 'info',
     },
   };

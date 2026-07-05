@@ -58,12 +58,21 @@ export default async function PathologistProfilePage() {
         </div>
       </div>
 
+      <RateSettings
+        remoteFee={p?.remote_fee_ugx ?? null}
+        visitFee={p?.visit_fee_ugx ?? null}
+        fullName={p?.full_name ?? ''}
+        location={p?.location ?? ''}
+        phoneNumber={p?.phone_number ?? ''}
+        primaryCrop={p?.primary_crop ?? ''}
+      />
+
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px' }}>
         <p className="text-sm font-bold mb-3" style={{ color: C.text }}>Specialisation</p>
         <p className="text-xs mb-4" style={{ color: C.muted }}>Set which crop diseases and regions you specialise in to get matched with relevant cases.</p>
         <div style={{ display: 'flex', gap: 8 }}>
           <Link href="/pathologist/settings" style={{ flex: 1, padding: '10px', background: 'var(--color-primary-bg)', color: C.greenMed, borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none', textAlign: 'center' }}>
-            Edit Profile →
+            More Settings →
           </Link>
         </div>
       </div>

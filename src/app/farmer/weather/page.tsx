@@ -281,14 +281,14 @@ export default async function WeatherPage({
               Bi-Modal Rainfall Pattern
             </p>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5', marginBottom: '16px' }}>
-              Uganda has two main rainy seasons. Season A (March–May) brings long rains ideal for maize and beans.
-              Season B (September–November) brings shorter rains suited for beans, sweet potato and tomatoes.
+              Uganda has two main rainy seasons. The March–May rains are long rains ideal for maize and beans.
+              The September–November rains are shorter, suited for beans, sweet potato and tomatoes.
               Northern Uganda has a single rainy season (April–October).
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               {[
-                { season: 'Season A · Long Rains', months: 'Mar – May', crops: 'Maize, Beans, Groundnuts' },
-                { season: 'Season B · Short Rains', months: 'Sep – Nov', crops: 'Beans, Sweet Potato, Tomato' },
+                { season: 'Rainy Season · Long Rains', months: 'Mar – May', crops: 'Maize, Beans, Groundnuts' },
+                { season: 'Rainy Season · Short Rains', months: 'Sep – Nov', crops: 'Beans, Sweet Potato, Tomato' },
               ].map((s) => (
                 <div key={s.season} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px' }}>
                   <div style={{ display: 'flex', marginBottom: '6px', color: '#BBF7D0' }}><Leaf size={20} /></div>

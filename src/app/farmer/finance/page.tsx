@@ -64,7 +64,7 @@ async function FinanceSummary({ userId }: { userId: string }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
         {((): { label: string; value: string; sub: string; icon: JSX.Element; border: string; bg: string; color: string }[] => [
           {
-            label: 'Total Invested (Season A)',
+            label: 'Total Invested (This Season)',
             value: totalSpent > 0 ? `UGX ${totalSpent.toLocaleString()}` : '—',
             sub: `${expenses.length} expense entries`,
             icon: <Banknote size={20} />, border: C.red, bg: 'var(--color-danger-bg)', color: C.red,
@@ -157,7 +157,7 @@ async function FinanceSummary({ userId }: { userId: string }) {
             <div style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.shadow }}>
               <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}` }}>
                 <p style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>Saved Farm Plans</p>
-                <p style={{ fontSize: '12px', color: C.muted }}>Season A 2026</p>
+                <p style={{ fontSize: '12px', color: C.muted }}>This Season · 2026</p>
               </div>
               <div style={{ padding: '0' }}>
                 {projections.map((p: any, i: number) => {

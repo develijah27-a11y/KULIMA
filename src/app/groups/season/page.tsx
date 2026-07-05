@@ -10,8 +10,8 @@ const C = {
 };
 
 const UG_SEASONS = [
-  { name: 'Season A', months: 'Mar – Jun', desc: 'Long rains. Primary planting for maize, beans, groundnuts.', current: true },
-  { name: 'Season B', months: 'Aug – Nov', desc: 'Short rains. Second crop and coffee main harvest.', current: false },
+  { name: 'Rainy Season', months: 'Mar – Jun', desc: 'Long rains. Primary planting for maize, beans, groundnuts.', current: true },
+  { name: 'Rainy Season', months: 'Aug – Nov', desc: 'Short rains. Second crop and coffee main harvest.', current: false },
   { name: 'Dry Season', months: 'Dec – Feb', desc: 'Irrigated crops, coffee fly crop, sweet potato.', current: false },
 ];
 
@@ -53,7 +53,7 @@ export default async function SeasonPlannerPage() {
 
       {/* Milestones */}
       <div>
-        <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Season A Milestones</p>
+        <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>{currentSeason.name} Milestones ({currentSeason.months})</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {MILESTONES.map((m, i) => (
             <div key={m.title} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 18px', borderRadius: 12, background: C.cardBg, boxShadow: C.cardShadow, opacity: m.done ? 1 : 0.7 }}>

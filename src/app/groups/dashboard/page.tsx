@@ -118,12 +118,12 @@ async function SeasonBanner({ userId }: { userId: string }) {
   const supabase = await createClient();
 
   const month = new Date().getMonth();
-  const season = month >= 2 && month <= 4 ? 'Season A (Mar–May)' : month >= 8 && month <= 10 ? 'Season B (Sep–Nov)' : 'Off-season';
+  const season = month >= 2 && month <= 4 ? 'Rainy Season (March–May)' : month >= 8 && month <= 10 ? 'Rainy Season (September–November)' : 'Dry Season';
   const nextAction = month >= 2 && month <= 4
-    ? 'Coordinate land preparation and group seed purchase for Season A'
+    ? 'Coordinate land preparation and group seed purchase for the March–May rains'
     : month >= 8 && month <= 10
     ? 'Arrange collective harvest transport and bulk storage contracts'
-    : 'Plan group input procurement for the upcoming planting season';
+    : 'Plan group input procurement for the upcoming rainy season';
 
   const { data: announcement } = await (supabase.from as any)('group_announcements')
     .select('title, body, created_at')
