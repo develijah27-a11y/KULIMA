@@ -117,7 +117,7 @@ async function FinanceSummary({ userId }: { userId: string }) {
             <div style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.shadow }}>
               <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}` }}>
                 <p style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>Spending Breakdown</p>
-                <p style={{ fontSize: '12px', color: C.muted }}>Season A 2026 · UGX {totalSpent.toLocaleString()} total</p>
+                <p style={{ fontSize: '12px', color: C.muted }}>This Season · 2026 · UGX {totalSpent.toLocaleString()} total</p>
               </div>
               <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {topCats.map(([cat, amount]) => {

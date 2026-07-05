@@ -24,6 +24,8 @@ export interface Database {
           primary_crop: string | null
           verification_level: string | null
           trust_score: number | null
+          remote_fee_ugx: number | null
+          visit_fee_ugx: number | null
           created_at: string
           updated_at: string
         }
@@ -41,6 +43,8 @@ export interface Database {
           primary_crop?: string | null
           verification_level?: string | null
           trust_score?: number | null
+          remote_fee_ugx?: number | null
+          visit_fee_ugx?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -58,6 +62,8 @@ export interface Database {
           primary_crop?: string | null
           verification_level?: string | null
           trust_score?: number | null
+          remote_fee_ugx?: number | null
+          visit_fee_ugx?: number | null
           created_at?: string
           updated_at?: string
         }

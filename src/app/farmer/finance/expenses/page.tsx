@@ -32,7 +32,7 @@ async function ExpenseData({ userId }: { userId: string }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '14px' }}>
           {[
             {
-              label: 'Total Spent (Season A)',
+              label: 'Total Spent (This Season)',
               value: `UGX ${totalSpent.toLocaleString()}`,
               sub: `${current.length} expense entries`,
               color: 'var(--color-danger)', bg: 'var(--color-danger-bg)',

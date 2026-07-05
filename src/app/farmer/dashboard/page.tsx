@@ -13,6 +13,7 @@ import {
   Sun, Moon, Cloud, CloudSun, CloudRain, CloudLightning, Snowflake,
   Calendar, MessageCircle, ShoppingCart, Pencil, ClipboardList, Search,
   BarChart3, Leaf, AlertTriangle, AlertCircle, Wind, Droplets, Truck,
+  ArrowRight, User,
 } from 'lucide-react';
 
 const getWeatherCached = cache(async (lat: number, lon: number): Promise<ServerWeatherData> => {
@@ -658,6 +659,116 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
   );
 }
 
+// ─── Streaming: Delivery history ─────────────────────────────────────────────
+
+async function DeliveryHistory({ userId }: { userId: string }) {
+  const supabase = await createClient();
+
+  const { data: deliveries } = await (supabase.from as any)('delivery_requests')
+    .select(`
+      id, pickup_district, dropoff_district, cargo_kg, cargo_type,
+      status, payment_status, agreed_price, estimated_fare, created_at,
+      transporter:profiles!delivery_requests_transporter_id_fkey(full_name)
+    `)
+    .eq('requester_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(6);
+
+  const rows = (deliveries ?? []) as any[];
+
+  const STATUS: Record<string, { label: string; color: string; bg: string }> = {
+    open:       { label: 'Finding Driver',  color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+    assigned:   { label: 'Driver Assigned', color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
+    in_transit: { label: 'On the Way',      color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
+    delivered:  { label: 'Delivered',       color: 'var(--color-purple)',  bg: 'var(--color-purple-bg)'  },
+    cancelled:  { label: 'Cancelled',       color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
+  };
+
+  const activeCount = rows.filter((d) => ['open', 'assigned', 'in_transit'].includes(d.status)).length;
+
+  return (
+    <Card>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <div className="flex items-center gap-2.5">
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+            My Deliveries
+          </p>
+          {activeCount > 0 && (
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: 'var(--color-primary-bg)', color: C.green }}>
+              {activeCount} active
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <Link href="/farmer/deliveries/new" className="text-xs font-bold px-3 py-1.5 rounded-lg" style={{ background: 'var(--color-primary-bg)', color: C.green, textDecoration: 'none' }}>
+            + Request
+          </Link>
+          <Link href="/farmer/deliveries" className="text-xs font-semibold" style={{ color: C.greenMed, textDecoration: 'none' }}>
+            View all →
+          </Link>
+        </div>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="px-5 py-10 text-center">
+          <Truck size={36} style={{ margin: '0 auto 10px', color: C.muted }} />
+          <p className="text-sm font-bold" style={{ color: C.text }}>No deliveries yet</p>
+          <p className="text-xs mt-1 mb-4" style={{ color: C.muted }}>Move your produce from farm to market quickly and safely</p>
+          <Link href="/farmer/deliveries/new" className="inline-block text-xs font-bold px-4 py-2 rounded-lg" style={{ background: C.green, color: '#fff', textDecoration: 'none' }}>
+            Book First Delivery →
+          </Link>
+        </div>
+      ) : (
+        <div className="divide-y" style={{ borderColor: C.border }}>
+          {rows.map((d: any) => {
+            const st = STATUS[d.status] ?? STATUS.open;
+            const needsPay = d.status === 'delivered' && d.payment_status !== 'paid';
+            const price = d.agreed_price ?? d.estimated_fare;
+            return (
+              <Link
+                key={d.id}
+                href="/farmer/deliveries"
+                className="flex items-center justify-between gap-3"
+                style={{ padding: '12px 20px', textDecoration: 'none' }}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: st.bg, color: st.color }}>
+                    <Truck size={15} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: C.text }}>
+                      {d.pickup_district} → {d.dropoff_district}
+                    </p>
+                    <p className="text-[11px] mt-0.5" style={{ color: C.muted }}>
+                      {d.cargo_kg}kg{d.cargo_type ? ` · ${d.cargo_type}` : ''}
+                      {d.transporter?.full_name ? ` · ${d.transporter.full_name}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {needsPay && (
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>
+                      Pay Now
+                    </span>
+                  )}
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: st.bg, color: st.color }}>
+                    {st.label}
+                  </span>
+                  {price && (
+                    <p className="text-xs font-black" style={{ color: C.text }}>
+                      {Number(price).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // ─── Quick actions ────────────────────────────────────────────────────────────
 
 function QuickActions() {
@@ -666,7 +777,7 @@ function QuickActions() {
     { label: 'Farm Records',     href: '/farmer/farm',             icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
     { label: 'Check Weather',    href: '/farmer/weather',          icon: <Cloud size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
     { label: 'Crop Doctor',      href: '/farmer/doctor',           icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
-    { label: 'Book Delivery',    href: '/farmer/deliveries/new',   icon: <Truck size={20} />,         bg: 'var(--color-purple-bg)',   color: 'var(--color-purple)' },
+    { label: 'My Deliveries',    href: '/farmer/deliveries',        icon: <Truck size={20} />,         bg: 'var(--color-purple-bg)',   color: 'var(--color-purple)' },
   ];
 
   return (
