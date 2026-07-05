@@ -103,7 +103,7 @@ function QuickActions() {
       <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
           <Link key={label} href={href} className="flex flex-col items-center gap-2 py-4 rounded-xl hover:opacity-85 transition-opacity" style={{ background: bg, textDecoration: 'none' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--tile-icon-bg)', color }}>
               {icon}
             </div>
             <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>

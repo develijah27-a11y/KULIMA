@@ -143,6 +143,10 @@
   --d-placeholder: var(--color-text-hint);
   --d-row-hover:   var(--color-surface-2);
   --d-subtle:      var(--color-surface-2);
+  /* Icon-chip background used inside colored quick-action tiles (bg is a
+     tinted color like --color-sky-bg) — a bright white circle reads fine
+     against those pale tints in light mode. */
+  --tile-icon-bg:  rgba(255, 255, 255, 0.7);
 }
 
 /* ─── Dark mode ───
@@ -248,6 +252,10 @@
   --d-placeholder: var(--color-text-hint);
   --d-row-hover:   var(--color-surface-2);
   --d-subtle:      var(--color-surface-2);
+  /* A bright white circle on a dark tinted tile reads as a glaring, washed-out
+     blob — swap it for a soft translucent highlight instead, same idea as
+     the glass surfaces used elsewhere in dark mode. */
+  --tile-icon-bg:  rgba(255, 255, 255, 0.10);
 }
 
 /* ═══════════════════════════════════════════════════════════════════

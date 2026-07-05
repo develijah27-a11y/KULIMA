@@ -683,7 +683,7 @@ function QuickActions() {
             className="flex flex-col items-center gap-2 py-4 rounded-xl transition-opacity hover:opacity-85 active:scale-95"
             style={{ background: bg, textDecoration: 'none' }}
           >
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--tile-icon-bg)', color }}>
               {icon}
             </div>
             <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
