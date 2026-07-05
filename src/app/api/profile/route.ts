@@ -34,7 +34,7 @@ export async function PATCH(req: Request) {
     update.visit_fee_ugx = visit_fee_ugx === null ? null : Number(visit_fee_ugx);
   }
 
-  const { error } = await supabase.from('profiles').update(update).eq('user_id', user.id);
+  const { error } = await (supabase.from as any)('profiles').update(update).eq('user_id', user.id);
 
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
 
