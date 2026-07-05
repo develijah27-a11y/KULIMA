@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, type JSX } from 'react';
-import { X, Bell, Check, CheckCheck, ExternalLink, Package, TrendingUp, Cloud, MessageCircle } from 'lucide-react';
+import { X, Bell, Check, CheckCheck, ExternalLink, Package, TrendingUp, Cloud, MessageCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -12,7 +12,7 @@ export interface Notification {
   href?: string;
   read: boolean;
   createdAt: string;
-  type?: 'order' | 'price' | 'weather' | 'system' | 'message';
+  type?: 'order' | 'price' | 'weather' | 'system' | 'message' | 'group';
 }
 
 interface NotificationDrawerProps {
@@ -27,6 +27,7 @@ const TYPE_ICONS: Record<string, JSX.Element> = {
   weather: <Cloud size={16} />,
   message: <MessageCircle size={16} />,
   system:  <Bell size={16} />,
+  group:   <Users size={16} />,
 };
 
 function groupByDate(notifications: Notification[]) {

@@ -25,12 +25,13 @@ export default function AddMemberPage() {
   const [cropType, setCropType] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState<{ linked: boolean } | null>(null);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!fullName.trim()) { setError('Please enter the member\'s name'); return; }
     if (!district) { setError('Please select a district'); return; }
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setSuccess(null);
     try {
       const res = await fetch('/api/group-members', {
         method: 'POST',
@@ -39,12 +40,39 @@ export default function AddMemberPage() {
       });
       const json = await res.json();
       if (!res.ok || json.error) throw new Error(json.error ?? 'Failed to add member');
-      router.push('/groups/members');
+      setSuccess({ linked: !!json.linked });
+      setTimeout(() => router.push('/groups/members'), json.linked ? 1800 : 2600);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  if (success) {
+    return (
+      <div className="max-w-xl mx-auto space-y-5">
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
+          {/* Coloured stripe header */}
+          <div style={{
+            padding: '16px 20px',
+            background: success.linked ? 'var(--color-primary-bg)' : 'var(--color-harvest-bg)',
+            borderBottom: `1px solid ${success.linked ? 'var(--color-success-border)' : 'var(--color-warning-border)'}`,
+          }}>
+            <p style={{ fontSize: 15, fontWeight: 800, color: success.linked ? C.green : 'var(--color-harvest)', margin: 0 }}>
+              {success.linked ? 'Member added & notified' : 'Saved to your roster'}
+            </p>
+          </div>
+          <div style={{ padding: '16px 20px' }}>
+            <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.6 }}>
+              {success.linked
+                ? `${fullName} has a registered AgriNova account and has been sent a notification that they joined your group.`
+                : `${fullName} was saved to your member list. Because no matching AgriNova account was found for that phone number, they won't receive notifications or group payouts until they sign up with the same number and are linked.`}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -83,8 +111,19 @@ export default function AddMemberPage() {
         </div>
 
         <div>
-          <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Phone Number <span style={{ fontWeight: 400, color: C.muted }}>(optional)</span></label>
-          <input value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="e.g. 0772 123456" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: 'var(--d-input-bg)', outline: 'none', boxSizing: 'border-box' }} />
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 4 }}>
+            Phone Number
+            <span style={{ fontWeight: 500, color: 'var(--color-harvest)', marginLeft: 6, fontSize: 11 }}>Strongly recommended</span>
+          </label>
+          <input
+            value={phoneNumber}
+            onChange={e => setPhoneNumber(e.target.value)}
+            placeholder="e.g. 0772 123456"
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: 'var(--d-input-bg)', outline: 'none', boxSizing: 'border-box' }}
+          />
+          <p style={{ fontSize: 11, color: C.muted, marginTop: 5, lineHeight: 1.5 }}>
+            Phone is how we tell two people with the same name apart. If this member has an AgriNova account, the phone links them automatically — and they get notified immediately.
+          </p>
         </div>
 
         <div>
