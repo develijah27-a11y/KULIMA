@@ -268,7 +268,7 @@ export default async function FinancePage() {
           borderRadius: '16px', padding: '24px',
         }}
       >
-        <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
+        <p style={{ fontSize: '11px', fontWeight: 700, color: '#BBF7D0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
           Profit Tips
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>

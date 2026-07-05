@@ -306,7 +306,7 @@ async function AIBanner({ userId }: { userId: string }) {
         <Sprout size={20} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-primary-muted)' }}>Farm Tip</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#BBF7D0' }}>Farm Tip</p>
         <p className="text-sm font-bold text-white leading-snug">{season.currentTask}</p>
         <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
           {season.season} · {season.daysLeft} days remaining · {crop.charAt(0).toUpperCase() + crop.slice(1)} season

@@ -208,7 +208,7 @@ async function UgandaLocalPrices({
       {/* Hot demand banner */}
       {hotCrops.length > 0 && (
         <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 16, padding: '16px 20px' }}>
-          <p style={{ color: 'var(--color-primary-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <p style={{ color: '#BBF7D0', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
             <Flame size={12} /> High Buyer Demand — Last 30 Days
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -335,7 +335,7 @@ async function RegionalPrices({ region }: { region: 'east_africa' | 'global' }) 
     <div className="space-y-6">
       {/* Header */}
       <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 16, padding: '20px 24px' }}>
-        <p style={{ color: 'var(--color-primary-muted)', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+        <p style={{ color: '#BBF7D0', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
           {cfg.desc}
         </p>
         <p style={{ color: '#fff', fontSize: 20, fontWeight: 900, letterSpacing: '-0.02em', margin: '0 0 4px' }}>{cfg.label}</p>

@@ -154,11 +154,11 @@ async function DemandIntelligence() {
   return (
     <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)' }}>
       <div className="flex items-start gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(82,183,136,0.2)', color: 'var(--color-primary-muted)' }}>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(82,183,136,0.2)', color: '#BBF7D0' }}>
           <Radio size={20} />
         </div>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--color-primary-muted)' }}>What Farmers Need</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: '#BBF7D0' }}>What Farmers Need</p>
           <p className="text-sm font-bold text-white">What farmers near you are growing</p>
           <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>Stock these inputs to match current market demand</p>
         </div>
@@ -170,7 +170,7 @@ async function DemandIntelligence() {
             <div key={crop} className="rounded-lg p-2.5" style={{ background: 'rgba(255,255,255,0.08)' }}>
               <p className="text-xs font-bold text-white capitalize">{crop}</p>
               <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>{count} farms</p>
-              <p className="text-[10px] mt-1 leading-tight" style={{ color: 'var(--color-primary-muted)' }}>{CROP_INPUTS[crop] ?? 'General inputs'}</p>
+              <p className="text-[10px] mt-1 leading-tight" style={{ color: '#BBF7D0' }}>{CROP_INPUTS[crop] ?? 'General inputs'}</p>
             </div>
           ))}
         </div>
@@ -182,7 +182,7 @@ async function DemandIntelligence() {
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="text-[10px] font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.4)' }}>Active districts:</span>
           {topDistricts.map(([d, count]) => (
-            <span key={d} className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(82,183,136,0.2)', color: 'var(--color-primary-muted)' }}>
+            <span key={d} className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(82,183,136,0.2)', color: '#BBF7D0' }}>
               {d} ({count})
             </span>
           ))}

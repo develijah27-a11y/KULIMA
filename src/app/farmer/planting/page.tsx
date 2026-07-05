@@ -50,27 +50,31 @@ function Card({ children, style = {} }: { children: React.ReactNode; style?: Rea
 
 function MonthBar({ cal, currentMonth }: { cal: PlantingWindow; currentMonth: number }) {
   const cells = MONTHS.map((_, m) => {
-    let type: 'plant-a' | 'harvest-a' | 'plant-b' | 'harvest-b' | 'empty' = 'empty';
+    let type: 'plant-1' | 'weed-1' | 'harvest-1' | 'plant-2' | 'weed-2' | 'harvest-2' | 'empty' = 'empty';
 
     const inRange = (start: number, end: number) => {
       if (start <= end) return m >= start && m <= end;
       return m >= start || m <= end;
     };
 
-    if (cal.seasonA) {
-      if (inRange(cal.seasonA.plantStart, cal.seasonA.plantEnd)) type = 'plant-a';
-      else if (inRange(cal.seasonA.harvestStart, cal.seasonA.harvestEnd)) type = 'harvest-a';
+    if (cal.rains1) {
+      if (inRange(cal.rains1.plantStart, cal.rains1.plantEnd)) type = 'plant-1';
+      else if (inRange(cal.rains1.weedStart, cal.rains1.weedEnd)) type = 'weed-1';
+      else if (inRange(cal.rains1.harvestStart, cal.rains1.harvestEnd)) type = 'harvest-1';
     }
-    if (cal.seasonB) {
-      if (inRange(cal.seasonB.plantStart, cal.seasonB.plantEnd)) type = 'plant-b';
-      else if (inRange(cal.seasonB.harvestStart, cal.seasonB.harvestEnd)) type = 'harvest-b';
+    if (cal.rains2) {
+      if (inRange(cal.rains2.plantStart, cal.rains2.plantEnd)) type = 'plant-2';
+      else if (inRange(cal.rains2.weedStart, cal.rains2.weedEnd)) type = 'weed-2';
+      else if (inRange(cal.rains2.harvestStart, cal.rains2.harvestEnd)) type = 'harvest-2';
     }
 
     const colors: Record<string, { bg: string; border: string }> = {
-      'plant-a':   { bg: 'var(--color-success-bg)', border: '#34D399' },
-      'harvest-a': { bg: 'var(--color-harvest-bg)', border: '#FCD34D' },
-      'plant-b':   { bg: 'var(--color-sky-bg)', border: '#93C5FD' },
-      'harvest-b': { bg: '#FDE8D8', border: '#FDBA74' },
+      'plant-1':   { bg: 'var(--color-success-bg)', border: '#34D399' },
+      'weed-1':    { bg: 'var(--color-lime-bg)', border: '#A3E635' },
+      'harvest-1': { bg: 'var(--color-harvest-bg)', border: '#FCD34D' },
+      'plant-2':   { bg: 'var(--color-sky-bg)', border: '#93C5FD' },
+      'weed-2':    { bg: 'var(--color-cyan-bg)', border: '#67E8F9' },
+      'harvest-2': { bg: '#FDE8D8', border: '#FDBA74' },
       'empty':     { bg: '#F9FAFB', border: 'var(--d-border)' },
     };
 
@@ -153,7 +157,7 @@ export default async function PlantingPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <span style={{ display: 'flex', color: '#fff' }}>{phaseCfg.icon}</span>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#BBF7D0', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   {phaseCfg.bg && 'Current Season'}
                 </span>
               </div>
@@ -163,7 +167,7 @@ export default async function PlantingPage() {
               </p>
             </div>
             <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', minWidth: '180px' }}>
-              <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
+              <p style={{ fontSize: '11px', fontWeight: 700, color: '#BBF7D0', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '6px' }}>
                 Next Season
               </p>
               <p style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', marginBottom: '4px' }}>{season.nextSeason}</p>

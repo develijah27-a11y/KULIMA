@@ -304,7 +304,7 @@ export function ExpenseForm({ initialExpenses }: Props) {
           }}
         >
           <div>
-            <p style={{ fontSize: '12px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <p style={{ fontSize: '12px', fontWeight: 700, color: '#BBF7D0', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               {filterSeason} {filterCrop ? `· ${filterCrop.replace(/_/g, ' ')}` : '· All Crops'}
             </p>
             <p style={{ fontSize: '22px', fontWeight: 900, color: '#fff', letterSpacing: '-0.03em', marginTop: '2px' }}>

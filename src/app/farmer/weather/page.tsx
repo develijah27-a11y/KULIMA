@@ -274,7 +274,7 @@ export default async function WeatherPage({
               borderRadius: '12px',
             }}
           >
-            <p style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-primary-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
+            <p style={{ fontSize: '11px', fontWeight: 700, color: '#BBF7D0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
               Uganda Seasonal Rainfall Outlook
             </p>
             <p style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', marginBottom: '6px' }}>
@@ -293,7 +293,7 @@ export default async function WeatherPage({
                 <div key={s.season} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px' }}>
                   <div style={{ display: 'flex', marginBottom: '6px', color: '#BBF7D0' }}><Leaf size={20} /></div>
                   <p style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', marginBottom: '2px' }}>{s.season}</p>
-                  <p style={{ fontSize: '12px', color: 'var(--color-primary-muted)', marginBottom: '4px' }}>{s.months}</p>
+                  <p style={{ fontSize: '12px', color: '#BBF7D0', marginBottom: '4px' }}>{s.months}</p>
                   <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>{s.crops}</p>
                 </div>
               ))}

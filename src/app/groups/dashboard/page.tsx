@@ -135,11 +135,11 @@ async function SeasonBanner({ userId }: { userId: string }) {
   return (
     <div className="rounded-xl p-5" style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)' }}>
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(82,183,136,0.2)', color: 'var(--color-primary-muted)' }}>
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(82,183,136,0.2)', color: '#BBF7D0' }}>
           <Megaphone size={20} />
         </div>
         <div className="flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--color-primary-muted)' }}>
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#BBF7D0' }}>
             {announcement ? 'Latest Announcement' : `${season} · Group Action`}
           </p>
           <p className="text-sm font-bold text-white leading-snug">
