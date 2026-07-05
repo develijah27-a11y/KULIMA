@@ -5,6 +5,7 @@ import Link from 'next/link';
 import {
   CloudRain, TrendingUp, Users, Microscope, Package, BarChart3,
   Leaf, ShoppingCart, Store, Check, ChevronDown, ArrowRight,
+  Wifi, Signal, BatteryFull, Bell, Wallet as WalletIcon,
 } from 'lucide-react';
 
 const FEATURES = [
@@ -25,6 +26,10 @@ const ROLES = [
     points: ['Reach farmers nearby', 'Manage orders in one place', 'Verified profile badge', 'Get paid on delivery'] },
 ];
 
+function fade(delayMs: number) {
+  return { animationDelay: `${delayMs}ms` } as const;
+}
+
 export default function Home() {
   const [activeRole, setActiveRole] = useState(0);
 
@@ -32,36 +37,79 @@ export default function Home() {
     <div style={{ background: 'var(--color-soil)', color: 'var(--color-text-on-dark)', minHeight: '100vh', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
 
       {/* ── Onboarding-style hero: fills the first screen like an app splash ── */}
-      <section style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', padding: '20px 24px' }}>
+      <section style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', padding: '0 24px 20px' }}>
+
+        {/* Status-bar strip — the single strongest visual cue that this is a phone screen, not a website */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 2px 0', fontSize: 12, fontWeight: 700, color: 'rgba(240,253,244,0.55)' }}>
+          <span>9:41</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <Signal size={13} />
+            <Wifi size={13} />
+            <BatteryFull size={15} />
+          </div>
+        </div>
 
         {/* Top bar — mark only, no link-heavy nav (app-like, not website-like) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9, paddingTop: 8 }}>
+        <div className="landing-fade-up" style={{ display: 'flex', alignItems: 'center', gap: 9, paddingTop: 18, ...fade(0) }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--color-primary)', color: '#06210F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 16 }}>A</div>
           <span style={{ fontSize: 18, fontWeight: 900, letterSpacing: '-0.03em' }}>AgriNova</span>
         </div>
 
         {/* Center content */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', maxWidth: 460, margin: '0 auto', width: '100%' }}>
-          <div style={{
+          <div className="landing-fade-up landing-float" style={{
             width: 84, height: 84, borderRadius: 24, background: 'var(--color-primary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28,
-            boxShadow: '0 12px 40px rgba(124,197,118,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24,
+            boxShadow: '0 16px 40px rgba(124,197,118,0.4)', ...fade(80),
           }}>
             <Leaf size={40} color="#06210F" strokeWidth={2.2} />
           </div>
 
-          <h1 style={{ fontSize: 'clamp(2.2rem,9vw,3.2rem)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, margin: '0 0 14px' }}>
+          <h1 className="landing-fade-up" style={{ fontSize: 'clamp(2.2rem,9vw,3.2rem)', fontWeight: 900, letterSpacing: '-0.04em', lineHeight: 1.05, margin: '0 0 14px', ...fade(160) }}>
             Grow smarter.<br />
             <span style={{ color: 'var(--color-primary)' }}>Sell better.</span>
           </h1>
 
-          <p style={{ fontSize: 16, color: 'rgba(240,253,244,0.68)', fontWeight: 500, lineHeight: 1.5, margin: '0 0 8px', maxWidth: 340 }}>
+          <p className="landing-fade-up" style={{ fontSize: 16, color: 'rgba(240,253,244,0.68)', fontWeight: 500, lineHeight: 1.5, margin: '0 0 24px', maxWidth: 340, ...fade(240) }}>
             Weather, prices, buyers, and disease detection — everything a farmer needs, in one place.
           </p>
+
+          {/* Mini in-app preview — a stylized peek at the real dashboard, not just marketing copy */}
+          <div className="landing-fade-up" style={{
+            width: '100%', maxWidth: 300, borderRadius: 20, background: 'var(--color-surface)',
+            padding: '14px 16px', boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+            border: '1px solid rgba(255,255,255,0.08)', ...fade(320),
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ textAlign: 'left' }}>
+                <p style={{ fontSize: 9, fontWeight: 800, color: 'var(--color-text-muted)', margin: 0, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Good morning</p>
+                <p style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text)', margin: '1px 0 0' }}>Namutebi Grace</p>
+              </div>
+              <div style={{ width: 26, height: 26, borderRadius: 8, background: 'var(--color-primary-bg)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Bell size={13} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+              <div style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--color-primary-bg)', textAlign: 'left' }}>
+                <span style={{ display: 'flex', color: 'var(--color-primary)', marginBottom: 6 }}><WalletIcon size={14} /></span>
+                <p style={{ fontSize: 13, fontWeight: 900, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.02em' }}>UGX 480K</p>
+                <p style={{ fontSize: 9, color: 'var(--color-text-muted)', margin: '1px 0 0', fontWeight: 700 }}>Wallet balance</p>
+              </div>
+              <div style={{ padding: '10px 12px', borderRadius: 12, background: 'var(--color-harvest-bg)', textAlign: 'left' }}>
+                <span style={{ display: 'flex', color: 'var(--color-harvest)', marginBottom: 6 }}><TrendingUp size={14} /></span>
+                <p style={{ fontSize: 13, fontWeight: 900, color: 'var(--color-text)', margin: 0, letterSpacing: '-0.02em' }}>+12%</p>
+                <p style={{ fontSize: 9, color: 'var(--color-text-muted)', margin: '1px 0 0', fontWeight: 700 }}>Maize this week</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 10px', borderRadius: 10, background: 'var(--color-surface-2)' }}>
+              <span style={{ width: 18, height: 18, borderRadius: 999, background: 'var(--color-success)', flexShrink: 0 }} />
+              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text)', margin: 0, textAlign: 'left' }}>Buyer offer accepted — 300kg beans</p>
+            </div>
+          </div>
         </div>
 
         {/* Stats strip — solid, high-contrast tiles instead of translucent glow */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+        <div className="landing-fade-up" style={{ display: 'flex', gap: 10, marginBottom: 20, ...fade(400) }}>
           {[
             { value: '10,000+', label: 'Farmers',   color: 'var(--color-primary)' },
             { value: '50+',     label: 'Markets',   color: 'var(--color-harvest)' },
@@ -75,9 +123,10 @@ export default function Home() {
         </div>
 
         {/* Bottom-anchored primary action — the pattern real apps use for onboarding */}
-        <div style={{ maxWidth: 400, margin: '0 auto', width: '100%' }}>
+        <div className="landing-fade-up" style={{ maxWidth: 400, margin: '0 auto', width: '100%', ...fade(460) }}>
           <Link
             href="/auth/signup"
+            className="press-link"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               width: '100%', padding: '17px', borderRadius: 16,
@@ -99,13 +148,13 @@ export default function Home() {
           </Link>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 4, opacity: 0.4 }}>
+        <div className="landing-bounce" style={{ display: 'flex', justifyContent: 'center', paddingTop: 4, opacity: 0.4 }}>
           <ChevronDown size={20} />
         </div>
       </section>
 
       {/* ── Feature list — vertical rows like a mobile settings/features list ── */}
-      <section style={{ padding: '48px 24px', background: 'var(--color-soil-mid)' }}>
+      <section style={{ padding: '48px 24px', background: 'var(--color-soil-mid)', borderRadius: '28px 28px 0 0' }}>
         <div style={{ maxWidth: 460, margin: '0 auto' }}>
           <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-primary-muted)', textAlign: 'center', marginBottom: 8 }}>
             Everything in one app
@@ -147,7 +196,7 @@ export default function Home() {
                   flex: 1, padding: '10px 6px', borderRadius: 10, border: 'none', cursor: 'pointer',
                   background: activeRole === i ? r.color : 'transparent',
                   color: activeRole === i ? '#06210F' : 'rgba(240,253,244,0.6)',
-                  fontWeight: 800, fontSize: 12.5, transition: 'background 0.15s, color 0.15s',
+                  fontWeight: 800, fontSize: 12.5, transition: 'background 0.2s ease, color 0.2s ease',
                 }}
               >
                 {r.role.split(' ')[0]}
@@ -159,7 +208,7 @@ export default function Home() {
           {(() => {
             const r = ROLES[activeRole];
             return (
-              <div style={{ padding: 24, borderRadius: 20, background: r.bg }}>
+              <div key={activeRole} className="landing-role-card" style={{ padding: 24, borderRadius: 20, background: r.bg }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                   <span style={{ display: 'flex', color: r.color }}>{r.icon}</span>
                   <h3 style={{ fontSize: 18, fontWeight: 900, color: '#0F1720', letterSpacing: '-0.02em', margin: 0 }}>{r.role}</h3>
@@ -185,7 +234,7 @@ export default function Home() {
         <h2 style={{ fontSize: 'clamp(1.8rem,7vw,2.4rem)', fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 24px' }}>
           Ready to grow <span style={{ color: 'var(--color-primary)' }}>smarter?</span>
         </h2>
-        <Link href="/auth/signup" style={{
+        <Link href="/auth/signup" className="press-link" style={{
           display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 34px', borderRadius: 14,
           background: 'var(--color-primary)', color: '#06210F', fontWeight: 900, fontSize: 16,
           textDecoration: 'none', boxShadow: '0 8px 28px rgba(124,197,118,0.35)', letterSpacing: '-0.01em',
