@@ -42,14 +42,17 @@ export async function PATCH(req: Request) {
   if (action === 'accept') {
     // Only the delivery requester can accept a bid
     const { data: bid } = await (supabase.from as any)('delivery_bids')
-      .select('*, delivery:delivery_requests(id, requester_id)')
+      .select('*, delivery:delivery_requests(id, requester_id, pickup_district, dropoff_district, cargo_kg)')
       .eq('id', bid_id)
       .single();
 
     if (!bid) return NextResponse.json({ error: 'Bid not found' }, { status: 404 });
     if (bid.delivery?.requester_id !== user.id) return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
 
-    // Accept this bid, reject others, assign transporter
+    const dr = bid.delivery as any;
+    const route = dr ? `${dr.cargo_kg}kg from ${dr.pickup_district} → ${dr.dropoff_district}` : 'your delivery';
+
+    // Accept this bid, reject others, assign transporter, notify winner
     await Promise.all([
       (supabase.from as any)('delivery_bids').update({ status: 'accepted' }).eq('id', bid_id),
       (supabase.from as any)('delivery_bids').update({ status: 'rejected' }).eq('delivery_id', bid.delivery_id).neq('id', bid_id),
@@ -60,6 +63,13 @@ export async function PATCH(req: Request) {
         agreed_price: bid.price,
         updated_at: new Date().toISOString(),
       }).eq('id', bid.delivery_id),
+      (supabase.from as any)('notifications').insert({
+        user_id: bid.transporter_id,
+        type: 'delivery',
+        title: 'Your bid was accepted!',
+        body: `The farmer accepted your bid of UGX ${Number(bid.price).toLocaleString()} for ${route}. Head to My Deliveries to coordinate pickup.`,
+        read: false,
+      }),
     ]);
 
     return NextResponse.json({ success: true });

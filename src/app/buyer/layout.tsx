@@ -40,9 +40,10 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
   let location = '';
   let roles: string[] = [];
 
-  const [profileRes, unreadRes] = await Promise.all([
+  const [profileRes, unreadRes, deliveryRes] = await Promise.all([
     supabase.from('profiles').select('id, full_name, location, role, roles').eq('user_id', user.id).single(),
     supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false),
+    (supabase.from as any)('delivery_requests').select('id', { count: 'exact', head: true }).eq('requester_id', user.id).in('status', ['open', 'assigned', 'in_transit']),
   ]);
 
   if (profileRes.data) {
@@ -58,15 +59,17 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
     redirect('/onboarding/role');
   }
 
+  const activeDeliveries = deliveryRes?.count ?? 0;
+
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'there';
   const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
 
-  const navWithBadge = BUYER_NAV.map(item =>
-    item.href === '/buyer/notifications' && unreadCount > 0
-      ? { ...item, badge: unreadCount }
-      : item
-  );
+  const navWithBadge = BUYER_NAV.map(item => {
+    if (item.href === '/buyer/notifications' && unreadCount > 0) return { ...item, badge: unreadCount };
+    if (item.href === '/buyer/deliveries' && activeDeliveries > 0) return { ...item, badge: activeDeliveries };
+    return item;
+  });
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>

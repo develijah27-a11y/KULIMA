@@ -853,7 +853,12 @@ export default async function FarmerDashboardPage() {
         <AIBanner userId={userId} />
       </Suspense>
 
-      {/* 4 · Market prices + Weather forecast (2-col) */}
+      {/* 4 · Delivery history */}
+      <Suspense fallback={<div className="dash-skeleton h-52 rounded-xl" />}>
+        <DeliveryHistory userId={userId} />
+      </Suspense>
+
+      {/* 5 · Market prices + Weather forecast (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
           <MarketPricesTable userId={userId} />

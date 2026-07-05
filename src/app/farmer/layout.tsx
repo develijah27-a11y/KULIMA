@@ -48,10 +48,11 @@ export default async function FarmerLayout({ children }: { children: React.React
   let location = '';
   let roles: string[] = [];
 
-  // Parallel: profile + unread count. RLS on notifications filters by auth.uid() automatically.
-  const [profileRes, unreadRes] = await Promise.all([
+  // Parallel: profile + unread notifications + active delivery count
+  const [profileRes, unreadRes, deliveryRes] = await Promise.all([
     supabase.from('profiles').select('id, full_name, location, role, roles').eq('user_id', user.id).single(),
     supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false),
+    (supabase.from as any)('delivery_requests').select('id', { count: 'exact', head: true }).eq('requester_id', user.id).in('status', ['open', 'assigned', 'in_transit']),
   ]);
 
   if (profileRes.data) {
@@ -64,7 +65,11 @@ export default async function FarmerLayout({ children }: { children: React.React
     location = profileRes.data.location ?? '';
     roles = userRoles;
     unreadCount = unreadRes.count ?? 0;
-  } else {
+  }
+
+  const activeDeliveries = deliveryRes?.count ?? 0;
+
+  if (!profileRes.data) {
     // No profile yet → onboarding
     redirect('/onboarding/role');
   }
@@ -73,12 +78,11 @@ export default async function FarmerLayout({ children }: { children: React.React
   const first = profile?.name.split(' ')[0] ?? 'there';
   const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
 
-  // Badge unread count on notifications
-  const navWithBadge = FARMER_NAV.map(item =>
-    item.href === '/farmer/notifications' && unreadCount > 0
-      ? { ...item, badge: unreadCount }
-      : item
-  );
+  const navWithBadge = FARMER_NAV.map(item => {
+    if (item.href === '/farmer/notifications' && unreadCount > 0) return { ...item, badge: unreadCount };
+    if (item.href === '/farmer/deliveries' && activeDeliveries > 0) return { ...item, badge: activeDeliveries };
+    return item;
+  });
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>
