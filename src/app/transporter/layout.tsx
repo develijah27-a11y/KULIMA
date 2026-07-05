@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { MobileSidebarDrawer } from '@/components/layout/MobileSidebarDrawer';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
@@ -74,6 +75,7 @@ export default async function TransporterLayout({ children }: { children: React.
         </main>
       </div>
       <MobileNav navItems={navWithBadge} />
+      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
       <Link href="/transporter/job-queue" className="fab fab-primary" aria-label="View job queue" style={{ textDecoration: 'none' }}>
         <Truck size={21} strokeWidth={2.5} color="#fff" />
       </Link>

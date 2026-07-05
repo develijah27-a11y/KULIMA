@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { MobileSidebarDrawer } from '@/components/layout/MobileSidebarDrawer';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
@@ -67,6 +68,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </main>
       </div>
       <MobileNav navItems={ADMIN_NAV} />
+      <MobileSidebarDrawer navItems={ADMIN_NAV} profile={profile} />
       <NavCommandPalette items={ADMIN_NAV} />
     </div>
   );

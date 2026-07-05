@@ -7,6 +7,8 @@ import {
   Truck, Zap, Snowflake, Inbox, DollarSign, CreditCard, Car,
   CheckCircle2, X, Unlock, Navigation,
 } from 'lucide-react';
+import { VerificationBanner } from '@/components/trust/VerificationBanner';
+import { type VerificationLevel } from '@/lib/trust';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -23,7 +25,7 @@ const Card = ({ children, style = {} }: { children: React.ReactNode; style?: Rea
 
 const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('full_name, location, roles').eq('user_id', userId).single();
+  const { data } = await supabase.from('profiles').select('full_name, location, roles, verification_level').eq('user_id', userId).single();
   return data as any;
 });
 
@@ -459,6 +461,12 @@ export default async function TransporterDashboard() {
           Find Jobs →
         </Link>
       </div>
+
+      <VerificationBanner
+        level={(profile?.verification_level as VerificationLevel) ?? 'none'}
+        verifyHref="/transporter/verify"
+        requiredDocsLabel="national ID, driving permit, and a photo"
+      />
 
       {/* Stats */}
       <Suspense fallback={

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { TopBar } from '@/components/layout/TopBar';
 import { MobileNav } from '@/components/layout/MobileNav';
+import { MobileSidebarDrawer } from '@/components/layout/MobileSidebarDrawer';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
@@ -89,6 +90,7 @@ export default async function FarmerLayout({ children }: { children: React.React
         </main>
       </div>
       <MobileNav navItems={navWithBadge} />
+      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
       <Link
         href="/farmer/marketplace/new"
         className="fab fab-primary"
