@@ -830,13 +830,25 @@ input.auth-input:-webkit-autofill:active {
 @media (max-width: 360px) {
   .stat-grid { gap: 6px; grid-template-columns: repeat(2, 1fr); }
 
-  /* Reduce page padding on tiny screens */
-  main { padding: 12px !important; }
+  /* Reduce page padding on tiny screens, but preserve bottom nav clearance */
+  main {
+    padding: 12px !important;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
 
 /* Mobile tab bar — fluid height using dvh (dynamic viewport height) */
 .mobile-tab-bar {
   height: clamp(56px, 9vh, 68px);
+}
+
+/* ── Bottom nav clearance ──────────────────────────────────────────────────────
+   The fixed bottom nav is ~64px tall. This !important guarantee wins over any
+   Tailwind utility (pb-24, p-5, etc.) regardless of class output order.       */
+@media (max-width: 767px) {
+  main {
+    padding-bottom: calc(clamp(56px, 9vh, 68px) + env(safe-area-inset-bottom, 0px) + 16px) !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
