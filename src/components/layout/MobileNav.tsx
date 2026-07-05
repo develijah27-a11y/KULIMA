@@ -42,7 +42,7 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
     <>
 
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex glass-nav"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex glass-nav mobile-tab-bar"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >
       {visibleItems.map(({ href, icon, label, badge }) => {
@@ -54,14 +54,15 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
             key={href}
             href={href}
             prefetch
-            className="mobile-nav-item flex-1 flex flex-col items-center justify-center gap-0.5"
+            className="mobile-nav-item flex-1 flex flex-col items-center justify-center"
             style={{
               color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
               textDecoration: 'none',
-              minHeight: '52px',
-              paddingTop: '8px',
-              paddingBottom: '6px',
               position: 'relative',
+              gap: 'clamp(2px, 0.8vw, 4px)',
+              paddingTop: 'clamp(6px, 1.5vh, 9px)',
+              paddingBottom: 'clamp(5px, 1.2vh, 7px)',
+              minHeight: 'clamp(50px, 8vh, 60px)',
             }}
           >
             {active && (
@@ -71,23 +72,28 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
                   top: 0,
                   left: '50%',
                   transform: 'translateX(-50%)',
-                  width: 24,
-                  height: 2.5,
-                  borderRadius: '0 0 3px 3px',
+                  width: 'clamp(20px, 6vw, 28px)',
+                  height: 3,
+                  borderRadius: '0 0 4px 4px',
                   background: 'var(--color-primary)',
+                  boxShadow: '0 1px 6px var(--color-primary)',
                 }}
               />
             )}
             <div style={{ position: 'relative' }}>
-              <Icon size={21} strokeWidth={active ? 2.5 : 1.75} />
+              <Icon
+                size={22}
+                strokeWidth={active ? 2.5 : 1.8}
+                style={{ display: 'block' }}
+              />
               {badge !== undefined && badge > 0 && (
                 <span
                   style={{
                     position: 'absolute',
-                    top: -4,
-                    right: -6,
-                    minWidth: 15,
-                    height: 15,
+                    top: -5,
+                    right: -7,
+                    minWidth: 16,
+                    height: 16,
                     background: 'var(--color-danger)',
                     color: 'white',
                     borderRadius: 99,
@@ -96,14 +102,23 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '0 3px',
+                    padding: '0 4px',
+                    border: '1.5px solid var(--color-bg)',
+                    letterSpacing: 0,
                   }}
                 >
                   {badge > 9 ? '9+' : badge}
                 </span>
               )}
             </div>
-            <span style={{ fontSize: '10px', fontWeight: active ? 700 : 500, lineHeight: 1 }}>
+            <span
+              style={{
+                fontSize: 'clamp(9px, 2.4vw, 10.5px)',
+                fontWeight: active ? 700 : 500,
+                lineHeight: 1,
+                letterSpacing: active ? '-0.01em' : 0,
+              }}
+            >
               {label.split(' ')[0]}
             </span>
           </Link>
@@ -113,42 +128,52 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
         <button
           onClick={openSidebar}
           aria-label="Open full menu"
-          className="mobile-nav-item flex-1 flex flex-col items-center justify-center gap-0.5"
+          className="mobile-nav-item flex-1 flex flex-col items-center justify-center no-min-touch"
           style={{
             color: overflowActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            minHeight: '52px',
-            paddingTop: '8px',
-            paddingBottom: '6px',
             position: 'relative',
+            gap: 'clamp(2px, 0.8vw, 4px)',
+            paddingTop: 'clamp(6px, 1.5vh, 9px)',
+            paddingBottom: 'clamp(5px, 1.2vh, 7px)',
+            minHeight: 'clamp(50px, 8vh, 60px)',
           }}
         >
           {overflowActive && (
             <span
               style={{
                 position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)',
-                width: 24, height: 2.5, borderRadius: '0 0 3px 3px', background: 'var(--color-primary)',
+                width: 'clamp(20px, 6vw, 28px)', height: 3,
+                borderRadius: '0 0 4px 4px', background: 'var(--color-primary)',
+                boxShadow: '0 1px 6px var(--color-primary)',
               }}
             />
           )}
           <div style={{ position: 'relative' }}>
-            <MoreHorizontal size={21} strokeWidth={overflowActive ? 2.5 : 1.75} />
+            <MoreHorizontal size={22} strokeWidth={overflowActive ? 2.5 : 1.8} style={{ display: 'block' }} />
             {overflowBadgeTotal > 0 && (
               <span
                 style={{
-                  position: 'absolute', top: -4, right: -6, minWidth: 15, height: 15,
+                  position: 'absolute', top: -5, right: -7, minWidth: 16, height: 16,
                   background: 'var(--color-danger)', color: 'white', borderRadius: 99,
                   fontSize: 9, fontWeight: 800, display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', padding: '0 3px',
+                  justifyContent: 'center', padding: '0 4px',
+                  border: '1.5px solid var(--color-bg)',
                 }}
               >
                 {overflowBadgeTotal > 9 ? '9+' : overflowBadgeTotal}
               </span>
             )}
           </div>
-          <span style={{ fontSize: '10px', fontWeight: overflowActive ? 700 : 500, lineHeight: 1 }}>More</span>
+          <span style={{
+            fontSize: 'clamp(9px, 2.4vw, 10.5px)',
+            fontWeight: overflowActive ? 700 : 500,
+            lineHeight: 1,
+          }}>
+            More
+          </span>
         </button>
       )}
       </nav>

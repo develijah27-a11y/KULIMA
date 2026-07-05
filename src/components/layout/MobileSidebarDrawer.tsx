@@ -28,10 +28,8 @@ export function MobileSidebarDrawer({ navItems, profile }: Props) {
     return () => window.removeEventListener('agrinova:menu-open', handler);
   }, []);
 
-  // Close when the user navigates to a new page
   useEffect(() => { setOpen(false); }, [pathname]);
 
-  // Lock body scroll while open
   useEffect(() => {
     if (open) {
       const prev = document.body.style.overflow;
@@ -62,106 +60,40 @@ export function MobileSidebarDrawer({ navItems, profile }: Props) {
   const initial = profile?.name?.[0]?.toUpperCase() ?? 'U';
 
   return (
-    <div
-      className="md:hidden"
-      style={{ position: 'fixed', inset: 0, zIndex: 70, display: 'flex' }}
-    >
+    <div className="agrinova-drawer-root md:hidden">
       {/* Backdrop */}
       <div
+        className="agrinova-drawer-backdrop"
         onClick={() => setOpen(false)}
-        style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(0,0,0,0.55)',
-          backdropFilter: 'blur(3px)',
-          WebkitBackdropFilter: 'blur(3px)',
-          animation: 'fadeIn 180ms ease',
-        }}
       />
 
       {/* Slide-in drawer */}
-      <aside
-        style={{
-          position: 'relative', zIndex: 1,
-          width: 288, maxWidth: '85vw',
-          height: '100%',
-          display: 'flex', flexDirection: 'column',
-          background: 'var(--color-sidebar)',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          WebkitOverflowScrolling: 'touch',
-          animation: 'slideInLeft 220ms cubic-bezier(0.25,0.46,0.45,0.94)',
-          boxShadow: '8px 0 40px rgba(0,0,0,0.25)',
-        }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            height: 58, padding: '0 16px',
-            borderBottom: '1px solid var(--color-sidebar-divider)',
-            flexShrink: 0,
-          }}
-        >
+      <aside className="agrinova-drawer-panel">
+
+        {/* ── Header ── */}
+        <div className="agrinova-drawer-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-              background: 'rgba(255,255,255,0.18)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, fontWeight: 900,
-              color: 'var(--color-sidebar-text)',
-              fontFamily: 'var(--font-display)',
-            }}>
-              A
-            </div>
-            <span style={{
-              fontSize: 16, fontWeight: 800,
-              color: 'var(--color-sidebar-text)',
-              letterSpacing: '-0.02em',
-              fontFamily: 'var(--font-display)',
-            }}>
-              AgriNova
-            </span>
+            <div className="agrinova-drawer-logo-mark">A</div>
+            <span className="agrinova-drawer-logo-text">AgriNova</span>
           </div>
           <button
             onClick={() => setOpen(false)}
             aria-label="Close menu"
-            style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: 'rgba(255,255,255,0.10)',
-              border: 'none', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--color-sidebar-muted)',
-            }}
+            className="agrinova-drawer-close"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Role label */}
+        {/* ── Role label ── */}
         {profile && (
-          <div style={{
-            padding: '8px 16px',
-            borderBottom: '1px solid var(--color-sidebar-divider)',
-            flexShrink: 0,
-          }}>
-            <p style={{
-              fontSize: 10, fontWeight: 800,
-              color: 'var(--color-sidebar-muted)',
-              textTransform: 'uppercase', letterSpacing: '0.12em',
-            }}>
-              {profile.role}
-            </p>
+          <div className="agrinova-drawer-role">
+            <p className="agrinova-drawer-role-text">{profile.role}</p>
           </div>
         )}
 
-        {/* Nav */}
-        <nav
-          style={{
-            flex: 1,
-            padding: '10px 10px',
-            overflowY: 'auto',
-          }}
-        >
+        {/* ── Nav ── */}
+        <nav className="agrinova-drawer-nav">
           {navItems.map(({ href, icon, label, badge, divider, sectionLabel }, idx) => {
             const Icon = ICON_MAP[icon] ?? LayoutDashboard;
             const active = activeSet.has(href);
@@ -169,59 +101,24 @@ export function MobileSidebarDrawer({ navItems, profile }: Props) {
             return (
               <div key={href}>
                 {divider && (
-                  <div style={{ marginTop: idx === 0 ? 0 : 14, marginBottom: 6 }}>
-                    <div style={{
-                      height: 1,
-                      background: 'var(--color-sidebar-divider)',
-                      marginBottom: sectionLabel ? 7 : 0,
-                    }} />
+                  <div className="agrinova-drawer-section-wrap" style={{ marginTop: idx === 0 ? 0 : undefined }}>
+                    <div className="agrinova-drawer-divider" />
                     {sectionLabel && (
-                      <p style={{
-                        fontSize: 9, fontWeight: 800,
-                        color: 'var(--color-sidebar-muted)',
-                        textTransform: 'uppercase', letterSpacing: '0.12em',
-                        paddingLeft: 10,
-                        fontFamily: 'var(--font-body)',
-                      }}>
-                        {sectionLabel}
-                      </p>
+                      <p className="agrinova-drawer-section-label">{sectionLabel}</p>
                     )}
                   </div>
                 )}
                 <Link
                   href={href}
                   prefetch
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: active ? '10px 10px 10px 7px' : '10px 10px',
-                    borderRadius: 10,
-                    background: active ? 'var(--color-sidebar-active)' : 'transparent',
-                    color: active ? 'var(--color-sidebar-text)' : 'var(--color-sidebar-muted)',
-                    textDecoration: 'none',
-                    marginBottom: 2,
-                    minHeight: 46,
-                    borderLeft: active ? '3px solid #4ADE80' : '3px solid transparent',
-                    transition: 'background 100ms ease, color 100ms ease',
-                    position: 'relative',
-                  }}
+                  className={`agrinova-drawer-link${active ? ' agrinova-drawer-link--active' : ''}`}
                 >
                   <span style={{ flexShrink: 0, display: 'flex' }}>
                     <Icon size={17} strokeWidth={active ? 2.5 : 2} />
                   </span>
-                  <span style={{
-                    fontSize: 14, fontWeight: 700, flex: 1,
-                    lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden',
-                    fontFamily: 'var(--font-body)',
-                  }}>
-                    {label}
-                  </span>
+                  <span className="agrinova-drawer-link-label">{label}</span>
                   {badge !== undefined && badge > 0 && (
-                    <span style={{
-                      fontSize: 10, fontWeight: 800,
-                      padding: '2px 7px', borderRadius: 99, flexShrink: 0,
-                      background: 'var(--color-sidebar-badge)',
-                      color: 'var(--color-sidebar-text)',
-                    }}>
+                    <span className="agrinova-drawer-badge">
                       {badge > 99 ? '99+' : badge}
                     </span>
                   )}
@@ -231,50 +128,18 @@ export function MobileSidebarDrawer({ navItems, profile }: Props) {
           })}
         </nav>
 
-        {/* Profile footer */}
+        {/* ── Profile footer ── */}
         {profile && (
-          <div style={{
-            padding: '14px 16px',
-            borderTop: '1px solid var(--color-sidebar-divider)',
-            display: 'flex', alignItems: 'center', gap: 12,
-            flexShrink: 0,
-          }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-              background: 'rgba(255,255,255,0.18)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 15, fontWeight: 800,
-              color: 'var(--color-sidebar-text)',
-            }}>
-              {initial}
-            </div>
+          <div className="agrinova-drawer-footer">
+            <div className="agrinova-drawer-avatar">{initial}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{
-                fontSize: 13, fontWeight: 700,
-                color: 'var(--color-sidebar-text)',
-                lineHeight: 1.3,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {profile.name}
-              </p>
-              <p style={{
-                fontSize: 11, fontWeight: 600,
-                color: 'var(--color-sidebar-muted)',
-                textTransform: 'capitalize',
-              }}>
-                {profile.role}
-              </p>
+              <p className="agrinova-drawer-name">{profile.name}</p>
+              <p className="agrinova-drawer-role-sub">{profile.role}</p>
             </div>
             <button
               onClick={handleSignOut}
               title="Sign out"
-              style={{
-                width: 36, height: 36, borderRadius: 9, flexShrink: 0,
-                background: 'rgba(255,255,255,0.10)',
-                border: 'none', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--color-sidebar-muted)',
-              }}
+              className="agrinova-drawer-signout"
             >
               <LogOut size={15} />
             </button>
