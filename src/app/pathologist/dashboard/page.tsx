@@ -93,13 +93,15 @@ function QuickActions() {
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Quick Actions</p>
       </div>
-      <div className="grid grid-cols-5 gap-2 p-4">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
-          <Link key={label} href={href} className="flex flex-col items-center gap-2 py-4 rounded-xl hover:opacity-85 transition-opacity" style={{ background: bg, textDecoration: 'none' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.7)', color }}>
+          <Link key={label} href={href}
+            className="press-link flex flex-col items-center gap-2 py-4 rounded-xl"
+            style={{ background: bg, textDecoration: 'none' }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(255,255,255,0.65)', color }}>
               {icon}
             </div>
-            <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
+            <span className="text-[11px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
           </Link>
         ))}
       </div>

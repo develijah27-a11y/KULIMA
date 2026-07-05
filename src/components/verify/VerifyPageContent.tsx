@@ -48,59 +48,93 @@ export async function VerifyPageContent() {
         </p>
       </div>
 
-      {/* Current status */}
-      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px 24px' }}>
-        <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: C.muted }}>Your Status</p>
+      {/* Current status card */}
+      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
 
-        {/* Two-column grid: verification level | trust score — no flex-wrap ambiguity */}
-        <div className="grid grid-cols-2 gap-4 mb-5">
-          <div>
-            <p className="text-xs font-semibold mb-2" style={{ color: C.muted }}>Verification Level</p>
-            <VerificationBadge level={currentLevel} size="md" />
-            <p className="text-xs mt-2 leading-snug" style={{ color: C.muted }}>{BADGE_CONFIG[currentLevel].description}</p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold mb-2" style={{ color: C.muted }}>Trust Score</p>
-            <TrustScore score={trustScore} deals={deals} size="sm" />
-          </div>
+        {/* Card header — subtle gradient stripe */}
+        <div style={{
+          background: 'linear-gradient(135deg, var(--color-primary-bg) 0%, var(--color-sky-bg) 100%)',
+          borderBottom: `1px solid ${C.border}`,
+          padding: '14px 20px',
+        }}>
+          <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.12em', margin: 0 }}>
+            Your Status
+          </p>
         </div>
 
-        {/* Progress path — always full width, clearly below the status grid */}
-        <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
-            <p className="text-xs font-semibold mb-3" style={{ color: C.muted }}>Verification path</p>
-            <div className="flex items-center gap-0">
+        <div style={{ padding: '20px' }}>
+          {/* Two-column grid: verification level | trust score */}
+          <div className="grid grid-cols-2 gap-4 mb-5">
+            {/* Left: badge */}
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Level
+              </p>
+              <VerificationBadge level={currentLevel} size="md" />
+              <p style={{ fontSize: 11, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
+                {BADGE_CONFIG[currentLevel].description}
+              </p>
+            </div>
+
+            {/* Right: trust ring — vertical layout fits any column width */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.08em', alignSelf: 'flex-start' }}>
+                Trust
+              </p>
+              <TrustScore score={trustScore} deals={deals} size="sm" />
+            </div>
+          </div>
+
+          {/* Progress path — full width below the grid */}
+          <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Verification Path
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
               {LEVELS.map((lvl, i) => {
-                const cfg     = BADGE_CONFIG[lvl];
-                const done    = i <= currentIdx;
-                const isCurr  = lvl === currentLevel;
+                const cfg    = BADGE_CONFIG[lvl];
+                const done   = i <= currentIdx;
+                const isCurr = lvl === currentLevel;
                 return (
-                  <div key={lvl} className="flex items-center" style={{ flex: i < LEVELS.length - 1 ? 1 : 'none' }}>
+                  <div key={lvl} style={{ display: 'flex', alignItems: 'center', flex: i < LEVELS.length - 1 ? 1 : 'none' }}>
                     <div style={{
-                      width: 32, height: 32, borderRadius: '50%',
+                      width: 36, height: 36, borderRadius: '50%',
                       background: done ? cfg.bg : 'var(--color-surface-2)',
                       border: `2px solid ${done ? cfg.border : C.border}`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 13, color: done ? cfg.color : C.muted,
-                      fontWeight: 700, flexShrink: 0,
-                      boxShadow: isCurr ? `0 0 0 3px ${cfg.border}` : 'none',
+                      color: done ? cfg.color : C.muted,
+                      fontWeight: 800, flexShrink: 0,
+                      boxShadow: isCurr ? `0 0 0 4px ${cfg.border}` : 'none',
+                      transition: 'box-shadow 200ms ease',
                     }}>
-                      {done ? (lvl === 'grey' ? <Smartphone size={14} /> : lvl === 'green' ? <Check size={14} /> : lvl === 'blue' ? <Gem size={14} /> : <Star size={14} />) : i + 1}
+                      {done
+                        ? (lvl === 'grey'  ? <Smartphone size={15} />
+                          : lvl === 'green' ? <Check size={15} />
+                          : lvl === 'blue'  ? <Gem size={15} />
+                          : <Star size={15} />)
+                        : <span style={{ fontSize: 13 }}>{i + 1}</span>}
                     </div>
                     {i < LEVELS.length - 1 && (
-                      <div style={{ flex: 1, height: 2, background: done && i < currentIdx ? cfg.color : C.border }} />
+                      <div style={{ flex: 1, height: 3, borderRadius: 2, background: done && i < currentIdx ? cfg.color : C.border }} />
                     )}
                   </div>
                 );
               })}
             </div>
-            <div className="flex justify-between mt-1">
-              {LEVELS.map(lvl => (
-                <p key={lvl} style={{ fontSize: 9, color: C.muted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {BADGE_CONFIG[lvl].label}
+            {/* Labels below stepper — readable font size */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+              {LEVELS.map((lvl, i) => (
+                <p key={lvl} style={{
+                  fontSize: 10, fontWeight: 700, color: i <= currentIdx ? BADGE_CONFIG[lvl].color : C.muted,
+                  textTransform: 'uppercase', letterSpacing: '0.04em',
+                  width: 36, textAlign: 'center',
+                }}>
+                  {lvl === 'grey' ? 'Phone' : lvl === 'green' ? 'ID' : lvl === 'blue' ? 'KYC' : 'Gold'}
                 </p>
               ))}
             </div>
           </div>
+        </div>
       </div>
 
       {/* Wizard */}
