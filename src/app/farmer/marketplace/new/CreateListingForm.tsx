@@ -21,14 +21,15 @@ const DISTRICTS = [
 ];
 
 interface Props {
-  marketPrice: number | null;
+  priceMap: Record<string, number>;
   farmerDistrict?: string;
 }
 
-export function CreateListingForm({ marketPrice, farmerDistrict }: Props) {
+export function CreateListingForm({ priceMap, farmerDistrict }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+  const [priceTouched, setPriceTouched] = useState(false);
   const [form, setForm]       = useState({
     cropType:     '',
     quantityKg:   '',
@@ -38,12 +39,22 @@ export function CreateListingForm({ marketPrice, farmerDistrict }: Props) {
     notes:        '',
   });
 
+  const marketPrice = priceMap[form.cropType] ?? null;
   const price  = parseFloat(form.askingPrice);
   const low    = marketPrice && price > 0 && price < marketPrice * 0.85;
   const high   = marketPrice && price > 0 && price > marketPrice * 1.3;
 
   function set(k: keyof typeof form, v: string) {
-    setForm(p => ({ ...p, [k]: v }));
+    setForm(p => {
+      const next = { ...p, [k]: v };
+      // Pre-fill the asking price with today's market rate when the farmer
+      // picks a crop, as long as they haven't typed their own price yet.
+      if (k === 'cropType' && !priceTouched) {
+        const suggested = priceMap[v];
+        next.askingPrice = suggested ? String(suggested) : '';
+      }
+      return next;
+    });
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -112,11 +123,18 @@ export function CreateListingForm({ marketPrice, farmerDistrict }: Props) {
           />
         </div>
         <div>
-          <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Price per kg (UGX) *</label>
+          <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
+            Price per kg (UGX) *
+            {marketPrice && !priceTouched && (
+              <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 600, color: 'var(--color-primary-hover)' }}>
+                (suggested from today's market)
+              </span>
+            )}
+          </label>
           <input
             type="number" min="1"
             value={form.askingPrice}
-            onChange={e => set('askingPrice', e.target.value)}
+            onChange={e => { setPriceTouched(true); set('askingPrice', e.target.value); }}
             placeholder={marketPrice ? `Market: ${marketPrice.toLocaleString()}` : 'e.g. 1200'}
             required
             style={{

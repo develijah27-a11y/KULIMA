@@ -10,8 +10,17 @@ export async function POST(req: Request) {
   const profile = await getOrCreateProfile(supabase, user);
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 500 });
 
-  const { groupId } = await req.json();
+  const { groupId, phone_number } = await req.json();
   if (!groupId) return NextResponse.json({ error: 'groupId required' }, { status: 400 });
+
+  // A phone number is required so group sale payouts can reach this
+  // member's mobile money — capture it now if the profile doesn't have one.
+  if (!(profile as any).phone_number) {
+    if (!phone_number?.trim()) {
+      return NextResponse.json({ error: 'PHONE_REQUIRED' }, { status: 400 });
+    }
+    await supabase.from('profiles').update({ phone_number: phone_number.trim() }).eq('id', (profile as any).id);
+  }
 
   const { error } = await (supabase.from as any)('farmer_group_members').insert({
     group_id:  groupId,

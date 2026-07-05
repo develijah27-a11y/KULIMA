@@ -76,6 +76,7 @@ export default async function FarmerProfilePage() {
       {/* Identity card */}
       <Card>
         <div className="p-6">
+          {/* Name row — TrustScore NOT placed here so it never crowds the name */}
           <div className="flex items-start gap-4">
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black text-white shrink-0"
@@ -84,15 +85,18 @@ export default async function FarmerProfilePage() {
               {p.full_name?.[0]?.toUpperCase() ?? 'F'}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <p className="text-lg font-black" style={{ color: C.text, letterSpacing: '-0.02em' }}>{p.full_name ?? '—'}</p>
-                <VerificationBadge level={level} size="sm" />
-              </div>
-              <p className="text-sm" style={{ color: C.muted }}>{p.phone_number ?? '—'} · {p.location ?? '—'}</p>
+              <p className="text-lg font-black truncate" style={{ color: C.text, letterSpacing: '-0.02em', marginBottom: 4 }}>{p.full_name ?? '—'}</p>
+              <VerificationBadge level={level} size="sm" />
+              <p className="text-sm mt-2" style={{ color: C.muted }}>{p.phone_number ?? '—'} · {p.location ?? '—'}</p>
               {p.primary_crop && (
                 <p className="text-xs mt-1" style={{ color: C.muted }}>Primary crop: <strong style={{ color: C.text, textTransform: 'capitalize' }}>{p.primary_crop}</strong></p>
               )}
             </div>
+          </div>
+
+          {/* Trust score — own row below so it never overlaps the name */}
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Trust Score</p>
             <TrustScore score={trust} deals={deals} size="sm" />
           </div>
 

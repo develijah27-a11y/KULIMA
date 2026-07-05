@@ -7,10 +7,22 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { crop_type, total_quantity_kg, asking_price, district, notes, member_count } = body;
+  const { crop_type, total_quantity_kg, asking_price, district, notes, member_count, contributions } = body;
 
   if (!crop_type || !total_quantity_kg || !asking_price || !district) {
     return NextResponse.json({ error: 'crop_type, total_quantity_kg, asking_price, and district are required' }, { status: 400 });
+  }
+
+  // Optional: per-member quantity breakdown, used to split the payout
+  // proportionally once this listing sells. Must sum to the total.
+  if (contributions) {
+    if (!Array.isArray(contributions) || contributions.length === 0) {
+      return NextResponse.json({ error: 'contributions must be a non-empty array' }, { status: 400 });
+    }
+    const sum = contributions.reduce((s: number, c: any) => s + Number(c.quantity_kg || 0), 0);
+    if (Math.abs(sum - Number(total_quantity_kg)) > 0.5) {
+      return NextResponse.json({ error: `Member quantities (${sum}kg) must add up to the total (${total_quantity_kg}kg)` }, { status: 400 });
+    }
   }
 
   const { data, error } = await (supabase.from as any)('group_listings').insert({
@@ -25,6 +37,19 @@ export async function POST(req: Request) {
   }).select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (contributions && data) {
+    const rows = contributions
+      .filter((c: any) => Number(c.quantity_kg) > 0)
+      .map((c: any) => ({ group_listing_id: data.id, farmer_id: c.farmer_id, quantity_kg: Number(c.quantity_kg) }));
+    const { error: contribErr } = await (supabase.from as any)('group_listing_contributions').insert(rows);
+    if (contribErr) {
+      // Listing was created but contributions failed to save — surface this
+      // clearly rather than silently falling back to pooled-wallet payout.
+      return NextResponse.json({ success: true, data, warning: `Listing published, but member quantities were not saved: ${contribErr.message}` }, { status: 201 });
+    }
+  }
+
   return NextResponse.json({ success: true, data }, { status: 201 });
 }
 

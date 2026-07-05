@@ -216,16 +216,20 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
   const [error, setError]       = useState('');
   const [newGroup, setNew]      = useState({ name: '', description: '', district: '' });
   const [openPanel, setPanel]   = useState<string | null>(null); // group id with open member panel
+  const [phonePrompt, setPhonePrompt] = useState<string | null>(null); // group id awaiting a phone number
+  const [phoneInput, setPhoneInput]   = useState('');
 
   const myGroupIds = new Set(myGroups.map(g => g.id));
   const browseable = allGroups.filter(g => !myGroupIds.has(g.id));
 
-  async function join(groupId: string) {
+  async function join(groupId: string, phone_number?: string) {
     setLoad(groupId); setError('');
     try {
-      const res  = await fetch('/api/groups/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ groupId }) });
+      const res  = await fetch('/api/groups/join', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ groupId, phone_number }) });
       const json = await res.json();
+      if (json.error === 'PHONE_REQUIRED') { setPhonePrompt(groupId); return; }
       if (json.error) { setError(json.error); return; }
+      setPhonePrompt(null); setPhoneInput('');
       const group = allGroups.find(g => g.id === groupId);
       if (group) setMine(prev => [...prev, { ...group, my_role: 'member' }]);
     } finally { setLoad(null); }
@@ -367,20 +371,48 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
         ) : (
           <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
             {browseable.map((g, i) => (
-              <div key={g.id} style={{ padding: '16px 20px', borderBottom: i < browseable.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.green, flexShrink: 0 }}><Users size={22} /></div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 3px' }}>{g.name}</p>
-                  {g.description && <p style={{ fontSize: 12, color: C.muted, margin: '0 0 2px' }}>{g.description}</p>}
-                  <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
-                    {g.district ?? 'Uganda'}
-                    {g.member_count ? ` · ${g.member_count} member${g.member_count === 1 ? '' : 's'}` : ''}
-                  </p>
+              <div key={g.id} style={{ borderBottom: i < browseable.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.green, flexShrink: 0 }}><Users size={22} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 3px' }}>{g.name}</p>
+                    {g.description && <p style={{ fontSize: 12, color: C.muted, margin: '0 0 2px' }}>{g.description}</p>}
+                    <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
+                      {g.district ?? 'Uganda'}
+                      {g.member_count ? ` · ${g.member_count} member${g.member_count === 1 ? '' : 's'}` : ''}
+                    </p>
+                  </div>
+                  <button disabled={loading === g.id} onClick={() => join(g.id)}
+                    style={{ flexShrink: 0, padding: '7px 16px', borderRadius: 8, border: 'none', background: C.green, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                    {loading === g.id ? '…' : 'Join'}
+                  </button>
                 </div>
-                <button disabled={loading === g.id} onClick={() => join(g.id)}
-                  style={{ flexShrink: 0, padding: '7px 16px', borderRadius: 8, border: 'none', background: C.green, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
-                  {loading === g.id ? '…' : 'Join'}
-                </button>
+                {phonePrompt === g.id && (
+                  <div style={{ padding: '0 20px 16px' }}>
+                    <div style={{ background: 'var(--color-warning-bg)', border: '1px solid var(--color-warning-border)', borderRadius: 10, padding: '12px 14px' }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: C.text, margin: '0 0 8px' }}>
+                        Add your phone number to join
+                      </p>
+                      <p style={{ fontSize: 11, color: C.muted, margin: '0 0 10px' }}>
+                        This is where group sale payouts will be sent when this group sells produce.
+                      </p>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input
+                          value={phoneInput}
+                          onChange={e => setPhoneInput(e.target.value)}
+                          placeholder="e.g. 0772 123456"
+                          style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)' }}
+                        />
+                        <button
+                          disabled={loading === g.id || !phoneInput.trim()}
+                          onClick={() => join(g.id, phoneInput.trim())}
+                          style={{ padding: '9px 16px', borderRadius: 8, border: 'none', background: C.green, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                          {loading === g.id ? '…' : 'Confirm & Join'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -29,6 +29,18 @@ interface Props {
   completed: any[];
 }
 
+const TAB_LABEL: Record<'pending' | 'active' | 'completed', string> = {
+  pending:   'New Offers',
+  active:    'In Progress',
+  completed: 'Completed',
+};
+
+const TAB_HELP: Record<'pending' | 'active' | 'completed', string> = {
+  pending:   'Jobs the system has matched to your vehicle — accept or decline before someone else takes them.',
+  active:    "Jobs you've accepted and are currently picking up or delivering.",
+  completed: "Jobs you've delivered. Payout status is shown on each one.",
+};
+
 export function ActiveJobsClient({ pending, active, completed }: Props) {
   const router = useRouter();
   const tabs   = ['pending', 'active', 'completed'] as const;
@@ -91,12 +103,13 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
               padding: '5px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer',
               background: tab === t ? C.green : 'var(--color-surface-2)',
               color: tab === t ? '#fff' : C.muted,
-              textTransform: 'capitalize',
             }}>
-            {t} {counts[t] > 0 && <span style={{ marginLeft: 3, background: 'rgba(255,255,255,0.25)', padding: '1px 5px', borderRadius: 99, fontSize: 10 }}>{counts[t]}</span>}
+            {TAB_LABEL[t]} {counts[t] > 0 && <span style={{ marginLeft: 3, background: 'rgba(255,255,255,0.25)', padding: '1px 5px', borderRadius: 99, fontSize: 10 }}>{counts[t]}</span>}
           </button>
         ))}
       </div>
+
+      <p style={{ fontSize: 12, color: C.muted, margin: '-8px 0 0' }}>{TAB_HELP[tab]}</p>
 
       {error && (
         <div style={{ padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, fontSize: 13, color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: 6 }}>

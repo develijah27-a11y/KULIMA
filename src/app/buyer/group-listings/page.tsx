@@ -30,8 +30,9 @@ export default async function GroupListingsPage({
   let query = (supabase.from as any)('group_listings')
     .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, status, created_at')
     .eq('status', 'active')
+    .order('crop_type', { ascending: true })
     .order('created_at', { ascending: false })
-    .limit(60);
+    .limit(120);
 
   if (crop)     query = query.eq('crop_type', crop);
   if (district) query = query.eq('district', district);
@@ -46,6 +47,16 @@ export default async function GroupListingsPage({
   const prices   = pricesRes.data ?? [];
   const priceMap: Record<string, number> = {};
   prices.forEach((p: any) => { if (!priceMap[p.crop_type]) priceMap[p.crop_type] = p.price_per_kg; });
+
+  // Group by crop so buyers can shop "all maize", "all beans", etc. as
+  // distinct sections instead of one interleaved feed.
+  const byCrop = new Map<string, any[]>();
+  for (const l of listings) {
+    const key = l.crop_type ?? 'other';
+    if (!byCrop.has(key)) byCrop.set(key, []);
+    byCrop.get(key)!.push(l);
+  }
+  const cropSections = [...byCrop.entries()].sort(([a], [b]) => a.localeCompare(b));
 
   function filterUrl(changes: Record<string, string>) {
     const params = new URLSearchParams({ crop, district, ...changes });
@@ -122,8 +133,20 @@ export default async function GroupListingsPage({
           </Link>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {listings.map((l: any) => {
+        <div className="space-y-8">
+        {cropSections.map(([cropType, cropListings]) => (
+          <div key={cropType}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <Leaf size={16} style={{ color: getCropColor(cropType) }} />
+              <h2 style={{ fontSize: 15, fontWeight: 800, color: C.text, textTransform: 'capitalize', margin: 0 }}>
+                {cropType.replace(/_/g, ' ')}
+              </h2>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, background: 'var(--color-surface-2)', padding: '2px 8px', borderRadius: 999 }}>
+                {cropListings.length} lot{cropListings.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+          {cropListings.map((l: any) => {
             const market     = priceMap[l.crop_type?.toLowerCase()];
             const priceDelta = market ? Math.round(((l.asking_price - market) / market) * 100) : null;
             const totalValue = Math.round((l.total_quantity_kg ?? 0) * (l.asking_price ?? 0));
@@ -185,6 +208,9 @@ export default async function GroupListingsPage({
               </Link>
             );
           })}
+            </div>
+          </div>
+        ))}
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@
 export type VerificationStatus = 'pending' | 'approved' | 'rejected';
 
 export const BADGE_CONFIG = {
-  none:  { label: 'Not Verified',    color: '#9CA3AF', bg: '#F3F4F6', border: '#E5E7EB', description: 'Verify your phone number to get started' },
+  none:  { label: 'Not Verified',    color: '#B45309', bg: '#FEF3C7', border: '#F59E0B', description: 'Verify your phone number to get started' },
   grey:  { label: 'Phone Verified',  color: '#6B7280', bg: '#F3F4F6', border: '#E5E7EB', description: 'Phone number confirmed on signup' },
   green: { label: 'ID Verified',     color: '#059669', bg: '#D1FAE5', border: '#A7F3D0', description: 'National ID verified by AgriNova' },
   blue:  { label: 'KYC Verified',    color: '#0284C7', bg: 'var(--color-sky-bg)', border: '#BFDBFE', description: 'Full identity and business verified' },

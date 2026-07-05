@@ -58,7 +58,7 @@ export default async function NewListingPage() {
 
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
         <CreateListingForm
-          marketPrice={priceMap[profile?.primary_crop ?? ''] ?? null}
+          priceMap={priceMap}
           farmerDistrict={profile?.location ?? undefined}
         />
       </div>

@@ -51,19 +51,23 @@ export async function VerifyPageContent() {
       {/* Current status */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px 24px' }}>
         <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: C.muted }}>Your Status</p>
-        <div className="flex flex-wrap items-center justify-between gap-6">
+
+        {/* Two-column grid: verification level | trust score — no flex-wrap ambiguity */}
+        <div className="grid grid-cols-2 gap-4 mb-5">
           <div>
-            <p className="text-sm font-semibold mb-2" style={{ color: C.muted }}>Verification Level</p>
+            <p className="text-xs font-semibold mb-2" style={{ color: C.muted }}>Verification Level</p>
             <VerificationBadge level={currentLevel} size="md" />
-            <p className="text-xs mt-1.5" style={{ color: C.muted }}>{BADGE_CONFIG[currentLevel].description}</p>
+            <p className="text-xs mt-2 leading-snug" style={{ color: C.muted }}>{BADGE_CONFIG[currentLevel].description}</p>
           </div>
           <div>
-            <p className="text-sm font-semibold mb-2" style={{ color: C.muted }}>Trust Score</p>
-            <TrustScore score={trustScore} deals={deals} size="md" />
+            <p className="text-xs font-semibold mb-2" style={{ color: C.muted }}>Trust Score</p>
+            <TrustScore score={trustScore} deals={deals} size="sm" />
           </div>
-          {/* Progress bar */}
-          <div className="w-full">
-            <p className="text-xs font-semibold mb-2" style={{ color: C.muted }}>Verification path</p>
+        </div>
+
+        {/* Progress path — always full width, clearly below the status grid */}
+        <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
+            <p className="text-xs font-semibold mb-3" style={{ color: C.muted }}>Verification path</p>
             <div className="flex items-center gap-0">
               {LEVELS.map((lvl, i) => {
                 const cfg     = BADGE_CONFIG[lvl];
@@ -97,7 +101,6 @@ export async function VerifyPageContent() {
               ))}
             </div>
           </div>
-        </div>
       </div>
 
       {/* Wizard */}

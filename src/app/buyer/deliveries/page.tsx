@@ -145,11 +145,6 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
         {/* Fare */}
         <p style={{ fontSize: 12, fontWeight: 700, color: C.green, margin: '0 0 4px' }}>
           UGX {Number(d.estimated_fare).toLocaleString()}
-          {d.driver_earnings && (
-            <span style={{ fontWeight: 400, color: C.muted }}>
-              {' '}· driver gets UGX {Number(d.driver_earnings).toLocaleString()}
-            </span>
-          )}
         </p>
 
         {/* Driver info */}

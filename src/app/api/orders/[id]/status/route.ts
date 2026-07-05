@@ -163,14 +163,66 @@ export async function PATCH(
         if (fee < minFee) fee = minFee;
         const net = gross - fee;
 
-        // ── Group listing: credit group wallet ──
+        // ── Group listing: split payout across contributing members ──
         if (order.group_listing_id) {
           const { data: groupListing } = await (db.from as any)('group_listings')
-            .select('admin_id').eq('id', order.group_listing_id).single();
+            .select('admin_id, total_quantity_kg').eq('id', order.group_listing_id).single();
 
           if (groupListing) {
             const adminId = groupListing.admin_id;
-            // farmer_groups.leader_id references profiles.id (not auth.uid)
+            const { data: contributions } = await (db.from as any)('group_listing_contributions')
+              .select('farmer_id, quantity_kg').eq('group_listing_id', order.group_listing_id);
+
+            if (contributions && contributions.length > 0) {
+              // Proportional split: each member gets net * (their kg / total kg).
+              // Credit each member's own wallet directly — no manual admin transfers.
+              const totalKg = contributions.reduce((s: number, c: any) => s + Number(c.quantity_kg), 0);
+              await (db.from as any)('escrow_accounts').update({ status: 'released', released_at: now }).eq('id', escrow.id);
+
+              for (const c of contributions) {
+                const share = Math.round(net * (Number(c.quantity_kg) / totalKg));
+                if (share <= 0) continue;
+
+                const { data: memberProfile } = await (db.from as any)('profiles')
+                  .select('user_id').eq('id', c.farmer_id).single();
+                if (!memberProfile) continue;
+
+                const { data: memberWallet } = await (db.from as any)('wallets')
+                  .select('id, balance').eq('user_id', memberProfile.user_id).single();
+                if (!memberWallet) continue;
+
+                await Promise.all([
+                  (db.from as any)('wallets').update({
+                    balance: Number(memberWallet.balance) + share, updated_at: now,
+                  }).eq('id', memberWallet.id),
+                  (db.from as any)('wallet_transactions').insert({
+                    wallet_id: memberWallet.id, user_id: memberProfile.user_id,
+                    type: 'payout', amount: share, status: 'completed', order_id: orderId,
+                    description: `Group sale payout — ${c.quantity_kg}kg contributed (${rate}% fee deducted)`,
+                  }),
+                  (db.from as any)('notifications').insert({
+                    ...notifBase,
+                    user_id: memberProfile.user_id,
+                    type:    'payment',
+                    title:   'Group sale payout received',
+                    body:    `UGX ${share.toLocaleString()} added to your wallet for your ${c.quantity_kg}kg contribution.`,
+                  }),
+                ]);
+              }
+
+              await (db.from as any)('group_wallet_transactions').insert({
+                group_admin_id: adminId,
+                order_id:       orderId,
+                type:           'sale_payout',
+                amount:         net,
+                description:    `Group sale — split across ${contributions.length} contributing member(s) (${rate}% fee deducted)`,
+              });
+
+              return NextResponse.json({ success: true, data: updated });
+            }
+
+            // Fallback: no per-member contributions recorded for this listing —
+            // credit the pooled group wallet as before (admin distributes manually).
             const { data: leaderProfile } = await (db.from as any)('profiles')
               .select('id').eq('user_id', adminId).single();
             if (leaderProfile) {
