@@ -15,7 +15,7 @@ import {
   ChevronLeft, ChevronRight,
 } from 'lucide-react';
 
-type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string; style?: React.CSSProperties }>;
 
 export const ICON_MAP: Record<string, IconComponent> = {
   dashboard:        LayoutDashboard,
