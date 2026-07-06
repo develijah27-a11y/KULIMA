@@ -68,6 +68,16 @@ function SignInContent() {
       )}
 
       <AuthForm mode="signin" />
+
+      <div className="text-center mt-4">
+        <Link
+          href="/auth/forgot-password"
+          className="text-sm"
+          style={{ color: 'rgba(240,253,244,0.55)', fontWeight: 600 }}
+        >
+          Forgot your password?
+        </Link>
+      </div>
     </AuthLayout>
   );
 }

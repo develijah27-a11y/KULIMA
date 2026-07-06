@@ -497,30 +497,29 @@ export interface Database {
           farmer_id: string
           score: number
           status: string
+          credit_limit: number | null
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
           farmer_id: string
-          score: number
+          score?: number
           status?: string
+          credit_limit?: number | null
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           farmer_id?: string
           score?: number
           status?: string
+          credit_limit?: number | null
           created_at?: string
+          updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "loan_profiles_farmer_id_fkey"
-            columns: ["farmer_id"]
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       diagnoses: {
         Row: {

@@ -61,30 +61,39 @@ export async function PATCH(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: profile } = await supabase.from('profiles').select('id, role').eq('user_id', user.id).single();
+  const { data: profile } = await supabase.from('profiles').select('id, role, roles').eq('user_id', user.id).single();
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+
+  const isPathologist = (profile as any).role === 'pathologist' || (profile as any).roles?.includes('pathologist');
+  if (!isPathologist) return NextResponse.json({ error: 'Only pathologists can act on disease reports' }, { status: 403 });
 
   const body = await req.json();
   const { id, action, diagnosis, treatment } = body;
   if (!id || !action) return NextResponse.json({ error: 'Missing id or action' }, { status: 400 });
 
   let update: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  // 'claim' is the only action allowed on an unclaimed report; 'diagnose' and
+  // 'close' must be scoped to the report this pathologist already claimed —
+  // otherwise any pathologist could overwrite or close someone else's report.
+  let query;
 
   if (action === 'claim') {
     update = { ...update, pathologist_id: (profile as any).id, status: 'assigned' };
+    query = (supabase.from as any)('disease_reports').update(update).eq('id', id).is('pathologist_id', null);
   } else if (action === 'diagnose') {
     if (!diagnosis) return NextResponse.json({ error: 'Diagnosis required' }, { status: 400 });
     update = { ...update, diagnosis, treatment: treatment ?? null, status: 'diagnosed', diagnosed_at: new Date().toISOString() };
+    query = (supabase.from as any)('disease_reports').update(update).eq('id', id).eq('pathologist_id', (profile as any).id);
   } else if (action === 'close') {
     update = { ...update, status: 'closed' };
+    query = (supabase.from as any)('disease_reports').update(update).eq('id', id).eq('pathologist_id', (profile as any).id);
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
-  const { error } = await (supabase.from as any)('disease_reports')
-    .update(update)
-    .eq('id', id);
+  const { data, error } = await query.select().single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: 'Report not found, already claimed, or not assigned to you' }, { status: 404 });
   return NextResponse.json({ success: true });
 }
