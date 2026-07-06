@@ -847,7 +847,7 @@ input.auth-input:-webkit-autofill:active {
    Tailwind utility (pb-24, p-5, etc.) regardless of class output order.       */
 @media (max-width: 767px) {
   main {
-    padding-bottom: calc(clamp(56px, 9vh, 68px) + env(safe-area-inset-bottom, 0px) + 16px) !important;
+    padding-bottom: max(108px, calc(clamp(56px, 9vh, 68px) + env(safe-area-inset-bottom, 0px) + 32px)) !important;
   }
 }
 
@@ -1431,3 +1431,9 @@ input.auth-input:-webkit-autofill:active {
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12) !important;
 }
 .fab-white:hover:not(:disabled) { background: var(--color-surface-2); }
+
+/* ── Toast notification slide-in ── */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(24px) scale(0.96); }
+  to   { opacity: 1; transform: translateX(0)    scale(1); }
+}

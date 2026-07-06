@@ -16,6 +16,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const [email, setEmail]           = useState('');
   const [password, setPassword]     = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPwd]  = useState(false);
   const [fullName, setFullName]     = useState('');
   const [phoneNumber, setPhone]     = useState('');
@@ -25,6 +26,11 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [success, setSuccess]       = useState<string | null>(null);
 
   const isSigningUpRef = useRef(false);
+  const submitLockRef = useRef(false);
+  // Only true after the user clicks Submit — prevents the INITIAL_SESSION
+  // event (fired on page-load with an existing cookie) from auto-redirecting
+  // the user without them entering credentials.
+  const hasSubmittedRef = useRef(false);
   const [clearingSession, setClearingSession] = useState(false);
 
   // On the signup page: if there is already an active session, sign out via the
@@ -40,11 +46,12 @@ export function AuthForm({ mode }: AuthFormProps) {
     });
   }, [mode]);
 
-  // Redirect to dashboard on SIGNED_IN only for the sign-in flow.
-  // Sign-up manages its own redirect after validating the response.
+  // Redirect to dashboard on SIGNED_IN only after the user submitted the form.
+  // Without hasSubmittedRef, the INITIAL_SESSION event (fired when the page
+  // loads with a valid cookie) would auto-redirect before the user types anything.
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session && !isSigningUpRef.current) {
+      if (event === 'SIGNED_IN' && session && !isSigningUpRef.current && hasSubmittedRef.current) {
         fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
         router.push('/dashboard');
         router.refresh();
@@ -55,6 +62,16 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (submitLockRef.current) return;
+    submitLockRef.current = true;
+    hasSubmittedRef.current = true;
+
+    if (mode === 'signup' && password !== confirmPassword) {
+      setError('Passwords don\'t match. Please re-type them.');
+      submitLockRef.current = false;
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -149,6 +166,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       }
     } finally {
       setLoading(false);
+      submitLockRef.current = false;
     }
   };
 
@@ -283,6 +301,30 @@ export function AuthForm({ mode }: AuthFormProps) {
           </button>
         </div>
       </div>
+
+      {/* Confirm password — signup only. Catches typos and browser/OS
+          "suggest a strong password" auto-fills silently replacing what the
+          user actually typed, which reads to users as "the app forced a
+          password on me" when it happens. */}
+      {mode === 'signup' && (
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm mb-1.5"
+            style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>
+            Confirm password
+          </label>
+          <input
+            id="confirmPassword"
+            type={showPassword ? 'text' : 'password'}
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            placeholder={showPassword ? 'Re-enter your password' : '••••••••'}
+            autoComplete="new-password"
+            required minLength={6}
+            disabled={loading}
+            className="auth-input"
+          />
+        </div>
+      )}
 
       {/* Error — red */}
       {error && (

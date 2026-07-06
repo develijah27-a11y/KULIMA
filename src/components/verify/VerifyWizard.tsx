@@ -6,7 +6,7 @@ import {
   BADGE_CONFIG, LEVEL_DETAILS, getRequiredDocs, canUpgradeTo,
   type VerificationLevel,
 } from '@/lib/trust';
-import { Clock, CheckCircle2, Check, Diamond, Star, Paperclip, AlertTriangle } from 'lucide-react';
+import { Clock, CheckCircle2, Check, Diamond, Star, Paperclip, AlertTriangle, Camera } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -34,6 +34,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
 
   const supabase = createClient();
   const levels: TargetLevel[] = ['green', 'blue', 'gold'];
+  const cameraRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   async function handleSubmit() {
     if (!target) return;
@@ -200,35 +201,40 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {docs.map((doc) => {
           const file = files[doc.key];
+          const isPhoto = doc.accept.includes('image/');
+          function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+            const f = e.target.files?.[0] ?? null;
+            setFiles(prev => ({ ...prev, [doc.key]: f }));
+          }
           return (
-            <div
-              key={doc.key}
-              onClick={() => fileRefs.current[doc.key]?.click()}
-              style={{
-                background: file ? 'var(--color-primary-bg)' : C.cardBg,
-                border: `2px dashed ${file ? 'var(--color-primary-muted)' : C.border}`,
-                borderRadius: 12, padding: '16px 20px',
-                cursor: 'pointer', transition: 'all 0.15s',
-              }}
-            >
-              <input
-                ref={el => { fileRefs.current[doc.key] = el; }}
-                type="file"
-                accept={doc.accept}
-                style={{ display: 'none' }}
-                onChange={e => {
-                  const f = e.target.files?.[0] ?? null;
-                  setFiles(prev => ({ ...prev, [doc.key]: f }));
-                }}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
+            <div key={doc.key} style={{ background: file ? 'var(--color-primary-bg)' : C.cardBg, border: `2px dashed ${file ? 'var(--color-primary-muted)' : C.border}`, borderRadius: 12, padding: '16px 20px', transition: 'all 0.15s' }}>
+              {/* Hidden inputs */}
+              <input ref={el => { fileRefs.current[doc.key] = el; }} type="file" accept={doc.accept} style={{ display: 'none' }} onChange={onFile} />
+              {isPhoto && (
+                <input ref={el => { cameraRefs.current[doc.key] = el; }} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={onFile} />
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ color: C.text, fontWeight: 600, fontSize: 14, margin: 0 }}>{doc.label}</p>
-                  <p style={{ color: C.muted, fontSize: 12, margin: '2px 0 0' }}>
-                    {file ? file.name : 'Tap to upload • JPG, PNG or PDF'}
+                  <p style={{ color: C.muted, fontSize: 12, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {file ? file.name : 'JPG, PNG or PDF · max 10 MB'}
                   </p>
                 </div>
-                <span style={{ display: 'flex', color: file ? 'var(--color-success)' : C.muted }}>{file ? <CheckCircle2 size={22} /> : <Paperclip size={22} />}</span>
+
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
+                  {file && <CheckCircle2 size={20} style={{ color: 'var(--color-success)' }} />}
+                  {isPhoto && (
+                    <button type="button" onClick={() => cameraRefs.current[doc.key]?.click()}
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.cardBg, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.text }}>
+                      <Camera size={14} /> Camera
+                    </button>
+                  )}
+                  <button type="button" onClick={() => fileRefs.current[doc.key]?.click()}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.cardBg, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.text }}>
+                    <Paperclip size={14} /> {file ? 'Change' : 'Upload'}
+                  </button>
+                </div>
               </div>
             </div>
           );

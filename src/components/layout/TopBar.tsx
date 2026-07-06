@@ -8,6 +8,7 @@ import { OfflineStatusPill } from '@/components/ui/OfflineStatusPill';
 import { ROLE_META } from '@/components/layout/RoleSwitcher';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Breadcrumb } from '@/components/layout/Breadcrumb';
+import { NotificationToastContainer } from '@/components/ui/NotificationToast';
 
 interface TopBarProps {
   greeting: string;
@@ -39,6 +40,7 @@ export function TopBar({
   const showRoleSwitch = !!(currentMeta && otherRoles.length > 0);
 
   return (
+    <>
     <header
       className="sticky top-0 z-20 flex items-center justify-between shrink-0 glass-topbar"
       style={{
@@ -198,5 +200,8 @@ export function TopBar({
         <NotificationBell initialUnreadCount={unreadCount} />
       </div>
     </header>
+
+    <NotificationToastContainer />
+    </>
   );
 }

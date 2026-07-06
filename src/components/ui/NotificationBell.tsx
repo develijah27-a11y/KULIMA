@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { NotificationDrawer, Notification } from './NotificationDrawer';
+import { showToast, requestBrowserNotificationPermission } from './NotificationToast';
+import { createClient } from '@/lib/supabase/client';
 
 interface ApiNotif {
   id: string;
@@ -20,6 +22,44 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [loaded, setLoaded] = useState(false);
+
+  // Ask for browser notification permission + subscribe to realtime inserts
+  useEffect(() => {
+    requestBrowserNotificationPermission();
+
+    const supabase = createClient();
+    let userId: string | null = null;
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      userId = user.id;
+
+      const channel = supabase
+        .channel('notif-bell-' + userId)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+          (payload: any) => {
+            const n = payload.new as any;
+            // Add to the drawer list
+            setNotifications(prev => [{
+              id: n.id,
+              title: n.title,
+              body: n.body,
+              read: false,
+              createdAt: n.created_at ?? new Date().toISOString(),
+              type: n.type,
+            }, ...prev]);
+            setUnreadCount(c => c + 1);
+            // Pop a toast
+            showToast({ title: n.title, body: n.body, type: n.type });
+          }
+        )
+        .subscribe();
+
+      return () => { supabase.removeChannel(channel); };
+    });
+  }, []);
 
   const ensureLoaded = useCallback(async () => {
     if (loaded) return;
