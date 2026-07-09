@@ -56,11 +56,30 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
   if (!order) return { ok: false, error: 'Order not found' };
   if (!order.escrow_id) return { ok: false, error: 'No escrow on this order — nothing to release' };
 
+  const now = new Date().toISOString();
+
+  // Best-effort read just to know what to revert to if a later step fails —
+  // not the actual concurrency guard (that's the atomic UPDATE below).
+  const { data: priorEscrow } = await (db.from as any)('escrow_accounts')
+    .select('status').eq('id', order.escrow_id).single();
+  const priorStatus = priorEscrow?.status === 'disputed' ? 'disputed' : 'funded';
+
+  // Atomically claim the escrow: this UPDATE only matches (and only one
+  // concurrent caller can win) if status is still funded/disputed at write
+  // time. Closes a double-release race — e.g. a double-tapped "Confirm
+  // Receipt" on a slow connection, or an admin resolving the same dispute
+  // twice — that would otherwise pay out the same escrow more than once.
   const { data: escrow } = await (db.from as any)('escrow_accounts')
-    .select('*').eq('id', order.escrow_id).in('status', ['funded', 'disputed']).single();
+    .update({ status: 'released', released_at: now })
+    .eq('id', order.escrow_id)
+    .in('status', ['funded', 'disputed'])
+    .select('*')
+    .single();
   if (!escrow) return { ok: false, error: 'Escrow not found or already processed' };
 
-  const now = new Date().toISOString();
+  const revertClaim = () => (db.from as any)('escrow_accounts')
+    .update({ status: priorStatus, released_at: null }).eq('id', escrow.id);
+
   const commission = await getCommissionRate(db);
   const gross = Number(escrow.amount);
   const fee = computeFee(gross, commission);
@@ -78,7 +97,6 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
 
       if (contributions && contributions.length > 0) {
         const totalKg = contributions.reduce((s: number, c: any) => s + Number(c.quantity_kg), 0);
-        await (db.from as any)('escrow_accounts').update({ status: 'released', released_at: now }).eq('id', escrow.id);
 
         for (const c of contributions) {
           const share = Math.round(net * (Number(c.quantity_kg) / totalKg));
@@ -86,11 +104,27 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
 
           const { data: memberProfile } = await (db.from as any)('profiles')
             .select('user_id').eq('id', c.farmer_id).single();
-          if (!memberProfile) continue;
+          if (!memberProfile) {
+            // Escrow is already claimed and this member's share can't just
+            // vanish silently — surface it to admins instead of losing it.
+            await (db.from as any)('notifications').insert({
+              type: 'alert', title: `Group payout could not reach a member — order #${orderId.slice(0, 8)}`,
+              body: `Contribution ${c.farmer_id} has no linked profile. UGX ${share.toLocaleString()} was not paid out — needs manual resolution.`,
+              data: { order_id: orderId, farmer_id: c.farmer_id },
+            });
+            continue;
+          }
 
           const { data: memberWallet } = await (db.from as any)('wallets')
             .select('id, balance').eq('user_id', memberProfile.user_id).single();
-          if (!memberWallet) continue;
+          if (!memberWallet) {
+            await (db.from as any)('notifications').insert({
+              type: 'alert', title: `Group payout could not reach a member — order #${orderId.slice(0, 8)}`,
+              body: `Member ${memberProfile.user_id} has no wallet. UGX ${share.toLocaleString()} was not paid out — needs manual resolution.`,
+              data: { order_id: orderId, user_id: memberProfile.user_id },
+            });
+            continue;
+          }
 
           await Promise.all([
             (db.from as any)('wallets').update({
@@ -134,7 +168,6 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
 
       if (farmGroup) {
         await Promise.all([
-          (db.from as any)('escrow_accounts').update({ status: 'released', released_at: now }).eq('id', escrow.id),
           (db.from as any)('farmer_groups').update({
             wallet_balance: Number(farmGroup.wallet_balance) + net, wallet_updated_at: now,
           }).eq('id', farmGroup.id),
@@ -158,10 +191,12 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
   // ── Individual seller ──
   const { data: sellerWallet } = await (db.from as any)('wallets')
     .select('id, balance').eq('user_id', escrow.seller_user_id).single();
-  if (!sellerWallet) return { ok: false, error: 'Seller wallet not found' };
+  if (!sellerWallet) {
+    await revertClaim();
+    return { ok: false, error: 'Seller wallet not found' };
+  }
 
   await Promise.all([
-    (db.from as any)('escrow_accounts').update({ status: 'released', released_at: now }).eq('id', escrow.id),
     (db.from as any)('wallets').update({ balance: Number(sellerWallet.balance) + net, updated_at: now }).eq('id', sellerWallet.id),
     (db.from as any)('wallet_transactions').insert([
       { wallet_id: sellerWallet.id, user_id: escrow.seller_user_id, type: 'payout', amount: net, status: 'completed', order_id: orderId, description: `Payout for order (${commission.rate_percent}% fee deducted)` },
@@ -188,19 +223,28 @@ export async function refundEscrowForOrder(db: AdminClient, orderId: string, can
   if (!order) return { ok: false, error: 'Order not found' };
   if (!order.escrow_id) return { ok: true, skipped: true };
 
+  // Atomically claim the escrow — see releaseEscrowForOrder for why this must
+  // be a single UPDATE...WHERE rather than a read-then-write.
   const { data: escrow } = await (db.from as any)('escrow_accounts')
-    .select('*').eq('id', order.escrow_id).in('status', ['funded', 'disputed']).single();
+    .update({ status: 'refunded' })
+    .eq('id', order.escrow_id)
+    .in('status', ['funded', 'disputed'])
+    .select('*')
+    .single();
   if (!escrow) return { ok: true, skipped: true };
 
   const { data: buyerWallet } = await (db.from as any)('wallets')
     .select('id, balance').eq('user_id', escrow.buyer_user_id).single();
-  if (!buyerWallet) return { ok: false, error: 'Buyer wallet not found' };
+  if (!buyerWallet) {
+    await (db.from as any)('escrow_accounts')
+      .update({ status: cancelledStatus === 'disputed' ? 'disputed' : 'funded' }).eq('id', escrow.id);
+    return { ok: false, error: 'Buyer wallet not found' };
+  }
 
   const now = new Date().toISOString();
   const refundAmount = Number(escrow.amount);
 
   await Promise.all([
-    (db.from as any)('escrow_accounts').update({ status: 'refunded' }).eq('id', escrow.id),
     (db.from as any)('wallets').update({
       balance: Number(buyerWallet.balance) + refundAmount, updated_at: now,
     }).eq('id', buyerWallet.id),
