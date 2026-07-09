@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { releaseEscrowForOrder, refundEscrowForOrder } from '@/lib/orders/escrow';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -89,6 +90,13 @@ export async function PATCH(req: Request, { params }: Params) {
     // Restore listing to active if it was marked sold from a Buy Now
     await (supabase.from as any)('listings').update({ status: 'active' }).eq('id', order.listing_id).eq('status', 'sold');
 
+    // Refund escrow to the buyer if it was already funded — otherwise a
+    // cancelled order silently kept the buyer's money locked forever.
+    if (order.escrow_id) {
+      const admin = createServiceRoleClient();
+      await refundEscrowForOrder(admin as any, id);
+    }
+
     // Notify the other party
     if (isFarmer) {
       await (supabase.from as any)('notifications').insert({
@@ -119,20 +127,32 @@ export async function PATCH(req: Request, { params }: Params) {
       return NextResponse.json({ error: 'Order not yet marked as delivered' }, { status: 400 });
     }
 
-    await (supabase.from as any)('orders')
-      .update({ status: 'completed', completed_at: now })
-      .eq('id', id);
+    if (order.escrow_id) {
+      // Escrow was funded — release it now. This does the actual money
+      // movement (credit seller/group members net of commission, credit the
+      // platform wallet) and marks the order completed itself.
+      const admin = createServiceRoleClient();
+      const result = await releaseEscrowForOrder(admin as any, id);
+      if (!result.ok) {
+        return NextResponse.json({ error: result.error ?? 'Failed to release payment' }, { status: 500 });
+      }
+    } else {
+      // No escrow was ever funded for this order — mark it completed but do
+      // NOT claim payment was released, since none was ever collected.
+      await (supabase.from as any)('orders')
+        .update({ status: 'completed', completed_at: now })
+        .eq('id', id);
 
-    // Notify farmer — payment released
-    if (farmerProfile) {
-      await (supabase.from as any)('notifications').insert({
-        farmer_id: order.farmer_profile_id,
-        user_id:   (farmerProfile as any).user_id,
-        type:      'payment',
-        title:     `Payment released — UGX ${Math.round(order.total_amount).toLocaleString()}`,
-        body:      `${(buyerProfile as any)?.full_name ?? 'Buyer'} confirmed receipt of ${order.crop_type} (${order.quantity_kg} kg).`,
-        data:      { order_id: id },
-      });
+      if (farmerProfile) {
+        await (supabase.from as any)('notifications').insert({
+          farmer_id: order.farmer_profile_id,
+          user_id:   (farmerProfile as any).user_id,
+          type:      'order',
+          title:     `Order marked complete — ${order.crop_type}`,
+          body:      `${(buyerProfile as any)?.full_name ?? 'Buyer'} confirmed receipt of ${order.crop_type} (${order.quantity_kg} kg). No escrow payment was recorded on this order — contact support if payment is outstanding.`,
+          data:      { order_id: id },
+        });
+      }
     }
 
     return NextResponse.json({ success: true });

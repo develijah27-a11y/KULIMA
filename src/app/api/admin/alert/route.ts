@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   );
 
   // Fetch target profile IDs
-  let profileQuery = (adminClient.from as any)('profiles').select('id, role');
+  let profileQuery = (adminClient.from as any)('profiles').select('id, role, user_id');
   if (targetRole && targetRole !== 'all' && VALID_ROLES.includes(targetRole)) {
     profileQuery = profileQuery.eq('role', targetRole);
   }
@@ -50,7 +50,8 @@ export async function POST(req: Request) {
   for (let i = 0; i < targetProfiles.length; i += CHUNK) {
     const chunk = targetProfiles.slice(i, i + CHUNK);
     const rows = chunk.map((p: any) => ({
-      farmer_id: p.id,   // notifications.farmer_id references profiles.id
+      farmer_id: p.id,       // notifications.farmer_id references profiles.id
+      user_id:   p.user_id,  // GET /api/notifications and the realtime bell filter on user_id
       type,
       title: title.trim(),
       body:  body.trim(),

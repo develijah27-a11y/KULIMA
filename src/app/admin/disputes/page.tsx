@@ -52,7 +52,7 @@ async function DisputeList({ status }: { status: string }) {
   const supabase = await createClient();
 
   let q = (supabase.from as any)('disputes')
-    .select('id, status, reason, description, resolution, created_at, complainant_id, respondent_id')
+    .select('id, status, reason, description, resolution, created_at, complainant_id, respondent_id, order_id')
     .order('created_at', { ascending: false })
     .limit(100);
   if (status) q = q.eq('status', status);
@@ -138,7 +138,7 @@ async function DisputeList({ status }: { status: string }) {
                   <p style={{ fontSize: 11, color: 'var(--color-success)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>{d.resolution}</p>
                 )}
               </div>
-              <DisputeActions disputeId={d.id} currentStatus={d.status} />
+              <DisputeActions disputeId={d.id} currentStatus={d.status} orderId={d.order_id ?? null} />
             </div>
           </div>
         );

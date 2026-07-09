@@ -14,8 +14,12 @@ export async function POST(req: Request) {
 
   if (!title?.trim()) return NextResponse.json({ success: false, error: 'Title required' }, { status: 400 });
 
+  // notifications GET / the realtime bell both filter on user_id — a row
+  // with only farmer_id set is invisible to the recipient (never appears in
+  // the bell, drawer, or unread count).
   const { error } = await supabase.from('notifications').insert({
     farmer_id: (profile as any).id,
+    user_id:   user.id,
     type:      type ?? 'info',
     title:     title.trim(),
     body:      message ?? '',

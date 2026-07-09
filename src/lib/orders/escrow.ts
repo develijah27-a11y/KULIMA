@@ -1,0 +1,220 @@
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '../database.types';
+
+type AdminClient = SupabaseClient<Database>;
+
+async function getCommissionRate(db: AdminClient) {
+  const { data } = await (db.from as any)('platform_commission')
+    .select('rate_percent, min_fee_ugx, max_fee_ugx, platform_wallet_user_id')
+    .eq('active', true)
+    .single();
+  return data ?? { rate_percent: 2.5, min_fee_ugx: 500, max_fee_ugx: null, platform_wallet_user_id: null };
+}
+
+function computeFee(gross: number, commission: { rate_percent: number; min_fee_ugx: number; max_fee_ugx: number | null }) {
+  let fee = Math.round(gross * commission.rate_percent / 100);
+  if (fee < commission.min_fee_ugx) fee = commission.min_fee_ugx;
+  if (commission.max_fee_ugx && fee > commission.max_fee_ugx) fee = commission.max_fee_ugx;
+  return fee;
+}
+
+async function creditPlatformWallet(
+  db: AdminClient,
+  platformWalletUserId: string | null,
+  feeAmount: number,
+  orderId: string,
+  now: string,
+) {
+  if (!platformWalletUserId || feeAmount <= 0) return;
+  const { data: platformWallet } = await (db.from as any)('wallets')
+    .select('id, balance').eq('user_id', platformWalletUserId).single();
+  if (!platformWallet) return;
+  await Promise.all([
+    (db.from as any)('wallets').update({
+      balance: Number(platformWallet.balance) + feeAmount, updated_at: now,
+    }).eq('id', platformWallet.id),
+    (db.from as any)('wallet_transactions').insert({
+      wallet_id: platformWallet.id, user_id: platformWalletUserId,
+      type: 'fee', amount: feeAmount, status: 'completed', order_id: orderId,
+      description: 'Platform commission received',
+    }),
+  ]);
+}
+
+/**
+ * Releases a funded escrow to the seller(s), net of platform commission, and
+ * marks the order completed. Handles both individual sellers and group
+ * listings (proportional split across group_listing_contributions).
+ * Caller must already have verified the requester is authorized (buyer or
+ * admin) and that order.status === 'delivered' (or 'disputed', for admin
+ * resolution) before calling this.
+ */
+export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
+  const { data: order } = await (db.from as any)('orders')
+    .select('id, escrow_id, group_listing_id, crop_type, quantity_kg')
+    .eq('id', orderId).single();
+  if (!order) return { ok: false, error: 'Order not found' };
+  if (!order.escrow_id) return { ok: false, error: 'No escrow on this order — nothing to release' };
+
+  const { data: escrow } = await (db.from as any)('escrow_accounts')
+    .select('*').eq('id', order.escrow_id).in('status', ['funded', 'disputed']).single();
+  if (!escrow) return { ok: false, error: 'Escrow not found or already processed' };
+
+  const now = new Date().toISOString();
+  const commission = await getCommissionRate(db);
+  const gross = Number(escrow.amount);
+  const fee = computeFee(gross, commission);
+  const net = gross - fee;
+
+  // ── Group listing: split payout proportionally across contributing members ──
+  if (order.group_listing_id) {
+    const { data: groupListing } = await (db.from as any)('group_listings')
+      .select('admin_id').eq('id', order.group_listing_id).single();
+
+    if (groupListing) {
+      const adminId = groupListing.admin_id;
+      const { data: contributions } = await (db.from as any)('group_listing_contributions')
+        .select('farmer_id, quantity_kg').eq('group_listing_id', order.group_listing_id);
+
+      if (contributions && contributions.length > 0) {
+        const totalKg = contributions.reduce((s: number, c: any) => s + Number(c.quantity_kg), 0);
+        await (db.from as any)('escrow_accounts').update({ status: 'released', released_at: now }).eq('id', escrow.id);
+
+        for (const c of contributions) {
+          const share = Math.round(net * (Number(c.quantity_kg) / totalKg));
+          if (share <= 0) continue;
+
+          const { data: memberProfile } = await (db.from as any)('profiles')
+            .select('user_id').eq('id', c.farmer_id).single();
+          if (!memberProfile) continue;
+
+          const { data: memberWallet } = await (db.from as any)('wallets')
+            .select('id, balance').eq('user_id', memberProfile.user_id).single();
+          if (!memberWallet) continue;
+
+          await Promise.all([
+            (db.from as any)('wallets').update({
+              balance: Number(memberWallet.balance) + share, updated_at: now,
+            }).eq('id', memberWallet.id),
+            (db.from as any)('wallet_transactions').insert({
+              wallet_id: memberWallet.id, user_id: memberProfile.user_id,
+              type: 'payout', amount: share, status: 'completed', order_id: orderId,
+              description: `Group sale payout — ${c.quantity_kg}kg contributed (${commission.rate_percent}% fee deducted)`,
+            }),
+            (db.from as any)('notifications').insert({
+              user_id: memberProfile.user_id, type: 'payment',
+              title: 'Group sale payout received',
+              body: `UGX ${share.toLocaleString()} added to your wallet for your ${c.quantity_kg}kg contribution.`,
+              data: { order_id: orderId },
+            }),
+          ]);
+        }
+
+        await creditPlatformWallet(db, commission.platform_wallet_user_id, fee, orderId, now);
+        // type is 'sale_payout_split' (not 'sale_payout') because this money
+        // was paid directly into each member's own wallet, not into
+        // farmer_groups.wallet_balance — the group wallet page must not sum
+        // this into its balance-affecting totals or it'll look like the pool
+        // grew by an amount it never actually received.
+        await (db.from as any)('group_wallet_transactions').insert({
+          group_admin_id: adminId, order_id: orderId, type: 'sale_payout_split', amount: net,
+          description: `Group sale — split across ${contributions.length} contributing member(s) (${commission.rate_percent}% fee deducted)`,
+        });
+        await (db.from as any)('orders').update({ status: 'completed', completed_at: now, updated_at: now }).eq('id', orderId);
+
+        return { ok: true, net, fee };
+      }
+
+      // Fallback: no per-member contributions recorded — credit the pooled group wallet.
+      const { data: leaderProfile } = await (db.from as any)('profiles')
+        .select('id').eq('user_id', adminId).single();
+      const { data: farmGroup } = leaderProfile
+        ? await (db.from as any)('farmer_groups').select('id, wallet_balance').eq('leader_id', leaderProfile.id).single()
+        : { data: null };
+
+      if (farmGroup) {
+        await Promise.all([
+          (db.from as any)('escrow_accounts').update({ status: 'released', released_at: now }).eq('id', escrow.id),
+          (db.from as any)('farmer_groups').update({
+            wallet_balance: Number(farmGroup.wallet_balance) + net, wallet_updated_at: now,
+          }).eq('id', farmGroup.id),
+          (db.from as any)('group_wallet_transactions').insert({
+            group_admin_id: adminId, order_id: orderId, type: 'sale_payout', amount: net,
+            description: `Group sale payout (${commission.rate_percent}% fee deducted)`,
+          }),
+          (db.from as any)('notifications').insert({
+            user_id: adminId, type: 'payment', title: 'Group sale proceeds received',
+            body: `UGX ${net.toLocaleString()} added to your group wallet (after ${commission.rate_percent}% platform fee).`,
+            data: { order_id: orderId },
+          }),
+        ]);
+        await creditPlatformWallet(db, commission.platform_wallet_user_id, fee, orderId, now);
+        await (db.from as any)('orders').update({ status: 'completed', completed_at: now, updated_at: now }).eq('id', orderId);
+        return { ok: true, net, fee };
+      }
+    }
+  }
+
+  // ── Individual seller ──
+  const { data: sellerWallet } = await (db.from as any)('wallets')
+    .select('id, balance').eq('user_id', escrow.seller_user_id).single();
+  if (!sellerWallet) return { ok: false, error: 'Seller wallet not found' };
+
+  await Promise.all([
+    (db.from as any)('escrow_accounts').update({ status: 'released', released_at: now }).eq('id', escrow.id),
+    (db.from as any)('wallets').update({ balance: Number(sellerWallet.balance) + net, updated_at: now }).eq('id', sellerWallet.id),
+    (db.from as any)('wallet_transactions').insert([
+      { wallet_id: sellerWallet.id, user_id: escrow.seller_user_id, type: 'payout', amount: net, status: 'completed', order_id: orderId, description: `Payout for order (${commission.rate_percent}% fee deducted)` },
+      { wallet_id: sellerWallet.id, user_id: escrow.seller_user_id, type: 'fee',    amount: fee, status: 'completed', order_id: orderId, description: `Platform fee (${commission.rate_percent}%)` },
+    ]),
+    (db.from as any)('notifications').insert({
+      user_id: escrow.seller_user_id, type: 'payment', title: 'Payment released to your wallet',
+      body: `UGX ${net.toLocaleString()} has been added to your wallet (after ${commission.rate_percent}% platform fee).`,
+      data: { order_id: orderId },
+    }),
+  ]);
+  await creditPlatformWallet(db, commission.platform_wallet_user_id, fee, orderId, now);
+  await (db.from as any)('orders').update({ status: 'completed', completed_at: now, updated_at: now }).eq('id', orderId);
+
+  return { ok: true, net, fee };
+}
+
+/**
+ * Refunds a funded/disputed escrow back to the buyer and marks the order
+ * cancelled. Caller must already have verified authorization.
+ */
+export async function refundEscrowForOrder(db: AdminClient, orderId: string, cancelledStatus: 'cancelled' | 'disputed' = 'cancelled') {
+  const { data: order } = await (db.from as any)('orders').select('id, escrow_id').eq('id', orderId).single();
+  if (!order) return { ok: false, error: 'Order not found' };
+  if (!order.escrow_id) return { ok: true, skipped: true };
+
+  const { data: escrow } = await (db.from as any)('escrow_accounts')
+    .select('*').eq('id', order.escrow_id).in('status', ['funded', 'disputed']).single();
+  if (!escrow) return { ok: true, skipped: true };
+
+  const { data: buyerWallet } = await (db.from as any)('wallets')
+    .select('id, balance').eq('user_id', escrow.buyer_user_id).single();
+  if (!buyerWallet) return { ok: false, error: 'Buyer wallet not found' };
+
+  const now = new Date().toISOString();
+  const refundAmount = Number(escrow.amount);
+
+  await Promise.all([
+    (db.from as any)('escrow_accounts').update({ status: 'refunded' }).eq('id', escrow.id),
+    (db.from as any)('wallets').update({
+      balance: Number(buyerWallet.balance) + refundAmount, updated_at: now,
+    }).eq('id', buyerWallet.id),
+    (db.from as any)('wallet_transactions').insert({
+      wallet_id: buyerWallet.id, user_id: escrow.buyer_user_id,
+      type: 'escrow_refund', amount: refundAmount, status: 'completed', order_id: orderId,
+      description: cancelledStatus === 'disputed' ? 'Refund: dispute resolved in buyer\'s favor' : 'Refund: order cancelled',
+    }),
+    (db.from as any)('notifications').insert({
+      user_id: escrow.buyer_user_id, type: 'payment', title: 'Refund issued',
+      body: `UGX ${refundAmount.toLocaleString()} has been refunded to your wallet.`,
+      data: { order_id: orderId },
+    }),
+  ]);
+
+  return { ok: true, refunded: refundAmount };
+}

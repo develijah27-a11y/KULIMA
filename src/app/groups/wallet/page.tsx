@@ -12,10 +12,11 @@ const C = {
 };
 
 const TX_ICON: Record<string, JSX.Element> = {
-  sale_payout:  <Banknote size={18} />,
-  contribution: <Plus size={18} />,
-  withdrawal:   <ArrowUpRight size={18} />,
-  fee:          <Settings size={18} />,
+  sale_payout:       <Banknote size={18} />,
+  sale_payout_split: <Banknote size={18} />,
+  contribution:      <Plus size={18} />,
+  withdrawal:        <ArrowUpRight size={18} />,
+  fee:               <Settings size={18} />,
 };
 
 export default async function GroupsWalletPage() {
@@ -52,6 +53,9 @@ export default async function GroupsWalletPage() {
 
   const walletBalance  = Number(group?.wallet_balance ?? 0);
   const totalContribs  = contribs.reduce((s: number, c: any) => s + Number(c.amount), 0);
+  // Only 'sale_payout' actually lands in the pooled wallet_balance above —
+  // 'sale_payout_split' pays each contributing member's own wallet directly,
+  // so it must be excluded here or this figure would overstate the pool.
   const totalSales     = txns.filter((t: any) => t.type === 'sale_payout').reduce((s: number, t: any) => s + Number(t.amount), 0);
 
   return (
@@ -128,27 +132,30 @@ export default async function GroupsWalletPage() {
           </div>
         ) : (
           <div>
-            {txns.map((t: any) => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: `1px solid ${C.border}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ display: 'flex', color: C.amber }}>{TX_ICON[t.type] ?? <Banknote size={18} />}</span>
-                  <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0, textTransform: 'capitalize' }}>
-                      {t.type?.replace(/_/g, ' ')}
-                    </p>
-                    {t.description && (
-                      <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>{t.description}</p>
-                    )}
-                    <p style={{ fontSize: 10, color: C.muted, margin: '1px 0 0' }}>
-                      {new Date(t.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </p>
+            {txns.map((t: any) => {
+              const isSplit = t.type === 'sale_payout_split';
+              return (
+                <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: `1px solid ${C.border}` }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ display: 'flex', color: C.amber }}>{TX_ICON[t.type] ?? <Banknote size={18} />}</span>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0, textTransform: 'capitalize' }}>
+                        {isSplit ? 'Sale — paid directly to members' : t.type?.replace(/_/g, ' ')}
+                      </p>
+                      {t.description && (
+                        <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>{t.description}</p>
+                      )}
+                      <p style={{ fontSize: 10, color: C.muted, margin: '1px 0 0' }}>
+                        {new Date(t.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
                   </div>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: isSplit ? C.muted : C.green, margin: 0, flexShrink: 0 }}>
+                    {isSplit ? 'UGX' : '+UGX'} {Math.round(t.amount).toLocaleString()}
+                  </p>
                 </div>
-                <p style={{ fontSize: 14, fontWeight: 800, color: C.green, margin: 0, flexShrink: 0 }}>
-                  +UGX {Math.round(t.amount).toLocaleString()}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

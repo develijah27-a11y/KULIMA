@@ -95,5 +95,23 @@ export async function PATCH(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data) return NextResponse.json({ error: 'Report not found, already claimed, or not assigned to you' }, { status: 404 });
+
+  if (action === 'diagnose' || action === 'close') {
+    const { data: farmerProfile } = await supabase
+      .from('profiles').select('user_id').eq('id', (data as any).farmer_id).single();
+    if (farmerProfile) {
+      await (supabase.from as any)('notifications').insert({
+        farmer_id: (data as any).farmer_id,
+        user_id:   (farmerProfile as any).user_id,
+        type:      'system',
+        title:     action === 'diagnose' ? `Diagnosis ready — ${(data as any).crop_type}` : `Case closed — ${(data as any).crop_type}`,
+        body:      action === 'diagnose'
+          ? `A pathologist diagnosed your ${(data as any).crop_type} report: ${diagnosis}`
+          : `Your ${(data as any).crop_type} case has been closed.`,
+        data:      { disease_report_id: id },
+      });
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
