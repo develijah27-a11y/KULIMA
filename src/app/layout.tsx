@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Poppins, Inter, DM_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/features/auth";
@@ -6,6 +7,13 @@ import { ToastContainer } from "@/components/ui/Toast";
 import { PagePrefetcher } from "@/components/ui/PagePrefetcher";
 import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { ServiceWorkerRegistrar } from "@/components/shared/ServiceWorkerRegistrar";
+
+// Self-hosted via next/font: fonts are fetched at build time and served from
+// our own origin, eliminating the fonts.googleapis.com/fonts.gstatic.com
+// round-trips that used to block first paint on every fresh page load.
+const poppins = Poppins({ subsets: ["latin"], weight: ["300","400","500","600","700"], variable: "--font-poppins", display: "swap" });
+const inter   = Inter({ subsets: ["latin"], weight: ["300","400","500","600","700"], variable: "--font-inter", display: "swap" });
+const dmMono  = DM_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-mono", display: "swap" });
 
 export const metadata: Metadata = {
   title: "AgriNova — Smart Farm Management for Uganda",
@@ -55,18 +63,11 @@ export default function RootLayout({
         <meta name="theme-color" content="#166B3A" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)" />
         {/* Preconnect to external origins — reduces DNS lookup time */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://hjvnkintvjogwljchwcq.supabase.co" />
         <link rel="dns-prefetch" href="https://api.openweathermap.org" />
-        {/* display=swap in the URL prevents font from blocking render */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400&display=swap"
-        />
       </head>
       <body
-        className={cn("min-h-screen antialiased")}
+        className={cn("min-h-screen antialiased", poppins.variable, inter.variable, dmMono.variable)}
         style={{ background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
       >
         <AuthProvider>{children}</AuthProvider>

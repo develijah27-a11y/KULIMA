@@ -4,7 +4,7 @@
   "description": "Real-time weather, market prices, crop disease detection, and buyer connections for Ugandan smallholder farmers.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F8FAFC",
+  "background_color": "#166B3A",
   "theme_color": "#166B3A",
   "orientation": "portrait-primary",
   "icons": [

@@ -125,10 +125,6 @@ const ROUTES_BY_ROLE: Record<string, string[]> = {
 
 const SHARED_ROUTES = [
   '/dashboard',
-  '/dashboard/farms',
-  '/dashboard/disease-detection',
-  '/dashboard/soil',
-  '/dashboard/weather',
 ];
 
 const ALL_ROLES = Object.keys(ROUTES_BY_ROLE);

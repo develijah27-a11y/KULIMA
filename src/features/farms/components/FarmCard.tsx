@@ -33,7 +33,7 @@ export function FarmCard({ farm, onDelete }: FarmCardProps) {
 
       <div className="flex gap-2">
         <Link
-          href={`/farms/${farm.id}`}
+          href="/farmer/farm"
           className="flex-1 text-center bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
         >
           View Details

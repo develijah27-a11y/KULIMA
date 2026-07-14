@@ -120,10 +120,11 @@
   --radius-card: 18px;
   --radius-pill: 99px;
 
-  /* ── Typography ── */
-  --font-display: 'Poppins', 'Inter', system-ui, sans-serif;
-  --font-body:    'Poppins', 'Inter', system-ui, sans-serif;
-  --font-mono:    'DM Mono', monospace;
+  /* ── Typography — font faces self-hosted via next/font (see layout.tsx),
+     which injects --font-poppins/--font-inter/--font-dm-mono on <body> ── */
+  --font-display: var(--font-poppins), var(--font-inter), system-ui, sans-serif;
+  --font-body:    var(--font-poppins), var(--font-inter), system-ui, sans-serif;
+  --font-mono:    var(--font-dm-mono), monospace;
 
   /* ── Backward-compat aliases (used by older components) ── */
   --color-accent:        var(--color-primary-hover);
