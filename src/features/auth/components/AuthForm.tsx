@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -409,6 +410,15 @@ export function AuthForm({ mode }: AuthFormProps) {
           ? mode === 'signup' ? 'Creating account…' : 'Signing in…'
           : mode === 'signup' ? 'Create account' : 'Sign in'}
       </button>
+
+      {mode === 'signup' && (
+        <p style={{ fontSize: 11.5, color: 'rgba(240,253,244,0.45)', textAlign: 'center', marginTop: 12, lineHeight: 1.5 }}>
+          By creating an account, you agree to AgriNova's{' '}
+          <Link href="/terms" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>Terms &amp; Conditions</Link>
+          {' '}and{' '}
+          <Link href="/privacy" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>Privacy Policy</Link>.
+        </p>
+      )}
 
     </form>
   );
