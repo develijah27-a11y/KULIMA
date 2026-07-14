@@ -57,7 +57,14 @@ export default async function BuyerListingsPage({
     supabase.from('market_prices').select('crop_type, price_per_kg').order('recorded_at', { ascending: false }).limit(50),
   ]);
 
-  const listings = listingsRes.data ?? [];
+  // Verified farmers get more exposure: sort by verification tier first
+  // (gold > blue > green > grey/unverified), keeping the buyer's chosen sort
+  // (newest/price) as the tiebreaker within each tier. Array.sort is stable,
+  // so re-sorting the already-ordered rows by tier alone preserves that.
+  const TIER_WEIGHT: Record<string, number> = { gold: 3, blue: 2, green: 1, grey: 0 };
+  const listings = [...(listingsRes.data ?? [])].sort((a: any, b: any) =>
+    (TIER_WEIGHT[b.farmer?.verification_level ?? 'grey'] ?? 0) - (TIER_WEIGHT[a.farmer?.verification_level ?? 'grey'] ?? 0)
+  );
   const prices   = pricesRes.data ?? [];
 
   const priceMap: Record<string, number> = {};

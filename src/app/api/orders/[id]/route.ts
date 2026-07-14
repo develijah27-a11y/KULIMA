@@ -45,29 +45,15 @@ export async function PATCH(req: Request, { params }: Params) {
       .update({ status: 'confirmed', confirmed_at: now, farmer_note: note ?? null })
       .eq('id', id);
 
-    // Create delivery request
-    const { data: dr } = await (supabase.from as any)('delivery_requests').insert({
-      requester_id:     order.buyer_id,
-      pickup_district:  order.pickup_district,
-      dropoff_district: order.dropoff_district ?? 'Kampala',
-      cargo_kg:         order.quantity_kg,
-      cargo_type:       order.crop_type,
-      pickup_date:      new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-      status:           'open',
-      delivery_type:    'standard',
-      notes:            `Order #${id.slice(0,8)} — ${order.crop_type}`,
-    }).select().single();
-
-    if (dr) {
-      await (supabase.from as any)('orders').update({ delivery_request_id: (dr as any).id }).eq('id', id);
-    }
-
-    // Notify buyer
+    // No delivery request yet — a transporter must not be dispatchable until
+    // the buyer has actually paid into escrow. Funding escrow (POST
+    // /api/wallet/escrow action=fund) is what creates the delivery request;
+    // see that route for the pickup/matching logic that used to live here.
     await (supabase.from as any)('notifications').insert({
       user_id: order.buyer_id,
       type:    'order',
       title:   `Order confirmed — ${order.crop_type}`,
-      body:    `${(farmerProfile as any).full_name ?? 'Farmer'} confirmed your order for ${order.quantity_kg} kg. A transporter will be assigned soon.`,
+      body:    `${(farmerProfile as any).full_name ?? 'Farmer'} confirmed your order for ${order.quantity_kg} kg. Pay now to arrange delivery.`,
       data:    { order_id: id },
     });
 
@@ -79,7 +65,7 @@ export async function PATCH(req: Request, { params }: Params) {
     const isFarmer = farmerProfile && (farmerProfile as any).user_id === user.id;
     const isBuyer  = order.buyer_id === user.id;
     if (!isFarmer && !isBuyer) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    if (!['pending', 'confirmed'].includes(order.status)) {
+    if (!['pending', 'confirmed', 'paid'].includes(order.status)) {
       return NextResponse.json({ error: 'Cannot cancel at this stage' }, { status: 400 });
     }
 

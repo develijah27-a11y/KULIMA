@@ -40,6 +40,7 @@ type Order = {
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   pending:    { label: 'New Order',    color: C.amber,  bg: C.amberBg  },
   confirmed:  { label: 'Confirmed',    color: C.blue,   bg: C.blueBg   },
+  paid:       { label: 'Payment Received', color: C.green, bg: C.greenBg },
   dispatched: { label: 'Driver Sent',  color: C.purple, bg: C.purpleBg },
   in_transit: { label: 'On the Way',   color: C.green,  bg: C.greenBg  },
   delivered:  { label: 'Delivered',    color: C.green,  bg: C.greenBg  },
@@ -50,7 +51,7 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> =
 
 const TABS = [
   { label: 'New',      filter: ['pending'] },
-  { label: 'Active',   filter: ['confirmed','dispatched','in_transit'] },
+  { label: 'Active',   filter: ['confirmed','paid','dispatched','in_transit'] },
   { label: 'Delivered',filter: ['delivered'] },
   { label: 'Done',     filter: ['completed'] },
   { label: 'Disputed', filter: ['disputed'] },
@@ -96,7 +97,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: (id: string, n
       const json = await res.json();
       if (json.success) {
         const nextStatus = action === 'confirm' ? 'confirmed' : 'cancelled';
-        showToast(action === 'confirm' ? 'Order confirmed! Driver will be assigned.' : 'Order cancelled.', true);
+        showToast(action === 'confirm' ? 'Order confirmed! Waiting for buyer payment.' : 'Order cancelled.', true);
         setShowNote(false);
         onAction(order.id, nextStatus);
       } else {

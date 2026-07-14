@@ -9,17 +9,23 @@ export default async function PathologistPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const [walletRes, consultationsRes] = await Promise.all([
+  const [walletRes, consultationsRes, profileRes] = await Promise.all([
     (supabase.from as any)('wallets').select('balance').eq('user_id', user.id).single(),
     (supabase.from as any)('consultations')
-      .select('id, type, status, fee_ugx, notes, created_at, pathologist:profiles!consultations_pathologist_id_fkey(full_name, location)')
+      .select(`
+        id, type, status, fee_ugx, notes, created_at,
+        pathologist:profiles!consultations_pathologist_id_fkey(full_name, location),
+        disease_report:disease_reports(id, status, crop_type, symptoms, diagnosis, treatment, diagnosed_at)
+      `)
       .eq('farmer_id', user.id)
       .order('created_at', { ascending: false })
       .limit(5),
+    (supabase.from as any)('profiles').select('id, location').eq('user_id', user.id).single(),
   ]);
 
   const walletBalance  = Number(walletRes.data?.balance ?? 0);
   const consultations  = (consultationsRes.data ?? []) as any[];
+  const farmerDistrict = (profileRes.data as any)?.location ?? '';
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
@@ -55,7 +61,7 @@ export default async function PathologistPage() {
       <PathologistClient />
 
       {/* Paid consultation booking */}
-      <ConsultationBooking walletBalance={walletBalance} consultations={consultations} />
+      <ConsultationBooking walletBalance={walletBalance} consultations={consultations} farmerDistrict={farmerDistrict} />
 
     </div>
   );

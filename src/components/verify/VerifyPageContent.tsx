@@ -18,7 +18,7 @@ export async function VerifyPageContent() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const [{ data: profile }, { data: pending }] = await Promise.all([
+  const [{ data: profile }, { data: pending }, { data: latest }] = await Promise.all([
     (supabase.from as any)('profiles')
       .select('id, role, verification_level, trust_score, reliability_score, completed_deals')
       .eq('user_id', user.id)
@@ -30,7 +30,17 @@ export async function VerifyPageContent() {
       .order('submitted_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Most recent submission overall — if it was rejected and nothing newer
+    // has been submitted since, show the reason so the user knows what to fix.
+    (supabase.from as any)('verifications')
+      .select('id, level, status, rejection_reason, submitted_at')
+      .eq('user_id', user.id)
+      .order('submitted_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
+
+  const rejection = latest?.status === 'rejected' ? latest : null;
 
   const currentLevel: VerificationLevel = (profile as any)?.verification_level ?? 'grey';
   const trustScore   = (profile as any)?.trust_score ?? 50;
@@ -152,6 +162,7 @@ export async function VerifyPageContent() {
             role={(profile as any)?.role ?? 'farmer'}
             currentLevel={currentLevel}
             hasPending={!!pending}
+            rejection={rejection ? { level: rejection.level, reason: rejection.rejection_reason ?? null } : null}
           />
         )}
       </div>

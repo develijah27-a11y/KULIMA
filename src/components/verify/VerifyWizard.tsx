@@ -22,9 +22,10 @@ interface Props {
   role: string;
   currentLevel: VerificationLevel;
   hasPending: boolean;
+  rejection?: { level: string; reason: string | null } | null;
 }
 
-export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending }: Props) {
+export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending, rejection }: Props) {
   const [step, setStep]           = useState<'choose' | 'upload' | 'done'>(hasPending ? 'done' : 'choose');
   const [target, setTarget]       = useState<TargetLevel | null>(null);
   const [files, setFiles]         = useState<Record<string, File | null>>({});
@@ -106,6 +107,21 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
   if (step === 'choose') {
     return (
       <div style={{ maxWidth: 600, margin: '0 auto' }}>
+        {rejection && (
+          <div style={{ marginBottom: 20, padding: '14px 16px', background: 'var(--color-danger-bg)', borderRadius: 12, border: '1px solid var(--color-danger)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+              <AlertTriangle size={16} style={{ color: 'var(--color-danger)', flexShrink: 0, marginTop: 1 }} />
+              <div>
+                <p style={{ color: 'var(--color-danger)', fontWeight: 700, fontSize: 14, margin: 0 }}>
+                  Your last submission was not approved
+                </p>
+                <p style={{ color: C.text, fontSize: 13, margin: '4px 0 0' }}>
+                  {rejection.reason ?? 'Please double-check your documents are clear and match your legal name, then resubmit.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         <h2 style={{ color: C.text, fontWeight: 800, fontSize: 20, marginBottom: 6, letterSpacing: '-0.02em' }}>
           Choose Verification Level
         </h2>

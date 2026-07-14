@@ -54,6 +54,17 @@ export async function POST(req: Request) {
   }
 
   // ── ACCEPT ─────────────────────────────────────────────────────────────────
+  // Must be verified at blue tier or above (driving license + vehicle
+  // registration + selfie on file) before taking a job — so a misplaced
+  // delivery or bad-faith driver can always be traced.
+  const { data: driverProfile } = await (admin.from as any)('profiles')
+    .select('verification_level').eq('user_id', user.id).single();
+  if (!driverProfile || !['blue', 'gold'].includes(driverProfile.verification_level)) {
+    return NextResponse.json({
+      error: 'Submit your driving license, vehicle registration, and a selfie for verification before accepting jobs.',
+    }, { status: 403 });
+  }
+
   // Driver must have an available vehicle
   const { data: vehicle } = await (admin.from as any)('vehicles')
     .select('id')

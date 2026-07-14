@@ -21,8 +21,17 @@ export async function GET(req: Request) {
   q = q.order('created_at', { ascending: false }).limit(60);
   const { data, error } = await q;
   if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+
+  // Verified farmers get more exposure: rank by verification tier first
+  // (gold > blue > green > grey/unverified), keeping recency as the
+  // tiebreaker within a tier — mirrors src/app/buyer/listings/page.tsx.
+  const TIER_WEIGHT: Record<string, number> = { gold: 3, blue: 2, green: 1, grey: 0 };
+  const sorted = [...(data ?? [])].sort((a: any, b: any) =>
+    (TIER_WEIGHT[b.farmer?.verification_level ?? 'grey'] ?? 0) - (TIER_WEIGHT[a.farmer?.verification_level ?? 'grey'] ?? 0)
+  );
+
   return NextResponse.json(
-    { success: true, data: data ?? [] },
+    { success: true, data: sorted },
     { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } }
   );
 }

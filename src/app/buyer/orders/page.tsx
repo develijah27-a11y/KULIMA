@@ -42,6 +42,7 @@ type Order = {
 const STEPS = [
   { key: 'pending',    label: 'Placed',     icon: <ClipboardList size={11} /> },
   { key: 'confirmed',  label: 'Confirmed',  icon: <CheckCircle2 size={11} /> },
+  { key: 'paid',       label: 'Paid',       icon: <CheckCircle2 size={11} /> },
   { key: 'dispatched', label: 'Driver',     icon: <Truck size={11} /> },
   { key: 'in_transit', label: 'On the way', icon: <Truck size={11} /> },
   { key: 'delivered',  label: 'Delivered',  icon: <Package size={11} /> },
@@ -49,8 +50,8 @@ const STEPS = [
 ];
 
 const STEP_IDX: Record<string, number> = {
-  pending: 0, confirmed: 1, dispatched: 2, in_transit: 3, delivered: 4, completed: 5,
-  cancelled: -1, disputed: 4,
+  pending: 0, confirmed: 1, paid: 2, dispatched: 3, in_transit: 4, delivered: 5, completed: 6,
+  cancelled: -1, disputed: 5,
 };
 
 function returnWindowMs(deliveredAt: string | null): number {
@@ -162,6 +163,19 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
     });
   }
 
+  async function payNow() {
+    startT(async () => {
+      const res = await fetch('/api/wallet/escrow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'fund', orderId: order.id }),
+      });
+      const json = await res.json();
+      if (json.success) { showToast('Payment secured — arranging a driver now', true); onAction(); }
+      else showToast(json.error ?? 'Payment failed', false);
+    });
+  }
+
   async function cancelOrder() {
     startT(async () => {
       const res = await fetch(`/api/orders/${order.id}`, {
@@ -188,7 +202,8 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
     });
   }
 
-  const canCancel   = ['pending', 'confirmed'].includes(order.status);
+  const canCancel   = ['pending', 'confirmed', 'paid'].includes(order.status);
+  const canPay      = order.status === 'confirmed';
   const canComplete = order.status === 'delivered';
   const withinReturnWindow = order.delivered_at
     ? Date.now() - new Date(order.delivered_at).getTime() < 48 * 60 * 60 * 1000
@@ -213,6 +228,11 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
               {order.status === 'delivered' && (
                 <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: C.amberBg, color: C.amber }}>
                   Confirm receipt
+                </span>
+              )}
+              {order.status === 'confirmed' && (
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: C.greenBg, color: C.green }}>
+                  Payment due
                 </span>
               )}
             </div>
@@ -279,8 +299,21 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
       )}
 
       {/* Actions */}
-      {(canComplete || canCancel || canDispute) && (
+      {(canPay || canComplete || canCancel || canDispute) && (
         <div style={{ padding: '0 20px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {canPay && (
+            <button
+              onClick={payNow}
+              disabled={pending}
+              style={{
+                width: '100%', padding: '12px', borderRadius: 12, border: 'none',
+                background: pending ? C.greenBg : C.green, color: pending ? C.green : '#fff',
+                fontSize: 13, fontWeight: 700, cursor: pending ? 'wait' : 'pointer',
+              }}
+            >
+              {pending ? 'Processing…' : `Pay UGX ${Math.round(order.total_amount).toLocaleString()} — Arrange Delivery`}
+            </button>
+          )}
           {canComplete && (
             <button
               onClick={confirmReceipt}
@@ -328,7 +361,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
 
 const STATUS_TABS = [
   { label: 'All',       filter: null },
-  { label: 'Active',    filter: ['pending','confirmed','dispatched','in_transit'] },
+  { label: 'Active',    filter: ['pending','confirmed','paid','dispatched','in_transit'] },
   { label: 'Delivered', filter: ['delivered'] },
   { label: 'Done',      filter: ['completed'] },
   { label: 'Disputed',  filter: ['disputed'] },
@@ -358,7 +391,7 @@ export default function BuyerOrdersPage() {
     return f === null || f.includes(o.status);
   });
 
-  const activeCount    = orders.filter(o => ['pending','confirmed','dispatched','in_transit'].includes(o.status)).length;
+  const activeCount    = orders.filter(o => ['pending','confirmed','paid','dispatched','in_transit'].includes(o.status)).length;
   const deliveredCount = orders.filter(o => o.status === 'delivered').length;
   const totalSpend     = orders.filter(o => o.status === 'completed').reduce((s, o) => s + o.total_amount, 0);
 

@@ -13,9 +13,18 @@ export async function POST(_req: Request, { params }: Params) {
 
   // Verify transporter role
   const { data: profile } = await supabase
-    .from('profiles').select('role').eq('user_id', user.id).single();
+    .from('profiles').select('role, verification_level').eq('user_id', user.id).single();
   if (!profile || !['transporter', 'admin'].includes((profile as any).role)) {
     return NextResponse.json({ error: 'Only transporters can accept jobs' }, { status: 403 });
+  }
+  // Blue-tier verification is what actually collects a driving permit +
+  // vehicle registration + selfie — require it before dispatch so a
+  // misplaced delivery or bad-faith driver can always be traced.
+  const level = (profile as any).verification_level;
+  if ((profile as any).role === 'transporter' && level !== 'blue' && level !== 'gold') {
+    return NextResponse.json({
+      error: 'Submit your driving license, vehicle registration, and a selfie for verification before accepting jobs.',
+    }, { status: 403 });
   }
 
   // Use admin client for all DB writes to bypass RLS on delivery_requests
@@ -66,7 +75,7 @@ export async function POST(_req: Request, { params }: Params) {
   await (admin.from as any)('orders')
     .update({ status: 'dispatched', dispatched_at: new Date().toISOString() })
     .eq('delivery_request_id', id)
-    .eq('status', 'confirmed');
+    .eq('status', 'paid');
 
   // Notify requester
   await (admin.from as any)('notifications').insert({
@@ -95,7 +104,7 @@ export async function PATCH(req: Request, { params }: Params) {
   );
 
   const { data: dr } = await (admin.from as any)('delivery_requests')
-    .select('id, status, transporter_id, requester_id, cargo_type, cargo_kg')
+    .select('id, status, transporter_id, requester_id, cargo_type, cargo_kg, estimated_fare')
     .eq('id', id)
     .single();
 
@@ -127,7 +136,9 @@ export async function PATCH(req: Request, { params }: Params) {
       user_id: dr.requester_id,
       type:    'delivery',
       title:   `Delivered — ${dr.cargo_type}`,
-      body:    `Your ${dr.cargo_kg} kg of ${dr.cargo_type} has been delivered. Please confirm receipt.`,
+      body:    dr.estimated_fare
+        ? `Your ${dr.cargo_kg} kg of ${dr.cargo_type} has arrived. Confirm receipt to release payment to the farmer, and pay UGX ${Math.round(Number(dr.estimated_fare)).toLocaleString()} to release the driver's earnings.`
+        : `Your ${dr.cargo_kg} kg of ${dr.cargo_type} has been delivered. Please confirm receipt.`,
       data:    { delivery_id: id },
     });
   } else {

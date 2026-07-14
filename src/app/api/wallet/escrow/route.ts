@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { calcFare } from '@/lib/delivery-pricing';
 
 const admin = () => createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,16 +32,18 @@ export async function POST(req: Request) {
     let escrowInsertData: Record<string, unknown>;
 
     if (orderId) {
-      // Order-based escrow — buyer pays after seller dispatches
+      // Order-based escrow — buyer pays once the farmer has confirmed. Payment
+      // is what confirms real delivery intent, so no delivery request exists
+      // (and no transporter can be dispatched) until this succeeds below.
       const { data: order, error: orderErr } = await (db.from as any)('orders')
-        .select('id, buyer_id, farmer_profile_id, total_amount, status, escrow_id, farmer:profiles!farmer_profile_id(user_id)')
+        .select('id, buyer_id, farmer_profile_id, total_amount, status, escrow_id, crop_type, quantity_kg, pickup_district, dropoff_district, group_listing_id, farmer:profiles!farmer_profile_id(user_id)')
         .eq('id', orderId)
         .single();
 
       if (orderErr || !order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
       if (order.buyer_id !== user.id) return NextResponse.json({ error: 'Not your order' }, { status: 403 });
-      if (order.status !== 'dispatched') {
-        return NextResponse.json({ error: 'Escrow can only be funded after the seller ships the order' }, { status: 409 });
+      if (order.status !== 'confirmed') {
+        return NextResponse.json({ error: 'Escrow can only be funded after the farmer confirms the order' }, { status: 409 });
       }
       if (order.escrow_id) {
         return NextResponse.json({ error: 'Escrow already funded for this order' }, { status: 409 });
@@ -119,25 +122,75 @@ export async function POST(req: Request) {
 
     // Link escrow to order + update status to 'paid'
     if (orderId) {
+      const now = new Date().toISOString();
       await (db.from as any)('orders').update({
         escrow_id:  escrowInsert.data.id,
         status:     'paid',
-        paid_at:    new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        paid_at:    now,
+        updated_at: now,
       }).eq('id', orderId);
 
-      // Notify seller
       const { data: order } = await (db.from as any)('orders')
-        .select('farmer_profile_id, crop_type').eq('id', orderId).single();
+        .select('farmer_profile_id, crop_type, quantity_kg, pickup_district, dropoff_district, delivery_request_id')
+        .eq('id', orderId).single();
+
       if (order) {
+        // Notify seller
         await (db.from as any)('notifications').insert({
           farmer_id: order.farmer_profile_id,
           user_id:   sellerUserId,
           type:      'payment',
           title:     'Payment received — proceed to ship',
-          body:      `The buyer has paid UGX ${totalAmount.toLocaleString()} into escrow. You can now dispatch the order.`,
+          body:      `The buyer has paid UGX ${totalAmount.toLocaleString()} into escrow. A transporter will be matched shortly.`,
           data:      { order_id: orderId },
         });
+
+        // Payment confirms the buyer genuinely wants this delivered — only
+        // now does a delivery request exist for transporters to pick up.
+        if (!order.delivery_request_id && order.pickup_district) {
+          const dropoff = order.dropoff_district ?? 'Kampala';
+          const fare = calcFare(order.pickup_district, dropoff, Number(order.quantity_kg), 'standard');
+
+          const { data: dr } = await (db.from as any)('delivery_requests').insert({
+            requester_id:      user.id,
+            pickup_district:   order.pickup_district,
+            dropoff_district:  dropoff,
+            cargo_kg:          order.quantity_kg,
+            cargo_type:        order.crop_type,
+            pickup_date:       new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
+            status:            'open',
+            delivery_type:     'standard',
+            estimated_fare:    fare.totalFare,
+            distance_km:       fare.distanceKm,
+            commission_rate:   10,
+            commission_amount: fare.commissionAmount,
+            driver_earnings:   fare.driverEarnings,
+            payment_status:    'pending',
+            notes:             `Order #${orderId.slice(0, 8)} — ${order.crop_type}`,
+          }).select('id').single();
+
+          if (dr) {
+            await (db.from as any)('orders').update({ delivery_request_id: dr.id }).eq('id', orderId);
+
+            // Auto-match available verified drivers, matching the standalone
+            // delivery-request flow in POST /api/deliveries.
+            const { data: matchedVehicles } = await (db.from as any)('vehicles')
+              .select('user_id').eq('is_available', true).limit(10);
+            const driverUserIds = [...new Set<string>((matchedVehicles ?? []).map((v: any) => v.user_id as string))];
+            if (driverUserIds.length > 0) {
+              await (db.from as any)('driver_assignments').insert(
+                driverUserIds.map((driverId: string) => ({ delivery_id: dr.id, driver_id: driverId, status: 'pending' })),
+              );
+              await (db.from as any)('notifications').insert(
+                driverUserIds.map((driverId: string) => ({
+                  user_id: driverId, type: 'delivery', title: 'New Delivery Request',
+                  body: `🚛 Standard · ${order.quantity_kg}kg from ${order.pickup_district} → ${dropoff} · UGX ${fare.totalFare.toLocaleString()}`,
+                  read: false,
+                })),
+              );
+            }
+          }
+        }
       }
     }
 
