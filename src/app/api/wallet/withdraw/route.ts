@@ -36,10 +36,18 @@ export async function POST(req: Request) {
 
   const txRef = `kulima-wdl-${user.id.slice(0, 8)}-${Date.now()}`;
 
-  // Deduct balance and create records atomically
-  const newBalance = Number(wallet.balance) - amount;
+  // Atomic conditional debit (UPDATE ... WHERE balance >= amount, single row
+  // lock) — closes the race where two concurrent withdrawal requests both
+  // pass the soft balance check above and both trigger a real payout.
+  const { data: debited, error: debitErr } = await (admin as any).rpc('claim_wallet_debit', {
+    p_wallet_id: wallet.id,
+    p_amount: amount,
+  });
+  if (debitErr || !debited) {
+    return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
+  }
 
-  const [momoInsert, txnInsert, balanceUpdate] = await Promise.all([
+  const [momoInsert, txnInsert] = await Promise.all([
     (admin.from as any)('mobile_money_requests').insert({
       user_id: user.id,
       type: 'withdrawal',
@@ -58,10 +66,10 @@ export async function POST(req: Request) {
       reference: txRef,
       description: `Withdrawal to ${provider.toUpperCase()} ${phone}`,
     }).select('id').single(),
-    (admin.from as any)('wallets').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', wallet.id),
   ]);
 
   if (momoInsert.error || txnInsert.error) {
+    await (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: amount });
     return NextResponse.json({ error: 'Failed to create withdrawal request' }, { status: 500 });
   }
 
@@ -89,7 +97,7 @@ export async function POST(req: Request) {
     if (flwData.status !== 'success') {
       // Refund balance and mark failed
       await Promise.all([
-        (admin.from as any)('wallets').update({ balance: wallet.balance, updated_at: new Date().toISOString() }).eq('id', wallet.id),
+        (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: amount }),
         (admin.from as any)('wallet_transactions').update({ status: 'failed' }).eq('id', txnInsert.data.id),
         (admin.from as any)('mobile_money_requests').update({ status: 'failed', failure_reason: flwData.message }).eq('id', momoInsert.data.id),
       ]);
@@ -106,7 +114,7 @@ export async function POST(req: Request) {
   } catch {
     // Refund on network error
     await Promise.all([
-      (admin.from as any)('wallets').update({ balance: wallet.balance, updated_at: new Date().toISOString() }).eq('id', wallet.id),
+      (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: amount }),
       (admin.from as any)('wallet_transactions').update({ status: 'failed' }).eq('id', txnInsert.data.id),
       (admin.from as any)('mobile_money_requests').update({ status: 'failed', failure_reason: 'Network error' }).eq('id', momoInsert.data.id),
     ]);

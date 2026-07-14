@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 // Vercel cron — weekly (Sunday midnight)
 export async function GET(req: Request) {
   const v = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
   if (v !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // loan_profiles now only grants write access to service_role (see
+  // service_manages_loan_profiles RLS policy) — this cron has no user
+  // session to scope a regular client to, so it needs the service-role
+  // client for the upsert below.
   const supabase = await createClient();
+  const admin = createServiceRoleClient();
 
   const { data: farmers } = await supabase.from('profiles').select('user_id, created_at');
   const { data: offers } = await supabase.from('offers').select('buyer_id, rating');
@@ -26,7 +31,7 @@ export async function GET(req: Request) {
 
   // upsert LoanProfile records
   for (const s of scores) {
-    await supabase.from('loan_profiles').upsert({
+    await admin.from('loan_profiles').upsert({
       farmer_id: s.farmerId, score: s.farmScore,
     });
   }

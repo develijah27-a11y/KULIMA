@@ -46,6 +46,9 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
     setUploading(true);
     setError('');
 
+    // The kyc-documents bucket is private — we store the storage path here,
+    // not a public URL. Admin review generates short-lived signed URLs from
+    // this path on demand via the service-role client.
     const urls: Record<string, string> = {};
     try {
       for (const doc of docs) {
@@ -56,8 +59,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
           .from('kyc-documents')
           .upload(path, file, { upsert: true });
         if (upErr) throw new Error(`Upload failed for ${doc.label}: ${upErr.message}`);
-        const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(path);
-        urls[doc.key] = urlData.publicUrl;
+        urls[doc.key] = path;
       }
 
       const { error: dbErr } = await supabase.from('verifications' as any).insert({

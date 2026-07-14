@@ -442,7 +442,7 @@ export default function Home() {
             <Leaf size={11} color="#031A08" strokeWidth={2.5} />
           </div>
           <span style={{ fontSize: 13.5, fontWeight: 900, color: TEXT, letterSpacing: '-0.025em' }}>AgriNova</span>
-          <span style={{ fontSize: 12, color: MUTED, marginLeft: 2 }}>© 2026</span>
+          <span style={{ fontSize: 12, color: MUTED, marginLeft: 2 }}>© 2026 AgriNova. All rights reserved.</span>
         </div>
         <div style={{ display: 'flex', gap: 24 }}>
           {['Privacy', 'Terms', 'Contact'].map(l => (

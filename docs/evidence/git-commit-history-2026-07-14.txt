@@ -1,0 +1,123 @@
+2026-05-21 11:50 | ad9b49c | Kulima Platform | Initial commit: Kulima backend foundation setup
+2026-05-22 03:54 | 44d0207 | Kulima Platform | feat: implement frontend features for authentication, farms, soil, disease detection, and weather
+2026-05-22 04:36 | bb6844c | Kulima Platform | ui: implement design system with consistent components
+2026-05-22 12:36 | 087e24c | Kulima Platform | "your message".
+2026-05-22 13:04 | c1a4dd0 | Kulima Platform | commit
+2026-05-22 21:25 | b7ea437 | Kulima Platform | feat(auth): fix env.ts corrupted string, add role migration for shared dashboard system
+2026-05-22 22:33 | 85e55b7 | Kulima Platform | feat: build complete dashboard structure - add farms, soil, disease-detection, weather pages with create forms - fix dashboard nav - add logout api route - migrate to proxy.ts for next16 - fix next.config
+2026-05-22 23:59 | dfab2ef | Kulima Platform | commit
+2026-05-23 12:55 | 48a6e67 | Kulima Platform | fix: improve farm ID handling in disease, soil, and weather forms
+2026-05-23 19:50 | 78e6716 | Kulima Platform | Checkpoint before AI changes
+2026-05-24 00:01 | 923efa7 | Kulima Platform | new commit
+2026-05-24 03:06 | b18904e | Kulima Platform | commit
+2026-05-24 17:31 | 80f8a86 | Kulima Platform | out going changes
+2026-05-24 21:40 | 36a6635 | Kulima Platform | commit new
+2026-05-24 21:48 | c977062 | Kulima Platform | css
+2026-05-24 22:06 | 6756d2a | Kulima Platform | new css
+2026-05-24 23:00 | b6d14ed | Kulima Platform | CSS
+2026-05-25 01:58 | 1177bab | Kulima Platform | changes
+2026-05-25 02:10 | 8040312 | Kulima Platform | feat: smart agricultural intelligence farmer dashboard
+2026-05-25 02:23 | 592eb11 | Kulima Platform | perf: eliminate sequential Supabase calls in dashboard root
+2026-05-25 02:27 | 5d0f405 | Kulima Platform | fix: resolve TypeScript errors in AuthForm and weather-server
+2026-05-25 02:35 | 935a5d1 | Kulima Platform | fix: remove dynamic export incompatible with cacheComponents
+2026-05-25 10:49 | 9599aba | Kulima Platform | feat: forest green sidebar + white card dashboard redesign
+2026-05-25 11:06 | ee150d0 | Kulima Platform | fix: resolve server→client icon serialization and html nesting errors
+2026-06-08 21:19 | d6495fe | Kulima Platform | feat: verification & trust system (KYC badges, trust scores, admin queue)
+2026-06-08 21:36 | 36f9f2e | Kulima Platform | feat: full marketplace — listings, offer negotiation, counter-offer flow
+2026-06-09 00:04 | 8c7437c | Kulima Platform | perf+feat: fix rendering performance, redesign Plant Pathologist
+2026-06-09 00:31 | 5281bbf | Kulima Platform | feat: complete farm finance system (calculator, expenses, projections)
+2026-06-09 00:58 | 589c40e | Kulima Platform | perf: eliminate getUser() network calls + stream pages for instant render
+2026-06-09 01:11 | 9cb8132 | Kulima Platform | fix: make input text visible — add explicit color/background to wallet inputs + global CSS
+2026-06-09 02:08 | 4f2c0a7 | Kulima Platform | feat: farm workers + full sidebar redesign for all 7 roles
+2026-06-09 02:26 | 42b4523 | Kulima Platform | feat: cash crop prices — Uganda, East Africa & global markets
+2026-06-09 03:11 | c78c215 | Kulima Platform | feat: real dashboards for all roles + crop photo system
+2026-06-09 03:26 | 3b9d5ee | Kulima Platform | feat: comprehensive admin system + critical platform fixes
+2026-06-09 09:49 | cc3999f | Kulima Platform | feat: farm inventory CRUD + full dark mode support
+2026-06-09 12:32 | a4d5d15 | Kulima Platform | commit
+2026-06-09 16:32 | 69c6dd4 | Kulima Platform | commit
+2026-06-10 10:39 | 49b4ac3 | Kulima Platform | commit
+2026-06-10 11:46 | 3fb231d | Kulima Platform | commit
+2026-06-11 09:30 | bcfd82d | Kulima Platform | new
+2026-06-11 13:04 | 0d91514 | Kulima Platform | NEW
+2026-06-12 10:15 | 4fdc073 | Kulima Platform | perf(step-1): code split PathologistClient, remove dead recharts dependency
+2026-06-12 10:25 | d44dae0 | Kulima Platform | perf(step-2): optimize images with next/image lazy loading and proper sizes
+2026-06-12 10:30 | 5b11e2b | Kulima Platform | perf(step-4): memoize parsedCosts to eliminate JSON.stringify on every render
+2026-06-12 13:10 | 112a804 | Kulima Platform | perf(step-6): wire up serwist service worker for offline caching
+2026-06-12 13:34 | e40a033 | Kulima Platform | fix(dev): skip serwist webpack plugin in development to fix Turbopack conflict
+2026-06-12 13:44 | 3e492bf | Kulima Platform | fix(auth): catch invalid refresh token error in middleware
+2026-06-12 13:46 | 9c3fa4c | Kulima Platform | fix(auth): suppress console.error for expected auth failures
+2026-06-12 13:54 | abda5b8 | Kulima Platform | fix(auth): make typed text bold black, override browser autofill styles
+2026-06-12 13:55 | 86f108c | Kulima Platform | NEW
+2026-06-12 14:04 | 4bad719 | Kulima Platform | fix(auth): fix input text color overridden by higher-specificity global rule
+2026-06-12 14:14 | e13dd57 | Kulima Platform | fix(auth): handle email-not-confirmed and improve fetch error detection
+2026-06-12 18:22 | 6f15319 | Kulima Platform | commits
+2026-06-12 23:22 | c0dae59 | Kulima Platform | fix: remove .catch() from Supabase queries — use Promise.allSettled instead
+2026-06-13 08:24 | 5ca29dc | Kulima Platform | fix(build): resolve three build blockers
+2026-06-13 08:27 | 58b73f1 | Kulima Platform | fix(proxy): rename export from middleware to proxy for Next.js 16
+2026-06-13 08:54 | 3e6529e | Kulima Platform | fix(build): update dynamic route handlers for Next.js 16 params API
+2026-06-13 09:02 | bf317e3 | Kulima Platform | fix(schemas): migrate Zod v3 error keys to Zod v4 message API
+2026-06-13 09:30 | 7f75907 | Kulima Platform | fix(schemas): replace errorMap with message in z.enum() for Zod v4
+2026-06-13 09:46 | d0162ed | Kulima Platform | fix(layout): remove invalid string onLoad from font link element
+2026-06-13 09:47 | 8c17433 | Kulima Platform | fix(error-handler): remove ZodError.errors alias dropped in Zod v4
+2026-06-13 10:15 | 504d5df | Kulima Platform | fix(supplier): add loading skeletons, error boundary, and fix notification queries
+2026-06-13 18:10 | 0cd61a4 | Kulima Platform | fix(ux): add loading skeletons and error boundaries to all 120 route segments
+2026-06-13 23:01 | 97178e2 | Kulima Platform | feat: fix all dashboard saves, add role switcher in settings, prefetch all pages
+2026-06-13 23:39 | 1f91e72 | Kulima Platform | perf: aggressive background prefetching for instant page navigation
+2026-06-19 23:32 | 63af0e7 | Kulima Platform | feat(admin): full admin dashboard + delivery system + perf fixes
+2026-06-21 23:14 | 79aac80 | Kulima Platform | new
+2026-06-21 23:55 | 95513a4 | Kulima Platform | fix(db): add audit_logs table + triggers to APPLY_PENDING_MIGRATIONS
+2026-06-30 22:43 | e1ee52b | Kulima Platform | feat(ux): match skeleton loaders to real pages + add Vercel auto-deploy
+2026-07-01 07:03 | 5afae9a | Elijah dev | fix(deploy): remove stale Vercel secret refs from vercel.json
+2026-07-01 07:59 | 1095a77 | Elijah dev | ci: simplify GitHub Actions to type-check only
+2026-07-01 08:27 | 16cd4aa | Elijah dev | perf: stream buyer dashboard header, fix heavy queries, widen tree-shaking
+2026-07-01 21:29 | 0d81815 | Elijah dev | feat(ux): fix role switcher + redesign sidebar to deep forest emerald
+2026-07-01 23:03 | 30306a2 | Elijah dev | feat(ui): replace all emoji icons with Lucide React icons across all 8 dashboards
+2026-07-01 23:49 | 36caf3e | Elijah dev | fix(saves): fix vehicle not appearing after registration + harden auth client
+2026-07-02 00:38 | d40e0ef | Elijah dev | feat(ux): replace all emoji with Lucide icons + add delivery booking to all roles
+2026-07-02 01:34 | da36447 | Elijah dev | feat(ui): replace emoji with Lucide icons across 43 files (batch 1)
+2026-07-02 01:44 | 36441bf | Elijah dev | feat(ui): replace emoji with icons in admin, pathologist, supplier pages
+2026-07-02 02:05 | 91cb5b7 | Elijah dev | feat(ui): replace emoji with Lucide icons in farmer pages, landing, onboarding, components
+2026-07-02 02:16 | 12ad060 | Elijah dev | feat(ui): replace emoji with Lucide icons in 9 more pages
+2026-07-02 02:24 | bee009d | Elijah dev | feat(ui): replace emoji with Lucide icons in 11 more pages
+2026-07-02 07:21 | 7a8fe43 | Elijah dev | style: replace remaining emoji with Lucide icons across 10 files
+2026-07-02 07:33 | 3ff0e5c | Elijah dev | style: replace emoji with Lucide icons across 25+ more files
+2026-07-02 08:38 | 54b29a4 | Elijah dev | style(ui): replace all emoji with Lucide SVG icons across 64 files
+2026-07-02 12:26 | 66837b0 | Elijah dev | feat(ux): simplify language across all roles for rural farmers
+2026-07-02 13:21 | ba0fe3e | Elijah dev | fix(ui): replace jargon with plain language and remove loan section
+2026-07-02 13:36 | 88a460e | Elijah dev | security: remove run_migration.js and add to gitignore
+2026-07-04 17:14 | c4408c4 | Elijah dev | fix(notifications): standardize on user_id for all roles
+2026-07-04 17:55 | 8ef2158 | Elijah dev | fix(delivery): fix 3 delivery system bugs and notification route
+2026-07-04 18:56 | 9e12740 | Elijah dev | fix(build): remove middleware.ts to resolve Next.js 16 conflict with proxy.ts
+2026-07-04 18:59 | 3dca693 | Elijah dev | Rebrand Kulima to AgriNova: identity, colors, typography, and logo
+2026-07-04 19:47 | 5bf184b | Elijah dev | security: enforce 12-hour session expiry and harden HTTP headers
+2026-07-04 21:42 | 85b1113 | Elijah dev | fix(data): replace fake weather fallback and implement live market price feed
+2026-07-04 21:44 | 264533d | Elijah dev | fix(pwa): cache-bust AgriNova icons so the rebrand actually shows up
+2026-07-04 21:58 | ecc37e3 | Elijah dev | chore: retrigger Vercel deployment
+2026-07-04 22:07 | a763e74 | Elijah dev | fix(deploy): remove 6-hourly cron — Vercel Hobby only supports daily crons
+2026-07-04 22:09 | 8bb8534 | Elijah dev | fix(notifications): reconcile on user_id, fix stale database.types.ts
+2026-07-04 22:32 | 59257d0 | Elijah dev | fix(weather): show farmer's actual district, not always Kampala
+2026-07-04 23:34 | 051adea | Elijah dev | chore: commit all local improvements that were not yet pushed
+2026-07-04 23:38 | 5d4461c | Elijah dev | fix(build): switch service-worker build from webpack plugin to post-build script
+2026-07-05 06:58 | c2b0075 | Elijah dev | feat(mobile): add full-screen sidebar drawer for all role dashboards
+2026-07-05 07:22 | 19f933b | Elijah dev | feat(mobile): fluid sidebar sizing + visual quality for all screen sizes
+2026-07-05 07:36 | 8c90810 | Elijah dev | fix(trust): move trust ring off name row, fix invisible Not Verified badge
+2026-07-05 08:19 | 7ba7639 | Elijah dev | fix(build): widen IconComponent type to accept style prop
+2026-07-05 08:28 | a2fad73 | Elijah dev | fix(trust): vertical ring layout, fixed grids, visual polish pass
+2026-07-05 11:16 | 4b8fd40 | Elijah dev | feat(landing): refine mobile-app-style landing page
+2026-07-05 12:17 | bdd3735 | Elijah dev | feat(wallet): account numbers, transfers, platform wallet, verify banner everywhere
+2026-07-05 12:53 | 0885826 | Elijah dev | fix(dark-mode): Quick Actions icon badges were hardcoded white
+2026-07-05 13:10 | a57dcfb | Elijah dev | feat(groups): overhaul chat UI, fix skeleton, wire member notifications
+2026-07-05 18:28 | 84a0b09 | Elijah dev | fix(dark-mode): banner labels unreadable — var(--color-primary-muted) inverts, banner bg doesn't
+2026-07-05 18:38 | c636111 | Elijah dev | fix(build): complete planting-calendar rains1/rains2 fields, unblock deploy
+2026-07-05 18:50 | 8312117 | Elijah dev | fix(build): add missing SeasonProblemCard component, unblock deploy
+2026-07-05 18:53 | 8349147 | Elijah dev | feat: redesign landing page + fix bottom nav obscuring content
+2026-07-05 19:31 | 7c96893 | Elijah dev | fix(build): add missing pathologist rate columns, unblock deploy
+2026-07-05 19:48 | ca37fd1 | Elijah dev | feat(deliveries): surface delivery history on dashboard + nav badges + transporter notification
+2026-07-05 19:50 | 6301216 | Elijah dev | fix(build): cast profile update to unblock deploy for real this time
+2026-07-06 00:05 | 37e05ef | Elijah dev | security: harden DB — RLS on schema_migrations, pin function search_path, drop permissive group_wallet policy, revoke anon execute on transfer_between_wallets
+2026-07-06 07:15 | eb3e495 | Elijah dev | fix: auto-login, toast notifications, bottom nav, camera/KYC upload, wallet PIN modal
+2026-07-06 07:21 | b500e1c | Elijah dev | fix(db): resolve security + performance advisor warnings
+2026-07-06 16:58 | e659bb5 | Elijah dev | fix(auth): close unauthenticated write vulnerabilities, add password reset flow
+2026-07-09 07:57 | 797f9a6 | Elijah dev | fix: escrow payments never actually released, dispute resolution didn't move money
+2026-07-09 14:21 | 7d60168 | Elijah dev | fix(escrow): close double-payout/double-refund race condition
+2026-07-14 19:55 | b2ce672 | Elijah dev | feat: require escrow payment before dispatch, gate driver jobs on verification, add human pathologist case flow

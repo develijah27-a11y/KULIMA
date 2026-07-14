@@ -91,7 +91,8 @@ export async function POST(req: Request) {
       };
     }
 
-    // Check buyer balance
+    // Check buyer balance (soft pre-check for a clean error message — the
+    // real enforcement is the atomic RPC below)
     const { data: buyerWallet } = await (db.from as any)('wallets')
       .select('id, balance').eq('user_id', user.id).single();
     if (!buyerWallet || Number(buyerWallet.balance) < totalAmount) {
@@ -100,31 +101,53 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    // Deduct buyer balance + create escrow + log transaction (atomic-ish)
-    const [walletUpdate, escrowInsert, txnInsert] = await Promise.all([
-      (db.from as any)('wallets').update({
-        balance:    Number(buyerWallet.balance) - totalAmount,
-        updated_at: new Date().toISOString(),
-      }).eq('id', buyerWallet.id),
-      (db.from as any)('escrow_accounts').insert(escrowInsertData).select('id').single(),
-      (db.from as any)('wallet_transactions').insert({
-        wallet_id:   buyerWallet.id,
-        user_id:     user.id,
-        type:        'escrow_lock',
-        amount:      totalAmount,
-        status:      'completed',
-        order_id:    orderId ?? null,
-        description: `Escrow funded for order`,
-      }),
-    ]);
+    let escrowId: string;
 
-    if (escrowInsert.error) return NextResponse.json({ error: 'Failed to create escrow' }, { status: 500 });
+    if (orderId) {
+      // Atomic: locks the buyer's wallet row, inserts the escrow row (unique
+      // on order_id), then debits — a concurrent duplicate "fund" call for
+      // the same order fails on the unique insert before any money moves,
+      // closing the double-charge race a plain read-then-write would have.
+      const { data: claimedId, error: claimErr } = await (db as any).rpc('claim_escrow_fund', {
+        p_order_id: orderId,
+        p_buyer_user_id: user.id,
+        p_seller_user_id: sellerUserId,
+        p_amount: totalAmount,
+      });
+      if (claimErr || !claimedId) {
+        const alreadyFunded = claimErr?.message?.includes('already funded');
+        return NextResponse.json({
+          error: alreadyFunded ? 'Escrow already funded for this order' : (claimErr?.message ?? 'Failed to create escrow'),
+        }, { status: alreadyFunded ? 409 : 500 });
+      }
+      escrowId = claimedId;
+    } else {
+      // Legacy offer-based escrow — backstopped by a unique index on
+      // escrow_accounts.offer_id, but not fully atomic like the order path.
+      const [walletUpdate, escrowInsert, txnInsert] = await Promise.all([
+        (db.from as any)('wallets').update({
+          balance:    Number(buyerWallet.balance) - totalAmount,
+          updated_at: new Date().toISOString(),
+        }).eq('id', buyerWallet.id),
+        (db.from as any)('escrow_accounts').insert(escrowInsertData).select('id').single(),
+        (db.from as any)('wallet_transactions').insert({
+          wallet_id:   buyerWallet.id,
+          user_id:     user.id,
+          type:        'escrow_lock',
+          amount:      totalAmount,
+          status:      'completed',
+          description: `Escrow funded for offer`,
+        }),
+      ]);
+      if (escrowInsert.error) return NextResponse.json({ error: 'Failed to create escrow' }, { status: 500 });
+      escrowId = escrowInsert.data.id;
+    }
 
     // Link escrow to order + update status to 'paid'
     if (orderId) {
       const now = new Date().toISOString();
       await (db.from as any)('orders').update({
-        escrow_id:  escrowInsert.data.id,
+        escrow_id:  escrowId,
         status:     'paid',
         paid_at:    now,
         updated_at: now,
@@ -194,7 +217,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, escrowId: escrowInsert.data.id });
+    return NextResponse.json({ success: true, escrowId });
   }
 
   // NOTE: release/refund/dispute for order-based escrow are handled by

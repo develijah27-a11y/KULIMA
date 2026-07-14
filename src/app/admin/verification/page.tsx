@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Suspense } from 'react';
 import { BADGE_CONFIG, type VerificationLevel } from '@/lib/trust';
 import { ApproveRejectButtons } from './ApproveRejectButtons';
+import { ViewDocsButton } from './ViewDocsButton';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -67,9 +68,12 @@ async function VerificationQueue({ filter }: { filter: string }) {
                 <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>Rejected: {v.rejection_reason}</p>
               )}
             </div>
-            {v.status === 'pending' && (
-              <ApproveRejectButtons verificationId={v.id} userId={v.user_id} targetLevel={v.level} />
-            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+              <ViewDocsButton verificationId={v.id} />
+              {v.status === 'pending' && (
+                <ApproveRejectButtons verificationId={v.id} userId={v.user_id} targetLevel={v.level} />
+              )}
+            </div>
           </div>
         );
       })}

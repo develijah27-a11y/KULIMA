@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 const FLW_BASE = 'https://api.flutterwave.com/v3';
 
@@ -7,6 +7,13 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // wallets and mobile_money_requests only grant write access to
+  // service_role — the user's own request can still create/see its own
+  // rows, but every write here goes through the service-role client so a
+  // client can never tamper with a pending deposit's amount before the
+  // webhook confirms it.
+  const admin = createServiceRoleClient();
 
   const { amount, phone, provider } = await req.json();
 
@@ -25,16 +32,15 @@ export async function POST(req: Request) {
     }
 
     // Directly credit the wallet — for dev/testing only
-    const { data: wallet, error: wErr } = await (supabase.from as any)('wallets')
+    const { data: wallet, error: wErr } = await (admin.from as any)('wallets')
       .select('id, balance')
       .eq('user_id', user.id)
       .single();
 
     if (wErr || !wallet) return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
 
-    const newBalance = Number(wallet.balance) + Number(amount);
-    await (supabase.from as any)('wallets').update({ balance: newBalance, updated_at: new Date().toISOString() }).eq('id', wallet.id);
-    await (supabase.from as any)('wallet_transactions').insert({
+    await (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: Number(amount) });
+    await (admin.from as any)('wallet_transactions').insert({
       wallet_id:   wallet.id,
       user_id:     user.id,
       type:        'deposit',
@@ -48,7 +54,7 @@ export async function POST(req: Request) {
   const txRef = `kulima-dep-${user.id.slice(0, 8)}-${Date.now()}`;
 
   // Create mobile_money_request record first
-  const { data: momoReq, error: momoErr } = await (supabase.from as any)('mobile_money_requests').insert({
+  const { data: momoReq, error: momoErr } = await (admin.from as any)('mobile_money_requests').insert({
     user_id: user.id,
     type: 'deposit',
     amount,
@@ -84,7 +90,7 @@ export async function POST(req: Request) {
 
     if (flwData.status !== 'success' && flwData.data?.status !== 'pending') {
       // Mark as failed
-      await (supabase.from as any)('mobile_money_requests').update({
+      await (admin.from as any)('mobile_money_requests').update({
         status: 'failed',
         failure_reason: flwData.message ?? 'Flutterwave charge failed',
       }).eq('id', momoReq.id);
@@ -94,7 +100,7 @@ export async function POST(req: Request) {
 
     // Update with flutterwave's transaction id if returned
     if (flwData.data?.id) {
-      await (supabase.from as any)('mobile_money_requests').update({
+      await (admin.from as any)('mobile_money_requests').update({
         status: 'processing',
         flutterwave_ref: String(flwData.data.id),
       }).eq('id', momoReq.id);
@@ -102,7 +108,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, message: 'Payment prompt sent' });
   } catch (err) {
-    await (supabase.from as any)('mobile_money_requests').update({
+    await (admin.from as any)('mobile_money_requests').update({
       status: 'failed',
       failure_reason: 'Network error contacting payment provider',
     }).eq('id', momoReq.id);

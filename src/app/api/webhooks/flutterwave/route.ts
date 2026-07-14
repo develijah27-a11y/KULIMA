@@ -28,38 +28,24 @@ export async function POST(req: Request) {
 
     if (!momoReq || momoReq.status === 'completed') return NextResponse.json({ received: true });
 
-    const { data: wallet } = await (admin.from as any)('wallets')
-      .select('id, balance')
-      .eq('user_id', momoReq.user_id)
-      .single();
+    // Credit the amount Flutterwave actually reports as charged, not the
+    // amount the client originally requested — the request row is user-
+    // writable in principle, so trusting it would let a small real payment
+    // be inflated into a large wallet credit.
+    const amount = Number(data.amount ?? momoReq.amount);
 
-    if (!wallet) return NextResponse.json({ received: true });
-
-    const amount = Number(momoReq.amount);
-
-    await Promise.all([
-      // Credit wallet
-      (admin.from as any)('wallets').update({
-        balance: Number(wallet.balance) + amount,
-        updated_at: new Date().toISOString(),
-      }).eq('id', wallet.id),
-      // Log transaction
-      (admin.from as any)('wallet_transactions').insert({
-        wallet_id: wallet.id,
-        user_id: momoReq.user_id,
-        type: 'deposit',
-        amount,
-        status: 'completed',
-        reference: txRef,
-        description: `Mobile money deposit via ${data.payment_type ?? 'MoMo'}`,
-        metadata: { flw_tx_id: data.id, flw_ref: data.flw_ref },
-      }),
-      // Mark momo request complete
-      (admin.from as any)('mobile_money_requests').update({
-        status: 'completed',
-        updated_at: new Date().toISOString(),
-      }).eq('id', momoReq.id),
-    ]);
+    // Atomic claim: UPDATE ... WHERE status <> 'completed' takes a row lock,
+    // so a retried/duplicated webhook delivery for the same request loses
+    // the race and credits nothing the second time.
+    const { data: claimed } = await (admin as any).rpc('claim_deposit', {
+      p_request_id: momoReq.id,
+      p_wallet_user_id: momoReq.user_id,
+      p_amount: amount,
+      p_reference: txRef,
+      p_description: `Mobile money deposit via ${data.payment_type ?? 'MoMo'}`,
+      p_metadata: { flw_tx_id: data.id, flw_ref: data.flw_ref },
+    });
+    if (!claimed) return NextResponse.json({ received: true });
   }
 
   if (event === 'transfer.completed') {
