@@ -74,12 +74,14 @@ export async function POST(req: Request) {
   const body = await req.json();
   const entries = Array.isArray(body) ? body : [body];
 
+  const ALLOWED_SOURCES = ['admin', 'ratin', 'maaif', 'farmgain', 'produce-market'];
+
   const rows = entries.map((e: any) => ({
     crop_type:    e.crop_type,
     price_per_kg: e.price_per_kg,
     market_name:  e.market_name ?? `${e.district ?? 'Unknown'} Market`,
     district:     e.district ?? null,
-    source:       'admin',
+    source:       ALLOWED_SOURCES.includes(e.source) ? e.source : 'admin',
     recorded_at:  new Date().toISOString(),
   })).filter((r: any) => r.crop_type && r.price_per_kg > 0);
 

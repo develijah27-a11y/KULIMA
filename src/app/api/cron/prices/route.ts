@@ -143,6 +143,44 @@ async function fetchFromWorldBank(
   }
 }
 
+// ── AgriNova's own farmers (real transacted prices) ────────────────────────
+// The most locally-relevant price signal isn't a bulletin or a world-market
+// quote — it's what buyers on this platform actually paid Ugandan farmers
+// this week. Aggregates completed orders (real money changed hands, not
+// just an asking price) grouped by crop + pickup district.
+async function insertOwnFarmerPrices(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const since = new Date(Date.now() - 7 * 86400000).toISOString();
+  const { data: orders } = await (supabase.from as any)('orders')
+    .select('crop_type, unit_price, pickup_district')
+    .eq('status', 'completed')
+    .gte('completed_at', since)
+    .not('unit_price', 'is', null);
+
+  const groups: Record<string, number[]> = {};
+  for (const o of (orders ?? [])) {
+    if (!o.crop_type || !(o.unit_price > 0)) continue;
+    const key = `${o.crop_type}__${o.pickup_district ?? 'National'}`;
+    (groups[key] ??= []).push(Number(o.unit_price));
+  }
+
+  const rows = Object.entries(groups).map(([key, prices]) => {
+    const [crop_type, district] = key.split('__');
+    const avg = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+    return {
+      crop_type,
+      price_per_kg: avg,
+      market_name: 'AgriNova Farmers (Actual Sales)',
+      district: district === 'National' ? null : district,
+      source: 'agrinova-farmers',
+      recorded_at: new Date().toISOString(),
+    };
+  });
+
+  if (rows.length === 0) return { inserted: 0 };
+  const { error } = await (supabase.from as any)('market_prices').insert(rows);
+  return error ? { inserted: 0, error: error.message } : { inserted: rows.length };
+}
+
 // ── Main cron handler ─────────────────────────────────────────────────────
 
 export async function GET(req: Request) {
@@ -199,6 +237,10 @@ export async function GET(req: Request) {
       errors.push(`${spec.crop}: ${err?.message ?? 'unknown error'}`);
     }
   }
+
+  const ownFarmers = await insertOwnFarmerPrices(supabase);
+  if (ownFarmers.inserted > 0) inserted.push(`agrinova-farmers: ${ownFarmers.inserted} crop/district pairs`);
+  if (ownFarmers.error) errors.push(`agrinova-farmers: ${ownFarmers.error}`);
 
   return NextResponse.json({
     success: true,

@@ -8,6 +8,14 @@ const CROPS = [
   'sweet_potatoes', 'banana', 'coffee', 'tomato', 'sunflower',
 ];
 
+const SOURCES = [
+  { value: 'admin',          label: 'Manual / Other' },
+  { value: 'ratin',          label: 'RATIN' },
+  { value: 'maaif',          label: 'MAAIF' },
+  { value: 'farmgain',       label: 'Farmgain' },
+  { value: 'produce-market', label: 'Produce Market Survey' },
+];
+
 interface Props {
   districts: string[];
 }
@@ -17,9 +25,10 @@ interface Entry {
   price_per_kg: string;
   district: string;
   market_name: string;
+  source: string;
 }
 
-const emptyEntry = (): Entry => ({ crop_type: 'maize', price_per_kg: '', district: 'Kampala', market_name: '' });
+const emptyEntry = (): Entry => ({ crop_type: 'maize', price_per_kg: '', district: 'Kampala', market_name: '', source: 'admin' });
 
 export function PriceEditor({ districts }: Props) {
   const [entries, setEntries] = useState<Entry[]>([emptyEntry()]);
@@ -47,6 +56,7 @@ export function PriceEditor({ districts }: Props) {
       price_per_kg: parseFloat(en.price_per_kg),
       district: en.district,
       market_name: en.market_name || `${en.district} Market`,
+      source: en.source,
     })).filter((en) => en.price_per_kg > 0);
 
     if (payload.length === 0) {
@@ -95,11 +105,11 @@ export function PriceEditor({ districts }: Props) {
         {/* Column headers */}
         <div
           style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 40px',
+            display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 0.9fr 1fr 40px',
             gap: '8px', marginBottom: '8px',
           }}
         >
-          {['Crop', 'District', 'Market Name', 'Price UGX/kg', ''].map((h) => (
+          {['Crop', 'District', 'Market Name', 'Price UGX/kg', 'Source', ''].map((h) => (
             <p key={h} style={{ fontSize: '11px', fontWeight: 700, color: 'var(--d-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {h}
             </p>
@@ -111,7 +121,7 @@ export function PriceEditor({ districts }: Props) {
             <div
               key={i}
               style={{
-                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 40px',
+                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 0.9fr 1fr 40px',
                 gap: '8px', alignItems: 'center',
               }}
             >
@@ -140,6 +150,11 @@ export function PriceEditor({ districts }: Props) {
                 required
                 style={inputStyle}
               />
+              <select value={entry.source} onChange={(e) => updateEntry(i, 'source', e.target.value)} style={inputStyle}>
+                {SOURCES.map((s) => (
+                  <option key={s.value} value={s.value}>{s.label}</option>
+                ))}
+              </select>
               <button
                 type="button"
                 onClick={() => removeRow(i)}
