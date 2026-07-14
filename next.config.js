@@ -45,6 +45,27 @@ const nextConfig = {
     ],
   },
   async headers() {
+    // script-src needs 'unsafe-inline' for the theme-init script in
+    // src/app/layout.tsx (a small static string, not user input — the audit
+    // found no actual injection vector, so this is defense-in-depth for
+    // resource loading, not a claim that inline scripts are individually
+    // trusted). Origins here are every external host the app actually
+    // references: Supabase (API + Realtime websocket), Google Fonts,
+    // OpenWeatherMap, and the Unsplash image hosts already allow-listed in
+    // next.config.js's images.remotePatterns.
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openweathermap.org",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ].join('; ');
+
     const securityHeaders = [
       { key: 'X-DNS-Prefetch-Control',   value: 'on' },
       { key: 'X-Content-Type-Options',   value: 'nosniff' },
@@ -52,6 +73,7 @@ const nextConfig = {
       { key: 'Referrer-Policy',          value: 'strict-origin-when-cross-origin' },
       // Restrict powerful browser APIs — geolocation is self-origin only (used by weather)
       { key: 'Permissions-Policy',       value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()' },
+      { key: 'Content-Security-Policy',  value: csp },
     ];
     // HSTS: tell browsers to always use HTTPS for 2 years (production only)
     if (!isDev) {

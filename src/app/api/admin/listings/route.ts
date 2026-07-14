@@ -33,6 +33,9 @@ export async function GET(req: Request) {
     .order('created_at', { ascending: false })
     .limit(100);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/admin/listings]', error);
+    return NextResponse.json({ error: 'Failed to load listings. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ data: data ?? [] });
 }

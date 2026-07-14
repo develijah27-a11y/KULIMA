@@ -27,6 +27,9 @@ export async function POST(req: Request) {
     sent_at:   new Date().toISOString(),
   });
 
-  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/notifications/send]', error);
+    return NextResponse.json({ success: false, error: 'Failed to send notification. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

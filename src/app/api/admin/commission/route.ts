@@ -34,7 +34,8 @@ export async function GET() {
     .single();
 
   if (dbErr && dbErr.code !== 'PGRST116') {
-    return NextResponse.json({ error: dbErr.message }, { status: 500 });
+    console.error('[/api/admin/commission GET]', dbErr);
+    return NextResponse.json({ error: 'Failed to load commission settings.' }, { status: 500 });
   }
 
   let platformWallet: { balance: number; account_number: string; owner_name: string | null } | null = null;
@@ -102,7 +103,10 @@ export async function PUT(req: Request) {
     updated_at: new Date().toISOString(),
   }).select().single();
 
-  if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
+  if (insertErr) {
+    console.error('[/api/admin/commission PUT]', insertErr);
+    return NextResponse.json({ error: 'Failed to save commission settings. Please try again.' }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true, data });
 }

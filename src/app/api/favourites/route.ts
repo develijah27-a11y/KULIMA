@@ -17,7 +17,10 @@ export async function GET() {
     .eq('buyer_id', user.id)
     .order('created_at', { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/favourites]', error);
+    return NextResponse.json({ error: 'Failed to load favourites. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ data: data ?? [] });
 }
 
@@ -38,7 +41,8 @@ export async function POST(req: Request) {
     if (error.code === '23505') {
       return NextResponse.json({ error: 'Already in favourites' }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[/api/favourites]', error);
+    return NextResponse.json({ error: 'Failed to add favourite. Please try again.' }, { status: 500 });
   }
   return NextResponse.json({ success: true, data }, { status: 201 });
 }
@@ -57,6 +61,9 @@ export async function DELETE(req: Request) {
     .eq('buyer_id', user.id)
     .eq('farmer_id', farmerId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/favourites]', error);
+    return NextResponse.json({ error: 'Failed to remove favourite. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

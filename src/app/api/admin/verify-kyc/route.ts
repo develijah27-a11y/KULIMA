@@ -17,6 +17,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
   }
 
+  const VALID_LEVELS = ['green', 'blue', 'gold'];
+  const VALID_ACTIONS = ['approve', 'reject'];
+  if (!VALID_LEVELS.includes(targetLevel)) {
+    return NextResponse.json({ error: 'Invalid targetLevel' }, { status: 400 });
+  }
+  if (!VALID_ACTIONS.includes(action)) {
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  }
+
   // Update verification record
   const { error: vErr } = await (supabase.from as any)('verifications')
     .update({
@@ -27,14 +36,20 @@ export async function POST(req: NextRequest) {
     })
     .eq('id', verificationId);
 
-  if (vErr) return NextResponse.json({ error: vErr.message }, { status: 500 });
+  if (vErr) {
+    console.error('[/api/admin/verify-kyc]', vErr);
+    return NextResponse.json({ error: 'Failed to update the verification record.' }, { status: 500 });
+  }
 
   // On approve: upgrade the profile's verification level
   if (action === 'approve') {
     const { error: pErr } = await (supabase.from as any)('profiles')
       .update({ verification_level: targetLevel })
       .eq('user_id', userId);
-    if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
+    if (pErr) {
+      console.error('[/api/admin/verify-kyc]', pErr);
+      return NextResponse.json({ error: 'Failed to update the profile verification level.' }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ success: true });

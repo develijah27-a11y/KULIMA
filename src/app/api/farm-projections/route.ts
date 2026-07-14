@@ -17,7 +17,10 @@ export async function GET(req: Request) {
   if (season) q = q.eq('season', season);
 
   const { data, error } = await q.limit(100);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-projections]', error);
+    return NextResponse.json({ error: 'Failed to load projections.' }, { status: 500 });
+  }
   return NextResponse.json(
     { projections: data ?? [] },
     { headers: { 'Cache-Control': 'private, max-age=120, stale-while-revalidate=300' } },
@@ -60,7 +63,10 @@ export async function POST(req: Request) {
     break_even_price_per_kg: break_even_price_per_kg ? Number(break_even_price_per_kg) : null,
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-projections]', error);
+    return NextResponse.json({ error: 'Failed to save the projection.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, projection: data });
 }
 
@@ -76,6 +82,9 @@ export async function DELETE(req: Request) {
   const { error } = await (supabase.from as any)('farm_projections')
     .delete().eq('id', id).eq('user_id', user.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-projections]', error);
+    return NextResponse.json({ error: 'Failed to delete the projection.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

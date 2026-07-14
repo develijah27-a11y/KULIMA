@@ -59,7 +59,10 @@ export async function POST(req: Request, { params }: Params) {
     updated_at:      now.toISOString(),
   }).eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/supplier-products/[id]/flash]', error);
+    return NextResponse.json({ error: 'Failed to start flash deal. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, flash_price_ugx: flashPrice, flash_ends_at: endsAt.toISOString() }, { status: 201 });
 }
 
@@ -80,6 +83,9 @@ export async function DELETE(_req: Request, { params }: Params) {
     updated_at:      new Date().toISOString(),
   }).eq('id', id).eq('supplier_id', profileId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/supplier-products/[id]/flash]', error);
+    return NextResponse.json({ error: 'Failed to end flash deal. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

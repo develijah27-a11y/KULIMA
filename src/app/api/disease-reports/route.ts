@@ -29,7 +29,10 @@ export async function POST(req: Request) {
     reported_at: new Date().toISOString(),
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/disease-reports]', error);
+    return NextResponse.json({ error: 'Failed to submit disease report. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ data }, { status: 201 });
 }
 
@@ -52,7 +55,10 @@ export async function GET(req: Request) {
   if (mine)    q = q.eq('pathologist_id', (await supabase.from('profiles').select('id').eq('user_id', user.id).single()).data?.id);
 
   const { data, error } = await q.limit(100);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/disease-reports]', error);
+    return NextResponse.json({ error: 'Failed to load disease reports. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ data: data ?? [] });
 }
 
@@ -93,7 +99,10 @@ export async function PATCH(req: Request) {
 
   const { data, error } = await query.select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/disease-reports]', error);
+    return NextResponse.json({ error: 'Failed to update disease report. Please try again.' }, { status: 500 });
+  }
   if (!data) return NextResponse.json({ error: 'Report not found, already claimed, or not assigned to you' }, { status: 404 });
 
   if (action === 'diagnose' || action === 'close') {

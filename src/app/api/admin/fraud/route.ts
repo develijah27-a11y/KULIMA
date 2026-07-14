@@ -26,6 +26,9 @@ export async function PATCH(req: Request) {
     updated_at: new Date().toISOString(),
   }).eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/admin/fraud]', error);
+    return NextResponse.json({ error: 'Failed to update fraud flag status.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, status: nextStatus });
 }

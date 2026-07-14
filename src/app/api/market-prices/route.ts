@@ -86,6 +86,9 @@ export async function POST(req: Request) {
   if (rows.length === 0) return NextResponse.json({ error: 'No valid entries' }, { status: 400 });
 
   const { error } = await (supabase.from as any)('market_prices').insert(rows);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/market-prices]', error);
+    return NextResponse.json({ error: 'Failed to save market price entries.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, inserted: rows.length });
 }

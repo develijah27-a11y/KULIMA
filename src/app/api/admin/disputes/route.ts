@@ -63,6 +63,9 @@ export async function PATCH(req: Request) {
     ...(transition.extraFields ?? {}),
   }).eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/admin/disputes]', error);
+    return NextResponse.json({ error: 'Failed to update dispute. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, status: transition.status });
 }

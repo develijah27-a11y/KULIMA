@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { rateLimit } from '@/lib/rate-limit';
 
 const FLW_BASE = 'https://api.flutterwave.com/v3';
 
@@ -11,6 +12,10 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (!(await rateLimit(`withdraw:${user.id}`, 5, 60))) {
+    return NextResponse.json({ error: 'Too many withdrawal attempts. Please wait a minute and try again.' }, { status: 429 });
+  }
 
   const { amount, phone, provider } = await req.json();
 

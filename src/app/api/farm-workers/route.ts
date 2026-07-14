@@ -19,7 +19,10 @@ export async function GET(req: Request) {
   if (activeOnly) q = q.eq('is_active', true);
 
   const { data, error } = await q.limit(100);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-workers]', error);
+    return NextResponse.json({ error: 'Failed to load farm workers.' }, { status: 500 });
+  }
   return NextResponse.json(
     { workers: data ?? [] },
     { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } },
@@ -51,7 +54,10 @@ export async function POST(req: Request) {
     notes:       notes?.trim() || null,
   }).select('*, farms(name)').single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-workers]', error);
+    return NextResponse.json({ error: 'Failed to add the worker.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, worker: data });
 }
 
@@ -78,7 +84,10 @@ export async function PATCH(req: Request) {
     .select('*, farms(name)')
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-workers]', error);
+    return NextResponse.json({ error: 'Failed to update the worker.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, worker: data });
 }
 
@@ -96,6 +105,9 @@ export async function DELETE(req: Request) {
     .eq('id', id)
     .eq('owner_id', user.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-workers]', error);
+    return NextResponse.json({ error: 'Failed to remove the worker.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

@@ -25,7 +25,10 @@ export async function GET(req: Request) {
   if (type)     query = query.eq('delivery_type', type);
 
   const { data, error } = await query.limit(60);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/deliveries GET]', error);
+    return NextResponse.json({ error: 'Failed to load deliveries. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ data, deliveries: data });
 }
 
@@ -76,7 +79,10 @@ export async function POST(req: Request) {
     payment_status:   'pending',
   }).select('id').single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/deliveries POST]', error);
+    return NextResponse.json({ error: 'Failed to create delivery request. Please try again.' }, { status: 500 });
+  }
 
   const deliveryId = data.id;
 
@@ -147,7 +153,10 @@ export async function PATCH(req: Request) {
       .eq('id', id)
       .eq('transporter_id', user.id)
       .eq('status', 'assigned');
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[/api/deliveries PATCH start_transit]', error);
+      return NextResponse.json({ error: 'Failed to start transit. Please try again.' }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   }
 
@@ -158,7 +167,10 @@ export async function PATCH(req: Request) {
       .eq('id', id)
       .eq('transporter_id', user.id)
       .eq('status', 'in_transit');
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[/api/deliveries PATCH complete]', error);
+      return NextResponse.json({ error: 'Failed to complete delivery. Please try again.' }, { status: 500 });
+    }
 
     // Notify the requester that their goods have arrived
     try {
@@ -192,7 +204,10 @@ export async function PATCH(req: Request) {
       .eq('id', id)
       .eq('requester_id', user.id)
       .not('status', 'in', '("in_transit","delivered")');
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[/api/deliveries PATCH cancel]', error);
+      return NextResponse.json({ error: 'Failed to cancel delivery. Please try again.' }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   }
 

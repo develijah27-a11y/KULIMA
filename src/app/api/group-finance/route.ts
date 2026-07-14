@@ -12,7 +12,10 @@ export async function GET(req: Request) {
     .order('created_at', { ascending: false })
     .limit(100);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/group-finance]', error);
+    return NextResponse.json({ error: 'Failed to load group finance records.' }, { status: 500 });
+  }
   return NextResponse.json(
     { records: data ?? [] },
     { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } },
@@ -43,6 +46,9 @@ export async function POST(req: Request) {
     created_at:  new Date().toISOString(),
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/group-finance]', error);
+    return NextResponse.json({ error: 'Failed to save the transaction.' }, { status: 500 });
+  }
   return NextResponse.json({ record: data }, { status: 201 });
 }

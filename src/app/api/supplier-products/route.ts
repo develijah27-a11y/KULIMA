@@ -21,7 +21,10 @@ export async function GET() {
     .order('created_at', { ascending: false })
     .limit(200);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/supplier-products GET]', error);
+    return NextResponse.json({ error: 'Failed to load products. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json(
     { data: data ?? [] },
     { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } },
@@ -60,7 +63,10 @@ export async function POST(req: Request) {
     is_available: true,
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/supplier-products POST]', error);
+    return NextResponse.json({ error: 'Failed to create product. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ data }, { status: 201 });
 }
 
@@ -87,7 +93,10 @@ export async function PATCH(req: Request) {
     .eq('id', id)
     .eq('supplier_id', profile.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/supplier-products PATCH]', error);
+    return NextResponse.json({ error: 'Failed to update product. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }
 
@@ -108,6 +117,9 @@ export async function DELETE(req: Request) {
     .eq('id', id)
     .eq('supplier_id', profile.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/supplier-products DELETE]', error);
+    return NextResponse.json({ error: 'Failed to delete product. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

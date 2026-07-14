@@ -15,7 +15,10 @@ export async function GET(_req: Request, { params }: Ctx) {
     .eq('group_id', groupId)
     .order('joined_at', { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/groups/[id]/members]', error);
+    return NextResponse.json({ error: 'Failed to load group members. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ members: data ?? [] });
 }
 
@@ -86,7 +89,8 @@ export async function POST(req: Request, { params }: Ctx) {
 
   if (error) {
     if (error.code === '23505') return NextResponse.json({ error: `${found.full_name} is already in this group.` }, { status: 409 });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[/api/groups/[id]/members]', error);
+    return NextResponse.json({ error: 'Failed to add group member. Please try again.' }, { status: 500 });
   }
 
   // Notify the added member
@@ -131,7 +135,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
     .eq('id', memberId)
     .eq('group_id', groupId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/groups/[id]/members]', error);
+    return NextResponse.json({ error: 'Failed to update member role. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }
 
@@ -161,6 +168,9 @@ export async function DELETE(req: Request, { params }: Ctx) {
     .eq('group_id', groupId)
     .neq('role', 'leader'); // can't remove self as leader
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/groups/[id]/members]', error);
+    return NextResponse.json({ error: 'Failed to remove group member. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

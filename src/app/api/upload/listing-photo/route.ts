@@ -37,7 +37,10 @@ export async function POST(req: Request) {
     .from('listing-images')
     .upload(path, buffer, { contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`, upsert: false });
 
-  if (uploadError) return NextResponse.json({ error: uploadError.message }, { status: 500 });
+  if (uploadError) {
+    console.error('[/api/upload/listing-photo]', uploadError);
+    return NextResponse.json({ error: 'Failed to upload image. Please try again.' }, { status: 500 });
+  }
 
   const { data: pub } = admin.storage.from('listing-images').getPublicUrl(path);
   return NextResponse.json({ success: true, url: pub.publicUrl });

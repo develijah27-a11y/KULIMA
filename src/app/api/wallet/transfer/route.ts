@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (!(await rateLimit(`transfer:${user.id}`, 10, 60))) {
+    return NextResponse.json({ error: 'Too many transfer attempts. Please wait a minute and try again.' }, { status: 429 });
+  }
 
   const { accountNumber, amount, note } = await req.json();
 

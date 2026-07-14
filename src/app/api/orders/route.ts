@@ -26,7 +26,10 @@ export async function GET(req: Request) {
       .order('created_at', { ascending: false })
       .limit(100);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[/api/orders]', error);
+      return NextResponse.json({ error: 'Failed to load orders. Please try again.' }, { status: 500 });
+    }
     return NextResponse.json({ data: data ?? [] });
   }
 
@@ -44,7 +47,10 @@ export async function GET(req: Request) {
     .order('created_at', { ascending: false })
     .limit(100);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/orders]', error);
+    return NextResponse.json({ error: 'Failed to load orders. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ data: data ?? [] });
 }
 
@@ -116,7 +122,10 @@ export async function POST(req: Request) {
       dropoff_district:  (buyerProfile as any)?.location ?? null,
     }).select().single();
 
-    if (orderErr) return NextResponse.json({ error: orderErr.message }, { status: 500 });
+    if (orderErr) {
+      console.error('[/api/orders]', orderErr);
+      return NextResponse.json({ error: 'Failed to create order. Please try again.' }, { status: 500 });
+    }
 
     // Notify group admin
     if (adminProfile) {
@@ -180,7 +189,10 @@ export async function POST(req: Request) {
     dropoff_district:   (buyerProfile as any)?.location ?? null,
   }).select().single();
 
-  if (orderErr) return NextResponse.json({ error: orderErr.message }, { status: 500 });
+  if (orderErr) {
+    console.error('[/api/orders]', orderErr);
+    return NextResponse.json({ error: 'Failed to create order. Please try again.' }, { status: 500 });
+  }
 
   // Notify farmer
   const { data: farmerProfile } = await supabase

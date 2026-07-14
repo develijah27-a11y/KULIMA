@@ -59,6 +59,9 @@ export async function PATCH(req: Request) {
     .eq('id', id)
     .eq('supplier_id', profile.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/supplier-orders]', error);
+    return NextResponse.json({ error: 'Failed to update order status. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

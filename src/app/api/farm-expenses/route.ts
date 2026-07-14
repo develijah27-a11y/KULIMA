@@ -19,7 +19,10 @@ export async function GET(req: Request) {
   if (cropType) q = q.eq('crop_type', cropType);
 
   const { data, error } = await q.limit(1000);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-expenses]', error);
+    return NextResponse.json({ error: 'Failed to load expenses.' }, { status: 500 });
+  }
 
   // Aggregate summary
   const expenses = (data ?? []) as any[];
@@ -61,7 +64,10 @@ export async function POST(req: Request) {
     farm_id: farm_id || null,
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-expenses]', error);
+    return NextResponse.json({ error: 'Failed to save the expense.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, expense: data });
 }
 
@@ -77,6 +83,9 @@ export async function DELETE(req: Request) {
   const { error } = await (supabase.from as any)('farm_expenses')
     .delete().eq('id', id).eq('user_id', user.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/farm-expenses]', error);
+    return NextResponse.json({ error: 'Failed to delete the expense.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

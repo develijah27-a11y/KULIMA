@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Requester pays for the delivery after goods arrive.
 // Flow: deduct from requester wallet → pay driver their earnings (fare minus 10% commission) →
@@ -9,6 +10,10 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (!(await rateLimit(`delivery-pay:${user.id}`, 10, 60))) {
+    return NextResponse.json({ error: 'Too many requests. Please wait a minute and try again.' }, { status: 429 });
+  }
 
   const { delivery_id } = await req.json();
   if (!delivery_id) return NextResponse.json({ error: 'delivery_id required' }, { status: 400 });
@@ -60,60 +65,31 @@ export async function POST(req: Request) {
 
   const now = new Date().toISOString();
 
-  // Atomic payment:
-  // 1. Deduct total fare from requester
-  // 2. Add driver earnings to driver wallet (fare minus commission)
-  // 3. Mark delivery payment_status = paid
-  // 4. Free the driver's vehicle
-  // 5. Log both wallet transactions
+  // Atomic claim: claims payment_status = 'paid' (row lock, no double-pay on
+  // a duplicate/concurrent request) and moves the money in the same
+  // transaction — closes the race the old read-then-write Promise.all had.
+  const { data: paid, error: payErr } = await (admin as any).rpc('claim_delivery_payment', {
+    p_delivery_id: delivery_id,
+    p_requester_user_id: user.id,
+    p_driver_user_id: delivery.transporter_id,
+    p_total_fare: totalFare,
+    p_driver_earnings: driverEarnings,
+    p_commission_amount: 0,
+    p_platform_wallet_user_id: null,
+  });
+  if (payErr) {
+    console.error('[deliveries/pay]', payErr);
+    return NextResponse.json({ error: payErr.message?.includes('Insufficient') ? payErr.message : 'Payment failed. Please try again.' }, { status: 400 });
+  }
+  if (!paid) {
+    return NextResponse.json({ error: 'Already paid' }, { status: 409 });
+  }
+
   await Promise.all([
-    (admin.from as any)('wallets').update({
-      balance:    Number(requesterWallet.balance) - totalFare,
-      updated_at: now,
-    }).eq('id', requesterWallet.id),
-
-    (admin.from as any)('wallets').update({
-      balance:    Number(driverWallet.balance) + driverEarnings,
-      updated_at: now,
-    }).eq('id', driverWallet.id),
-
-    (admin.from as any)('delivery_requests').update({
-      payment_status: 'paid',
-      updated_at:     now,
-    }).eq('id', delivery_id),
-
     (admin.from as any)('vehicles').update({
       is_available: true,
       updated_at:   now,
     }).eq('user_id', delivery.transporter_id),
-
-    (admin.from as any)('wallet_transactions').insert({
-      wallet_id:   requesterWallet.id,
-      user_id:     user.id,
-      type:        'transfer_out',
-      amount:      totalFare,
-      status:      'completed',
-      description: `Delivery payment: ${delivery.pickup_district} → ${delivery.dropoff_district}`,
-      metadata: {
-        delivery_id,
-        driver_earnings: driverEarnings,
-        commission:      commissionAmt,
-      },
-    }),
-
-    (admin.from as any)('wallet_transactions').insert({
-      wallet_id:   driverWallet.id,
-      user_id:     delivery.transporter_id,
-      type:        'transfer_in',
-      amount:      driverEarnings,
-      status:      'completed',
-      description: `Delivery earnings (90% after commission): ${delivery.pickup_district} → ${delivery.dropoff_district}`,
-      metadata: {
-        delivery_id,
-        total_fare:  totalFare,
-        commission:  commissionAmt,
-      },
-    }),
   ]);
 
   // Notify the driver of payment

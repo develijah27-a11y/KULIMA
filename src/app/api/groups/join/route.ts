@@ -66,7 +66,8 @@ export async function POST(req: Request) {
 
   if (error) {
     if (error.code === '23505') return NextResponse.json({ error: 'Already a member' }, { status: 409 });
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[/api/groups/join]', error);
+    return NextResponse.json({ error: 'Failed to join group. Please try again.' }, { status: 500 });
   }
 
   // Notify the group leader that someone joined

@@ -36,7 +36,10 @@ export async function PATCH(req: Request) {
 
   const { error } = await (supabase.from as any)('profiles').update(update).eq('user_id', user.id);
 
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/profile]', error);
+    return NextResponse.json({ ok: false, error: 'Failed to update profile. Please try again.' }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

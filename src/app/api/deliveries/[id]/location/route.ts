@@ -27,7 +27,10 @@ export async function POST(req: Request, { params }: Ctx) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'delivery_request_id,user_id' });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/deliveries/[id]/location POST]', error);
+    return NextResponse.json({ error: 'Failed to update location. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }
 

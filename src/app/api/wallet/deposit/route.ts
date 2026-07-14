@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 const FLW_BASE = 'https://api.flutterwave.com/v3';
 
@@ -7,6 +8,10 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (!(await rateLimit(`deposit:${user.id}`, 5, 60))) {
+    return NextResponse.json({ error: 'Too many deposit attempts. Please wait a minute and try again.' }, { status: 429 });
+  }
 
   // wallets and mobile_money_requests only grant write access to
   // service_role — the user's own request can still create/see its own

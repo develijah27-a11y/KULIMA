@@ -21,7 +21,10 @@ export async function POST(req: Request) {
     is_active:   true,
   }).select().single();
 
-  if (gErr) return NextResponse.json({ error: gErr.message }, { status: 500 });
+  if (gErr) {
+    console.error('[/api/groups]', gErr);
+    return NextResponse.json({ error: 'Failed to create group. Please try again.' }, { status: 500 });
+  }
 
   // Auto-add creator as leader member
   await (supabase.from as any)('farmer_group_members').insert({

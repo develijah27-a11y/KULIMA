@@ -36,7 +36,10 @@ export async function POST(req: Request) {
   }
 
   const { data: profiles, error: profileErr } = await profileQuery;
-  if (profileErr) return NextResponse.json({ error: profileErr.message }, { status: 500 });
+  if (profileErr) {
+    console.error('[/api/admin/alert]', profileErr);
+    return NextResponse.json({ error: 'Failed to load target profiles. Please try again.' }, { status: 500 });
+  }
 
   const targetProfiles: any[] = profiles ?? [];
   if (targetProfiles.length === 0) {
@@ -59,7 +62,10 @@ export async function POST(req: Request) {
     }));
 
     const { error } = await (adminClient.from as any)('notifications').insert(rows);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[/api/admin/alert]', error);
+      return NextResponse.json({ error: 'Failed to send alert notifications. Please try again.' }, { status: 500 });
+    }
     totalSent += chunk.length;
   }
 

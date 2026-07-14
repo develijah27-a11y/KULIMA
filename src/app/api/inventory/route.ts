@@ -75,7 +75,10 @@ export async function POST(req: Request) {
     notes: notes?.trim() || null,
   }).select('*').single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/inventory]', error);
+    return NextResponse.json({ error: 'Failed to add the inventory item.' }, { status: 500 });
+  }
   return NextResponse.json({ item: data });
 }
 
@@ -105,7 +108,10 @@ export async function PATCH(req: Request) {
     .eq('id', id)
     .eq('farmer_id', profile.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/inventory]', error);
+    return NextResponse.json({ error: 'Failed to update the inventory item.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }
 
@@ -126,6 +132,9 @@ export async function DELETE(req: Request) {
     .eq('id', id)
     .eq('farmer_id', profile.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/inventory]', error);
+    return NextResponse.json({ error: 'Failed to delete the inventory item.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

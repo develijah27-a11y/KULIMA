@@ -19,7 +19,10 @@ export async function POST(req: Request) {
     .eq('status', 'countered')
     .maybeSingle();
 
-  if (offerErr) return NextResponse.json({ success: false, error: offerErr.message }, { status: 500 });
+  if (offerErr) {
+    console.error('[/api/offers/accept-counter]', offerErr);
+    return NextResponse.json({ success: false, error: 'Failed to look up the counter-offer.' }, { status: 500 });
+  }
   if (!offer) return NextResponse.json({ success: false, error: 'No pending counter-offer found on this listing' }, { status: 404 });
 
   // Accept this offer, reject others, mark listing sold

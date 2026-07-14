@@ -79,7 +79,10 @@ export async function POST(req: Request) {
     status:             'pending',
   }).select().single();
 
-  if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
+  if (insertErr) {
+    console.error('[/api/supplier-orders/returns]', insertErr);
+    return NextResponse.json({ error: 'Failed to submit return request. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, data: ret }, { status: 201 });
 }
 
@@ -109,6 +112,9 @@ export async function PATCH(req: Request) {
     .eq('id', id)
     .eq('supplier_id', profile.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/supplier-orders/returns]', error);
+    return NextResponse.json({ error: 'Failed to update return request. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }

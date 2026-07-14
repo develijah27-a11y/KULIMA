@@ -13,7 +13,10 @@ export async function GET(req: Request) {
     .order('full_name')
     .limit(100);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/group-members]', error);
+    return NextResponse.json({ error: 'Failed to load group members. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json(
     { members: data ?? [] },
     { headers: { 'Cache-Control': 'private, max-age=60, stale-while-revalidate=120' } },
@@ -116,6 +119,9 @@ export async function POST(req: Request) {
     joined_at:    new Date().toISOString(),
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/group-members]', error);
+    return NextResponse.json({ error: 'Failed to add group member. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ member: data, linked }, { status: 201 });
 }

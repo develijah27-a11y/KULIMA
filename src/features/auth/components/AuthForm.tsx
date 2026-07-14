@@ -24,6 +24,9 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState<string | null>(null);
   const [success, setSuccess]       = useState<string | null>(null);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [resending, setResending]   = useState(false);
+  const [resent, setResent]         = useState(false);
 
   const isSigningUpRef = useRef(false);
   const submitLockRef = useRef(false);
@@ -75,6 +78,8 @@ export function AuthForm({ mode }: AuthFormProps) {
     setLoading(true);
     setError(null);
     setSuccess(null);
+    setNeedsConfirmation(false);
+    setResent(false);
 
     try {
       if (mode === 'signup') {
@@ -112,8 +117,10 @@ export function AuthForm({ mode }: AuthFormProps) {
           }
         }
 
-        // Create profile server-side
-        if (data.user) {
+        if (data.session && data.user) {
+          // A session came back immediately — only possible if email
+          // confirmation is off. Create the profile now, since this is the
+          // one path where the user is already authenticated post-signUp().
           await fetch('/api/auth/create-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -124,16 +131,16 @@ export function AuthForm({ mode }: AuthFormProps) {
               location: location || null,
             }),
           }).catch(() => {});
-        }
-
-        if (data.session) {
-          // New account, email confirmation off — go straight in
           router.push('/dashboard');
           router.refresh();
           return;
         }
 
-        setSuccess('Account created! Check your email to confirm, then sign in.');
+        // Standard path: email confirmation is required, so there's no
+        // session yet — the profile gets created in /auth/confirm/route.ts
+        // once the user actually clicks the link and is authenticated.
+        setSuccess(`Account created! We've sent a confirmation link to ${email} — click it to activate your account.`);
+        setNeedsConfirmation(true);
       } else {
         // ── Sign in ──────────────────────────────────────────────────────────
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -159,6 +166,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         setError('Wrong email or password. Please try again.');
       } else if (lower.includes('email not confirmed')) {
         setError('Your email address is not confirmed yet. Please check your inbox and click the confirmation link, then try signing in again.');
+        setNeedsConfirmation(true);
       } else {
         // Only log errors that aren't expected auth failures
         console.error('[AgriNova Auth] Unexpected error during', mode, ':', err);
@@ -167,6 +175,25 @@ export function AuthForm({ mode }: AuthFormProps) {
     } finally {
       setLoading(false);
       submitLockRef.current = false;
+    }
+  };
+
+  const resendConfirmation = async () => {
+    if (!email || resending) return;
+    setResending(true);
+    setResent(false);
+    try {
+      const { error: resendError } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+      });
+      if (resendError) throw resendError;
+      setResent(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Could not resend the email. Please try again.');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -353,6 +380,27 @@ export function AuthForm({ mode }: AuthFormProps) {
           role="status"
         >
           {success}
+        </div>
+      )}
+
+      {/* Resend confirmation — shown after signup, or when sign-in is blocked
+          on an unconfirmed email. Covers the expired-link / lost-email case
+          modern apps always account for. */}
+      {needsConfirmation && (
+        <div style={{ textAlign: 'center' }}>
+          <button
+            type="button"
+            onClick={resendConfirmation}
+            disabled={resending}
+            style={{
+              background: 'none', border: 'none', padding: 0,
+              fontSize: 13, fontWeight: 700,
+              color: resending ? 'rgba(240,253,244,0.35)' : 'var(--color-primary)',
+              cursor: resending ? 'default' : 'pointer', textDecoration: 'underline',
+            }}
+          >
+            {resending ? 'Sending…' : resent ? 'Email sent — check your inbox' : "Didn't get it? Resend confirmation email"}
+          </button>
         </div>
       )}
 

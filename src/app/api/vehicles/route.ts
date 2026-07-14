@@ -26,7 +26,10 @@ export async function POST(req: Request) {
     is_cold_capable: is_cold_capable ?? false,
   }).select('id').single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/vehicles POST]', error);
+    return NextResponse.json({ error: 'Failed to add vehicle. Please try again.' }, { status: 500 });
+  }
   revalidatePath('/transporter/dashboard');
   revalidatePath('/transporter/vehicle');
   return NextResponse.json({ success: true, vehicleId: data.id });
@@ -46,7 +49,10 @@ export async function PATCH(req: Request) {
   for (const k of allowed) { if (k in updates) safe[k] = updates[k]; }
 
   const { error } = await (supabase.from as any)('vehicles').update(safe).eq('id', id).eq('user_id', user.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/vehicles PATCH]', error);
+    return NextResponse.json({ error: 'Failed to update vehicle. Please try again.' }, { status: 500 });
+  }
   revalidatePath('/transporter/dashboard');
   revalidatePath('/transporter/vehicle');
   return NextResponse.json({ success: true });

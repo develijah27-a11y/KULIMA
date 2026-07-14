@@ -50,7 +50,10 @@ export async function PATCH(
     updated_at:      now,
   }).eq('id', id);
 
-  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (updateErr) {
+    console.error('[/api/admin/listings/[id]]', updateErr);
+    return NextResponse.json({ error: 'Failed to update listing status. Please try again.' }, { status: 500 });
+  }
 
   // Notify farmer
   const { data: fp } = await (db.from as any)('profiles').select('user_id').eq('id', listing.farmer_id).single();

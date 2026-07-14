@@ -20,7 +20,10 @@ export async function GET(req: Request) {
 
   q = q.order('created_at', { ascending: false }).limit(60);
   const { data, error } = await q;
-  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/listings]', error);
+    return NextResponse.json({ success: false, error: 'Failed to load listings. Please try again.' }, { status: 500 });
+  }
 
   // Verified farmers get more exposure: rank by verification tier first
   // (gold > blue > green > grey/unverified), keeping recency as the
@@ -79,7 +82,10 @@ export async function POST(req: Request) {
 
   const { data, error } = await (supabase.from as any)('listings').insert(insertPayload).select().single();
 
-  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/listings]', error);
+    return NextResponse.json({ success: false, error: 'Failed to create listing. Please try again.' }, { status: 500 });
+  }
   revalidatePath('/farmer/dashboard');
   revalidatePath('/farmer/marketplace');
   return NextResponse.json({ success: true, data });
@@ -100,7 +106,10 @@ export async function PATCH(req: Request) {
     .update({ status })
     .eq('id', id)
     .eq('farmer_id', profile.id);
-  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/listings]', error);
+    return NextResponse.json({ success: false, error: 'Failed to update listing status. Please try again.' }, { status: 500 });
+  }
   revalidatePath('/farmer/dashboard');
   revalidatePath('/farmer/marketplace');
   return NextResponse.json({ success: true });

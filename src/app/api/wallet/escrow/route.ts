@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { calcFare } from '@/lib/delivery-pricing';
+import { rateLimit } from '@/lib/rate-limit';
 
 const admin = () => createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,10 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (!(await rateLimit(`escrow:${user.id}`, 10, 60))) {
+    return NextResponse.json({ error: 'Too many requests. Please wait a minute and try again.' }, { status: 429 });
+  }
 
   const { action, offerId, orderId } = await req.json();
   if (!action) return NextResponse.json({ error: 'action required' }, { status: 400 });

@@ -38,7 +38,8 @@ export async function POST(req: Request) {
     .eq('user_id', user.id);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    console.error('[/api/profile/add-role]', updateError);
+    return NextResponse.json({ error: 'Failed to update your roles. Please try again.' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, roles: newRoles });

@@ -12,7 +12,10 @@ export async function GET(req: Request) {
     .order('delivery_date', { ascending: true })
     .limit(50);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/offtaker-contracts]', error);
+    return NextResponse.json({ error: 'Failed to load contracts.' }, { status: 500 });
+  }
   return NextResponse.json(
     { contracts: data ?? [] },
     { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } },
@@ -45,6 +48,9 @@ export async function POST(req: Request) {
     created_at:    new Date().toISOString(),
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/offtaker-contracts]', error);
+    return NextResponse.json({ error: 'Failed to create the contract.' }, { status: 500 });
+  }
   return NextResponse.json({ contract: data }, { status: 201 });
 }

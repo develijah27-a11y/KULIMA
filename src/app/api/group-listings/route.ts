@@ -36,7 +36,10 @@ export async function POST(req: Request) {
     status:            'active',
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/group-listings POST]', error);
+    return NextResponse.json({ error: 'Failed to publish group listing. Please try again.' }, { status: 500 });
+  }
 
   if (contributions && data) {
     const rows = contributions
@@ -46,7 +49,8 @@ export async function POST(req: Request) {
     if (contribErr) {
       // Listing was created but contributions failed to save — surface this
       // clearly rather than silently falling back to pooled-wallet payout.
-      return NextResponse.json({ success: true, data, warning: `Listing published, but member quantities were not saved: ${contribErr.message}` }, { status: 201 });
+      console.error('[/api/group-listings POST]', contribErr);
+      return NextResponse.json({ success: true, data, warning: 'Listing published, but member quantities were not saved. Please try again or contact support.' }, { status: 201 });
     }
   }
 

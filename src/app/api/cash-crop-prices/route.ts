@@ -16,7 +16,10 @@ export async function GET(req: Request) {
   if (region) q = q.eq('region', region);
 
   const { data, error } = await q.limit(200);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/cash-crop-prices]', error);
+    return NextResponse.json({ error: 'Failed to load cash crop prices.' }, { status: 500 });
+  }
   return NextResponse.json(
     { prices: data ?? [] },
     { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } },
@@ -46,6 +49,9 @@ export async function PATCH(req: Request) {
   const { data, error } = await (supabase.from as any)('cash_crop_prices')
     .update(update).eq('id', id).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/cash-crop-prices]', error);
+    return NextResponse.json({ error: 'Failed to update the price entry.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, price: data });
 }

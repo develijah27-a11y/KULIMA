@@ -31,7 +31,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   const { error } = await (auth.supabase.from as any)('disease_reports').update(update).eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/admin/disease-reports/[id]]', error);
+    return NextResponse.json({ error: 'Failed to update disease report. Please try again.' }, { status: 500 });
+  }
 
   return NextResponse.json({ success: true });
 }

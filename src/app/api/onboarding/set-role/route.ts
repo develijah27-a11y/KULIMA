@@ -41,7 +41,10 @@ export async function POST(req: Request) {
     .update({ role: primaryRole, roles: rawRoles })
     .eq('user_id', user.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/onboarding/set-role]', error);
+    return NextResponse.json({ error: 'Failed to set your role. Please try again.' }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true, redirect: ROLE_DASHBOARD[primaryRole] });
 }

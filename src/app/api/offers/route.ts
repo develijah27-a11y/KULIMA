@@ -28,7 +28,10 @@ export async function GET(req: Request) {
   q = q.order('created_at', { ascending: false }).limit(50);
 
   const { data, error } = await q;
-  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/offers]', error);
+    return NextResponse.json({ success: false, error: 'Failed to load offers. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json(
     { success: true, data: data ?? [] },
     { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } },
@@ -77,7 +80,10 @@ export async function POST(req: Request) {
     status:        'pending',
   }).select().single();
 
-  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/offers]', error);
+    return NextResponse.json({ success: false, error: 'Failed to submit offer. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ success: true, data });
 }
 

@@ -23,7 +23,10 @@ export async function GET() {
     .eq('group_id', group.id)
     .order('joined_at', { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/groups/my-members]', error);
+    return NextResponse.json({ error: 'Failed to load group members. Please try again.' }, { status: 500 });
+  }
 
   // Include the leader themselves — they can contribute produce too
   const members = [

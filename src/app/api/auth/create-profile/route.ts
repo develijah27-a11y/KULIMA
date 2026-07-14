@@ -35,7 +35,8 @@ export async function POST(req: Request) {
   );
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    console.error('[/api/auth/create-profile]', error);
+    return NextResponse.json({ ok: false, error: 'Failed to create profile. Please try again.' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

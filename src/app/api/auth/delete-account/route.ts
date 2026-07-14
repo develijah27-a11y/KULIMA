@@ -9,7 +9,10 @@ export async function POST(request: NextRequest) {
   // Delete the auth user (cascades to profiles and related data via FK)
   const service = createServiceRoleClient();
   const { error } = await service.auth.admin.deleteUser(user.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/auth/delete-account]', error);
+    return NextResponse.json({ error: 'Failed to delete your account. Please try again.' }, { status: 500 });
+  }
 
   // Expire all Supabase session cookies
   const response = NextResponse.json({ ok: true });

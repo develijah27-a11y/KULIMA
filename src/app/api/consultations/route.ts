@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { rateLimit } from '@/lib/rate-limit';
 
 // Platform defaults used only when a pathologist hasn't set their own rate —
 // pathologists can set remote_fee_ugx / visit_fee_ugx on their own profile.
@@ -32,7 +33,10 @@ export async function GET(req: Request) {
   }
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('[/api/consultations]', error);
+    return NextResponse.json({ error: 'Failed to load consultations. Please try again.' }, { status: 500 });
+  }
   return NextResponse.json({ data: data ?? [] });
 }
 
@@ -40,6 +44,10 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  if (!(await rateLimit(`consultation-book:${user.id}`, 5, 60))) {
+    return NextResponse.json({ error: 'Too many requests. Please wait a minute and try again.' }, { status: 429 });
+  }
 
   let body: any;
   try { body = await req.json(); } catch {
@@ -92,44 +100,22 @@ export async function POST(req: Request) {
     }, { status: 400 });
   }
 
-  // Deduct fee from farmer wallet
-  const { error: deductErr } = await (db.from as any)('wallets').update({
-    balance:    Number(wallet.balance) - feeUgx,
-    updated_at: new Date().toISOString(),
-  }).eq('id', wallet.id);
-  if (deductErr) return NextResponse.json({ error: 'Payment failed' }, { status: 500 });
-
-  // Log fee transaction
-  const { data: txn } = await (db.from as any)('wallet_transactions').insert({
-    wallet_id:   wallet.id,
-    user_id:     user.id,
-    type:        'fee',
-    amount:      feeUgx,
-    status:      'completed',
-    description: `${type === 'farm_visit' ? 'Farm visit' : 'Remote'} consultation fee`,
-  }).select('id').single();
-
-  // If pathologist found, credit their wallet (80% — platform keeps 20%)
-  if (assigned) {
-    const pathologistShare = Math.round(feeUgx * 0.8);
-    const { data: pathWallet } = await (db.from as any)('wallets')
-      .select('id, balance').eq('user_id', assigned.user_id).single();
-    if (pathWallet) {
-      await Promise.all([
-        (db.from as any)('wallets').update({
-          balance:    Number(pathWallet.balance) + pathologistShare,
-          updated_at: new Date().toISOString(),
-        }).eq('id', pathWallet.id),
-        (db.from as any)('wallet_transactions').insert({
-          wallet_id:   pathWallet.id,
-          user_id:     assigned.user_id,
-          type:        'payout',
-          amount:      pathologistShare,
-          status:      'completed',
-          description: `${type === 'farm_visit' ? 'Farm visit' : 'Remote'} consultation payment`,
-        }),
-      ]);
-    }
+  // Atomic: locks the farmer's wallet row, moves the fee to the pathologist
+  // (80% share) in one transaction — closes the race where a double-
+  // submitted booking could double-charge the farmer and double-pay the
+  // pathologist. Also prevents a duplicate consultation row on a rapid
+  // double-submit, since the row lock serializes concurrent calls for the
+  // same farmer.
+  const pathologistShare = assigned ? Math.round(feeUgx * 0.8) : 0;
+  const { error: payErr } = await (db as any).rpc('claim_consultation_payment', {
+    p_farmer_user_id: user.id,
+    p_pathologist_user_id: assigned?.user_id ?? null,
+    p_total_fee: feeUgx,
+    p_pathologist_share: pathologistShare,
+  });
+  if (payErr) {
+    console.error('[/api/consultations]', payErr);
+    return NextResponse.json({ error: payErr.message?.includes('Insufficient') ? payErr.message : 'Payment failed. Please try again.' }, { status: 400 });
   }
 
   // Create consultation record
@@ -143,10 +129,12 @@ export async function POST(req: Request) {
     farmer_district:      farmerDistrict,
     pathologist_district: assigned?.location ?? null,
     notes:                notes ?? null,
-    payment_txn_id:       txn?.id ?? null,
   }).select().single();
 
-  if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
+  if (insertErr) {
+    console.error('[/api/consultations]', insertErr);
+    return NextResponse.json({ error: 'Failed to book consultation. Please try again.' }, { status: 500 });
+  }
 
   // Notify pathologist if matched
   if (assigned) {
