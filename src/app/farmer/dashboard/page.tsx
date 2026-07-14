@@ -668,7 +668,7 @@ async function DeliveryHistory({ userId }: { userId: string }) {
     .select(`
       id, pickup_district, dropoff_district, cargo_kg, cargo_type,
       status, payment_status, agreed_price, estimated_fare, created_at,
-      transporter:profiles!delivery_requests_transporter_id_fkey(full_name)
+      transporter:profiles!delivery_requests_transporter_profile_fkey(full_name)
     `)
     .eq('requester_id', userId)
     .order('created_at', { ascending: false })

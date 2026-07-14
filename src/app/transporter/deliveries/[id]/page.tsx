@@ -18,7 +18,7 @@ export default async function DeliveryDetailPage({ params }: { params: Promise<{
 
   const [deliveryRes, vehicleRes, existingBidRes] = await Promise.all([
     (supabase.from as any)('delivery_requests')
-      .select('*, requester:profiles!delivery_requests_requester_id_fkey(full_name, verification_level)')
+      .select('*, requester:profiles!delivery_requests_requester_profile_fkey(full_name, verification_level)')
       .eq('id', id)
       .single(),
     (supabase.from as any)('vehicles').select('id, plate_number, vehicle_type, capacity_kg').eq('user_id', user.id).maybeSingle(),

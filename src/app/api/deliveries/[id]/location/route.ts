@@ -3,9 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 
 type Ctx = { params: Promise<{ id: string }> };
 
-// POST — the delivery's requester shares/updates their live location.
-// RLS also enforces that only the requester of this specific delivery can
-// write here, so this can't be used to spoof someone else's location.
+// POST — either party on this delivery (the requester or the assigned
+// transporter) shares/updates their own live location. RLS enforces that a
+// caller can only write a row for their own user_id, and only if they're
+// actually the requester or transporter on this specific delivery — so this
+// can't be used to spoof someone else's location.
 export async function POST(req: Request, { params }: Ctx) {
   const { id: deliveryId } = await params;
   const supabase = await createClient();
@@ -49,17 +51,32 @@ export async function DELETE(_req: Request, { params }: Ctx) {
   return NextResponse.json({ success: true });
 }
 
-// GET — the assigned driver reads the requester's current shared location.
-// RLS restricts this to whoever is transporter_id on the delivery.
+// GET — reads the OTHER party's current shared location: the requester gets
+// the driver's position, the driver gets the requester's. Which "other"
+// user_id to look up depends on which side of the delivery the caller is on.
 export async function GET(_req: Request, { params }: Ctx) {
   const { id: deliveryId } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  const { data: delivery } = await (supabase.from as any)('delivery_requests')
+    .select('requester_id, transporter_id')
+    .eq('id', deliveryId)
+    .single();
+  if (!delivery) return NextResponse.json({ error: 'Delivery not found' }, { status: 404 });
+
+  const otherUserId = delivery.requester_id === user.id
+    ? delivery.transporter_id
+    : delivery.transporter_id === user.id
+      ? delivery.requester_id
+      : null;
+  if (!otherUserId) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
   const { data } = await (supabase.from as any)('delivery_locations')
     .select('lat, lng, updated_at')
     .eq('delivery_request_id', deliveryId)
+    .eq('user_id', otherUserId)
     .maybeSingle();
 
   return NextResponse.json({ location: data ?? null });

@@ -2,8 +2,10 @@
 
 import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle, Navigation2 } from 'lucide-react';
 import { NavigateButton } from '@/components/delivery/NavigateButton';
+import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
+import { DriverTrackingSheet } from '@/components/delivery/DriverTrackingSheet';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -48,6 +50,8 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
   const [tab, setTab]     = useState<typeof tabs[number]>(pending.length > 0 ? 'pending' : active.length > 0 ? 'active' : 'completed');
   const [busy, setBusy]   = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [trackingId, setTrackingId] = useState<string | null>(null);
+  const trackedDelivery = active.find((d: any) => d.id === trackingId) ?? null;
 
   const counts = { pending: pending.length, active: active.length, completed: completed.length };
 
@@ -247,6 +251,24 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                     />
                   </div>
 
+                  {/* Broadcasting is automatic once a job is accepted — matches
+                      the expected default for a driver, not an opt-in toggle */}
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    <ShareLocationButton deliveryId={d.id} active autoStart label="location visible to requester" />
+                    {d.requester && (
+                      <button
+                        onClick={() => setTrackingId(d.id)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: 'none',
+                          cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                          background: 'var(--color-sky-bg, #E0F2FE)', color: 'var(--color-sky, #0EA5E9)',
+                        }}
+                      >
+                        <Navigation2 size={13} /> View live map
+                      </button>
+                    )}
+                  </div>
+
                   {isAssigned && (
                     <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'start_transit')}
                       style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: isBusy ? 'var(--color-surface-2)' : 'var(--color-harvest)', color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
@@ -301,6 +323,19 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
             })}
           </div>
         )
+      )}
+
+      {trackedDelivery && (
+        <DriverTrackingSheet
+          open={!!trackingId}
+          onClose={() => setTrackingId(null)}
+          delivery={trackedDelivery}
+          otherParty={{
+            name: trackedDelivery.requester?.full_name ?? 'Requester',
+            phone: trackedDelivery.requester?.phone_number,
+            role: 'requester',
+          }}
+        />
       )}
     </div>
   );

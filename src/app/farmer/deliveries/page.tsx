@@ -36,7 +36,7 @@ export default async function FarmerDeliveriesPage() {
       id, pickup_district, pickup_location, dropoff_district, dropoff_location,
       cargo_kg, cargo_type, delivery_type, estimated_fare, distance_km,
       driver_earnings, status, payment_status, pickup_date, created_at,
-      transporter:profiles!delivery_requests_transporter_id_fkey(full_name, phone_number)
+      transporter:profiles!delivery_requests_transporter_profile_fkey(full_name, phone_number)
     `)
     .eq('requester_id', user.id)
     .order('created_at', { ascending: false })

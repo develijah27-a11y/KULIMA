@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, type FormEvent, type JSX } from 'reac
 import { useRouter } from 'next/navigation';
 import { Truck, Zap, Snowflake, MapPin, Clock, CheckCircle2, Megaphone, AlertTriangle } from 'lucide-react';
 import type { DeliveryType, FareBreakdown } from '@/lib/delivery-pricing';
+import { FareConfirmSheet } from '@/components/delivery/FareConfirmSheet';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -57,6 +58,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   const [error, setError]                     = useState('');
   const [submitted, setSubmitted]             = useState(false);
   const [driversNotified, setDriversNotified] = useState<number | null>(null);
+  const [showConfirm, setShowConfirm]         = useState(false);
 
   const fetchFare = useCallback(async () => {
     if (!pickupDistrict || !dropoffDistrict || !cargoKg || parseFloat(cargoKg) <= 0) {
@@ -77,11 +79,17 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
     return () => clearTimeout(id);
   }, [fetchFare]);
 
-  async function submit(e: FormEvent) {
+  function openConfirm(e: FormEvent) {
     e.preventDefault();
     if (!pickupDistrict || !dropoffDistrict || !cargoKg || !pickupDate) {
       setError('Please fill all required fields'); return;
     }
+    if (!fare) { setError('Still calculating fare — try again in a moment'); return; }
+    setError('');
+    setShowConfirm(true);
+  }
+
+  async function submit() {
     setLoading(true); setError('');
     try {
       const res = await fetch('/api/deliveries', {
@@ -103,9 +111,11 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Failed to post delivery');
       setDriversNotified(json.driversNotified ?? 0);
+      setShowConfirm(false);
       setSubmitted(true);
       setTimeout(() => { router.push(successRedirect); router.refresh(); }, 3000);
     } catch (err: any) {
+      setShowConfirm(false);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -141,7 +151,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   }
 
   return (
-    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <form onSubmit={openConfirm} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
       {prefilledOffer && (
         <div style={{ padding: '11px 14px', background: 'var(--color-primary-bg)', borderRadius: 10, border: '1px solid var(--color-primary-muted)' }}>
@@ -286,10 +296,23 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         </p>
       )}
 
-      <button type="submit" disabled={loading}
-        style={{ padding: '14px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer' }}>
-        {loading ? 'Posting…' : 'Post Delivery Request →'}
+      <button type="submit" disabled={loading || !fare}
+        style={{ padding: '14px', background: (loading || !fare) ? 'var(--color-surface-2)' : C.green, color: (loading || !fare) ? C.muted : '#fff', border: 'none', borderRadius: 12, fontWeight: 700, fontSize: 15, cursor: (loading || !fare) ? 'not-allowed' : 'pointer' }}>
+        Review &amp; Confirm →
       </button>
+
+      {fare && (
+        <FareConfirmSheet
+          open={showConfirm}
+          onClose={() => setShowConfirm(false)}
+          onConfirm={submit}
+          confirming={loading}
+          deliveryType={deliveryType}
+          fare={fare}
+          route={{ pickupDistrict, dropoffDistrict }}
+          cargo={{ kg: parseFloat(cargoKg) || 0, type: cargoType }}
+        />
+      )}
     </form>
   );
 }

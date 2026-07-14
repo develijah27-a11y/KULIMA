@@ -26,7 +26,7 @@ export default async function BuyerColdChainPage() {
       id, pickup_district, dropoff_district, cargo_kg, cargo_type,
       delivery_type, estimated_fare, distance_km, status, payment_status,
       pickup_date, accepted_at, delivered_at, created_at,
-      transporter:profiles!delivery_requests_transporter_id_fkey(full_name, phone_number)
+      transporter:profiles!delivery_requests_transporter_profile_fkey(full_name, phone_number)
     `)
     .eq('requester_id', user.id)
     .eq('delivery_type', 'cold')

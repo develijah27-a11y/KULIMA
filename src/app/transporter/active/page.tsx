@@ -25,7 +25,8 @@ export default async function ActiveJobsPage() {
       .select(`
         id, pickup_district, pickup_location, dropoff_district, dropoff_location,
         cargo_kg, cargo_type, delivery_type, estimated_fare, driver_earnings,
-        distance_km, status, accepted_at, picked_up_at, pickup_date
+        distance_km, status, accepted_at, picked_up_at, pickup_date,
+        requester:profiles!delivery_requests_requester_profile_fkey(full_name, phone_number)
       `)
       .eq('transporter_id', user.id)
       .in('status', ['assigned', 'in_transit'])

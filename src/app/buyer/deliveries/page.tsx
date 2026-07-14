@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { PayDeliveryButton } from './PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
+import { TrackDeliveryButton } from '@/components/delivery/TrackDeliveryButton';
 import type { JSX } from 'react';
 import { Truck, Search, Car, Package, Snowflake, Zap, CheckCircle2, User } from 'lucide-react';
 
@@ -36,15 +37,26 @@ export default async function BuyerDeliveriesPage() {
       id, pickup_district, pickup_location, dropoff_district, dropoff_location,
       cargo_kg, cargo_type, delivery_type, estimated_fare, distance_km,
       commission_amount, driver_earnings,
-      status, payment_status, pickup_date,
+      status, payment_status, pickup_date, transporter_id,
       accepted_at, picked_up_at, delivered_at, created_at,
-      transporter:profiles!delivery_requests_transporter_id_fkey(full_name, phone_number, verification_level)
+      transporter:profiles!delivery_requests_transporter_profile_fkey(full_name, phone_number, verification_level)
     `)
     .eq('requester_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50);
 
   const rows = deliveries ?? [];
+
+  // vehicles has no direct FK to delivery_requests (both reference
+  // auth.users independently), so it can't be embedded in the query above —
+  // fetch separately and join in memory by transporter user_id.
+  const transporterIds = [...new Set(rows.map((d: any) => d.transporter_id).filter(Boolean))];
+  const { data: vehicleRows } = transporterIds.length
+    ? await (supabase.from as any)('vehicles')
+        .select('user_id, vehicle_type, plate_number, make_model, is_cold_capable')
+        .in('user_id', transporterIds)
+    : { data: [] };
+  const vehicleByUser = new Map((vehicleRows ?? []).map((v: any) => [v.user_id, v]));
 
   const active    = rows.filter((d: any) => ['open','assigned','in_transit'].includes(d.status));
   const delivered = rows.filter((d: any) => d.status === 'delivered');
@@ -80,14 +92,14 @@ export default async function BuyerDeliveriesPage() {
       {/* Active & in-transit */}
       {active.length > 0 && (
         <Section title="Active" count={active.length}>
-          {active.map((d: any) => <DeliveryRow key={d.id} d={d} />)}
+          {active.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} />)}
         </Section>
       )}
 
       {/* Arrived — needs payment */}
       {delivered.length > 0 && (
         <Section title="Delivered — Payment Due" count={delivered.length} highlight>
-          {delivered.map((d: any) => <DeliveryRow key={d.id} d={d} showPay />)}
+          {delivered.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} showPay />)}
         </Section>
       )}
 
@@ -119,10 +131,11 @@ function Section({ title, count, highlight, children }: { title: string; count: 
   );
 }
 
-function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
+function DeliveryRow({ d, vehicle, showPay }: { d: any; vehicle?: any; showPay?: boolean }) {
   const st   = STATUS_CFG[d.status] ?? STATUS_CFG.open;
   const tm   = TYPE_META[d.delivery_type] ?? TYPE_META.standard;
   const paid = d.payment_status === 'paid';
+  const canTrack = ['assigned', 'in_transit'].includes(d.status) && d.transporter;
 
   return (
     <div style={{ padding: '15px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -157,7 +170,22 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
         )}
 
         {/* Live location — helps the driver find you without a phone call while driving */}
-        <ShareLocationButton deliveryId={d.id} active={['open', 'assigned'].includes(d.status)} />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <ShareLocationButton deliveryId={d.id} active={['open', 'assigned'].includes(d.status)} />
+          {canTrack && (
+            <TrackDeliveryButton
+              delivery={d}
+              driver={{
+                name: d.transporter.full_name ?? 'Your driver',
+                phone: d.transporter.phone_number,
+                vehicleType: vehicle?.vehicle_type,
+                plateNumber: vehicle?.plate_number,
+                makeModel: vehicle?.make_model,
+                isColdCapable: vehicle?.is_cold_capable,
+              }}
+            />
+          )}
+        </div>
       </div>
 
       {/* Pay button */}
