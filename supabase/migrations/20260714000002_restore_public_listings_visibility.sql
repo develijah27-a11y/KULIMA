@@ -4,6 +4,7 @@
 -- listing that isn't their own, silently breaking the entire marketplace —
 -- browse still showed a buyer's own listings (if any) but every listing
 -- detail page for another farmer's listing 404'd.
+DROP POLICY IF EXISTS "Buyers can view active listings" ON public.listings;
 CREATE POLICY "Buyers can view active listings"
   ON public.listings FOR SELECT
   USING (status = 'active');
@@ -14,6 +15,7 @@ CREATE POLICY "Buyers can view active listings"
 -- offer, and a farmer's incoming offers on their own listings, were both
 -- invisible to everyone except an admin. Mirrors the existing UPDATE policy,
 -- which already correctly scopes to buyer-own-offer OR farmer-owns-listing.
+DROP POLICY IF EXISTS "Buyers and farmers can view their own offers" ON public.offers;
 CREATE POLICY "Buyers and farmers can view their own offers"
   ON public.offers FOR SELECT
   USING (
