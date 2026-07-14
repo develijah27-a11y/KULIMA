@@ -123,11 +123,6 @@ export default function TermsPage() {
 
       <h2>14. Contact</h2>
       <p>Questions about these Terms can be sent to us via our <a href="/contact">Contact page</a>.</p>
-
-      <div className="legal-callout">
-        <strong>Note:</strong> AgriNova is currently completing formal business registration in Uganda.
-        These Terms will be updated with our registered legal entity name once that process completes.
-      </div>
     </LegalPage>
   );
 }

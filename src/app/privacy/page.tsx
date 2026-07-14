@@ -114,12 +114,6 @@ export default function PrivacyPolicyPage() {
       <p>
         Questions about this policy or your data can be sent to us via our <a href="/contact">Contact page</a>.
       </p>
-
-      <div className="legal-callout">
-        <strong>Note:</strong> AgriNova is a Uganda-based service currently completing formal business
-        registration. This policy will be updated with our registered legal entity name once that
-        process completes.
-      </div>
     </LegalPage>
   );
 }
