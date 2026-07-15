@@ -360,6 +360,8 @@ export default async function OfftakerDashboardPage() {
       <VerificationBanner
         level={(profile?.verification_level as VerificationLevel) ?? 'none'}
         verifyHref="/offtaker/verify"
+        headline="Get verified — source with confidence"
+        benefit="Sign escrow-backed contracts and access bulk group harvests"
         requiredDocsLabel="national ID and a selfie"
       />
 

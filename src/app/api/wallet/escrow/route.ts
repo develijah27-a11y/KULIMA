@@ -200,10 +200,23 @@ export async function POST(req: Request) {
           if (dr) {
             await (db.from as any)('orders').update({ delivery_request_id: dr.id }).eq('id', orderId);
 
-            // Auto-match available verified drivers, matching the standalone
-            // delivery-request flow in POST /api/deliveries.
-            const { data: matchedVehicles } = await (db.from as any)('vehicles')
-              .select('user_id').eq('is_available', true).limit(10);
+            // Auto-match available, right-sized verified drivers covering the
+            // pickup district — same matching rule as POST /api/deliveries
+            // (kept in sync manually since this is a second creation path).
+            let { data: matchedVehicles } = await (db.from as any)('vehicles')
+              .select('user_id')
+              .eq('is_available', true)
+              .gte('capacity_kg', Number(order.quantity_kg))
+              .contains('districts', [order.pickup_district])
+              .limit(50);
+            if (!matchedVehicles || matchedVehicles.length === 0) {
+              const res = await (db.from as any)('vehicles')
+                .select('user_id')
+                .eq('is_available', true)
+                .gte('capacity_kg', Number(order.quantity_kg))
+                .limit(50);
+              matchedVehicles = res.data;
+            }
             const driverUserIds = [...new Set<string>((matchedVehicles ?? []).map((v: any) => v.user_id as string))];
             if (driverUserIds.length > 0) {
               await (db.from as any)('driver_assignments').insert(

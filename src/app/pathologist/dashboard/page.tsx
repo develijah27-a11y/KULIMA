@@ -344,6 +344,8 @@ export default async function PathologistDashboardPage() {
       <VerificationBanner
         level={(profile?.verification_level as VerificationLevel) ?? 'none'}
         verifyHref="/pathologist/verify"
+        headline="Get certified — start consulting"
+        benefit="Get matched to paid consultations and unlock higher fees"
         requiredDocsLabel="national ID, a selfie, and your professional qualifications"
       />
 

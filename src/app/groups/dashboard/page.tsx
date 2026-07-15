@@ -378,6 +378,8 @@ export default async function GroupsDashboardPage() {
       <VerificationBanner
         level={(profile?.verification_level as VerificationLevel) ?? 'none'}
         verifyHref="/groups/verify"
+        headline="Get verified — sell with confidence"
+        benefit="Unlock escrow-protected group sales and loans"
         requiredDocsLabel="national ID and a selfie"
       />
 

@@ -813,6 +813,8 @@ async function VerifyPrompt({ userId }: { userId: string }) {
     <VerificationBanner
       level={(profile?.verification_level as VerificationLevel) ?? 'none'}
       verifyHref="/farmer/verify"
+      headline="Get verified — sell with confidence"
+      benefit="Buyers see you first and you unlock escrow-protected sales"
       requiredDocsLabel="national ID and a selfie"
     />
   );

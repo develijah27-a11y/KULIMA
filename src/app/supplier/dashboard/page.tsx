@@ -360,6 +360,8 @@ export default async function SupplierDashboardPage() {
       <VerificationBanner
         level={(profile?.verification_level as VerificationLevel) ?? 'none'}
         verifyHref="/supplier/verify"
+        headline="Get verified — reach more farmers"
+        benefit="Rank higher in search and unlock flash deals"
         requiredDocsLabel="national ID, a selfie, and business registration"
       />
 

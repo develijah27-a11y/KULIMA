@@ -18,7 +18,15 @@ export async function PATCH(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ success: false }, { status: 401 });
 
-  await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+  // With an id: mark just that notification read (scoped to the caller via
+  // user_id, so one user can't mark another's notification read). Without
+  // one: mark everything unread as read, same as before.
+  let id: string | undefined;
+  try { ({ id } = await req.json()); } catch { /* no body — mark-all path */ }
+
+  const query = supabase.from('notifications').update({ read: true }).eq('user_id', user.id);
+  await (id ? query.eq('id', id) : query.eq('read', false));
+
   return NextResponse.json({ success: true });
 }
 

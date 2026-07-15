@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
-  BADGE_CONFIG, LEVEL_DETAILS, getRequiredDocs, canUpgradeTo,
+  BADGE_CONFIG, getLevelDetails, getRequiredDocs, canUpgradeTo,
   type VerificationLevel,
 } from '@/lib/trust';
 import { Clock, CheckCircle2, Check, Diamond, Star, Paperclip, AlertTriangle, Camera } from 'lucide-react';
@@ -72,6 +72,8 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
         business_reg_url:   urls.business_reg   ?? null,
         driving_permit_url: urls.driving_permit ?? null,
         vehicle_reg_url:    urls.vehicle_reg    ?? null,
+        insurance_url:      urls.insurance_cert ?? null,
+        vehicle_photo_url:  urls.vehicle_photo  ?? null,
         qualifications_url: urls.qualifications ?? null,
       });
       if (dbErr) throw new Error(dbErr.message);
@@ -133,7 +135,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {levels.map((lvl) => {
             const cfg    = BADGE_CONFIG[lvl];
-            const detail = LEVEL_DETAILS[lvl];
+            const detail = getLevelDetails(lvl, role);
             const locked = !canUpgradeTo(currentLevel, lvl);
             const sel    = target === lvl;
             return (

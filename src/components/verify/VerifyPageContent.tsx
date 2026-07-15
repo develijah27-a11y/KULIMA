@@ -13,6 +13,16 @@ const C = {
 
 const LEVELS: VerificationLevel[] = ['grey', 'green', 'blue', 'gold'];
 
+const ROLE_HEADER: Record<string, { title: string; subtitle: string }> = {
+  farmer:      { title: 'Get Verified, Sell with Confidence', subtitle: 'Verified farmers get more views, more trust, and access to escrow-protected sales and loans.' },
+  buyer:       { title: 'Get Verified, Buy with Confidence',  subtitle: 'Verified buyers get faster order approval and access to bulk sourcing and group listings.' },
+  transporter: { title: 'Get Verified, Start Earning',        subtitle: 'Verified drivers unlock paid delivery jobs, higher job-match priority, and protected fare payouts.' },
+  supplier:    { title: 'Get Verified, Reach More Farmers',   subtitle: 'Verified suppliers rank higher in search and unlock flash deals and escrow-protected sales.' },
+  pathologist: { title: 'Get Certified, Start Consulting',    subtitle: 'Certified pathologists get matched to paid consultations and unlock higher fees.' },
+  offtaker:    { title: 'Get Verified, Source with Confidence', subtitle: 'Verified offtakers can sign escrow-backed contracts and access bulk group harvests.' },
+};
+const DEFAULT_HEADER = { title: 'Verification & Trust', subtitle: 'Get verified to unlock escrow deals, financing, and buyer trust.' };
+
 export async function VerifyPageContent() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -46,15 +56,17 @@ export async function VerifyPageContent() {
   const trustScore   = (profile as any)?.trust_score ?? 50;
   const deals        = (profile as any)?.completed_deals ?? 0;
   const currentIdx   = LEVELS.indexOf(currentLevel);
+  const role         = (profile as any)?.role ?? '';
+  const header       = ROLE_HEADER[role] ?? DEFAULT_HEADER;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-          Verification & Trust
+          {header.title}
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>
-          Get verified to unlock escrow deals, financing, and buyer trust.
+          {header.subtitle}
         </p>
       </div>
 

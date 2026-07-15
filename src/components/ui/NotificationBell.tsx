@@ -84,7 +84,16 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
   const handleMarkRead = useCallback(async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     setUnreadCount(prev => Math.max(0, prev - 1));
-    // No dedicated single-mark endpoint — optimistic update only for now
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+    } catch {
+      // Best-effort — the dot may reappear on next load if this failed, but
+      // the notification itself was already seen.
+    }
   }, []);
 
   const handleMarkAllRead = useCallback(async () => {

@@ -9,6 +9,8 @@ const DOC_LABELS: Record<string, string> = {
   business_reg_url: 'Business registration',
   driving_permit_url: 'Driving permit',
   vehicle_reg_url: 'Vehicle registration',
+  insurance_url: 'Insurance certificate',
+  vehicle_photo_url: 'Vehicle photo',
   qualifications_url: 'Qualifications',
 };
 

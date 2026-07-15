@@ -3,7 +3,8 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 const DOC_COLUMNS = [
   'national_id_url', 'selfie_url', 'business_reg_url',
-  'driving_permit_url', 'vehicle_reg_url', 'qualifications_url',
+  'driving_permit_url', 'vehicle_reg_url', 'insurance_url', 'vehicle_photo_url',
+  'qualifications_url',
 ] as const;
 
 // Admin-only: the kyc-documents bucket is private, so document links can't

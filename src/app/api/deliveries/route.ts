@@ -95,13 +95,34 @@ export async function POST(req: Request) {
 
   let driversNotified = 0;
   try {
-    let vehicleQuery = (admin.from as any)('vehicles')
-      .select('user_id')
-      .eq('is_available', true);
+    const cargoKgNum = parseFloat(cargo_kg);
 
-    if (delivery_type === 'cold') vehicleQuery = vehicleQuery.eq('is_cold_capable', true);
+    function baseVehicleQuery() {
+      let q = (admin.from as any)('vehicles')
+        .select('user_id')
+        .eq('is_available', true)
+        .gte('capacity_kg', cargoKgNum);
+      if (delivery_type === 'cold') q = q.eq('is_cold_capable', true);
+      return q;
+    }
 
-    const { data: matchedVehicles } = await vehicleQuery.limit(10);
+    // Primary match: available, right-sized vehicles actually operating in
+    // the pickup district. `districts` is a text[] of districts a
+    // transporter covers — `.contains` maps to Postgres `@>`.
+    let { data: matchedVehicles } = await baseVehicleQuery()
+      .contains('districts', [pickup_district])
+      .limit(50);
+
+    // Fallback: nobody covers that exact district (small/rural area, or a
+    // transporter just hasn't added it to their coverage list yet) — still
+    // notify other available, right-sized drivers nationwide rather than
+    // silently notifying no one. The open-jobs browse/bid flow is the
+    // ultimate safety net regardless, but a push notification reaches
+    // drivers who aren't actively browsing.
+    if (!matchedVehicles || matchedVehicles.length === 0) {
+      const res = await baseVehicleQuery().limit(50);
+      matchedVehicles = res.data;
+    }
 
     if (matchedVehicles && matchedVehicles.length > 0) {
       const driverUserIds: string[] = [...new Set<string>(matchedVehicles.map((v: any) => v.user_id as string))];

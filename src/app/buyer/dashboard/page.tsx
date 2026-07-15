@@ -471,6 +471,8 @@ async function VerifyPrompt({ userId }: { userId: string }) {
     <VerificationBanner
       level={(profile?.verification_level as VerificationLevel) ?? 'none'}
       verifyHref="/buyer/verify"
+      headline="Get verified — buy with confidence"
+      benefit="Faster order approval and access to bulk sourcing"
       requiredDocsLabel="national ID, a selfie, and business registration"
     />
   );

@@ -465,6 +465,8 @@ export default async function TransporterDashboard() {
       <VerificationBanner
         level={(profile?.verification_level as VerificationLevel) ?? 'none'}
         verifyHref="/transporter/verify"
+        headline="Get verified — start earning today"
+        benefit="Unlock paid delivery jobs and protected fare payouts"
         requiredDocsLabel="national ID, driving permit, and a photo"
       />
 
