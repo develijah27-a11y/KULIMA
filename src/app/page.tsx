@@ -169,13 +169,16 @@ export default function Home() {
                 }}>
                   Create free account <ArrowRight size={17} strokeWidth={2.5} />
                 </Link>
-                <Link href="/auth/signin" style={{
+                {/* Secondary CTA points further down the page, not to Sign in —
+                    that's already one click away in the sticky nav right above,
+                    so repeating it here read as an accidental duplicate. */}
+                <a href="#how-it-works" style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   padding: '15px 26px', borderRadius: 14, background: '#fff',
                   border: `1.5px solid ${LINE}`, color: INK, fontWeight: 700, fontSize: 15.5, textDecoration: 'none',
                 }}>
-                  Sign in
-                </Link>
+                  See how it works
+                </a>
               </div>
 
               <div className="landing-fade-up" style={{ display: 'flex', gap: 30, flexWrap: 'wrap', animationDelay: '300ms' }}>

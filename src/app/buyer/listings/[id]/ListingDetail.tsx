@@ -66,14 +66,19 @@ export function ListingDetail({
 }: Props) {
   const router = useRouter();
   const [qty, setQty] = useState(Math.min(50, listing.quantity_kg));
-  const [showOffer, setShowOffer] = useState(false);
-  const [offerPrice, setOfferPrice] = useState(Math.round(listing.asking_price * 0.88));
-  const [offerNote, setOfferNote] = useState('');
+  const [qtyInput, setQtyInput] = useState(String(Math.min(50, listing.quantity_kg)));
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [buyPending, startBuy] = useTransition();
-  const [offerPending, startOffer] = useTransition();
 
   const total = Math.round(qty * listing.asking_price);
+
+  function applyQty(raw: string) {
+    setQtyInput(raw);
+    const n = Math.floor(Number(raw));
+    if (Number.isFinite(n) && n > 0) {
+      setQty(Math.min(n, listing.quantity_kg));
+    }
+  }
   const priceDelta = marketPrice ? Math.round(((listing.asking_price - marketPrice) / marketPrice) * 100) : null;
   const farmer = listing.farmer ?? {};
 
@@ -95,29 +100,6 @@ export function ListingDetail({
         setTimeout(() => router.push('/buyer/orders'), 1800);
       } else {
         showToast(json.error ?? 'Failed to place order', false);
-      }
-    });
-  }
-
-  function handleOffer() {
-    if (!offerPrice || offerPrice <= 0) { showToast('Enter a valid price', false); return; }
-    const minAllowed = Math.round(listing.asking_price * 0.7);
-    if (offerPrice < minAllowed) {
-      showToast(`Minimum offer is UGX ${minAllowed.toLocaleString()}/kg (70% of asking price)`, false);
-      return;
-    }
-    startOffer(async () => {
-      const res = await fetch('/api/offers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listingId: listing.id, offeredPrice: offerPrice, notes: offerNote }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        showToast('Offer sent! Farmer will respond soon.', true);
-        setTimeout(() => router.push('/buyer/requests'), 1800);
-      } else {
-        showToast(json.error ?? 'Failed to send offer', false);
       }
     });
   }
@@ -167,7 +149,7 @@ export function ListingDetail({
             <p style={{ fontSize: 28, fontWeight: 900, color: cropColor, margin: 0, letterSpacing: '-0.03em' }}>
               UGX {Math.round(listing.asking_price).toLocaleString()}
             </p>
-            <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0' }}>per kg · asking price</p>
+            <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0' }}>per kg · fixed price set by the farmer</p>
           </div>
           {priceDelta !== null && (
             <span style={{
@@ -239,24 +221,63 @@ export function ListingDetail({
             Buy Now
           </p>
 
-          {/* Quantity slider */}
+          {/* Quantity — typed amount, not a slider: precise on the first try,
+              especially for large bulk orders where dragging a slider to an
+              exact number is fiddly. */}
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 13, color: C.muted }}>Quantity</span>
-              <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>{qty} kg</span>
+              <span style={{ fontSize: 13, color: C.muted }}>How many kilograms?</span>
+              <span style={{ fontSize: 11, color: C.muted }}>{listing.quantity_kg.toLocaleString()} kg available</span>
             </div>
-            <input
-              type="range"
-              min={1}
-              max={listing.quantity_kg}
-              step={1}
-              value={qty}
-              onChange={e => setQty(Number(e.target.value))}
-              style={{ width: '100%', accentColor: 'var(--color-primary)', cursor: 'pointer' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-              <span style={{ fontSize: 10, color: C.muted }}>1 kg</span>
-              <span style={{ fontSize: 10, color: C.muted }}>{listing.quantity_kg} kg</span>
+            <div style={{ position: 'relative' }}>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={listing.quantity_kg}
+                value={qtyInput}
+                onChange={e => applyQty(e.target.value)}
+                onBlur={() => setQtyInput(String(qty))}
+                style={{
+                  width: '100%', padding: '14px 52px 14px 16px', borderRadius: 12,
+                  border: `1.5px solid ${C.border}`, fontSize: 20, fontWeight: 800,
+                  color: C.text, background: 'var(--d-input-bg)',
+                  boxSizing: 'border-box', outline: 'none', letterSpacing: '-0.02em',
+                }}
+              />
+              <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 13, fontWeight: 700, color: C.muted }}>
+                kg
+              </span>
+            </div>
+            {/* Quick picks */}
+            <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+              {[25, 50, 100, 250].filter(n => n < listing.quantity_kg).map(n => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => applyQty(String(n))}
+                  style={{
+                    padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    border: `1px solid ${qty === n ? 'transparent' : C.border}`,
+                    background: qty === n ? C.green : 'transparent',
+                    color: qty === n ? '#fff' : C.muted,
+                  }}
+                >
+                  {n} kg
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => applyQty(String(listing.quantity_kg))}
+                style={{
+                  padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                  border: `1px solid ${qty === listing.quantity_kg ? 'transparent' : C.border}`,
+                  background: qty === listing.quantity_kg ? C.green : 'transparent',
+                  color: qty === listing.quantity_kg ? '#fff' : C.muted,
+                }}
+              >
+                All ({listing.quantity_kg.toLocaleString()} kg)
+              </button>
             </div>
           </div>
 
@@ -287,103 +308,6 @@ export function ListingDetail({
           >
             {buyPending ? 'Placing order…' : <><ShoppingCart size={16} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 6 }} />Buy Now — UGX {total.toLocaleString()}</>}
           </button>
-        </div>
-      )}
-
-      {/* ── Make Offer section ───────────────────────────────────────────── */}
-      {!disabled && (
-        <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, overflow: 'hidden' }}>
-          <button
-            onClick={() => setShowOffer(v => !v)}
-            style={{
-              width: '100%', padding: '16px 22px', background: 'none', border: 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              cursor: 'pointer',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ display: 'flex', color: C.muted }}><Users size={18} /></span>
-              <div style={{ textAlign: 'left' }}>
-                <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>Negotiate price instead</p>
-                <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>Send a lower offer to the farmer</p>
-              </div>
-            </div>
-            <span style={{ color: C.muted, fontSize: 18, transform: showOffer ? 'rotate(180deg)' : 'none', transition: '0.2s' }}>›</span>
-          </button>
-
-          {showOffer && (
-            <div style={{ padding: '0 22px 20px', borderTop: `1px solid ${C.border}` }}>
-              <div style={{ paddingTop: 16 }}>
-                {/* Price input */}
-                <div style={{ marginBottom: 12 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
-                    Your price per kg (UGX)
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 12, color: C.muted, fontWeight: 600 }}>UGX</span>
-                    <input
-                      type="number"
-                      value={offerPrice}
-                      onChange={e => setOfferPrice(Number(e.target.value))}
-                      min={Math.round(listing.asking_price * 0.7)}
-                      max={listing.asking_price}
-                      style={{
-                        width: '100%', padding: '12px 14px 12px 52px', borderRadius: 10,
-                        border: `1.5px solid ${C.border}`, fontSize: 16, fontWeight: 700,
-                        color: C.text, background: 'var(--d-input-bg)',
-                        boxSizing: 'border-box', outline: 'none',
-                      }}
-                    />
-                  </div>
-                  <p style={{ fontSize: 10, color: C.muted, margin: '4px 0 0' }}>
-                    Min: UGX {Math.round(listing.asking_price * 0.7).toLocaleString()} · Asking: UGX {Math.round(listing.asking_price).toLocaleString()}
-                  </p>
-                </div>
-
-                {/* Savings display */}
-                {offerPrice > 0 && offerPrice < listing.asking_price && (
-                  <div style={{ background: C.greenBg, borderRadius: 10, padding: '8px 12px', marginBottom: 12, display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 12, color: C.greenMed }}>Savings per kg</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: C.green }}>
-                      UGX {(Math.round(listing.asking_price) - offerPrice).toLocaleString()} ({Math.round(((listing.asking_price - offerPrice) / listing.asking_price) * 100)}% off)
-                    </span>
-                  </div>
-                )}
-
-                {/* Note */}
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 6 }}>
-                    Message to farmer (optional)
-                  </label>
-                  <textarea
-                    value={offerNote}
-                    onChange={e => setOfferNote(e.target.value)}
-                    placeholder="e.g. I can collect in bulk, ready to pay immediately..."
-                    rows={2}
-                    style={{
-                      width: '100%', padding: '10px 12px', borderRadius: 10,
-                      border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text,
-                      background: 'var(--d-input-bg)', resize: 'none',
-                      boxSizing: 'border-box', outline: 'none', fontFamily: 'inherit',
-                    }}
-                  />
-                </div>
-
-                <button
-                  onClick={handleOffer}
-                  disabled={offerPending}
-                  style={{
-                    width: '100%', padding: '13px 20px', borderRadius: 12, border: 'none',
-                    background: offerPending ? C.amberBg : C.amber,
-                    color: offerPending ? C.amber : '#fff',
-                    fontSize: 14, fontWeight: 700, cursor: offerPending ? 'wait' : 'pointer',
-                  }}
-                >
-                  {offerPending ? 'Sending…' : `Send Offer — UGX ${offerPrice > 0 ? offerPrice.toLocaleString() : '—'}/kg`}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
 

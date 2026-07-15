@@ -52,7 +52,7 @@ export default async function NewListingPage() {
       <div style={{ background: 'var(--color-primary-bg)', border: '1px solid var(--color-primary-muted)', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 10 }}>
         <ShieldCheck size={18} style={{ flexShrink: 0, color: 'var(--color-success)' }} />
         <p style={{ fontSize: 13, color: 'var(--color-success)', margin: 0 }}>
-          <strong>Price protection active.</strong> Buyers cannot offer below 70% of your asking price. We also alert you if your price is significantly below market.
+          <strong>Your price is final.</strong> We show you today's market rate so you can set a fair price with confidence — once posted, buyers pay exactly what you ask. No negotiating you down.
         </p>
       </div>
 

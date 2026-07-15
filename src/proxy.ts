@@ -7,9 +7,6 @@ const PROTECTED = [
   '/farms', '/soil', '/disease', '/weather',
 ];
 
-// Routes where we redirect logged-in users away
-const AUTH_ONLY = ['/auth/signin'];
-
 // Sessions expire after 12 hours regardless of Supabase's own token lifetime.
 // The agrinova_sess cookie records when the session was first stamped.
 const SESSION_COOKIE = 'agrinova_sess';
@@ -20,11 +17,16 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const isProtected = PROTECTED.some(r => pathname.startsWith(r));
-  const isAuthOnly  = AUTH_ONLY.some(r => pathname === r);
 
-  // Public routes (landing, /auth/signup, static pages):
+  // Public routes (landing, /auth/signin, /auth/signup, static pages):
   // skip Supabase entirely — no cookie refresh needed for unauthenticated pages.
-  if (!isProtected && !isAuthOnly) {
+  // /auth/signin used to force-redirect an already-authenticated visitor
+  // straight to /dashboard here — that read as "it logged me in without
+  // asking for a password" since the form never even rendered. The signin
+  // page itself now checks client-side and shows an explicit "you're
+  // already signed in as X — continue or sign out" choice instead of a
+  // silent server-side bounce.
+  if (!isProtected) {
     return NextResponse.next({ request });
   }
 
@@ -68,15 +70,6 @@ export async function proxy(request: NextRequest) {
     const redirectUrl = new URL('/auth/signin', request.url);
     redirectUrl.searchParams.set('next', pathname);
     const redirectRes = NextResponse.redirect(redirectUrl);
-    response.cookies.getAll().forEach((cookie) => {
-      redirectRes.cookies.set(cookie.name, cookie.value, cookie as any);
-    });
-    return redirectRes;
-  }
-
-  // Redirect logged-in users away from /auth/signin only
-  if (user && isAuthOnly) {
-    const redirectRes = NextResponse.redirect(new URL('/dashboard', request.url));
     response.cookies.getAll().forEach((cookie) => {
       redirectRes.cookies.set(cookie.name, cookie.value, cookie as any);
     });

@@ -38,53 +38,15 @@ export async function GET(req: Request) {
   );
 }
 
-export async function POST(req: Request) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-
-  const { listingId, offeredPrice, notes } = await req.json();
-  if (!listingId || !offeredPrice) {
-    return NextResponse.json({ success: false, error: 'Missing fields' }, { status: 400 });
-  }
-
-  const { data: listing } = await (supabase.from as any)('listings').select('asking_price, status').eq('id', listingId).single();
-  if (!listing || listing.status !== 'active') {
-    return NextResponse.json({ success: false, error: 'Listing not available' }, { status: 404 });
-  }
-
-  const minOffer = (listing.asking_price ?? 0) * 0.7;
-  if (+offeredPrice < minOffer) {
-    return NextResponse.json({
-      success: false,
-      error: `Minimum offer is UGX ${Math.round(minOffer).toLocaleString()} (70% of asking price)`,
-    }, { status: 400 });
-  }
-
-  // Prevent duplicate pending offer from same buyer
-  const { data: existing } = await (supabase.from as any)('offers')
-    .select('id')
-    .eq('listing_id', listingId)
-    .eq('buyer_id', user.id)
-    .in('status', ['pending', 'countered'])
-    .maybeSingle();
-  if (existing) {
-    return NextResponse.json({ success: false, error: 'You already have an active offer on this listing' }, { status: 409 });
-  }
-
-  const { data, error } = await (supabase.from as any)('offers').insert({
-    listing_id:    listingId,
-    buyer_id:      user.id,
-    offered_price: +offeredPrice,
-    message:       notes ?? null,
-    status:        'pending',
-  }).select().single();
-
-  if (error) {
-    console.error('[/api/offers]', error);
-    return NextResponse.json({ success: false, error: 'Failed to submit offer. Please try again.' }, { status: 500 });
-  }
-  return NextResponse.json({ success: true, data });
+// Price negotiation is retired — listings sell at the farmer's set price
+// (the same price the market-rate guidance helped them choose when posting).
+// This endpoint stays only to let GET/PATCH resolve any offers that were
+// already in flight when this changed; no new ones can be created.
+export async function POST() {
+  return NextResponse.json({
+    success: false,
+    error: 'Price negotiation is no longer available on AgriNova. Listings are sold at the price set by the farmer — use Buy Now instead.',
+  }, { status: 410 });
 }
 
 export async function PATCH(req: Request) {

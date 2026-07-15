@@ -230,7 +230,7 @@ export default async function BuyerListingsPage({
 
                 <div style={{ padding: '10px 18px', borderTop: `1px solid ${C.border}`, background: 'var(--color-surface-2)' }}>
                   <p style={{ fontSize: 12, color: C.greenMed, fontWeight: 700, margin: 0, textAlign: 'center' }}>
-                    View & Make Offer →
+                    View & Buy →
                   </p>
                 </div>
               </Link>

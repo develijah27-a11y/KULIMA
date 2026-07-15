@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, MapPin, Menu } from 'lucide-react';
+import { ChevronDown, MapPin } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { OfflineStatusPill } from '@/components/ui/OfflineStatusPill';
 import { ROLE_META } from '@/components/layout/RoleSwitcher';
@@ -31,10 +31,6 @@ export function TopBar({
   const router = useRouter();
   const [roleOpen, setRoleOpen] = useState(false);
 
-  const openMobileMenu = useCallback(() => {
-    window.dispatchEvent(new CustomEvent('agrinova:menu-open'));
-  }, []);
-
   const currentMeta = currentRole ? ROLE_META[currentRole] : null;
   const otherRoles = (allRoles ?? []).filter(r => r !== currentRole && ROLE_META[r]);
   const showRoleSwitch = !!(currentMeta && otherRoles.length > 0);
@@ -49,22 +45,6 @@ export function TopBar({
         paddingRight: 'clamp(12px, 4vw, 24px)',
       }}
     >
-      {/* Mobile hamburger — opens full sidebar drawer */}
-      <button
-        className="md:hidden shrink-0 flex items-center justify-center rounded-xl mr-2"
-        onClick={openMobileMenu}
-        aria-label="Open navigation menu"
-        style={{
-          width: 36, height: 36,
-          background: 'var(--color-surface-2)',
-          border: '1px solid var(--color-border-mid)',
-          color: 'var(--color-text)',
-          cursor: 'pointer',
-        }}
-      >
-        <Menu size={18} strokeWidth={2} />
-      </button>
-
       {/* Greeting */}
       <div className="min-w-0 flex-1 mr-3">
         <p

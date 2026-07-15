@@ -70,6 +70,31 @@ export default function RootLayout({
         className={cn("min-h-screen antialiased", poppins.variable, inter.variable, dmMono.variable)}
         style={{ background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
       >
+        {/* Branded splash — bridges the OS's plain icon-on-green-background
+            splash and the real UI. Pure CSS animation (see .app-splash in
+            globals.css) so it paints immediately and always resolves, even
+            if JS is slow to hydrate. */}
+        <div className="app-splash" aria-hidden="true">
+          <svg className="app-splash-mark" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="splashBg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stopColor="#2FA34F" />
+                <stop offset="1" stopColor="#166B3A" />
+              </linearGradient>
+            </defs>
+            <rect width="256" height="256" rx="57" fill="url(#splashBg)" />
+            <circle cx="128" cy="150" r="22" fill="#FFA726" />
+            <path d="M128,58 L192,200 L166,200 L150,158 L106,158 L90,200 L64,200 Z" fill="#FFFFFF" />
+            <path d="M128,58 L150,158" stroke="#166B3A" strokeWidth="3" strokeLinecap="round" opacity="0.35" />
+            <path d="M172,72 Q186,86 172,102 Q158,86 172,72 Z" fill="#7CC576" />
+            <path d="M172,76 L172,98" stroke="#FFF7E6" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+            <path d="M58,210 Q128,200 198,210" stroke="#FFF7E6" strokeWidth="6" strokeLinecap="round" fill="none" opacity="0.55" />
+            <path d="M52,226 Q128,217 204,226" stroke="#FFF7E6" strokeWidth="6" strokeLinecap="round" fill="none" opacity="0.35" />
+          </svg>
+          <span className="app-splash-word">AgriNova</span>
+          <span className="app-splash-tagline">Smart Farm Management</span>
+          <div className="app-splash-dots"><span /><span /><span /></div>
+        </div>
         <AuthProvider>{children}</AuthProvider>
         <ToastContainer />
         <NavigationProgress />

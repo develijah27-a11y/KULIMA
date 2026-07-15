@@ -154,47 +154,58 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
           <p style={{ color: C.muted, fontSize: 13, marginTop: 4 }}>Add your first product to start receiving orders from farmers.</p>
         </div>
       ) : (
-        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
-          {visible.map((p, i) => {
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {visible.map((p) => {
             const lowStock = p.stock_qty < 5 && p.is_available;
             return (
-              <div key={p.id} style={{ padding: '16px 20px', borderBottom: i < visible.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
-                <div style={{ width: 44, height: 44, borderRadius: 10, background: lowStock ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: lowStock ? C.red : C.green, overflow: 'hidden' }}>
-                  {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : getCatIcon(p.category)}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>{p.name}</p>
+              <div key={p.id} style={{
+                background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden',
+                display: 'flex', flexDirection: 'column', opacity: p.is_available ? 1 : 0.6,
+              }}>
+                {/* Photo header */}
+                <div style={{ height: 130, position: 'relative', overflow: 'hidden', background: 'var(--color-primary-bg)' }}>
+                  {p.image_url ? (
+                    <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.green }}>
+                      {getCatIcon(p.category, 40)}
+                    </div>
+                  )}
+                  <div style={{ position: 'absolute', top: 10, left: 10, display: 'flex', gap: 6 }}>
                     {!p.is_available && (
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, background: 'var(--color-surface-2)', color: C.muted }}>Hidden</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: 'rgba(0,0,0,0.6)', color: '#fff' }}>Hidden</span>
                     )}
                     {lowStock && (
-                      <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 999, background: 'var(--color-harvest-bg)', color: C.amber }}>Low stock</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: 'var(--color-harvest)', color: '#fff' }}>Low stock</span>
                     )}
                   </div>
-                  <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0', textTransform: 'capitalize' }}>
+                </div>
+
+                <div style={{ padding: '14px 16px', flex: 1 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0 }}>{p.name}</p>
+                  <p style={{ fontSize: 11.5, color: C.muted, margin: '2px 0 0', textTransform: 'capitalize' }}>
                     {p.category} · Stock: {p.stock_qty} {p.unit}
                     {p.district ? ` · ${p.district}` : ''}
                   </p>
                   {p.description && (
-                    <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</p>
+                    <p style={{ fontSize: 11, color: C.muted, margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</p>
                   )}
+                  <p style={{ fontSize: 17, fontWeight: 900, color: C.green, margin: '10px 0 0', letterSpacing: '-0.02em' }}>
+                    UGX {Math.round(p.price_per_unit).toLocaleString()} <span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>/ {p.unit}</span>
+                  </p>
                 </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 800, color: C.green, margin: 0 }}>UGX {Math.round(p.price_per_unit).toLocaleString()}</p>
-                  <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>per {p.unit}</p>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+
+                <div style={{ display: 'flex', gap: 8, padding: '0 16px 16px' }}>
                   <button onClick={() => toggleAvail(p)}
-                    style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid var(--d-border)', background: 'transparent', color: C.muted, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--d-border)', background: 'transparent', color: C.muted, fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}>
                     {p.is_available ? 'Hide' : 'Show'}
                   </button>
                   <button onClick={() => { setModal({ ...p }); setError(''); }}
-                    style={{ padding: '5px 10px', borderRadius: 7, border: '1px solid var(--d-border)', background: 'transparent', color: C.text, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    style={{ flex: 1, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--d-border)', background: 'transparent', color: C.text, fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}>
                     Edit
                   </button>
                   <button disabled={deleting === p.id} onClick={() => del(p.id)}
-                    style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: 'var(--color-danger-bg)', color: C.red, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                    style={{ padding: '7px 12px', borderRadius: 8, border: 'none', background: 'var(--color-danger-bg)', color: C.red, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>
                     {deleting === p.id ? '…' : 'Del'}
                   </button>
                 </div>

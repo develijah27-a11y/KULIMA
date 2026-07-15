@@ -2,8 +2,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Leaf, ShieldCheck, Package } from 'lucide-react';
-import { getCropColor } from '@/lib/crop-photos';
+import { Leaf, ShieldCheck, Package, MapPin, Clock } from 'lucide-react';
+import { getCropPhotoUrl, getCropGradient } from '@/lib/crop-photos';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -27,7 +27,7 @@ function timeAgo(iso: string) {
 async function MyListings({ profileId, filter }: { profileId: string; filter: string }) {
   const supabase = await createClient();
   let q = (supabase.from as any)('listings')
-    .select('id, crop_type, quantity_kg, asking_price, district, status, created_at, notes')
+    .select('id, crop_type, quantity_kg, asking_price, district, status, created_at, notes, image_url')
     .eq('farmer_id', profileId)
     .order('created_at', { ascending: false });
 
@@ -65,46 +65,59 @@ async function MyListings({ profileId, filter }: { profileId: string; filter: st
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div className="grid sm:grid-cols-2 gap-4">
       {rows.map((l: any) => {
         const st = STATUS_CFG[l.status] ?? STATUS_CFG.active;
         const pendingOffers = offerMap[l.id] ?? 0;
+        const k = l.crop_type?.toLowerCase() ?? '';
+        const photoUrl = l.image_url || getCropPhotoUrl(k, 400, 220);
+        const gradient = getCropGradient(k);
+
         return (
           <Link
             key={l.id}
             href={`/farmer/marketplace/${l.id}`}
-            style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '16px 20px', textDecoration: 'none', display: 'block' }}
+            style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, textDecoration: 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: 'var(--color-primary-bg)' }}
-                >
-                  <Leaf size={20} style={{ color: getCropColor(l.crop_type) }} />
+            {/* Photo header */}
+            <div style={{
+              height: 120, position: 'relative', overflow: 'hidden',
+              background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`,
+              backgroundImage: photoUrl ? `url(${photoUrl})` : undefined,
+              backgroundSize: 'cover', backgroundPosition: 'center',
+            }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)' }} />
+              {!photoUrl && (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Leaf size={40} style={{ color: 'rgba(255,255,255,0.8)' }} />
                 </div>
+              )}
+              <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: st.bg, color: st.color }}>
+                {st.label}
+              </span>
+              {pendingOffers > 0 && (
+                <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: 'var(--color-harvest)', color: '#fff' }}>
+                  {pendingOffers} offer{pendingOffers !== 1 ? 's' : ''}
+                </span>
+              )}
+              <p style={{ position: 'absolute', bottom: 8, left: 12, color: '#fff', fontWeight: 800, fontSize: 15, margin: 0, textTransform: 'capitalize', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
+                {l.crop_type}
+              </p>
+            </div>
+
+            <div style={{ padding: '12px 16px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <p style={{ fontSize: 11.5, color: C.muted, margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><MapPin size={11} />{l.district}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Clock size={11} />{timeAgo(l.created_at)}</span>
+              </p>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                 <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-sm capitalize" style={{ color: C.text }}>{l.crop_type}</p>
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: st.bg, color: st.color }}>
-                      {st.label}
-                    </span>
-                    {pendingOffers > 0 && (
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: 'var(--color-harvest-bg)', color: 'var(--color-harvest)' }}>
-                        {pendingOffers} offer{pendingOffers !== 1 ? 's' : ''}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                    {l.quantity_kg} kg · {l.district} · {timeAgo(l.created_at)}
+                  <p style={{ fontSize: 17, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
+                    UGX {Math.round(l.asking_price).toLocaleString()}
                   </p>
+                  <p style={{ fontSize: 10, color: C.muted, margin: '1px 0 0' }}>per kg</p>
                 </div>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="font-black text-base" style={{ color: C.green, letterSpacing: '-0.02em' }}>
-                  UGX {Math.round(l.asking_price).toLocaleString()}
-                </p>
-                <p className="text-xs" style={{ color: C.muted }}>per kg</p>
+                <p style={{ fontSize: 12, fontWeight: 700, color: C.text, margin: 0 }}>{l.quantity_kg.toLocaleString()} kg</p>
               </div>
             </div>
           </Link>
@@ -189,7 +202,7 @@ export default async function FarmerMarketplacePage({
       <div style={{ background: 'var(--color-primary-bg)', border: '1px solid var(--color-primary-muted)', borderRadius: 12, padding: '10px 16px', display: 'flex', gap: 10, alignItems: 'center' }}>
         <ShieldCheck size={16} style={{ color: '#065F46', flexShrink: 0 }} />
         <p style={{ fontSize: 12, color: '#065F46', margin: 0 }}>
-          AgriNova alerts you if any offer is more than 30% below your asking price.
+          Your asking price is final — buyers pay exactly what you list, no back-and-forth.
         </p>
       </div>
 

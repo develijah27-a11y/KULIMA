@@ -2,15 +2,91 @@
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
 import { AuthForm } from '@/features/auth/components/AuthForm';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
-import { Suspense } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { ShieldCheck, AlertCircle } from 'lucide-react';
+
+const supabase = createClient();
+
+// Shown instead of the sign-in form when the visitor already has a valid
+// session — e.g. they never signed out, or followed an old bookmark to
+// /auth/signin. Previously this case was handled by silently redirecting
+// straight to the dashboard server-side, which read as "the app logged me
+// in without asking for a password." Being explicit about who's signed in
+// and letting them choose is the standard, trustworthy pattern (same as
+// Google/GitHub's account-picker on their own login pages).
+function AlreadySignedIn({ email }: { email: string }) {
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function switchAccount() {
+    setSigningOut(true);
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.reload();
+  }
+
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+          padding: '12px 14px', borderRadius: 12, marginBottom: 20,
+          background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)',
+        }}
+      >
+        <div style={{
+          width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+          background: 'var(--color-primary)', color: '#06210F',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontWeight: 900, fontSize: 15,
+        }}>
+          {email[0]?.toUpperCase() ?? 'U'}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontSize: 12, color: 'rgba(240,253,244,0.55)', fontWeight: 700, margin: 0 }}>Signed in as</p>
+          <p style={{ fontSize: 13.5, color: 'var(--color-text-on-dark)', fontWeight: 800, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{email}</p>
+        </div>
+      </div>
+
+      <Link href="/dashboard" className="auth-btn" style={{ display: 'block', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
+        Continue to dashboard
+      </Link>
+
+      <button
+        type="button"
+        onClick={switchAccount}
+        disabled={signingOut}
+        style={{
+          marginTop: 14, background: 'none', border: 'none', padding: 0,
+          fontSize: 13, fontWeight: 700, textDecoration: 'underline',
+          color: signingOut ? 'rgba(240,253,244,0.35)' : 'rgba(240,253,244,0.65)',
+          cursor: signingOut ? 'default' : 'pointer',
+        }}
+      >
+        {signingOut ? 'Signing out…' : 'Not you? Sign out and use a different account'}
+      </button>
+    </div>
+  );
+}
 
 function SignInContent() {
   const params = useSearchParams();
   const error  = params.get('error');
   const reason = params.get('reason');
+
+  const [checking, setChecking] = useState(true);
+  const [existingEmail, setExistingEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Skip the check entirely if we're here because a session just expired —
+    // no point asking "continue as X" right after forcing a fresh sign-in.
+    if (reason === 'session_expired') { setChecking(false); return; }
+    supabase.auth.getUser().then(({ data }) => {
+      setExistingEmail(data.user?.email ?? null);
+      setChecking(false);
+    });
+  }, [reason]);
 
   return (
     <AuthLayout
@@ -67,17 +143,26 @@ function SignInContent() {
         </div>
       )}
 
-      <AuthForm mode="signin" />
-
-      <div className="text-center mt-4">
-        <Link
-          href="/auth/forgot-password"
-          className="text-sm"
-          style={{ color: 'rgba(240,253,244,0.55)', fontWeight: 600 }}
-        >
-          Forgot your password?
-        </Link>
-      </div>
+      {checking ? (
+        <div style={{ padding: '32px 0', textAlign: 'center', color: 'rgba(240,253,244,0.45)', fontSize: 13 }}>
+          Checking your session…
+        </div>
+      ) : existingEmail ? (
+        <AlreadySignedIn email={existingEmail} />
+      ) : (
+        <>
+          <AuthForm mode="signin" />
+          <div className="text-center mt-4">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm"
+              style={{ color: 'rgba(240,253,244,0.55)', fontWeight: 600 }}
+            >
+              Forgot your password?
+            </Link>
+          </div>
+        </>
+      )}
     </AuthLayout>
   );
 }
