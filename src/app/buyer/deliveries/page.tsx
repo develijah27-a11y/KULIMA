@@ -171,7 +171,7 @@ function DeliveryRow({ d, vehicle, showPay }: { d: any; vehicle?: any; showPay?:
 
         {/* Live location — helps the driver find you without a phone call while driving */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <ShareLocationButton deliveryId={d.id} active={['open', 'assigned'].includes(d.status)} />
+          <ShareLocationButton deliveryId={d.id} active={['assigned', 'in_transit'].includes(d.status) && !!d.transporter} />
           {canTrack && (
             <TrackDeliveryButton
               delivery={d}
