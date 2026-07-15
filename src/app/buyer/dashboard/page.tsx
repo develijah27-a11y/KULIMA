@@ -360,22 +360,33 @@ async function MarketPulse() {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Market Pulse</p>
         <Link href="/buyer/listings" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Browse market →</Link>
       </div>
-      <div className="grid grid-cols-2 divide-x divide-y" style={{ borderColor: C.border }}>
+      <div className="grid grid-cols-2 gap-3 p-4">
         {pulse.map(({ crop, avg, trend }) => {
           const color = COLORS[crop] ?? C.greenMed;
           const up = trend >= 0;
           return (
-            <div key={crop} className="px-4 py-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <div className="w-2 h-2 rounded-full" style={{ background: color }} />
-                <p className="text-xs font-bold capitalize" style={{ color: C.text }}>{crop}</p>
+            <div key={crop} className="rounded-xl px-4 py-3" style={{ background: 'var(--color-surface-2)' }}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
+                  <p className="text-xs font-bold capitalize" style={{ color: C.text }}>{crop}</p>
+                </div>
+                {Math.abs(trend) > 0.1 && (
+                  <span
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={{
+                      color: up ? 'var(--color-success)' : C.red,
+                      background: up ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
+                    }}
+                  >
+                    {up ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
+                  </span>
+                )}
               </div>
-              <p className="text-base font-black" style={{ color, letterSpacing: '-0.03em' }}>UGX {avg.toLocaleString()}</p>
-              {Math.abs(trend) > 0.1 && (
-                <p className="text-[10px] mt-0.5 font-bold" style={{ color: up ? 'var(--color-success)' : C.red }}>
-                  {up ? '↑' : '↓'} {Math.abs(trend).toFixed(1)}%
-                </p>
-              )}
+              <p className="text-lg font-black leading-none" style={{ color, letterSpacing: '-0.03em' }}>
+                UGX {avg.toLocaleString()}
+              </p>
+              <p className="text-[10px] font-semibold mt-1" style={{ color: C.muted }}>per kg</p>
             </div>
           );
         })}

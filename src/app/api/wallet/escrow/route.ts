@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { calcFare } from '@/lib/delivery-pricing';
 import { rateLimit } from '@/lib/rate-limit';
+import { sendPushToUsers } from '@/lib/push';
 
 const admin = () => createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -222,13 +223,20 @@ export async function POST(req: Request) {
               await (db.from as any)('driver_assignments').insert(
                 driverUserIds.map((driverId: string) => ({ delivery_id: dr.id, driver_id: driverId, status: 'pending' })),
               );
+              const deliveryBody = `🚛 Standard · ${order.quantity_kg}kg from ${order.pickup_district} → ${dropoff} · UGX ${fare.totalFare.toLocaleString()}`;
               await (db.from as any)('notifications').insert(
                 driverUserIds.map((driverId: string) => ({
                   user_id: driverId, type: 'delivery', title: 'New Delivery Request',
-                  body: `🚛 Standard · ${order.quantity_kg}kg from ${order.pickup_district} → ${dropoff} · UGX ${fare.totalFare.toLocaleString()}`,
+                  body: deliveryBody,
                   read: false,
                 })),
               );
+              await sendPushToUsers(driverUserIds, {
+                title: 'New Delivery Request',
+                body:  deliveryBody,
+                url:   '/transporter/job-queue',
+                tag:   `delivery-${dr.id}`,
+              });
             }
           }
         }

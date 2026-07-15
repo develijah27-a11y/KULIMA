@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { sendPushToUsers } from '@/lib/push';
 
 // Vercel cron — every 6 hours
 export async function GET(req: Request) {
@@ -21,15 +22,17 @@ export async function GET(req: Request) {
         .eq('role', 'farmer')
         .then(({ data: farmers }) => {
           if (!farmers?.length) return;
+          const body = rainDays[0]?.weather?.[0]?.description ?? 'Heavy rain expected in the next few days';
           supabase.from('notifications').insert(
             farmers.map((f: any) => ({
               user_id: f.user_id,
               type:    'rain',
               title:   'Rain arriving in your area',
-              body:    rainDays[0]?.weather?.[0]?.description ?? 'Heavy rain expected in the next few days',
+              body,
               read:    false,
             }))
           );
+          sendPushToUsers(farmers.map((f: any) => f.user_id), { title: 'Rain arriving in your area', body, url: '/farmer/weather' });
         });
     }
   });
@@ -79,16 +82,70 @@ export async function GET(req: Request) {
     const toNotify = farmers.filter((f: any) => !notifiedIds.has(f.user_id));
     if (toNotify.length === 0) continue;
 
+    const body = `${change.crop} moved from UGX ${Math.round(change.oldPrice).toLocaleString()} to UGX ${Math.round(change.newPrice).toLocaleString()} per kg. Check the market page before you sell.`;
     await (supabase.from as any)('notifications').insert(
       toNotify.map((f: any) => ({
         user_id: f.user_id,
         type: 'price',
         title,
-        body: `${change.crop} moved from UGX ${Math.round(change.oldPrice).toLocaleString()} to UGX ${Math.round(change.newPrice).toLocaleString()} per kg. Check the market page before you sell.`,
+        body,
         read: false,
       })),
     );
+    await sendPushToUsers(toNotify.map((f: any) => f.user_id), { title, body, url: '/farmer/prices' });
   }
 
-  return NextResponse.json({ success: true, priceChanges: priceChanges.length });
+  // 3. Low stock — farmer inputs. farm_inventory.low_stock_threshold is set
+  // per item by the farmer; quantity at or below it means they're close to
+  // running out of something they use on the farm (seed, fertilizer, etc.).
+  // PostgREST filters compare a column to a literal, not to another column,
+  // so "quantity <= low_stock_threshold" is done in JS after a narrower fetch.
+  const { data: inventoryWithThreshold } = await (supabase.from as any)('farm_inventory')
+    .select('id, farmer_id, name, quantity, unit, low_stock_threshold, profile:profiles!farm_inventory_farmer_id_fkey(user_id)')
+    .not('low_stock_threshold', 'is', null)
+    .gt('low_stock_threshold', 0);
+  const lowInventory = (inventoryWithThreshold ?? []).filter((i: any) => i.quantity <= i.low_stock_threshold);
+
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  for (const item of (lowInventory ?? []) as any[]) {
+    const userId = item.profile?.user_id;
+    if (!userId) continue;
+    const title = `Running low: ${item.name}`;
+
+    const { data: already } = await (supabase.from as any)('notifications')
+      .select('id').eq('user_id', userId).eq('title', title).gte('created_at', dayAgo).maybeSingle();
+    if (already) continue;
+
+    const body = `You have ${item.quantity} ${item.unit} of ${item.name} left — below your restock threshold of ${item.low_stock_threshold} ${item.unit}.`;
+    await (supabase.from as any)('notifications').insert({ user_id: userId, type: 'stock', title, body, read: false });
+    await sendPushToUsers([userId], { title, body, url: '/farmer/inventory' });
+  }
+
+  // 4. Low stock — supplier products. Same 5-unit threshold already shown
+  // as a "Low stock" badge in the supplier's own catalogue view.
+  const { data: lowProducts } = await (supabase.from as any)('supplier_products')
+    .select('id, supplier_id, name, stock_qty, unit, is_available, profile:profiles!supplier_products_supplier_id_fkey(user_id)')
+    .eq('is_available', true)
+    .lt('stock_qty', 5);
+
+  for (const p of (lowProducts ?? []) as any[]) {
+    const userId = p.profile?.user_id;
+    if (!userId) continue;
+    const title = `Running low: ${p.name}`;
+
+    const { data: already } = await (supabase.from as any)('notifications')
+      .select('id').eq('user_id', userId).eq('title', title).gte('created_at', dayAgo).maybeSingle();
+    if (already) continue;
+
+    const body = `Only ${p.stock_qty} ${p.unit} of ${p.name} left in stock. Restock soon or farmers won't be able to order it.`;
+    await (supabase.from as any)('notifications').insert({ user_id: userId, type: 'stock', title, body, read: false });
+    await sendPushToUsers([userId], { title, body, url: '/supplier/catalogue' });
+  }
+
+  return NextResponse.json({
+    success: true,
+    priceChanges: priceChanges.length,
+    lowInventory: (lowInventory ?? []).length,
+    lowProducts: (lowProducts ?? []).length,
+  });
 }

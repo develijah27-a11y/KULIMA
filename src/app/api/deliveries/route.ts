@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
 import { calcFare, type DeliveryType } from '@/lib/delivery-pricing';
+import { sendPushToUsers } from '@/lib/push';
 
 // ─── GET: list open deliveries for transporters to browse ────────────────────
 export async function GET(req: Request) {
@@ -149,6 +150,12 @@ export async function POST(req: Request) {
           read:    false,
         }));
         await (admin.from as any)('notifications').insert(notifications);
+        await sendPushToUsers(driverUserIds, {
+          title: 'New Delivery Request',
+          body:  `${typeLabel} · ${cargo_kg}kg from ${pickup_district} → ${dropoff_district} · UGX ${fare.totalFare.toLocaleString()}`,
+          url:   '/transporter/job-queue',
+          tag:   `delivery-${deliveryId}`,
+        });
       }
     }
   } catch {

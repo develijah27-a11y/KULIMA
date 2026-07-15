@@ -38,8 +38,38 @@ export function CameraCapture({ onCaptured, onCancel, label = 'Take a photo' }: 
       requestAnimationFrame(() => {
         if (videoRef.current) videoRef.current.srcObject = stream;
       });
-    } catch {
-      setError('Camera access was blocked. Allow camera permission for this site to take a photo.');
+    } catch (err: unknown) {
+      // getUserMedia throws several distinct error names — collapsing them
+      // all into "permission blocked" is misleading when the real cause is
+      // e.g. no camera device found, or the camera already being held by
+      // another app/tab, or the page being loaded over plain http:// (which
+      // isn't a "secure context" outside localhost, so the browser refuses
+      // camera access even when the user has never been asked for — or has
+      // already granted — permission).
+      const name = err instanceof DOMException ? err.name : '';
+      if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        setError('No camera was found on this device.');
+      } else if (name === 'NotReadableError' || name === 'TrackStartError') {
+        setError('Your camera is already in use by another app or browser tab. Close it and try again.');
+      } else if (name === 'OverconstrainedError' || name === 'ConstraintNotSatisfiedError') {
+        // Retry once without the rear-camera preference — some devices have
+        // only a front camera and reject the "environment" constraint outright.
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          streamRef.current = stream;
+          setPhase('live');
+          requestAnimationFrame(() => { if (videoRef.current) videoRef.current.srcObject = stream; });
+          return;
+        } catch {
+          setError('No compatible camera was found on this device.');
+        }
+      } else if (!window.isSecureContext) {
+        setError('Camera access requires a secure (https://) connection. Open this site over https to use the camera.');
+      } else if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        setError('Camera permission is blocked for this site. Check your browser\'s site settings (tap the lock icon in the address bar) and allow Camera, then try again.');
+      } else {
+        setError('Could not start the camera. Please try again.');
+      }
     }
   }
 

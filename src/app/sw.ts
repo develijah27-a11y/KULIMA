@@ -99,3 +99,45 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// ── Web Push ─────────────────────────────────────────────────────────────
+// Shows an OS-level notification even when the app isn't open — this is
+// what actually reaches a driver whose phone is locked, or a farmer/supplier
+// who isn't currently in the app, unlike the in-app notification bell which
+// only updates while a tab is active.
+self.addEventListener('push', (event: PushEvent) => {
+  if (!event.data) return;
+  let payload: { title?: string; body?: string; url?: string; tag?: string } = {};
+  try { payload = event.data.json(); } catch { payload = { body: event.data.text() }; }
+
+  const title = payload.title ?? 'AgriNova';
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: payload.body ?? '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: payload.tag,
+      data: { url: payload.url ?? '/dashboard' },
+    }),
+  );
+});
+
+// Focus an already-open AgriNova tab if one exists and navigate it,
+// otherwise open a new one — standard "tap the notification" behavior.
+self.addEventListener('notificationclick', (event: NotificationEvent) => {
+  event.notification.close();
+  const url = (event.notification.data as { url?: string } | undefined)?.url ?? '/dashboard';
+  event.waitUntil(
+    (async () => {
+      const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of clientsList) {
+        if ('focus' in client) {
+          await (client as WindowClient).focus();
+          if ('navigate' in client) await (client as WindowClient).navigate(url);
+          return;
+        }
+      }
+      await self.clients.openWindow(url);
+    })(),
+  );
+});

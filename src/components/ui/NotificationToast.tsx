@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Bell, Truck, MessageCircle, Users, TrendingUp, Cloud } from 'lucide-react';
+import { X, Bell, Truck, MessageCircle, Users, TrendingUp, Cloud, Package } from 'lucide-react';
 
 export interface ToastItem {
   id: string;
@@ -42,6 +42,7 @@ const TYPE_ICON: Record<string, React.ReactNode> = {
   group:    <Users size={15} />,
   price:    <TrendingUp size={15} />,
   weather:  <Cloud size={15} />,
+  stock:    <Package size={15} />,
 };
 
 export function NotificationToastContainer() {
