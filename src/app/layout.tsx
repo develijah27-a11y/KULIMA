@@ -39,6 +39,28 @@ const themeScript = `
 })();
 `;
 
+// Dismisses the splash on window `load` (all resources in, not just DOM
+// parsed) rather than a fixed CSS timer — on the slow rural connections
+// this app targets, a blind timer tied to the splash's own first-paint
+// clock can finish well before the rest of the page has actually loaded.
+// Enforces a minimum hold so it doesn't just flash on fast connections, and
+// a hard timeout so it can never get stuck if `load` never fires.
+const splashScript = `
+(function(){
+  var MIN_MS = 500, MAX_MS = 4000, start = Date.now(), done = false;
+  function hide(){
+    if (done) return;
+    done = true;
+    var el = document.getElementById('app-splash');
+    if (el) el.classList.add('is-leaving');
+  }
+  function schedule(){ setTimeout(hide, Math.max(0, MIN_MS - (Date.now() - start))); }
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule);
+  setTimeout(hide, MAX_MS);
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -71,10 +93,10 @@ export default function RootLayout({
         style={{ background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
       >
         {/* Branded splash — bridges the OS's plain icon-on-green-background
-            splash and the real UI. Pure CSS animation (see .app-splash in
-            globals.css) so it paints immediately and always resolves, even
-            if JS is slow to hydrate. */}
-        <div className="app-splash" aria-hidden="true">
+            splash and the real UI. The overlay markup paints immediately
+            (plain CSS, no JS needed to appear); splashScript below decides
+            when to dismiss it. */}
+        <div id="app-splash" className="app-splash" aria-hidden="true">
           <svg className="app-splash-mark" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="splashBg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
@@ -95,6 +117,7 @@ export default function RootLayout({
           <span className="app-splash-tagline">Smart Farm Management</span>
           <div className="app-splash-dots"><span /><span /><span /></div>
         </div>
+        <script dangerouslySetInnerHTML={{ __html: splashScript }} />
         <AuthProvider>{children}</AuthProvider>
         <ToastContainer />
         <NavigationProgress />

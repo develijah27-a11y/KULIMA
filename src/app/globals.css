@@ -1145,10 +1145,15 @@ input.auth-input:-webkit-autofill:active {
 /* ── App splash screen ──────────────────────────────────────────────────
    Shown on every cold load (PWA launch or hard browser refresh) to bridge
    the gap between the OS's plain icon-on-background_color splash and the
-   real UI painting in. Pure CSS (no JS/hydration dependency) so it appears
-   in the very first paint and can never get stuck if a script fails —
-   holds for 900ms, then fades and drops out of the a11y/hit-test tree via
-   visibility, staying that way (animation-fill-mode: forwards). */
+   real UI painting in. The overlay itself is plain CSS so it's in the very
+   first paint with no JS dependency; a small inline script (see layout.tsx)
+   decides *when* to dismiss it — on window `load` plus a minimum hold, with
+   a hard timeout fallback — instead of a blind fixed-timer fade. A timer
+   tied to the wrong clock (the animation starts at this element's own first
+   paint, which on a slow connection can be long before the rest of the page
+   — fonts, images, hydration — has actually loaded) would fade the splash
+   before the app underneath is ready, on exactly the slow rural connections
+   this app is built for. */
 .app-splash {
   position: fixed;
   inset: 0;
@@ -1159,7 +1164,9 @@ input.auth-input:-webkit-autofill:active {
   justify-content: center;
   gap: 18px;
   background: linear-gradient(160deg, #2FA34F 0%, #166B3A 62%, #0F4C2A 100%);
-  animation: appSplashOut 550ms ease 900ms forwards;
+}
+.app-splash.is-leaving {
+  animation: appSplashOut 450ms ease forwards;
 }
 .app-splash-mark {
   width: 96px;
@@ -1216,7 +1223,7 @@ input.auth-input:-webkit-autofill:active {
   40%           { opacity: 1;    transform: translateY(-3px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .app-splash { animation-duration: 1ms; }
+  .app-splash.is-leaving { animation-duration: 1ms; }
   .app-splash-mark, .app-splash-word, .app-splash-tagline, .app-splash-dots, .app-splash-dots span {
     animation: none;
     opacity: 1;
