@@ -14,7 +14,7 @@ export default async function InvoicePage({
   if (!user) redirect('/auth/signin');
 
   const { data: contract } = await (supabase.from as any)('offtaker_contracts')
-    .select('id, crop_type, quantity_kg, price_ugx, farmer_name, farmer_location, delivery_date, payment_status, status, notes, created_at, updated_at')
+    .select('id, crop_type, quantity_kg, price_ugx, farmer_name, district, delivery_date, payment_status, status, notes, created_at, updated_at')
     .eq('id', id)
     .eq('offtaker_id', user.id)
     .single();
@@ -86,8 +86,8 @@ export default async function InvoicePage({
           <div>
             <p style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Farmer / Supplier</p>
             <p style={{ fontSize: 15, fontWeight: 700, color: '#111', margin: 0 }}>{contract.farmer_name ?? '—'}</p>
-            {contract.farmer_location && (
-              <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0' }}>{contract.farmer_location}</p>
+            {contract.district && (
+              <p style={{ fontSize: 12, color: '#6b7280', margin: '2px 0 0' }}>{contract.district}</p>
             )}
           </div>
         </div>

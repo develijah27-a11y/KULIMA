@@ -14,7 +14,7 @@ async function CalculatorData() {
       .select('crop_type, price_per_kg')
       .order('recorded_at', { ascending: false }),
     (supabase.from as any)('farms')
-      .select('primary_crop')
+      .select('crop_types')
       .eq('user_id', session.user.id)
       .single(),
   ]);
@@ -31,7 +31,7 @@ async function CalculatorData() {
   return (
     <CalculatorClient
       marketPrices={marketPrices}
-      primaryCrop={farmRes.data?.primary_crop ?? 'maize'}
+      primaryCrop={farmRes.data?.crop_types?.[0] ?? 'maize'}
     />
   );
 }

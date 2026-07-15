@@ -12,12 +12,13 @@ export default async function MessagesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
+  // offtaker_contracts has no relational link to a farmer profile — the
+  // offtaker just types the farmer's name when logging a contract — so
+  // "contacts" here are grouped by that free-text name, with no phone
+  // number to call (the data was never captured, not a lookup bug).
   const [{ data: contracts }, { data: profile }] = await Promise.all([
     (supabase.from as any)('offtaker_contracts')
-      .select(`
-        id, crop_type, status, farmer_id,
-        farmer:profiles!offtaker_contracts_farmer_id_fkey(full_name, phone_number, location)
-      `)
+      .select('id, crop_type, status, farmer_name')
       .eq('offtaker_id', user.id)
       .in('status', ['active', 'completed'])
       .order('created_at', { ascending: false })
@@ -34,7 +35,7 @@ export default async function MessagesPage() {
 
   const rows = (contracts ?? []) as any[];
   const notifs = (recentNotifs ?? []) as any[];
-  const uniqueFarmers = Array.from(new Map(rows.map(c => [c.farmer_id, c.farmer])).entries()).slice(0, 8);
+  const uniqueFarmers = Array.from(new Set(rows.map(c => c.farmer_name).filter(Boolean))).slice(0, 8) as string[];
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
@@ -50,29 +51,20 @@ export default async function MessagesPage() {
             <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Farmer Contacts</p>
             <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>From your active contracts — call or WhatsApp directly</p>
           </div>
-          {uniqueFarmers.map(([farmerId, farmer]: [string, any], i) => {
-            const farmerContracts = rows.filter(c => c.farmer_id === farmerId);
+          {uniqueFarmers.map((farmerName, i) => {
+            const farmerContracts = rows.filter(c => c.farmer_name === farmerName);
             const crops = [...new Set(farmerContracts.map((c: any) => c.crop_type))].join(', ');
             return (
-              <div key={farmerId} style={{ padding: '14px 18px', borderBottom: i < uniqueFarmers.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', gap: 13, alignItems: 'center' }}>
+              <div key={farmerName} style={{ padding: '14px 18px', borderBottom: i < uniqueFarmers.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', gap: 13, alignItems: 'center' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--color-sky-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: C.blue, flexShrink: 0 }}>
-                  {farmer?.full_name?.[0]?.toUpperCase() ?? '?'}
+                  {farmerName?.[0]?.toUpperCase() ?? '?'}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px' }}>{farmer?.full_name ?? 'Farmer'}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px' }}>{farmerName}</p>
                   <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
                     {crops && <span style={{ textTransform: 'capitalize' }}>{crops}</span>}
-                    {farmer?.location && ` · ${farmer.location}`}
                   </p>
                 </div>
-                {farmer?.phone_number && (
-                  <a
-                    href={`tel:${farmer.phone_number}`}
-                    style={{ padding: '6px 14px', background: 'var(--color-sky-bg)', color: C.blue, borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}
-                  >
-                    Call
-                  </a>
-                )}
               </div>
             );
           })}

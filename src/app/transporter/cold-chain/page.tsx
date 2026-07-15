@@ -20,7 +20,7 @@ export default async function TransporterColdChainPage() {
 
   const [{ data: vehicle }, { data: active }, { data: history }] = await Promise.all([
     (supabase.from as any)('vehicles')
-      .select('id, make, model, plate_number, is_cold_capable')
+      .select('id, make_model, plate_number, is_cold_capable')
       .eq('user_id', user.id)
       .eq('is_cold_capable', true)
       .single(),
@@ -69,7 +69,7 @@ export default async function TransporterColdChainPage() {
           <span style={{ display: 'flex', color: 'var(--color-sky)' }}><Snowflake size={22} /></span>
           <div>
             <p style={{ fontSize: 13, fontWeight: 700, color: C.blue, margin: '0 0 2px' }}>Cool Transport Certified Vehicle</p>
-            <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{vehicle.make} {vehicle.model} · {vehicle.plate_number}</p>
+            <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{vehicle.make_model} · {vehicle.plate_number}</p>
           </div>
         </div>
       ) : (

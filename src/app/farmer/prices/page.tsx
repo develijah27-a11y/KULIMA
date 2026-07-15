@@ -184,12 +184,12 @@ async function UgandaLocalPrices({
     avgMap[c] = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   }
 
-  const hotCrops = [...demand].sort((a: any, b: any) => (b.offer_count_30d ?? 0) - (a.offer_count_30d ?? 0)).slice(0, 4);
+  const hotCrops = [...demand].sort((a: any, b: any) => (b.request_count ?? 0) - (a.request_count ?? 0)).slice(0, 4);
   const cropEntries = Object.entries(cropMap).sort(([a], [b]) => {
     if (a === primaryCrop) return -1;
     if (b === primaryCrop) return 1;
-    const da = demandMap[a]?.offer_count_30d ?? 0;
-    const db = demandMap[b]?.offer_count_30d ?? 0;
+    const da = demandMap[a]?.request_count ?? 0;
+    const db = demandMap[b]?.request_count ?? 0;
     return db - da;
   });
 
@@ -218,7 +218,7 @@ async function UgandaLocalPrices({
                 <span style={{ display: 'flex', color: getCropColor(d.crop_type) }}><Leaf size={16} /></span>
                 <div>
                   <p style={{ color: '#fff', fontWeight: 700, fontSize: 12, margin: 0, textTransform: 'capitalize' }}>{d.crop_type.replace(/_/g,' ')}</p>
-                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, margin: 0 }}>{d.offer_count_30d} active buyers</p>
+                  <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 10, margin: 0 }}>{d.request_count} active buyers</p>
                 </div>
               </a>
             ))}
@@ -274,7 +274,7 @@ async function UgandaLocalPrices({
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 2 }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, textTransform: 'capitalize' }}>{crop.replace(/_/g,' ')}</p>
                     {isPrimary && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-success-bg)', color: 'var(--color-success)' }}>YOUR CROP</span>}
-                    {dm?.offer_count_30d > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>IN DEMAND</span>}
+                    {dm?.request_count > 0 && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}>IN DEMAND</span>}
                     {GLOBAL_SOURCES.has(info.source) && <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(96,165,250,0.12)', color: 'var(--color-sky)' }}>GLOBAL REF</span>}
                   </div>
                   <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{info.market} · {info.district}</p>

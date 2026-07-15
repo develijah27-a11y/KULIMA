@@ -29,7 +29,7 @@ const getProfile = cache(async (userId: string) => {
   return data as any;
 });
 
-async function PathologistStats({ userId }: { userId: string }) {
+async function PathologistStats({ profileId }: { profileId: string }) {
   const supabase = await createClient();
 
   const weekAgo = new Date(Date.now() - 7 * 864e5).toISOString();
@@ -45,7 +45,7 @@ async function PathologistStats({ userId }: { userId: string }) {
       .eq('urgency', 'high'),
     (supabase.from as any)('disease_reports')
       .select('id', { count: 'exact', head: true })
-      .eq('pathologist_id', userId)
+      .eq('pathologist_id', profileId)
       .eq('status', 'closed')
       .gte('updated_at', weekAgo),
     (supabase.from as any)('disease_scans')
@@ -362,7 +362,7 @@ export default async function PathologistDashboardPage() {
       </div>
 
       <Suspense fallback={<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}</div>}>
-        <PathologistStats userId={userId} />
+        <PathologistStats profileId={profile?.id ?? ''} />
       </Suspense>
 
       <QuickActions />

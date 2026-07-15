@@ -150,7 +150,12 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
         )}
 
         {/* Live location — helps the driver find you without a phone call while driving */}
-        <ShareLocationButton deliveryId={d.id} active={['assigned', 'in_transit'].includes(d.status) && !!d.transporter} />
+        <ShareLocationButton
+          deliveryId={d.id}
+          active={['assigned', 'in_transit'].includes(d.status) && !!d.transporter}
+          autoStart
+          label="location visible to driver"
+        />
       </div>
 
       {showPay && !paid && (

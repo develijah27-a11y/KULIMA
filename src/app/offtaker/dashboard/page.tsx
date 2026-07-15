@@ -43,7 +43,7 @@ async function OfftakerStats({ userId }: { userId: string }) {
       .eq('offtaker_id', userId)
       .eq('status', 'active'),
     (supabase.from as any)('offtaker_contracts')
-      .select('farmer_id')
+      .select('farmer_name')
       .eq('offtaker_id', userId)
       .eq('status', 'active'),
     (supabase.from as any)('wallets')
@@ -60,7 +60,7 @@ async function OfftakerStats({ userId }: { userId: string }) {
   const suppliersData   = suppliersRes.status    === 'fulfilled' ? (suppliersRes.value.data    ?? []) : [];
   const walletBal       = walletRes.status       === 'fulfilled' ? (walletRes.value.data?.balance ?? 0) : 0;
   const pendingPayCount = pendingPayRes.status   === 'fulfilled' ? (pendingPayRes.value.count  ?? 0) : 0;
-  const uniqueSuppliers = new Set(suppliersData.map((r: any) => r.farmer_id)).size;
+  const uniqueSuppliers = new Set(suppliersData.map((r: any) => r.farmer_name).filter(Boolean)).size;
 
   const stats = [
     { label: 'Active Deals',       value: contractsCount,                                      icon: <FileText size={18} />,   sub: 'Running agreements',       border: C.greenBright },
@@ -296,9 +296,9 @@ async function AvailableSupply() {
 async function SupplierScorecard({ userId }: { userId: string }) {
   const supabase = await createClient();
   const { data: scorecards, error } = await (supabase.from as any)('offtaker_scorecards')
-    .select('farmer_name, crop_type, reliability_score, quality_score, total_kg, district')
+    .select('farmer_name, crop_type, delivery_score, quality_score, quantity_kg')
     .eq('offtaker_id', userId)
-    .order('reliability_score', { ascending: false })
+    .order('delivery_score', { ascending: false })
     .limit(5);
 
   const rows = error ? [] : (scorecards ?? []);
@@ -321,7 +321,7 @@ async function SupplierScorecard({ userId }: { userId: string }) {
       ) : (
         <div className="divide-y" style={{ borderColor: C.border }}>
           {rows.map((s: any, i: number) => {
-            const score = ((s.reliability_score + s.quality_score) / 2).toFixed(1);
+            const score = ((s.delivery_score + s.quality_score) / 2).toFixed(1);
             const color = parseFloat(score) >= 4 ? 'var(--color-success)' : parseFloat(score) >= 3 ? 'var(--color-harvest)' : C.red;
             return (
               <div key={i} className="px-5 py-3 flex items-center justify-between gap-3">
@@ -331,7 +331,7 @@ async function SupplierScorecard({ userId }: { userId: string }) {
                   </div>
                   <div>
                     <p className="text-sm font-semibold" style={{ color: C.text }}>{s.farmer_name}</p>
-                    <p className="text-[11px] capitalize" style={{ color: C.muted }}>{s.crop_type} · {s.total_kg?.toLocaleString()} kg delivered</p>
+                    <p className="text-[11px] capitalize" style={{ color: C.muted }}>{s.crop_type} · {s.quantity_kg?.toLocaleString()} kg delivered</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">

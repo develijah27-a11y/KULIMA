@@ -12,10 +12,9 @@ export default async function UrgentCasesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: cases } = await (supabase as any)
-    .from('disease_cases')
-    .select('id, crop_type, symptoms, severity, status, created_at, farmer_id')
-    .in('severity', ['high', 'critical'])
+  const { data: cases } = await (supabase.from as any)('disease_reports')
+    .select('id, crop_type, symptoms, urgency, status, created_at')
+    .in('urgency', ['high', 'critical'])
     .neq('status', 'closed')
     .order('created_at', { ascending: false })
     .limit(50);
@@ -40,7 +39,7 @@ export default async function UrgentCasesPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {list.map((c: any) => {
-            const sev = SEV_CFG[c.severity] ?? { color: 'var(--d-muted)', bg: 'var(--color-surface-2)' };
+            const sev = SEV_CFG[c.urgency] ?? { color: 'var(--d-muted)', bg: 'var(--color-surface-2)' };
             return (
               <Link
                 key={c.id}
@@ -62,7 +61,7 @@ export default async function UrgentCasesPage() {
                     </p>
                   </div>
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: sev.bg, color: sev.color, whiteSpace: 'nowrap', flexShrink: 0 }}>
-                    {c.severity.toUpperCase()}
+                    {c.urgency.toUpperCase()}
                   </span>
                 </div>
               </Link>

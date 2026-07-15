@@ -20,18 +20,17 @@ export async function GET(req: Request) {
 
   const [pricesRes, demandRes] = await Promise.all([
     priceQuery,
-    (supabase.from as any)('crop_demand_signals').select('crop_type, offer_count_30d, bids_per_listing').limit(50),
+    (supabase.from as any)('crop_demand_signals').select('crop_type, request_count').limit(50),
   ]);
 
   const prices = pricesRes.data ?? [];
   const demand = demandRes.data ?? [];
 
   // Build demand map
-  const demandMap: Record<string, { offer_count: number; bids_per_listing: number }> = {};
+  const demandMap: Record<string, { offer_count: number }> = {};
   demand.forEach((d: any) => {
     demandMap[d.crop_type] = {
-      offer_count: d.offer_count_30d ?? 0,
-      bids_per_listing: parseFloat(d.bids_per_listing) ?? 0,
+      offer_count: d.request_count ?? 0,
     };
   });
 

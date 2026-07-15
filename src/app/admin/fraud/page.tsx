@@ -62,7 +62,7 @@ async function FraudStats() {
 async function FlagList({ status, sev }: { status: string; sev: string }) {
   const supabase = await createClient();
   let q = (supabase.from as any)('fraud_flags')
-    .select('id, user_id, flagged_by, reason, severity, description, status, created_at')
+    .select('id, user_id, flag_type, severity, description, status, created_at')
     .order('created_at', { ascending: false })
     .limit(100);
   if (status) q = q.eq('status', status);
@@ -107,7 +107,7 @@ async function FlagList({ status, sev }: { status: string; sev: string }) {
                   <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: stc.bg, color: stc.color }}>{stc.label}</span>
                 </div>
                 <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 2px', textTransform: 'capitalize' }}>
-                  {flag.reason?.replace(/_/g, ' ') ?? 'Unknown reason'}
+                  {flag.flag_type?.replace(/_/g, ' ') ?? 'Unknown reason'}
                 </p>
                 {flag.description && (
                   <p style={{ fontSize: 12, color: C.muted, margin: '0 0 2px' }}>{flag.description}</p>

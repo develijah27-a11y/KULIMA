@@ -7,9 +7,8 @@ export default async function ResolvedCasesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: cases } = await (supabase as any)
-    .from('disease_cases')
-    .select('id, crop_type, symptoms, severity, status, created_at, updated_at')
+  const { data: cases } = await (supabase.from as any)('disease_reports')
+    .select('id, crop_type, urgency, status, created_at, updated_at')
     .eq('status', 'closed')
     .order('updated_at', { ascending: false })
     .limit(100);
@@ -60,7 +59,7 @@ export default async function ResolvedCasesPage() {
                 </p>
               </div>
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-support)', flexShrink: 0 }}>
-                {c.severity}
+                {c.urgency}
               </span>
             </Link>
           ))}

@@ -20,7 +20,7 @@ export default async function QualityControlPage() {
   if (!user) redirect('/auth/signin');
 
   const { data: contracts } = await (supabase.from as any)('offtaker_contracts')
-    .select('id, status, crop_type, quantity_kg, price_ugx, created_at, farmer_id')
+    .select('id, status, crop_type, quantity_kg, price_ugx, created_at')
     .eq('offtaker_id', user.id)
     .order('created_at', { ascending: false })
     .limit(100);

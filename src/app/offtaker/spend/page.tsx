@@ -12,7 +12,7 @@ export default async function SpendAnalyticsPage() {
   if (!user) redirect('/auth/signin');
 
   const { data: contracts } = await (supabase.from as any)('offtaker_contracts')
-    .select('price_ugx, quantity_kg, status, crop_type, created_at, farmer_id')
+    .select('price_ugx, quantity_kg, status, crop_type, created_at')
     .eq('offtaker_id', user.id)
     .order('created_at', { ascending: false })
     .limit(200);

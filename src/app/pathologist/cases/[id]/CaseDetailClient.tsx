@@ -38,7 +38,7 @@ interface Case {
   id: string;
   crop_type: string;
   symptoms: string;
-  severity: string;
+  urgency: string;
   district: string;
   status: string;
   reported_at: string;
@@ -58,10 +58,10 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
 
   const isAssigned   = c.pathologist_id === profileId;
   const canDiagnose  = c.status === 'assigned' && isAssigned;
-  const canClaim     = c.status === 'open';
+  const canClaim     = c.status === 'reported';
   const canClose     = c.status === 'diagnosed' && isAssigned;
 
-  const sev = SEV_CFG[c.severity] ?? SEV_CFG.unknown;
+  const sev = SEV_CFG[c.urgency] ?? SEV_CFG.unknown;
 
   async function action(act: string, extra?: object) {
     setLoading(act); setError('');

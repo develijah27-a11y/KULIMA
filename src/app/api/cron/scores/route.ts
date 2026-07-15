@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   const admin = createServiceRoleClient();
 
   const { data: farmers } = await supabase.from('profiles').select('user_id, created_at');
-  const { data: offers } = await supabase.from('offers').select('buyer_id, rating');
+  const { data: offers } = await supabase.from('offers').select('buyer_id');
   const { data: farms } = await supabase.from('farms').select('user_id, size_hectares');
 
   const farmCount: Record<string, { hasCycle: boolean; area: number; deals: number }> = {};

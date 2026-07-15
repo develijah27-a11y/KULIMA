@@ -19,7 +19,7 @@ const SEV_CFG: Record<string, { color: string; bg: string; label: string }> = {
 };
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  open:      { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Open' },
+  reported:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Open' },
   assigned:  { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Assigned' },
   diagnosed: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Diagnosed' },
   closed:    { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Closed' },
@@ -28,7 +28,7 @@ const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> =
 
 const TABS = [
   { key: '',           label: 'All Cases' },
-  { key: 'open',       label: 'Open' },
+  { key: 'reported',   label: 'Open' },
   { key: 'assigned',   label: 'Assigned' },
   { key: 'diagnosed',  label: 'Diagnosed' },
   { key: 'closed',     label: 'Closed' },
@@ -53,13 +53,13 @@ export default async function PathologistCasesPage({
   const { status = '', severity = '' } = await searchParams;
 
   let q = (supabase.from as any)('disease_reports')
-    .select('id, crop_type, symptoms, severity, district, status, reported_at, created_at, pathologist_id, diagnosis')
-    .order('severity', { ascending: false })
+    .select('id, crop_type, symptoms, urgency, district, status, reported_at, created_at, pathologist_id, diagnosis')
+    .order('urgency', { ascending: false })
     .order('created_at', { ascending: true })
     .limit(80);
 
   if (status)   q = q.eq('status', status);
-  if (severity) q = q.eq('severity', severity);
+  if (severity) q = q.eq('urgency', severity);
 
   const [{ data: profile }, { data: cases, error }] = await Promise.all([
     (supabase.from as any)('profiles').select('id, role').eq('user_id', user.id).single(),
@@ -70,10 +70,10 @@ export default async function PathologistCasesPage({
   const rows: any[] = cases ?? [];
 
   const counts = {
-    open:      rows.filter(r => r.status === 'open').length,
+    open:      rows.filter(r => r.status === 'reported').length,
     assigned:  rows.filter(r => r.status === 'assigned').length,
     diagnosed: rows.filter(r => r.status === 'diagnosed').length,
-    critical:  rows.filter(r => ['high','critical'].includes(r.severity)).length,
+    critical:  rows.filter(r => ['high','critical'].includes(r.urgency)).length,
   };
 
   return (
@@ -146,8 +146,8 @@ export default async function PathologistCasesPage({
       ) : (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
           {rows.map((c: any, i: number) => {
-            const sev = SEV_CFG[c.severity] ?? SEV_CFG.unknown;
-            const st  = STATUS_CFG[c.status] ?? STATUS_CFG.open;
+            const sev = SEV_CFG[c.urgency] ?? SEV_CFG.unknown;
+            const st  = STATUS_CFG[c.status] ?? STATUS_CFG.reported;
             const isAssignedToMe = c.pathologist_id === profile.id;
             return (
               <Link

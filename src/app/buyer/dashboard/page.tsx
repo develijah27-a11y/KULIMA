@@ -124,7 +124,7 @@ async function ActiveOffers({ userId }: { userId: string }) {
 
   const { data: offers } = await (supabase.from as any)('offers')
     .select(`
-      id, offered_price, status, created_at, counter_price, note,
+      id, offered_price, status, created_at, counter_price,
       listing:listings(crop_type, quantity_kg, asking_price, district, farmer_id)
     `)
     .eq('buyer_id', userId)

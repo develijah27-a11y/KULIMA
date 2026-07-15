@@ -22,7 +22,7 @@ export default async function BuyerContractsPage() {
 
   // Check if buyer has any offtaker contracts (offtaker role might overlap with buyer)
   const { data: contracts } = await (supabase.from as any)('offtaker_contracts')
-    .select('id, crop_type, quantity_kg, price_ugx, status, start_date, end_date, created_at, farmer_id, profiles!offtaker_contracts_farmer_id_fkey(full_name, location)')
+    .select('id, crop_type, quantity_kg, price_ugx, status, delivery_date, created_at, farmer_name')
     .eq('offtaker_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50);
@@ -86,12 +86,11 @@ export default async function BuyerContractsPage() {
                   </div>
                   <p style={{ fontSize: 12, color: C.muted, margin: '0 0 3px' }}>
                     {c.quantity_kg} kg · UGX {Number(c.price_ugx).toLocaleString()}/kg
-                    {c.profiles?.full_name && ` · ${c.profiles.full_name}`}
+                    {c.farmer_name && ` · ${c.farmer_name}`}
                   </p>
-                  {c.start_date && c.end_date && (
+                  {c.delivery_date && (
                     <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
-                      {new Date(c.start_date).toLocaleDateString('en-UG', { month: 'short', day: 'numeric' })} →{' '}
-                      {new Date(c.end_date).toLocaleDateString('en-UG', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      Delivery {new Date(c.delivery_date).toLocaleDateString('en-UG', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   )}
                 </div>

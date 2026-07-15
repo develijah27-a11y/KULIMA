@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
   // Farmer requests their own purchases; supplier requests their incoming orders
   let query = (supabase.from as any)('supplier_orders')
-    .select('id, product_name, category, quantity, unit, amount, unit_price, status, notes, buyer_name, district, supplier_id, buyer_id, created_at, updated_at')
+    .select('id, product_name, quantity, unit, amount, unit_price, status, notes, buyer_name, district, supplier_id, buyer_id, created_at, updated_at')
     .order('created_at', { ascending: false });
 
   if (role === 'farmer') {

@@ -16,7 +16,7 @@ export default async function CaseDetailPage({ params }: { params: Promise<{ id:
   if (!profile) redirect('/auth/signin');
 
   const { data: report } = await (supabase.from as any)('disease_reports')
-    .select('id, crop_type, symptoms, severity, district, status, reported_at, created_at, pathologist_id, diagnosis, treatment, image_urls')
+    .select('id, crop_type, symptoms, urgency, district, status, reported_at, created_at, pathologist_id, diagnosis, treatment, image_urls')
     .eq('id', id)
     .single();
 

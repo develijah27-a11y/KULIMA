@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  open:      { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Open' },
+  reported:  { color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)',  label: 'Open' },
   assigned:  { color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)', label: 'Assigned' },
   diagnosed: { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Diagnosed' },
   closed:    { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Closed' },
@@ -14,10 +14,12 @@ export default async function MyCasesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: cases } = await (supabase as any)
-    .from('disease_cases')
-    .select('id, crop_type, symptoms, severity, status, created_at, updated_at')
-    .eq('assigned_to', user.id)
+  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
+  if (!profile) redirect('/auth/signin');
+
+  const { data: cases } = await (supabase.from as any)('disease_reports')
+    .select('id, crop_type, symptoms, status, created_at, updated_at')
+    .eq('pathologist_id', profile.id)
     .order('updated_at', { ascending: false })
     .limit(50);
 
