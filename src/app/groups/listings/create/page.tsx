@@ -18,6 +18,102 @@ interface Member {
   role: string;
 }
 
+interface Cluster {
+  cropType: string;
+  totalKg: number;
+  memberCount: number;
+  submissions: { id: string; quantity_kg: number; farmer: { full_name: string } | null }[];
+}
+
+function OrganizeSubmissions({ groupId, priceMap }: { groupId: string; priceMap: Record<string, number> }) {
+  const [clusters, setClusters] = useState<Cluster[] | null>(null);
+  const [prices, setPrices]     = useState<Record<string, string>>({});
+  const [publishing, setPub]    = useState<string | null>(null);
+  const [error, setError]       = useState('');
+  const [success, setSuccess]   = useState('');
+
+  const load = () => {
+    fetch(`/api/groups/${groupId}/organize`)
+      .then(r => r.json())
+      .then(json => setClusters(json.clusters ?? []))
+      .catch(() => setClusters([]));
+  };
+
+  useEffect(load, [groupId]);
+
+  async function publish(cropType: string) {
+    const askingPrice = prices[cropType];
+    if (!askingPrice || Number(askingPrice) <= 0) { setError(`Enter a price per kg for ${cropType}`); return; }
+    setPub(cropType); setError(''); setSuccess('');
+    try {
+      const res  = await fetch(`/api/groups/${groupId}/organize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cropType, askingPrice: Number(askingPrice) }),
+      });
+      const json = await res.json();
+      if (json.error) { setError(json.error); return; }
+      setSuccess(`${cropType} lot published!`);
+      load();
+    } finally { setPub(null); }
+  }
+
+  if (clusters === null) return null;
+  if (clusters.length === 0) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+      <div>
+        <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>Organize Member Submissions</p>
+        <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0' }}>
+          Members have already submitted these — just set a price and publish. No manual typing needed.
+        </p>
+      </div>
+      {success && <p style={{ fontSize: 12, color: 'var(--color-success)', fontWeight: 600, margin: 0 }}>{success}</p>}
+      {error && <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: 0 }}>{error}</p>}
+      {clusters.map(c => {
+        const marketPrice = priceMap[c.cropType] ?? null;
+        return (
+          <div key={c.cropType} style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: 0, textTransform: 'capitalize' }}>{c.cropType}</p>
+                <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0' }}>
+                  {c.totalKg.toLocaleString()} kg · {c.memberCount} member{c.memberCount !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginBottom: 12 }}>
+              {c.submissions.map(s => (
+                <p key={s.id} style={{ fontSize: 11, color: C.muted, margin: 0 }}>
+                  {s.farmer?.full_name ?? 'Member'} — {s.quantity_kg}kg
+                </p>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="number" min="1"
+                value={prices[c.cropType] ?? (marketPrice ? String(marketPrice) : '')}
+                onChange={e => setPrices(p => ({ ...p, [c.cropType]: e.target.value }))}
+                placeholder={marketPrice ? `Market: ${marketPrice.toLocaleString()}/kg` : 'Price per kg'}
+                style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+              />
+              <button
+                onClick={() => publish(c.cropType)}
+                disabled={publishing === c.cropType}
+                style={{ padding: '9px 18px', borderRadius: 8, border: 'none', background: C.greenMed, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: publishing === c.cropType ? 0.7 : 1, whiteSpace: 'nowrap' }}
+              >
+                {publishing === c.cropType ? 'Publishing…' : 'Publish This Lot'}
+              </button>
+            </div>
+          </div>
+        );
+      })}
+      <div style={{ textAlign: 'center', fontSize: 11, color: C.muted, padding: '4px 0' }}>— or build a listing manually below —</div>
+    </div>
+  );
+}
+
 export default function CreateGroupListingPage() {
   const router = useRouter();
   const [cropType, setCropType] = useState('');
@@ -31,11 +127,12 @@ export default function CreateGroupListingPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [contributions, setContributions] = useState<Record<string, string>>({});
   const [priceMap, setPriceMap] = useState<Record<string, number>>({});
+  const [groupId, setGroupId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/groups/my-members')
       .then(r => r.json())
-      .then(json => setMembers(json.members ?? []))
+      .then(json => { setMembers(json.members ?? []); setGroupId(json.groupId ?? null); })
       .catch(() => {});
     fetch('/api/market-prices')
       .then(r => r.json())
@@ -104,6 +201,10 @@ export default function CreateGroupListingPage() {
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Create Group Listing</h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Pool your members' produce to sell as one lot. When it sells, each member is paid automatically based on how much they put in.</p>
       </div>
+
+      {groupId && (
+        <OrganizeSubmissions groupId={groupId} priceMap={priceMap} />
+      )}
 
       <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 16, background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

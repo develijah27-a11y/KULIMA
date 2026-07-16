@@ -40,7 +40,7 @@ export async function POST(req: Request) {
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
   const body = await req.json();
-  const { name, category, description, price_per_unit, unit, stock_qty, min_order_qty, district, image_url } = body;
+  const { name, category, description, price_per_unit, unit, stock_qty, min_order_qty, low_stock_threshold, district, image_url } = body;
 
   if (!name || !price_per_unit || price_per_unit <= 0) {
     return NextResponse.json({ error: 'Name and valid price are required' }, { status: 400 });
@@ -58,6 +58,7 @@ export async function POST(req: Request) {
     unit: unit ?? 'kg',
     stock_qty: +(stock_qty ?? 0),
     min_order_qty: +(min_order_qty ?? 1),
+    low_stock_threshold: low_stock_threshold != null && low_stock_threshold !== '' ? +low_stock_threshold : null,
     district: district ?? null,
     image_url,
     is_available: true,
@@ -82,7 +83,7 @@ export async function PATCH(req: Request) {
   const { id, ...fields } = body;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  const allowed = ['name','category','description','price_per_unit','unit','stock_qty','min_order_qty','district','is_available','image_url'];
+  const allowed = ['name','category','description','price_per_unit','unit','stock_qty','min_order_qty','low_stock_threshold','district','is_available','image_url'];
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   for (const k of allowed) {
     if (k in fields) update[k] = fields[k];

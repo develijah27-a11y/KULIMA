@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Users, X, Check, Leaf, Settings } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
+import { Users, X, Check, Leaf, Settings, Package, Trash2 } from 'lucide-react';
+import { CameraCapture } from '@/components/ui/CameraCapture';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -14,6 +15,18 @@ const DISTRICTS = [
   'Kampala','Wakiso','Mukono','Jinja','Mbale','Mbarara','Gulu','Lira',
   'Masaka','Fort Portal','Arua','Soroti','Kabale','Hoima','Kasese',
 ];
+
+const SUBMIT_CROPS = ['maize','beans','coffee','rice','banana','cassava','tomato','sorghum','groundnuts','cotton'];
+
+interface Submission {
+  id: string;
+  crop_type: string;
+  quantity_kg: number;
+  notes: string | null;
+  photo_url: string | null;
+  status: 'pending' | 'published' | 'withdrawn';
+  created_at: string;
+}
 
 const ROLE_CFG: Record<string, { color: string; bg: string }> = {
   leader:    { color: 'var(--color-primary)',      bg: 'var(--color-success-bg)' },
@@ -208,6 +221,143 @@ function MemberPanel({ group, onClose }: { group: Group; onClose: () => void }) 
   );
 }
 
+function SubmitPanel({ group, onClose }: { group: Group; onClose: () => void }) {
+  const [submissions, setSubmissions] = useState<Submission[] | null>(null);
+  const [loading, setLoading]     = useState(false);
+  const [cropType, setCropType]   = useState('');
+  const [quantityKg, setQty]      = useState('');
+  const [notes, setNotes]         = useState('');
+  const [photoUrl, setPhotoUrl]   = useState('');
+  const [submitting, setSubmit]   = useState(false);
+  const [error, setError]         = useState('');
+  const [success, setSuccess]     = useState('');
+
+  const loadSubmissions = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const res  = await fetch(`/api/groups/${group.id}/submissions`);
+      const json = await res.json();
+      if (json.error) { setError(json.error); return; }
+      setSubmissions(json.submissions);
+    } finally { setLoading(false); }
+  }, [group.id]);
+
+  useEffect(() => { loadSubmissions(); }, [loadSubmissions]);
+
+  async function submit() {
+    if (!cropType) { setError('Select a crop'); return; }
+    if (!quantityKg || Number(quantityKg) <= 0) { setError('Enter a valid quantity'); return; }
+    setSubmit(true); setError(''); setSuccess('');
+    try {
+      const res  = await fetch(`/api/groups/${group.id}/submissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cropType, quantityKg: Number(quantityKg), notes: notes || undefined, photoUrl: photoUrl || undefined }),
+      });
+      const json = await res.json();
+      if (json.error) { setError(json.error); return; }
+      setSuccess('Submitted! Your group leader will organize it into a listing.');
+      setCropType(''); setQty(''); setNotes(''); setPhotoUrl('');
+      loadSubmissions();
+    } finally { setSubmit(false); }
+  }
+
+  async function withdraw(id: string) {
+    if (!confirm('Withdraw this submission?')) return;
+    setError('');
+    const res  = await fetch(`/api/groups/${group.id}/submissions/${id}`, { method: 'DELETE' });
+    const json = await res.json();
+    if (json.error) { setError(json.error); return; }
+    loadSubmissions();
+  }
+
+  const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
+    pending:   { label: 'Awaiting organization', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+    published: { label: 'Listed for sale',       color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+    withdrawn: { label: 'Withdrawn',             color: C.muted,                bg: C.surface2 },
+  };
+
+  return (
+    <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: 0, overflow: 'hidden', marginTop: 8 }}>
+      <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Package size={14} />Submit Produce to {group.name}</span>
+        </p>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex' }}><X size={16} /></button>
+      </div>
+
+      {/* Submission form */}
+      <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <select value={cropType} onChange={e => setCropType(e.target.value)}
+            style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)' }}>
+            <option value="">Select crop...</option>
+            {SUBMIT_CROPS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+          </select>
+          <input
+            type="number" min="0" value={quantityKg} onChange={e => setQty(e.target.value)}
+            placeholder="Quantity (kg)"
+            style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+          />
+        </div>
+        <textarea
+          value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+          placeholder="Notes (optional) — grade, drying status, pickup point..."
+          style={{ width: '100%', padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, resize: 'vertical', fontFamily: 'inherit', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+        />
+        {/* Photo is optional here — the whole point is to lower the bar for
+            members who can't easily photograph produce before collection. */}
+        {photoUrl ? (
+          <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden' }}>
+            <img src={photoUrl} alt="Produce" style={{ width: '100%', display: 'block', maxHeight: 140, objectFit: 'cover' }} />
+            <button type="button" onClick={() => setPhotoUrl('')}
+              style={{ position: 'absolute', top: 6, right: 6, padding: '4px 10px', borderRadius: 6, border: 'none', background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              Remove
+            </button>
+          </div>
+        ) : (
+          <CameraCapture onCaptured={setPhotoUrl} label="Add a photo (optional)" />
+        )}
+        {error && <p style={{ margin: 0, fontSize: 12, color: C.red }}>{error}</p>}
+        {success && <div style={{ fontSize: 12, color: 'var(--color-success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Check size={12} />{success}</div>}
+        <button onClick={submit} disabled={submitting}
+          style={{ padding: '10px', borderRadius: 8, border: 'none', background: C.green, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}>
+          {submitting ? 'Submitting…' : 'Submit Contribution'}
+        </button>
+      </div>
+
+      {/* My submissions */}
+      <div>
+        {loading ? (
+          <div style={{ padding: '24px', textAlign: 'center' }}><p style={{ color: C.muted, fontSize: 13 }}>Loading…</p></div>
+        ) : submissions === null || submissions.length === 0 ? (
+          <div style={{ padding: '24px', textAlign: 'center' }}><p style={{ color: C.muted, fontSize: 13 }}>No submissions yet.</p></div>
+        ) : (
+          submissions.map((s, i) => {
+            const st = STATUS_CFG[s.status] ?? STATUS_CFG.pending;
+            return (
+              <div key={s.id} style={{ padding: '12px 18px', borderBottom: i < submissions.length - 1 ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text, textTransform: 'capitalize' }}>{s.crop_type} · {s.quantity_kg}kg</p>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: st.bg, color: st.color, display: 'inline-block', marginTop: 3 }}>
+                    {st.label}
+                  </span>
+                </div>
+                {s.status === 'pending' && (
+                  <button onClick={() => withdraw(s.id)} title="Withdraw"
+                    style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #FCA5A5', background: 'transparent', color: C.red, cursor: 'pointer', display: 'flex' }}>
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, profileId }: Props) {
   const [tab, setTab]           = useState<'mine' | 'browse' | 'create'>('mine');
   const [myGroups, setMine]     = useState<Group[]>(initialMine);
@@ -216,6 +366,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
   const [error, setError]       = useState('');
   const [newGroup, setNew]      = useState({ name: '', description: '', district: '' });
   const [openPanel, setPanel]   = useState<string | null>(null); // group id with open member panel
+  const [submitPanel, setSubmitPanel] = useState<string | null>(null); // group id with open submit-produce panel
   const [phonePrompt, setPhonePrompt] = useState<string | null>(null); // group id awaiting a phone number
   const [phoneInput, setPhoneInput]   = useState('');
 
@@ -243,6 +394,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
       if (json.error) { setError(json.error); return; }
       setMine(prev => prev.filter(g => g.id !== groupId));
       if (openPanel === groupId) setPanel(null);
+      if (submitPanel === groupId) setSubmitPanel(null);
     } finally { setLoad(null); }
   }
 
@@ -312,9 +464,10 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
                 const role = ROLE_CFG[g.my_role ?? 'member'];
                 const isLeader = g.my_role === 'leader';
                 const isPanelOpen = openPanel === g.id;
+                const isSubmitOpen = submitPanel === g.id;
                 return (
                   <div key={g.id}>
-                    <div style={{ padding: '16px 20px', borderBottom: i < myGroups.length - 1 || isPanelOpen ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                    <div style={{ padding: '16px 20px', borderBottom: i < myGroups.length - 1 || isPanelOpen || isSubmitOpen ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                       <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.green, flexShrink: 0 }}><Users size={22} /></div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
@@ -330,6 +483,12 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
                         </p>
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                        {/* Submit Produce — every member (including the leader) can contribute */}
+                        <button
+                          onClick={() => setSubmitPanel(isSubmitOpen ? null : g.id)}
+                          style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: isSubmitOpen ? C.green : 'transparent', color: isSubmitOpen ? '#fff' : C.muted, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          <Package size={11} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Submit
+                        </button>
                         {/* Members button — all members can see, leaders can manage */}
                         <button
                           onClick={() => setPanel(isPanelOpen ? null : g.id)}
@@ -344,6 +503,11 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
                         )}
                       </div>
                     </div>
+                    {isSubmitOpen && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <SubmitPanel group={g} onClose={() => setSubmitPanel(null)} />
+                      </div>
+                    )}
                     {isPanelOpen && (
                       <div style={{ padding: '0 16px 16px' }}>
                         <MemberPanel group={g} onClose={() => setPanel(null)} />

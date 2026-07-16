@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight, Check, Sparkles,
-  CloudRain, TrendingUp, Users, Microscope, Package, BarChart3,
+  TrendingUp, Users, Microscope,
   Leaf, ShoppingCart, Truck, ShieldCheck, Lock, Scale, Smartphone, Wallet,
 } from 'lucide-react';
 
@@ -36,12 +36,10 @@ const CLAY_SOFT   = '#F6E9E2';
 const FONT = 'var(--font-poppins), var(--font-inter), system-ui, sans-serif';
 
 const FEATURES = [
-  { icon: <Wallet size={22} />,     title: 'Escrow-protected pay', sub: 'Buyer money is held safely until you confirm delivery — never released blind.', color: GREEN, bg: GREEN_SOFT, big: true },
-  { icon: <TrendingUp size={22} />, title: 'Live crop prices',     sub: 'Maize, beans, coffee and more — real district rates, daily.', color: GOLD, bg: GOLD_SOFT },
-  { icon: <CloudRain size={22} />,  title: 'Weather forecasts',    sub: 'Rain alerts and planting windows for your district.', color: SKY, bg: SKY_SOFT },
-  { icon: <Microscope size={22} />, title: 'AI Crop Doctor',       sub: 'Photo-diagnose disease in 30 seconds, escalate to a pathologist.', color: PLUM, bg: PLUM_SOFT },
-  { icon: <Users size={22} />,      title: 'Farmer groups',        sub: 'Pool harvests, sell as one lot, apply for group loans.', color: GREEN, bg: GREEN_SOFT },
-  { icon: <Package size={22} />,    title: 'Input marketplace',    sub: 'Seed, fertiliser and tools delivered to your gate.', color: CLAY, bg: CLAY_SOFT },
+  { icon: <Wallet size={22} />,     title: 'Escrow-protected pay', sub: 'Held safely until delivery is confirmed.', color: GREEN, bg: GREEN_SOFT, big: true },
+  { icon: <TrendingUp size={22} />, title: 'Live crop prices',     sub: 'Real district rates, daily.', color: GOLD, bg: GOLD_SOFT },
+  { icon: <Microscope size={22} />, title: 'AI Crop Doctor',       sub: 'Diagnose disease in 30 seconds.', color: PLUM, bg: PLUM_SOFT },
+  { icon: <Users size={22} />,      title: 'Farmer groups',        sub: 'Pool harvests, sell as one lot.', color: SKY, bg: SKY_SOFT },
 ];
 
 const TRUST = [
@@ -53,18 +51,18 @@ const TRUST = [
 const ROLES = [
   {
     icon: <Leaf size={22} />, role: 'Farmers', color: GREEN, bg: GREEN_SOFT,
-    tagline: 'From field to payment — all in one free app.',
-    points: ['See live prices before you harvest', 'Sell direct to verified buyers', 'AI crop disease diagnosis in 30 seconds', 'Join a group, access group loans'],
+    tagline: 'Sell direct, get paid safely.',
+    points: ['Live prices before you harvest', 'Sell to verified buyers', 'AI disease diagnosis in seconds'],
   },
   {
     icon: <ShoppingCart size={22} />, role: 'Buyers', color: GOLD, bg: GOLD_SOFT,
     tagline: 'Source fresh produce directly from farms.',
-    points: ['Browse verified farmer listings', 'Negotiate price directly with farmers', 'Payments held in escrow until delivery', 'Full delivery tracking, farm to gate'],
+    points: ['Browse verified farmer listings', 'Money held in escrow until delivery', 'Full tracking, farm to gate'],
   },
   {
     icon: <Truck size={22} />, role: 'Transporters', color: SKY, bg: SKY_SOFT,
-    tagline: 'More trips. Faster payment. Better reputation.',
-    points: ['See delivery requests in your area', 'Verified badge builds trust with clients', 'Live map, turn-by-turn to pickup and drop-off', 'Instant payment on confirmed delivery'],
+    tagline: 'More trips. Faster, guaranteed payment.',
+    points: ['Delivery requests near you', 'Live turn-by-turn navigation', 'Paid the moment delivery is confirmed'],
   },
 ];
 
@@ -155,9 +153,8 @@ export default function Home() {
                 fontSize: 'clamp(15px, 1.8vw, 17.5px)', color: INK_MUTE, fontWeight: 500,
                 lineHeight: 1.7, margin: '0 0 34px', maxWidth: 470, animationDelay: '150ms',
               }}>
-                Live maize, bean and coffee prices, direct buyer connections, and AI crop disease
-                detection — with every payment held safely in escrow until delivery is confirmed.
-                Cash out straight to MTN or Airtel Mobile Money.
+                Sell direct to buyers, get diagnosed crop problems in seconds, and get paid —
+                every shilling held safe until you confirm delivery.
               </p>
 
               <div className="landing-fade-up" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 40, animationDelay: '230ms' }}>
@@ -195,33 +192,14 @@ export default function Home() {
               <PhoneMockup />
             </div>
           </div>
-
-          {/* Payment rails trust bar */}
-          <div className="landing-fade-up" style={{
-            marginTop: 'clamp(48px, 7vh, 72px)', display: 'flex', alignItems: 'center', gap: 18,
-            flexWrap: 'wrap', animationDelay: '340ms',
-          }}>
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: INK_MUTE, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Payments powered by
-            </span>
-            {['MTN Mobile Money', 'Airtel Money', 'Flutterwave'].map(p => (
-              <span key={p} style={{
-                fontSize: 12.5, fontWeight: 700, color: INK, background: '#fff',
-                border: `1px solid ${LINE}`, borderRadius: 8, padding: '6px 12px',
-              }}>{p}</span>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* ════════════════════ FEATURES — bento grid ════════════════════ */}
       <section id="features" style={{ padding: 'clamp(64px, 9vh, 100px) clamp(18px, 5vw, 64px)' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto' }}>
-          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: GREEN, textAlign: 'center', marginBottom: 12 }}>
-            One app, everything you need
-          </p>
           <h2 style={{ fontSize: 'clamp(1.9rem, 4vw, 2.6rem)', fontWeight: 900, letterSpacing: '-0.04em', textAlign: 'center', margin: '0 0 48px', lineHeight: 1.1, color: INK }}>
-            No more juggling five apps
+            From harvest to payment
           </h2>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(270px, 1fr))', gap: 16, gridAutoFlow: 'dense' }}>

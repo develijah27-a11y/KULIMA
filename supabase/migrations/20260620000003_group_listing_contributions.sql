@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS group_listing_contributions (
   group_listing_id UUID          NOT NULL REFERENCES group_listings(id) ON DELETE CASCADE,
   farmer_id        UUID          NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   quantity_kg      DECIMAL(10,2) NOT NULL CHECK (quantity_kg > 0),
-  created_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+  created_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+  UNIQUE (group_listing_id, farmer_id)
 );
 
 ALTER TABLE group_listing_contributions ENABLE ROW LEVEL SECURITY;
@@ -50,8 +51,11 @@ BEGIN
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_group_listing_contributions_listing ON group_listing_contributions(group_listing_id);
-CREATE INDEX IF NOT EXISTS idx_group_listing_contributions_farmer  ON group_listing_contributions(farmer_id);
+-- Named to match what's already live (verified via pg_indexes), not the
+-- migration's own naming convention — so this stays a true no-op on
+-- production instead of creating a second, redundant duplicate index.
+CREATE INDEX IF NOT EXISTS idx_glc_listing ON group_listing_contributions(group_listing_id);
+CREATE INDEX IF NOT EXISTS idx_glc_farmer  ON group_listing_contributions(farmer_id);
 
 GRANT ALL ON group_listing_contributions TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON group_listing_contributions TO authenticated;

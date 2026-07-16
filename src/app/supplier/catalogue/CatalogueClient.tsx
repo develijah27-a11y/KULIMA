@@ -35,6 +35,7 @@ interface Product {
   unit: string;
   stock_qty: number;
   min_order_qty: number;
+  low_stock_threshold?: number | null;
   district?: string;
   is_available: boolean;
   image_url?: string;
@@ -43,8 +44,14 @@ interface Product {
 
 const EMPTY: Omit<Product,'id'|'created_at'> = {
   name:'', category:'seeds', description:'', price_per_unit:0,
-  unit:'kg', stock_qty:0, min_order_qty:1, district:'', is_available:true, image_url:'',
+  unit:'kg', stock_qty:0, min_order_qty:1, low_stock_threshold:null, district:'', is_available:true, image_url:'',
 };
+
+// Falls back to 5 units when a supplier hasn't set their own threshold —
+// same default the low-stock alert cron job uses.
+function isLowStock(p: Product) {
+  return p.stock_qty <= (p.low_stock_threshold ?? 5) && p.is_available;
+}
 
 export function CatalogueClient({ products: initial }: { products: Product[] }) {
   const [products, setProducts] = useState<Product[]>(initial);
@@ -117,7 +124,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
         {([
           { label: 'Total', value: products.length, color: C.text },
           { label: 'Available', value: products.filter(p => p.is_available).length, color: C.greenMed },
-          { label: 'Low Stock', value: products.filter(p => p.stock_qty < 5 && p.is_available).length, color: C.amber },
+          { label: 'Low Stock', value: products.filter(isLowStock).length, color: C.amber },
           { label: 'Categories', value: new Set(products.map(p => p.category)).size, color: C.text },
         ] as const).map(({ label, value, color }) => (
           <div key={label} style={{ background: C.cardBg, borderRadius: 12, boxShadow: C.cardShadow, padding: '14px 16px' }}>
@@ -156,7 +163,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {visible.map((p) => {
-            const lowStock = p.stock_qty < 5 && p.is_available;
+            const lowStock = isLowStock(p);
             return (
               <div key={p.id} style={{
                 background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden',
@@ -186,6 +193,9 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                   <p style={{ fontSize: 11.5, color: C.muted, margin: '2px 0 0', textTransform: 'capitalize' }}>
                     {p.category} · Stock: {p.stock_qty} {p.unit}
                     {p.district ? ` · ${p.district}` : ''}
+                  </p>
+                  <p style={{ fontSize: 10.5, color: C.muted, margin: '2px 0 0' }}>
+                    Alerts below {p.low_stock_threshold ?? 5} {p.unit}
                   </p>
                   {p.description && (
                     <p style={{ fontSize: 11, color: C.muted, margin: '4px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</p>
@@ -259,6 +269,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                 { label: 'Price per Unit (UGX) *', key: 'price_per_unit', type: 'number', placeholder: '0' },
                 { label: 'Stock Quantity', key: 'stock_qty', type: 'number', placeholder: '0' },
                 { label: 'Minimum Order Qty', key: 'min_order_qty', type: 'number', placeholder: '1' },
+                { label: 'Low Stock Alert Below (optional, default 5)', key: 'low_stock_threshold', type: 'number', placeholder: '5' },
                 { label: 'District (optional)', key: 'district', type: 'text', placeholder: 'e.g. Kampala' },
               ] as const).map(({ label, key, type, placeholder }) => (
                 <div key={key}>

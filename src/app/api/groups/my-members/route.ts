@@ -14,7 +14,7 @@ export async function GET() {
   if (!myProfile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
   const { data: group } = await (supabase.from as any)('farmer_groups')
-    .select('id').eq('leader_id', myProfile.id).single();
+    .select('id, name, district').eq('leader_id', myProfile.id).single();
 
   if (!group) return NextResponse.json({ members: [] });
 
@@ -36,5 +36,5 @@ export async function GET() {
       .map((m: any) => ({ id: m.farmer?.id, full_name: m.farmer?.full_name ?? 'Member', role: m.role })),
   ];
 
-  return NextResponse.json({ members });
+  return NextResponse.json({ members, groupId: group.id, groupName: group.name, groupDistrict: group.district });
 }

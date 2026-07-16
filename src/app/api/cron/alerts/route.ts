@@ -123,12 +123,14 @@ export async function GET(req: Request) {
     await sendPushToUsers([userId], { title, body, url: '/farmer/inventory' });
   }
 
-  // 4. Low stock — supplier products. Same 5-unit threshold already shown
-  // as a "Low stock" badge in the supplier's own catalogue view.
-  const { data: lowProducts } = await (supabase.from as any)('supplier_products')
-    .select('id, supplier_id, name, stock_qty, unit, is_available, profile:profiles!supplier_products_supplier_id_fkey(user_id)')
-    .eq('is_available', true)
-    .lt('stock_qty', 5);
+  // 4. Low stock — supplier products. Each product can set its own
+  // low_stock_threshold (a bag of seed and a piece of equipment don't run
+  // low at the same quantity) — falls back to 5 units when unset, matching
+  // the "Low stock" badge shown in the supplier's own catalogue view.
+  const { data: availableProducts } = await (supabase.from as any)('supplier_products')
+    .select('id, supplier_id, name, stock_qty, unit, low_stock_threshold, is_available, profile:profiles!supplier_products_supplier_id_fkey(user_id)')
+    .eq('is_available', true);
+  const lowProducts = (availableProducts ?? []).filter((p: any) => p.stock_qty <= (p.low_stock_threshold ?? 5));
 
   for (const p of (lowProducts ?? []) as any[]) {
     const userId = p.profile?.user_id;
