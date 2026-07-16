@@ -112,6 +112,7 @@ export async function PATCH(req: Request) {
       await (supabase.from as any)('notifications').insert({
         farmer_id: (data as any).farmer_id,
         user_id:   (farmerProfile as any).user_id,
+        role:      'farmer',
         type:      'system',
         title:     action === 'diagnose' ? `Diagnosis ready — ${(data as any).crop_type}` : `Case closed — ${(data as any).crop_type}`,
         body:      action === 'diagnose'

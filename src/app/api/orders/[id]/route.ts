@@ -51,6 +51,7 @@ export async function PATCH(req: Request, { params }: Params) {
     // see that route for the pickup/matching logic that used to live here.
     await (supabase.from as any)('notifications').insert({
       user_id: order.buyer_id,
+      role:    'buyer',
       type:    'order',
       title:   `Order confirmed — ${order.crop_type}`,
       body:    `${(farmerProfile as any).full_name ?? 'Farmer'} confirmed your order for ${order.quantity_kg} kg. Pay now to arrange delivery.`,
@@ -87,6 +88,7 @@ export async function PATCH(req: Request, { params }: Params) {
     if (isFarmer) {
       await (supabase.from as any)('notifications').insert({
         user_id: order.buyer_id,
+        role:    'buyer',
         type:    'order',
         title:   `Order cancelled — ${order.crop_type}`,
         body:    `Your order was cancelled by the farmer. ${note ?? ''}`,
@@ -96,6 +98,7 @@ export async function PATCH(req: Request, { params }: Params) {
       await (supabase.from as any)('notifications').insert({
         farmer_id: order.farmer_profile_id,
         user_id:   (farmerProfile as any)?.user_id,
+        role:      'farmer',
         type:      'order',
         title:     `Order cancelled by buyer — ${order.crop_type}`,
         body:      `The buyer cancelled their order for ${order.quantity_kg} kg.`,
@@ -133,6 +136,7 @@ export async function PATCH(req: Request, { params }: Params) {
         await (supabase.from as any)('notifications').insert({
           farmer_id: order.farmer_profile_id,
           user_id:   (farmerProfile as any).user_id,
+          role:      'farmer',
           type:      'order',
           title:     `Order marked complete — ${order.crop_type}`,
           body:      `${(buyerProfile as any)?.full_name ?? 'Buyer'} confirmed receipt of ${order.crop_type} (${order.quantity_kg} kg). No escrow payment was recorded on this order — contact support if payment is outstanding.`,

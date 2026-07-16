@@ -35,7 +35,7 @@ export async function POST(_req: Request, { params }: Params) {
 
   // Load the delivery request
   const { data: dr } = await (admin.from as any)('delivery_requests')
-    .select('id, status, requester_id, cargo_type, cargo_kg, pickup_district')
+    .select('id, status, requester_id, requester_role, cargo_type, cargo_kg, pickup_district')
     .eq('id', id)
     .single();
 
@@ -80,6 +80,7 @@ export async function POST(_req: Request, { params }: Params) {
   // Notify requester
   await (admin.from as any)('notifications').insert({
     user_id: dr.requester_id,
+    role:    dr.requester_role ?? null,
     type:    'delivery',
     title:   `Driver assigned — ${dr.cargo_type ?? 'cargo'}`,
     body:    `A transporter has accepted your delivery of ${dr.cargo_kg} kg from ${dr.pickup_district}.`,
@@ -104,7 +105,7 @@ export async function PATCH(req: Request, { params }: Params) {
   );
 
   const { data: dr } = await (admin.from as any)('delivery_requests')
-    .select('id, status, transporter_id, requester_id, cargo_type, cargo_kg, estimated_fare')
+    .select('id, status, transporter_id, requester_id, requester_role, cargo_type, cargo_kg, estimated_fare')
     .eq('id', id)
     .single();
 
@@ -121,6 +122,7 @@ export async function PATCH(req: Request, { params }: Params) {
       .eq('delivery_request_id', id);
     await (admin.from as any)('notifications').insert({
       user_id: dr.requester_id,
+      role:    dr.requester_role ?? null,
       type:    'delivery',
       title:   `Your ${dr.cargo_type} is on the way!`,
       body:    `The transporter has picked up your ${dr.cargo_kg} kg.`,
@@ -134,6 +136,7 @@ export async function PATCH(req: Request, { params }: Params) {
       .eq('delivery_request_id', id);
     await (admin.from as any)('notifications').insert({
       user_id: dr.requester_id,
+      role:    dr.requester_role ?? null,
       type:    'delivery',
       title:   `Delivered — ${dr.cargo_type}`,
       body:    dr.estimated_fare

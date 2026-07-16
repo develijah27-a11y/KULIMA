@@ -39,9 +39,13 @@ interface Props {
   prefilledOffer: { id: string; crop_type: string; quantity_kg: number; district: string } | null;
   successRedirect?: string;
   userDistrict?: string;
+  /** Which role dashboard this request was made from — tags the delivery
+   *  so it only shows up in that role's "My Deliveries" list, not every
+   *  role the account happens to hold. */
+  requesterRole?: string;
 }
 
-export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/deliveries', userDistrict }: Props) {
+export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/deliveries', userDistrict, requesterRole }: Props) {
   const router = useRouter();
   const [pickupDistrict, setPickupDistrict]   = useState(prefilledOffer?.district ?? userDistrict ?? '');
   const [pickupLocation, setPickupLocation]   = useState('');
@@ -106,6 +110,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
           pickup_date:      pickupDate,
           notes:            notes || null,
           delivery_type:    deliveryType,
+          requester_role:   requesterRole ?? null,
         }),
       });
       const json = await res.json();

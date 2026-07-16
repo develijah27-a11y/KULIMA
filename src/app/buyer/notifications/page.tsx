@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Bell, Truck, TrendingUp, Tag, Banknote, Settings, CloudRain, Bug } from 'lucide-react';
+import { MarkAllReadSync } from '@/components/ui/MarkAllReadSync';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -28,6 +29,7 @@ export default async function BuyerNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
+    .or('role.eq.buyer,role.is.null')
     .order('created_at', { ascending: false })
     .limit(60);
 
@@ -35,11 +37,12 @@ export default async function BuyerNotificationsPage() {
   const unread = notifications.filter(n => !n.read).length;
 
   if (unread > 0) {
-    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false).or('role.eq.buyer,role.is.null');
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
+      <MarkAllReadSync />
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>

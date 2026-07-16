@@ -309,10 +309,18 @@ function NotifItem({
 
   if (n.href) {
     return (
-      <Link href={n.href} style={{ textDecoration: 'none', display: 'block' }}>
+      <Link
+        href={n.href}
+        style={{ textDecoration: 'none', display: 'block' }}
+        onClick={() => { if (!n.read) onMarkRead?.(n.id); }}
+      >
         {content}
       </Link>
     );
   }
-  return content;
+  return (
+    <div onClick={() => { if (!n.read) onMarkRead?.(n.id); }} style={{ cursor: onMarkRead ? 'pointer' : 'default' }}>
+      {content}
+    </div>
+  );
 }

@@ -131,6 +131,7 @@ export async function POST(req: Request) {
     if (adminProfile) {
       await (supabase.from as any)('notifications').insert({
         user_id: adminProfile.user_id,
+        role:    'groups',
         type:    'order',
         title:   `New group order: ${gl.crop_type} · ${+quantityKg} kg`,
         body:    `${(buyerProfile as any)?.full_name ?? 'A buyer'} placed a bulk order for UGX ${total.toLocaleString()} from your group listing.`,
@@ -202,6 +203,7 @@ export async function POST(req: Request) {
     await (supabase.from as any)('notifications').insert({
       farmer_id: listing.farmer_id,
       user_id:   (farmerProfile as any).user_id,
+      role:      'farmer',
       type:      'order',
       title:     `New order: ${listing.crop_type} · ${+quantityKg} kg`,
       body:      `${(buyerProfile as any)?.full_name ?? 'A buyer'} placed an order for UGX ${total.toLocaleString()}. Confirm to proceed.`,

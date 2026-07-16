@@ -33,6 +33,7 @@ export default async function FarmerRequestDeliveryPage() {
           prefilledOffer={null}
           successRedirect="/farmer/deliveries"
           userDistrict={profile?.location ?? undefined}
+          requesterRole="farmer"
         />
       </div>
     </div>

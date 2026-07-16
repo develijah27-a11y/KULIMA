@@ -142,6 +142,7 @@ export async function PATCH(req: Request) {
         .from('profiles').select('full_name').eq('id', listing.farmer_id).single();
       await (supabase.from as any)('notifications').insert({
         user_id: offer.buyer_id,
+        role:    'buyer',
         type:    'offer',
         title:   `Offer accepted — ${listing.crop_type}`,
         body:    `${(farmerProf as any)?.full_name ?? 'Farmer'} accepted your offer of UGX ${agreedPrice.toLocaleString()}/kg. Your order is confirmed!`,
@@ -153,6 +154,7 @@ export async function PATCH(req: Request) {
     // Notify buyer
     await (supabase.from as any)('notifications').insert({
       user_id: offer.buyer_id,
+      role:    'buyer',
       type:    'offer',
       title:   'Offer declined',
       body:    farmerNote ? `The farmer declined your offer: "${farmerNote}"` : 'The farmer declined your offer.',
@@ -168,6 +170,7 @@ export async function PATCH(req: Request) {
     // Notify buyer about counter offer
     await (supabase.from as any)('notifications').insert({
       user_id: offer.buyer_id,
+      role:    'buyer',
       type:    'offer',
       title:   'Counter offer received',
       body:    `The farmer countered at UGX ${Number(counterPrice).toLocaleString()}/kg. ${farmerNote ?? ''}`,
@@ -212,6 +215,7 @@ export async function PATCH(req: Request) {
         await (supabase.from as any)('notifications').insert({
           farmer_id: listing.farmer_id,
           user_id:   (farmerProf as any).user_id,
+          role:      'farmer',
           type:      'offer',
           title:     'Counter offer accepted!',
           body:      `Your counter of UGX ${agreedPrice.toLocaleString()}/kg was accepted. Order confirmed for ${listing.quantity_kg} kg.`,

@@ -33,6 +33,7 @@ export default async function OfftakerRequestDeliveryPage() {
           prefilledOffer={null}
           successRedirect="/offtaker/dashboard"
           userDistrict={profile?.location ?? undefined}
+          requesterRole="offtaker"
         />
       </div>
     </div>

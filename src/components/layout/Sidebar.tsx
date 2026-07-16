@@ -14,6 +14,7 @@ import {
   Map, Users2, Truck, CheckCircle2, DollarSign, LineChart, LogOut, Heart,
   ChevronLeft, ChevronRight,
 } from 'lucide-react';
+import { useLiveUnreadBadge } from './useLiveUnreadBadge';
 
 type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string; style?: React.CSSProperties }>;
 
@@ -148,6 +149,9 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
 
   const width = collapsed ? 56 : 220;
 
+  const notifItem = navItems.find(i => i.icon === 'notifications');
+  const liveUnread = useLiveUnreadBadge(notifItem?.badge);
+
   return (
     <aside
       className="glass-sidebar hidden md:flex flex-col shrink-0 h-screen sticky top-0"
@@ -208,6 +212,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
         {navItems.map(({ href, icon, label, badge, divider, sectionLabel }, idx) => {
           const Icon = ICON_MAP[icon] ?? LayoutDashboard;
           const active = activeSet.has(href);
+          const badgeValue = icon === 'notifications' ? liveUnread : badge;
 
           return (
             <div key={href}>
@@ -256,7 +261,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
                     {label}
                   </span>
                 )}
-                {!collapsed && badge !== undefined && badge > 0 && (
+                {!collapsed && badgeValue !== undefined && badgeValue > 0 && (
                   <span
                     style={{
                       fontSize: 10, fontWeight: 800,
@@ -265,10 +270,10 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
                       color: 'var(--color-sidebar-text)',
                     }}
                   >
-                    {badge > 99 ? '99+' : badge}
+                    {badgeValue > 99 ? '99+' : badgeValue}
                   </span>
                 )}
-                {collapsed && badge !== undefined && badge > 0 && (
+                {collapsed && badgeValue !== undefined && badgeValue > 0 && (
                   <span
                     style={{
                       position: 'absolute',

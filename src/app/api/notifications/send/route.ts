@@ -17,9 +17,10 @@ export async function POST(req: Request) {
   // notifications GET / the realtime bell both filter on user_id — a row
   // with only farmer_id set is invisible to the recipient (never appears in
   // the bell, drawer, or unread count).
-  const { error } = await supabase.from('notifications').insert({
+  const { error } = await (supabase.from as any)('notifications').insert({
     farmer_id: (profile as any).id,
     user_id:   user.id,
+    role:      (profile as any).role ?? null,
     type:      type ?? 'info',
     title:     title.trim(),
     body:      message ?? '',

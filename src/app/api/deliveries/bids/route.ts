@@ -66,6 +66,7 @@ export async function PATCH(req: Request) {
       }).eq('id', bid.delivery_id),
       (supabase.from as any)('notifications').insert({
         user_id: bid.transporter_id,
+        role: 'transporter',
         type: 'delivery',
         title: 'Your bid was accepted!',
         body: `The farmer accepted your bid of UGX ${Number(bid.price).toLocaleString()} for ${route}. Head to My Deliveries to coordinate pickup.`,

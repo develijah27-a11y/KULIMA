@@ -2,6 +2,7 @@ import type { JSX } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Bell, Truck, TrendingUp, Tag, Banknote, Settings, CreditCard } from 'lucide-react';
+import { MarkAllReadSync } from '@/components/ui/MarkAllReadSync';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -27,6 +28,7 @@ export default async function TransporterNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
+    .or('role.eq.transporter,role.is.null')
     .order('created_at', { ascending: false })
     .limit(60);
 
@@ -34,11 +36,12 @@ export default async function TransporterNotificationsPage() {
   const unread = notifications.filter(n => !n.read).length;
 
   if (unread > 0) {
-    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false).or('role.eq.transporter,role.is.null');
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
+      <MarkAllReadSync />
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           Notifications

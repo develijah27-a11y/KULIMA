@@ -38,6 +38,9 @@ const getProfile = cache(async (userId: string) => {
 async function GroupStats({ userId }: { userId: string }) {
   const supabase = await createClient();
 
+  const { data: leaderProfile } = await supabase
+    .from('profiles').select('id').eq('user_id', userId).single();
+
   const [membersRes, listingsRes, walletRes, loansRes] = await Promise.allSettled([
     (supabase.from as any)('group_members')
       .select('id', { count: 'exact', head: true })
@@ -47,10 +50,15 @@ async function GroupStats({ userId }: { userId: string }) {
       .select('id', { count: 'exact', head: true })
       .eq('admin_id', userId)
       .eq('status', 'active'),
-    (supabase.from as any)('wallets')
-      .select('balance')
-      .eq('user_id', userId)
-      .maybeSingle(),
+    // The group's own pooled wallet (farmer_groups.wallet_balance) — NOT the
+    // admin's personal `wallets` row, which is a different pool of money and
+    // was previously shown here mislabeled as "Group Balance / Pooled funds".
+    leaderProfile
+      ? (supabase.from as any)('farmer_groups')
+          .select('wallet_balance')
+          .eq('leader_id', (leaderProfile as any).id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
     (supabase.from as any)('group_loans')
       .select('id', { count: 'exact', head: true })
       .eq('admin_id', userId)
@@ -60,7 +68,7 @@ async function GroupStats({ userId }: { userId: string }) {
   const membersCount  = membersRes.status  === 'fulfilled' ? (membersRes.value.count   ?? 0) : 0;
   const listingsCount = listingsRes.status === 'fulfilled' ? (listingsRes.value.count  ?? 0) : 0;
   const loansCount    = loansRes.status    === 'fulfilled' ? (loansRes.value.count     ?? 0) : 0;
-  const walletBal     = walletRes.status   === 'fulfilled' ? (walletRes.value.data?.balance ?? 0) : 0;
+  const walletBal     = walletRes.status   === 'fulfilled' ? (walletRes.value.data?.wallet_balance ?? 0) : 0;
 
   const stats = [
     { label: 'Group Members',      value: membersCount,                                  icon: <Users size={18} />,    sub: 'Active members',    border: C.greenBright },

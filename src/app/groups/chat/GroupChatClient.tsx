@@ -119,15 +119,23 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
     if (inputRef.current) inputRef.current.style.height = '44px';
     setTimeout(scrollToBottom, 60);
 
-    const { error: insertError } = await (supabase.from as any)('group_messages').insert({
-      admin_id: adminId, sender_id: currentUserId,
-      sender_name: currentUserName, body: text,
-    });
+    const { data: insertedRows, error: insertError } = await (supabase.from as any)('group_messages')
+      .insert({ admin_id: adminId, sender_id: currentUserId, sender_name: currentUserName, body: text })
+      .select('id, admin_id, sender_id, sender_name, body, created_at');
 
     if (insertError) {
       setMessages(prev => prev.filter(m => m.id !== tempId));
       setError('Message not sent. Please try again.');
       setDraft(text);
+    } else {
+      // Swap the optimistic placeholder for the confirmed row (real id +
+      // server timestamp) so the "Sending…" label clears immediately instead
+      // of waiting on the realtime channel — which would otherwise leave this
+      // exact bubble stuck since its temp_ id never matches an incoming row.
+      const confirmed = insertedRows?.[0];
+      if (confirmed) {
+        setMessages(prev => prev.map(m => (m.id === tempId ? confirmed : m)));
+      }
     }
     setSending(false);
     inputRef.current?.focus();

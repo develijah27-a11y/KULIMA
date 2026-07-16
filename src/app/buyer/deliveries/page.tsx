@@ -42,6 +42,7 @@ export default async function BuyerDeliveriesPage() {
       transporter:profiles!delivery_requests_transporter_profile_fkey(full_name, phone_number, verification_level)
     `)
     .eq('requester_id', user.id)
+    .or('requester_role.eq.buyer,requester_role.is.null')
     .order('created_at', { ascending: false })
     .limit(50);
 

@@ -97,6 +97,7 @@ export async function POST(req: Request, { params }: Ctx) {
   try {
     await (supabase.from as any)('notifications').insert({
       user_id: (found as any).user_id,
+      role: 'farmer',
       type: 'group',
       title: 'Added to a farmer group',
       body: `You've been added to ${group?.name ?? 'a farmer group'}. Open Farmer Groups to see it.`,

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { X, LogOut, LayoutDashboard } from 'lucide-react';
 import { ICON_MAP } from './Sidebar';
 import type { NavItem } from './Sidebar';
+import { useLiveUnreadBadge } from './useLiveUnreadBadge';
 
 interface Props {
   navItems: NavItem[];
@@ -55,6 +56,9 @@ export function MobileSidebarDrawer({ navItems, profile }: Props) {
     return set;
   }, [navItems, pathname]);
 
+  const notifItem = navItems.find(i => i.icon === 'notifications');
+  const liveUnread = useLiveUnreadBadge(notifItem?.badge);
+
   if (!open) return null;
 
   const initial = profile?.name?.[0]?.toUpperCase() ?? 'U';
@@ -97,6 +101,7 @@ export function MobileSidebarDrawer({ navItems, profile }: Props) {
           {navItems.map(({ href, icon, label, badge, divider, sectionLabel }, idx) => {
             const Icon = ICON_MAP[icon] ?? LayoutDashboard;
             const active = activeSet.has(href);
+            const badgeValue = icon === 'notifications' ? liveUnread : badge;
 
             return (
               <div key={href}>
@@ -117,9 +122,9 @@ export function MobileSidebarDrawer({ navItems, profile }: Props) {
                     <Icon size={17} strokeWidth={active ? 2.5 : 2} />
                   </span>
                   <span className="agrinova-drawer-link-label">{label}</span>
-                  {badge !== undefined && badge > 0 && (
+                  {badgeValue !== undefined && badgeValue > 0 && (
                     <span className="agrinova-drawer-badge">
-                      {badge > 99 ? '99+' : badge}
+                      {badgeValue > 99 ? '99+' : badgeValue}
                     </span>
                   )}
                 </Link>

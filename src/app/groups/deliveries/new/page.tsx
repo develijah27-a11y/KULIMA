@@ -33,6 +33,7 @@ export default async function GroupsRequestDeliveryPage() {
           prefilledOffer={null}
           successRedirect="/groups/dashboard"
           userDistrict={profile?.location ?? undefined}
+          requesterRole="groups"
         />
       </div>
     </div>

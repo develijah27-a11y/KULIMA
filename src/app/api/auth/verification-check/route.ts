@@ -38,6 +38,7 @@ export async function POST() {
 
   await (admin.from as any)('notifications').insert({
     user_id: user.id,
+    role: (profile as any)?.role ?? null,
     type: 'system',
     title: VERIFY_REMINDER_TITLE,
     body: 'Submit your national ID and other required documents to unlock jobs, payouts, and escrow-protected deals.',

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Bell } from 'lucide-react';
+import { MarkAllReadSync } from '@/components/ui/MarkAllReadSync';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -12,6 +13,7 @@ export default async function GroupsNotificationsPage() {
   const { data } = await supabase.from('notifications')
     .select('*')
     .eq('user_id', user.id)
+    .or('role.eq.groups,role.is.null')
     .order('created_at', { ascending: false })
     .limit(50);
 
@@ -22,11 +24,13 @@ export default async function GroupsNotificationsPage() {
     await supabase.from('notifications')
       .update({ read: true })
       .eq('user_id', user.id)
-      .eq('read', false);
+      .eq('read', false)
+      .or('role.eq.groups,role.is.null');
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
+      <MarkAllReadSync />
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 800, color: C.text, letterSpacing: '-0.03em', marginBottom: 4 }}>Notifications</h1>
         <p style={{ fontSize: 13, color: C.muted }}>{unread > 0 ? `${unread} unread` : `${notifications.length} total`}</p>

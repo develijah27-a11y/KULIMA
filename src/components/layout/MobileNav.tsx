@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { ICON_MAP } from './Sidebar';
 import type { NavItem } from './Sidebar';
 import { LayoutDashboard, MoreHorizontal } from 'lucide-react';
+import { useLiveUnreadBadge } from './useLiveUnreadBadge';
 
 // Show 4 primary items in the tab bar; "More" opens the full MobileSidebarDrawer.
 const MAX_PRIMARY = 4;
@@ -15,8 +16,12 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
 
   const visibleItems = navItems.slice(0, MAX_PRIMARY);
   const overflowItems = navItems.slice(MAX_PRIMARY);
-  const overflowBadgeTotal = overflowItems.reduce((sum, i) => sum + (i.badge ?? 0), 0);
   const hasOverflow = overflowItems.length > 0;
+
+  const notifItem = navItems.find(i => i.icon === 'notifications');
+  const liveUnread = useLiveUnreadBadge(notifItem?.badge);
+
+  const overflowBadgeTotal = overflowItems.reduce((sum, i) => sum + (i.icon === 'notifications' ? liveUnread : (i.badge ?? 0)), 0);
 
   const activeSet = useMemo(() => {
     const set = new Set<string>();
@@ -48,6 +53,7 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
       {visibleItems.map(({ href, icon, label, badge }) => {
         const Icon = ICON_MAP[icon] ?? LayoutDashboard;
         const active = activeSet.has(href);
+        const badgeValue = icon === 'notifications' ? liveUnread : badge;
 
         return (
           <Link
@@ -86,7 +92,7 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
                 strokeWidth={active ? 2.5 : 1.8}
                 style={{ display: 'block' }}
               />
-              {badge !== undefined && badge > 0 && (
+              {badgeValue !== undefined && badgeValue > 0 && (
                 <span
                   style={{
                     position: 'absolute',
@@ -107,7 +113,7 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
                     letterSpacing: 0,
                   }}
                 >
-                  {badge > 9 ? '9+' : badge}
+                  {badgeValue > 9 ? '9+' : badgeValue}
                 </span>
               )}
             </div>

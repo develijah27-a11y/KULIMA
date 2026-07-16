@@ -1,0 +1,11 @@
+-- delivery_requests.requester_id is the shared auth account id, with no
+-- record of which role dashboard created the request. Farmer, buyer, groups,
+-- offtaker, and supplier all have their own "Request delivery" page hitting
+-- the same POST /api/deliveries — so an account that uses more than one of
+-- those roles saw every delivery it ever requested, under every hat, mixed
+-- together in each dashboard's "My Deliveries" list and sidebar badge count.
+--
+-- Nullable and additive: existing rows stay NULL, which the read side treats
+-- as "show on every dashboard this account can reach" (matches the same
+-- convention used for notifications.role).
+ALTER TABLE public.delivery_requests ADD COLUMN IF NOT EXISTS requester_role TEXT;

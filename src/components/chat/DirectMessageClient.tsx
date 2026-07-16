@@ -135,17 +135,28 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
     setDraft('');
     setTimeout(scrollBottom, 60);
 
-    const { error: err } = await (supabase.from as any)('direct_messages').insert({
-      conversation_id: convId,
-      sender_id:       meId,
-      recipient_id:    themId,
-      body:            text,
-    });
+    const { data: insertedRows, error: err } = await (supabase.from as any)('direct_messages')
+      .insert({
+        conversation_id: convId,
+        sender_id:       meId,
+        recipient_id:    themId,
+        body:            text,
+      })
+      .select('id, conversation_id, sender_id, recipient_id, body, read, created_at');
 
     if (err) {
       setMessages(p => p.filter(m => m.id !== tempId));
       setError('Failed to send. Check your connection.');
       setDraft(text);
+    } else {
+      // Swap the optimistic placeholder for the confirmed row so the bubble
+      // stops looking like it's still sending — otherwise this exact message
+      // stays stuck at 65% opacity forever, since its temp_ id never matches
+      // the row the realtime channel delivers.
+      const confirmed = insertedRows?.[0];
+      if (confirmed) {
+        setMessages(p => p.map(m => (m.id === tempId ? confirmed : m)));
+      }
     }
     setSending(false);
     inputRef.current?.focus();

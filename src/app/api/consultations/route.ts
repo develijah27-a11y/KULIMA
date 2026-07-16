@@ -140,6 +140,7 @@ export async function POST(req: Request) {
   if (assigned) {
     await (db.from as any)('notifications').insert({
       user_id: assigned.user_id,
+      role:    'pathologist',
       type:    'alert',
       title:   `New ${type === 'farm_visit' ? 'farm visit request' : 'remote consultation'}`,
       body:    `A farmer in ${farmerDistrict} has booked a consultation with you. Open the app to connect.`,

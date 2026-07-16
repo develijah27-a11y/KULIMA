@@ -21,9 +21,14 @@ export default async function MyCasesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
+  const { data: profile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
+
+  // disease_reports.pathologist_id references profiles(id), not auth.uid() —
+  // filtering by user.id directly (as this page previously did) can never
+  // match, so it always rendered "No cases yet" regardless of assignments.
   const { data: cases } = await (supabase.from as any)('disease_reports')
     .select('id, crop_type, symptoms, district, urgency, farmer_name, status, diagnosis, created_at, updated_at')
-    .eq('pathologist_id', user.id)
+    .eq('pathologist_id', profile?.id ?? '')
     .order('updated_at', { ascending: false })
     .limit(50);
 

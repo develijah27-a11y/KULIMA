@@ -60,6 +60,7 @@ export async function PATCH(
   if (fp) {
     await (db.from as any)('notifications').insert({
       user_id:  (fp as any).user_id,
+      role:     'farmer',
       type:     'order',
       title:    isApprove ? `Listing approved — ${listing.crop_type}` : `Listing not approved — ${listing.crop_type}`,
       body:     isApprove

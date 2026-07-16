@@ -33,6 +33,7 @@ export default async function SupplierRequestDeliveryPage() {
           prefilledOffer={null}
           successRedirect="/supplier/dashboard"
           userDistrict={profile?.location ?? undefined}
+          requesterRole="supplier"
         />
       </div>
     </div>

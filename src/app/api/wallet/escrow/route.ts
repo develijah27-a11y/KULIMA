@@ -168,6 +168,7 @@ export async function POST(req: Request) {
         await (db.from as any)('notifications').insert({
           farmer_id: order.farmer_profile_id,
           user_id:   sellerUserId,
+          role:      'farmer',
           type:      'payment',
           title:     'Payment received — proceed to ship',
           body:      `The buyer has paid UGX ${totalAmount.toLocaleString()} into escrow. A transporter will be matched shortly.`,
@@ -226,7 +227,7 @@ export async function POST(req: Request) {
               const deliveryBody = `🚛 Standard · ${order.quantity_kg}kg from ${order.pickup_district} → ${dropoff} · UGX ${fare.totalFare.toLocaleString()}`;
               await (db.from as any)('notifications').insert(
                 driverUserIds.map((driverId: string) => ({
-                  user_id: driverId, type: 'delivery', title: 'New Delivery Request',
+                  user_id: driverId, role: 'transporter', type: 'delivery', title: 'New Delivery Request',
                   body: deliveryBody,
                   read: false,
                 })),

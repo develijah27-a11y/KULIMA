@@ -76,6 +76,7 @@ export async function POST(req: Request) {
     if (leaderProfile) {
       await (supabase.from as any)('notifications').insert({
         user_id: (leaderProfile as any).user_id,
+        role: 'groups',
         type: 'group',
         title: 'New member joined your group',
         body: `${(profile as any).full_name ?? 'A farmer'} joined ${group.name}.`,

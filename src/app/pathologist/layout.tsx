@@ -43,7 +43,7 @@ export default async function PathologistLayout({ children }: { children: React.
 
   const [profileRes, unreadRes] = await Promise.all([
     supabase.from('profiles').select('id, full_name, location, role, roles').eq('user_id', user.id).single(),
-    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false),
+    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false).or('role.eq.pathologist,role.is.null'),
   ]);
 
   if (profileRes.data) {

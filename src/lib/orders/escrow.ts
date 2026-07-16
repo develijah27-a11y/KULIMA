@@ -136,7 +136,7 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
               description: `Group sale payout — ${c.quantity_kg}kg contributed (${commission.rate_percent}% fee deducted)`,
             }),
             (db.from as any)('notifications').insert({
-              user_id: memberProfile.user_id, type: 'payment',
+              user_id: memberProfile.user_id, role: 'farmer', type: 'payment',
               title: 'Group sale payout received',
               body: `UGX ${share.toLocaleString()} added to your wallet for your ${c.quantity_kg}kg contribution.`,
               data: { order_id: orderId },
@@ -176,7 +176,7 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
             description: `Group sale payout (${commission.rate_percent}% fee deducted)`,
           }),
           (db.from as any)('notifications').insert({
-            user_id: adminId, type: 'payment', title: 'Group sale proceeds received',
+            user_id: adminId, role: 'groups', type: 'payment', title: 'Group sale proceeds received',
             body: `UGX ${net.toLocaleString()} added to your group wallet (after ${commission.rate_percent}% platform fee).`,
             data: { order_id: orderId },
           }),
@@ -203,7 +203,7 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
       { wallet_id: sellerWallet.id, user_id: escrow.seller_user_id, type: 'fee',    amount: fee, status: 'completed', order_id: orderId, description: `Platform fee (${commission.rate_percent}%)` },
     ]),
     (db.from as any)('notifications').insert({
-      user_id: escrow.seller_user_id, type: 'payment', title: 'Payment released to your wallet',
+      user_id: escrow.seller_user_id, role: 'farmer', type: 'payment', title: 'Payment released to your wallet',
       body: `UGX ${net.toLocaleString()} has been added to your wallet (after ${commission.rate_percent}% platform fee).`,
       data: { order_id: orderId },
     }),

@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Microscope } from 'lucide-react';
 import { ReportControls } from './ReportControls';
@@ -16,6 +17,14 @@ const URGENCY_CFG: Record<string, { color: string; bg: string }> = {
 
 export default async function AdminDiseaseReportsPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth/signin');
+
+  // Defense-in-depth: admin/layout.tsx already gates every page under this
+  // route, but every other admin page re-checks independently too — this one
+  // didn't, so it was relying solely on the layout guard.
+  const { data: me } = await supabase.from('profiles').select('role').eq('user_id', user.id).single();
+  if ((me as any)?.role !== 'admin') redirect('/dashboard');
 
   const [{ data: reports }, { data: pathologists }] = await Promise.all([
     (supabase.from as any)('disease_reports')

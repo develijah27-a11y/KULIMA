@@ -46,7 +46,7 @@ export default async function RequestDeliveryPage({
       </div>
 
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
-        <RequestDeliveryForm prefilledOffer={prefilledOffer} />
+        <RequestDeliveryForm prefilledOffer={prefilledOffer} requesterRole="buyer" />
       </div>
     </div>
   );

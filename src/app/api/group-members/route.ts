@@ -98,6 +98,7 @@ export async function POST(req: Request) {
 
           await (supabase.from as any)('notifications').insert({
             user_id: (matchedProfile as any).user_id,
+            role: 'farmer',
             type: 'group',
             title: 'You have been added to a group',
             body: `${adminName} added you to "${groupName}" on AgriNova. Open the app to see your group members and activities.`,

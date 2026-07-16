@@ -55,6 +55,7 @@ export async function POST(req: Request) {
     const rows = chunk.map((p: any) => ({
       farmer_id: p.id,       // notifications.farmer_id references profiles.id
       user_id:   p.user_id,  // GET /api/notifications and the realtime bell filter on user_id
+      role:      p.role ?? null, // shows only on that recipient's own role dashboard
       type,
       title: title.trim(),
       body:  body.trim(),

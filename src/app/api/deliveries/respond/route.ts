@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
   // Verify delivery is still open (another driver hasn't already accepted)
   const { data: delivery } = await (admin.from as any)('delivery_requests')
-    .select('id, status, estimated_fare, commission_amount, driver_earnings, requester_id, pickup_district, dropoff_district, cargo_kg, cargo_type, delivery_type')
+    .select('id, status, estimated_fare, commission_amount, driver_earnings, requester_id, requester_role, pickup_district, dropoff_district, cargo_kg, cargo_type, delivery_type')
     .eq('id', delivery_id)
     .single();
 
@@ -118,6 +118,7 @@ export async function POST(req: Request) {
 
     await (admin.from as any)('notifications').insert({
       user_id: delivery.requester_id,
+      role:    delivery.requester_role ?? null,
       type:    'delivery',
       title:   'Driver Accepted Your Delivery',
       body:    `${typeLabel} driver is on the way for your ${delivery.cargo_kg}kg shipment from ${delivery.pickup_district} → ${delivery.dropoff_district}.`,

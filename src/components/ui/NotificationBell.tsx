@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { NotificationDrawer, type Notification } from './NotificationDrawer';
 import { showToast, requestBrowserNotificationPermission } from './NotificationToast';
 import { createClient } from '@/lib/supabase/client';
+import { UNREAD_COUNT_EVENT } from '@/components/layout/useLiveUnreadBadge';
 
 interface ApiNotif {
   id: string;
@@ -16,6 +17,10 @@ interface ApiNotif {
 
 interface NotificationBellProps {
   initialUnreadCount?: number;
+  /** Which role dashboard this bell is mounted in — a notification tagged
+   *  for a different role (or untagged, which always shows) is filtered out
+   *  so switching roles on one account doesn't leak another role's alerts. */
+  currentRole?: string;
 }
 
 // VAPID public keys are base64url — the Push API needs them as a raw byte
@@ -58,7 +63,7 @@ async function ensurePushSubscription() {
   }
 }
 
-export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellProps) {
+export function NotificationBell({ initialUnreadCount = 0, currentRole }: NotificationBellProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [loaded, setLoaded] = useState(false);
@@ -85,6 +90,10 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
           { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
           (payload: any) => {
             const n = payload.new as any;
+            // Realtime can only filter on user_id server-side (no OR/IS NULL
+            // support) — a role-tagged row meant for a different dashboard
+            // still arrives here, so drop it client-side before it shows.
+            if (n.role && currentRole && n.role !== currentRole) return;
             // Add to the drawer list
             setNotifications(prev => [{
               id: n.id,
@@ -105,10 +114,31 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
     });
   }, []);
 
+  // Broadcast our unread count so the sidebar/mobile-nav "Notifications"
+  // badge — a static number baked in at server-render time — stays in sync.
+  // Tagged with source: 'bell' so our own listener below (which exists for
+  // *other* surfaces, e.g. a /*/notifications page marking everything read
+  // server-side) can ignore echoes of its own broadcasts.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(UNREAD_COUNT_EVENT, { detail: { count: unreadCount, source: 'bell' } }));
+  }, [unreadCount]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { count, source } = (e as CustomEvent<{ count: number; source?: string }>).detail;
+      if (source === 'bell') return;
+      setUnreadCount(count);
+      setLoaded(false);
+    };
+    window.addEventListener(UNREAD_COUNT_EVENT, handler);
+    return () => window.removeEventListener(UNREAD_COUNT_EVENT, handler);
+  }, []);
+
   const ensureLoaded = useCallback(async () => {
     if (loaded) return;
     try {
-      const res = await fetch('/api/notifications');
+      const url = currentRole ? `/api/notifications?role=${encodeURIComponent(currentRole)}` : '/api/notifications';
+      const res = await fetch(url);
       if (!res.ok) return;
       const json = await res.json();
       const items: Notification[] = (json.data ?? []).map((n: ApiNotif) => ({
@@ -123,7 +153,7 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
       setUnreadCount(items.filter(n => !n.read).length);
       setLoaded(true);
     } catch {}
-  }, [loaded]);
+  }, [loaded, currentRole]);
 
   const handleMarkRead = useCallback(async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
@@ -143,8 +173,12 @@ export function NotificationBell({ initialUnreadCount = 0 }: NotificationBellPro
   const handleMarkAllRead = useCallback(async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
-    await fetch('/api/notifications', { method: 'PATCH' });
-  }, []);
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: currentRole }),
+    });
+  }, [currentRole]);
 
   return (
     <div onClick={ensureLoaded}>

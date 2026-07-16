@@ -144,6 +144,7 @@ export async function POST(req: Request) {
         const typeLabel = delivery_type === 'cold' ? '❄️ Cold' : delivery_type === 'fast' ? '⚡ Fast' : '🚛 Standard';
         const notifications = driverProfiles.map((p: any) => ({
           user_id: p.user_id,
+          role:    'transporter',
           type:    'delivery',
           title:   'New Delivery Request',
           body:    `${typeLabel} · ${cargo_kg}kg from ${pickup_district} → ${dropoff_district} · UGX ${fare.totalFare.toLocaleString()}`,
@@ -207,13 +208,14 @@ export async function PATCH(req: Request) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
       );
       const { data: delivery } = await (admin.from as any)('delivery_requests')
-        .select('requester_id, estimated_fare')
+        .select('requester_id, requester_role, estimated_fare')
         .eq('id', id)
         .single();
 
       if (delivery?.requester_id) {
         await (admin.from as any)('notifications').insert({
           user_id: delivery.requester_id,
+          role:    delivery.requester_role ?? null,
           type:    'delivery',
           title:   'Delivery Arrived!',
           body:    `Your goods have been delivered. Please confirm and pay UGX ${Number(delivery.estimated_fare).toLocaleString()} to release the driver.`,

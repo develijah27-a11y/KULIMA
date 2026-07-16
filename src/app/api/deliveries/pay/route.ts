@@ -96,6 +96,7 @@ export async function POST(req: Request) {
   try {
     await (admin.from as any)('notifications').insert({
       user_id: delivery.transporter_id,
+      role:    'transporter',
       type:    'delivery',
       title:   'Payment Received',
       body:    `UGX ${driverEarnings.toLocaleString()} has been added to your wallet for the ${delivery.pickup_district} → ${delivery.dropoff_district} delivery.`,

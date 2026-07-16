@@ -23,9 +23,10 @@ export async function GET(req: Request) {
         .then(({ data: farmers }) => {
           if (!farmers?.length) return;
           const body = rainDays[0]?.weather?.[0]?.description ?? 'Heavy rain expected in the next few days';
-          supabase.from('notifications').insert(
+          (supabase.from as any)('notifications').insert(
             farmers.map((f: any) => ({
               user_id: f.user_id,
+              role:    'farmer',
               type:    'rain',
               title:   'Rain arriving in your area',
               body,
@@ -86,6 +87,7 @@ export async function GET(req: Request) {
     await (supabase.from as any)('notifications').insert(
       toNotify.map((f: any) => ({
         user_id: f.user_id,
+        role: 'farmer',
         type: 'price',
         title,
         body,
@@ -117,7 +119,7 @@ export async function GET(req: Request) {
     if (already) continue;
 
     const body = `You have ${item.quantity} ${item.unit} of ${item.name} left — below your restock threshold of ${item.low_stock_threshold} ${item.unit}.`;
-    await (supabase.from as any)('notifications').insert({ user_id: userId, type: 'stock', title, body, read: false });
+    await (supabase.from as any)('notifications').insert({ user_id: userId, role: 'farmer', type: 'stock', title, body, read: false });
     await sendPushToUsers([userId], { title, body, url: '/farmer/inventory' });
   }
 
@@ -138,7 +140,7 @@ export async function GET(req: Request) {
     if (already) continue;
 
     const body = `Only ${p.stock_qty} ${p.unit} of ${p.name} left in stock. Restock soon or farmers won't be able to order it.`;
-    await (supabase.from as any)('notifications').insert({ user_id: userId, type: 'stock', title, body, read: false });
+    await (supabase.from as any)('notifications').insert({ user_id: userId, role: 'supplier', type: 'stock', title, body, read: false });
     await sendPushToUsers([userId], { title, body, url: '/supplier/catalogue' });
   }
 
