@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { releaseEscrowForOrder, refundEscrowForOrder } from '@/lib/orders/escrow';
+import { notifyUser } from '@/lib/notify';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -49,13 +50,14 @@ export async function PATCH(req: Request, { params }: Params) {
     // the buyer has actually paid into escrow. Funding escrow (POST
     // /api/wallet/escrow action=fund) is what creates the delivery request;
     // see that route for the pickup/matching logic that used to live here.
-    await (supabase.from as any)('notifications').insert({
-      user_id: order.buyer_id,
+    await notifyUser(supabase, {
+      userId: order.buyer_id,
       role:    'buyer',
       type:    'order',
       title:   `Order confirmed — ${order.crop_type}`,
       body:    `${(farmerProfile as any).full_name ?? 'Farmer'} confirmed your order for ${order.quantity_kg} kg. Pay now to arrange delivery.`,
       data:    { order_id: id },
+      url:     '/buyer/orders',
     });
 
     return NextResponse.json({ success: true });
@@ -86,23 +88,24 @@ export async function PATCH(req: Request, { params }: Params) {
 
     // Notify the other party
     if (isFarmer) {
-      await (supabase.from as any)('notifications').insert({
-        user_id: order.buyer_id,
+      await notifyUser(supabase, {
+        userId: order.buyer_id,
         role:    'buyer',
         type:    'order',
         title:   `Order cancelled — ${order.crop_type}`,
         body:    `Your order was cancelled by the farmer. ${note ?? ''}`,
         data:    { order_id: id },
+        url:     '/buyer/orders',
       });
     } else {
-      await (supabase.from as any)('notifications').insert({
-        farmer_id: order.farmer_profile_id,
-        user_id:   (farmerProfile as any)?.user_id,
+      await notifyUser(supabase, {
+        userId:   (farmerProfile as any)?.user_id,
         role:      'farmer',
         type:      'order',
         title:     `Order cancelled by buyer — ${order.crop_type}`,
         body:      `The buyer cancelled their order for ${order.quantity_kg} kg.`,
         data:      { order_id: id },
+        url:       '/farmer/orders',
       });
     }
 
@@ -133,14 +136,14 @@ export async function PATCH(req: Request, { params }: Params) {
         .eq('id', id);
 
       if (farmerProfile) {
-        await (supabase.from as any)('notifications').insert({
-          farmer_id: order.farmer_profile_id,
-          user_id:   (farmerProfile as any).user_id,
+        await notifyUser(supabase, {
+          userId:   (farmerProfile as any).user_id,
           role:      'farmer',
           type:      'order',
           title:     `Order marked complete — ${order.crop_type}`,
           body:      `${(buyerProfile as any)?.full_name ?? 'Buyer'} confirmed receipt of ${order.crop_type} (${order.quantity_kg} kg). No escrow payment was recorded on this order — contact support if payment is outstanding.`,
           data:      { order_id: id },
+          url:       '/farmer/orders',
         });
       }
     }

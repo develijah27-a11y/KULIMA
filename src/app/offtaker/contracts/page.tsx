@@ -11,6 +11,7 @@ const C = {
 };
 
 const STATUS: Record<string, { label: string; color: string; bg: string }> = {
+  offered:   { label: 'Awaiting Farmer', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   active:    { label: 'Active',    color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
   pending:   { label: 'Pending',   color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   completed: { label: 'Done',      color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },

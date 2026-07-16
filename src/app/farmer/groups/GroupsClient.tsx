@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { Users, X, Check, Leaf, Settings, Package, Trash2 } from 'lucide-react';
+import { Users, X, Check, Leaf, Settings, Package, Trash2, Banknote } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/CameraCapture';
 
 const C = {
@@ -27,6 +27,24 @@ interface Submission {
   status: 'pending' | 'published' | 'withdrawn';
   created_at: string;
 }
+
+interface Loan {
+  id: string;
+  amount: number;
+  purpose: string | null;
+  repayment_date: string | null;
+  repaid_amount: number;
+  status: 'pending' | 'rejected' | 'active' | 'repaid' | 'defaulted';
+  created_at: string;
+}
+
+const LOAN_STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
+  pending:   { label: 'Awaiting decision', color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  active:    { label: 'Active',            color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
+  repaid:    { label: 'Repaid',            color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+  rejected:  { label: 'Rejected',          color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
+  defaulted: { label: 'Defaulted',         color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
+};
 
 const ROLE_CFG: Record<string, { color: string; bg: string }> = {
   leader:    { color: 'var(--color-primary)',      bg: 'var(--color-success-bg)' },
@@ -358,6 +376,149 @@ function SubmitPanel({ group, onClose }: { group: Group; onClose: () => void }) 
   );
 }
 
+function LoanPanel({ group, onClose }: { group: Group; onClose: () => void }) {
+  const [loans, setLoans]     = useState<Loan[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [amount, setAmount]   = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [repayBy, setRepayBy] = useState('');
+  const [submitting, setSubmit] = useState(false);
+  const [repayAmount, setRepayAmount] = useState<Record<string, string>>({});
+  const [repaying, setRepaying] = useState<string | null>(null);
+  const [error, setError]     = useState('');
+  const [success, setSuccess] = useState('');
+
+  const loadLoans = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const res  = await fetch(`/api/groups/${group.id}/loans`);
+      const json = await res.json();
+      if (json.error) { setError(json.error); return; }
+      setLoans(json.loans);
+    } finally { setLoading(false); }
+  }, [group.id]);
+
+  useEffect(() => { loadLoans(); }, [loadLoans]);
+
+  const hasOpenLoan = (loans ?? []).some(l => l.status === 'pending' || l.status === 'active');
+
+  async function apply() {
+    if (!amount || Number(amount) <= 0) { setError('Enter a valid amount'); return; }
+    setSubmit(true); setError(''); setSuccess('');
+    try {
+      const res  = await fetch(`/api/groups/${group.id}/loans`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: Number(amount), purpose: purpose || undefined, repaymentDate: repayBy || undefined }),
+      });
+      const json = await res.json();
+      if (json.error) { setError(json.error); return; }
+      setSuccess('Loan application submitted — the group leader will review it.');
+      setAmount(''); setPurpose(''); setRepayBy('');
+      loadLoans();
+    } finally { setSubmit(false); }
+  }
+
+  async function repay(loanId: string) {
+    const amt = repayAmount[loanId];
+    if (!amt || Number(amt) <= 0) { setError('Enter a valid repayment amount'); return; }
+    setRepaying(loanId); setError('');
+    try {
+      const res  = await fetch(`/api/groups/${group.id}/loans/${loanId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'repay', amount: Number(amt) }),
+      });
+      const json = await res.json();
+      if (json.error) { setError(json.error); return; }
+      setRepayAmount(prev => ({ ...prev, [loanId]: '' }));
+      loadLoans();
+    } finally { setRepaying(null); }
+  }
+
+  return (
+    <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: 0, overflow: 'hidden', marginTop: 8 }}>
+      <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Banknote size={14} />Loans from {group.name}</span>
+        </p>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex' }}><X size={16} /></button>
+      </div>
+
+      {!hasOpenLoan && (
+        <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.text }}>Apply for a Loan</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <input
+              type="number" min="0" value={amount} onChange={e => setAmount(e.target.value)}
+              placeholder="Amount (UGX)"
+              style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+            />
+            <input
+              type="date" value={repayBy} onChange={e => setRepayBy(e.target.value)}
+              min={new Date().toISOString().slice(0, 10)}
+              style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+            />
+          </div>
+          <input
+            value={purpose} onChange={e => setPurpose(e.target.value)}
+            placeholder="Purpose — e.g. seeds for planting season"
+            style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+          />
+          {error && <p style={{ margin: 0, fontSize: 12, color: C.red }}>{error}</p>}
+          {success && <div style={{ fontSize: 12, color: 'var(--color-success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Check size={12} />{success}</div>}
+          <button onClick={apply} disabled={submitting}
+            style={{ padding: '10px', borderRadius: 8, border: 'none', background: C.green, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}>
+            {submitting ? 'Submitting…' : 'Apply for Loan'}
+          </button>
+        </div>
+      )}
+
+      <div>
+        {loading ? (
+          <div style={{ padding: '24px', textAlign: 'center' }}><p style={{ color: C.muted, fontSize: 13 }}>Loading…</p></div>
+        ) : loans === null || loans.length === 0 ? (
+          <div style={{ padding: '24px', textAlign: 'center' }}><p style={{ color: C.muted, fontSize: 13 }}>No loans yet.</p></div>
+        ) : (
+          loans.map((l, i) => {
+            const st = LOAN_STATUS_CFG[l.status] ?? LOAN_STATUS_CFG.pending;
+            const remaining = l.amount - l.repaid_amount;
+            return (
+              <div key={l.id} style={{ padding: '12px 18px', borderBottom: i < loans.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>UGX {Math.round(l.amount).toLocaleString()}</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 11, color: C.muted }}>{l.purpose || 'General'}</p>
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: st.bg, color: st.color, flexShrink: 0 }}>{st.label}</span>
+                </div>
+                {l.status === 'active' && (
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <input
+                      type="number" min="0" max={remaining}
+                      value={repayAmount[l.id] ?? ''}
+                      onChange={e => setRepayAmount(prev => ({ ...prev, [l.id]: e.target.value }))}
+                      placeholder={`Repay (owe ${Math.round(remaining).toLocaleString()})`}
+                      style={{ flex: 1, padding: '7px 10px', borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+                    />
+                    <button
+                      disabled={repaying === l.id}
+                      onClick={() => repay(l.id)}
+                      style={{ padding: '7px 14px', borderRadius: 6, border: 'none', background: C.greenMed, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      {repaying === l.id ? '…' : 'Repay'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, profileId }: Props) {
   const [tab, setTab]           = useState<'mine' | 'browse' | 'create'>('mine');
   const [myGroups, setMine]     = useState<Group[]>(initialMine);
@@ -367,6 +528,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
   const [newGroup, setNew]      = useState({ name: '', description: '', district: '' });
   const [openPanel, setPanel]   = useState<string | null>(null); // group id with open member panel
   const [submitPanel, setSubmitPanel] = useState<string | null>(null); // group id with open submit-produce panel
+  const [loanPanel, setLoanPanel] = useState<string | null>(null); // group id with open loans panel
   const [phonePrompt, setPhonePrompt] = useState<string | null>(null); // group id awaiting a phone number
   const [phoneInput, setPhoneInput]   = useState('');
 
@@ -395,6 +557,7 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
       setMine(prev => prev.filter(g => g.id !== groupId));
       if (openPanel === groupId) setPanel(null);
       if (submitPanel === groupId) setSubmitPanel(null);
+      if (loanPanel === groupId) setLoanPanel(null);
     } finally { setLoad(null); }
   }
 
@@ -465,9 +628,10 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
                 const isLeader = g.my_role === 'leader';
                 const isPanelOpen = openPanel === g.id;
                 const isSubmitOpen = submitPanel === g.id;
+                const isLoanOpen = loanPanel === g.id;
                 return (
                   <div key={g.id}>
-                    <div style={{ padding: '16px 20px', borderBottom: i < myGroups.length - 1 || isPanelOpen || isSubmitOpen ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                    <div style={{ padding: '16px 20px', borderBottom: i < myGroups.length - 1 || isPanelOpen || isSubmitOpen || isLoanOpen ? `1px solid ${C.border}` : 'none', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                       <div style={{ width: 44, height: 44, borderRadius: 10, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.green, flexShrink: 0 }}><Users size={22} /></div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
@@ -489,6 +653,11 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
                           style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: isSubmitOpen ? C.green : 'transparent', color: isSubmitOpen ? '#fff' : C.muted, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                           <Package size={11} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Submit
                         </button>
+                        <button
+                          onClick={() => setLoanPanel(isLoanOpen ? null : g.id)}
+                          style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${C.border}`, background: isLoanOpen ? C.green : 'transparent', color: isLoanOpen ? '#fff' : C.muted, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          <Banknote size={11} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />Loans
+                        </button>
                         {/* Members button — all members can see, leaders can manage */}
                         <button
                           onClick={() => setPanel(isPanelOpen ? null : g.id)}
@@ -506,6 +675,11 @@ export function GroupsClient({ myGroups: initialMine, allGroups: initialAll, pro
                     {isSubmitOpen && (
                       <div style={{ padding: '0 16px 16px' }}>
                         <SubmitPanel group={g} onClose={() => setSubmitPanel(null)} />
+                      </div>
+                    )}
+                    {isLoanOpen && (
+                      <div style={{ padding: '0 16px 16px' }}>
+                        <LoanPanel group={g} onClose={() => setLoanPanel(null)} />
                       </div>
                     )}
                     {isPanelOpen && (

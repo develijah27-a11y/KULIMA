@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -86,13 +87,13 @@ export async function POST(req: Request) {
           const adminName = (myProfile as any)?.full_name ?? 'Your group leader';
           const groupName = (myGroup as any)?.name ?? 'a farmer group';
 
-          await (supabase.from as any)('notifications').insert({
-            user_id: (matchedProfile as any).user_id,
+          await notifyUser(supabase, {
+            userId: (matchedProfile as any).user_id,
             role: 'farmer',
             type: 'group',
             title: 'You have been added to a group',
             body: `${adminName} added you to "${groupName}" on AgriNova. Open the app to see your group members and activities.`,
-            read: false,
+            url: '/farmer/groups',
           });
         }
       }

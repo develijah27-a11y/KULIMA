@@ -25,7 +25,7 @@ const Card = ({ children, style = {} }: { children: React.ReactNode; style?: Rea
 
 const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('full_name, location, roles, verification_level').eq('user_id', userId).single();
+  const { data } = await supabase.from('profiles').select('full_name, location, role, roles, verification_level, role_verification_levels').eq('user_id', userId).single();
   return data as any;
 });
 
@@ -463,7 +463,7 @@ export default async function TransporterDashboard() {
       </div>
 
       <VerificationBanner
-        level={(profile?.verification_level as VerificationLevel) ?? 'none'}
+        level={(profile?.role_verification_levels?.transporter ?? (profile?.role === 'transporter' ? profile?.verification_level : null) ?? 'none') as VerificationLevel}
         verifyHref="/transporter/verify"
         headline="Get verified — start earning today"
         benefit="Unlock paid delivery jobs and protected fare payouts"

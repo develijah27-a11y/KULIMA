@@ -53,11 +53,18 @@ async function ensurePushSubscription() {
         applicationServerKey: urlBase64ToUint8Array(vapidKey) as BufferSource,
       });
     }
+    // This effect re-runs on every NotificationBell mount — every role
+    // switch, every hard refresh — and re-POSTing an unchanged subscription
+    // re-triggers a DB upsert for nothing. Skip it once this exact endpoint
+    // is already known-saved for this browser session.
+    const syncedKey = 'agrinova-push-synced';
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(syncedKey) === sub.endpoint) return;
     await fetch('/api/push/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(sub.toJSON()),
     });
+    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(syncedKey, sub.endpoint);
   } catch {
     // Best-effort — the in-app bell/realtime channel still works either way.
   }

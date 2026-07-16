@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
+import { notifyUser } from '@/lib/notify';
+
+// Where tapping the "Verify your account" push notification should land,
+// per role — each role manages KYC docs on its own dashboard.
+const VERIFY_URL: Record<string, string> = {
+  farmer: '/farmer/verify',
+  buyer: '/buyer/verify',
+  groups: '/groups/verify',
+  supplier: '/supplier/verify',
+  transporter: '/transporter/verify',
+  offtaker: '/offtaker/verify',
+  pathologist: '/pathologist/verify',
+};
 
 // Called once right after a successful sign-in. If the user hasn't at least
 // completed ID verification, nudge them with a notification — but only once
@@ -36,13 +49,14 @@ export async function POST() {
 
   if (recent) return NextResponse.json({ notified: false });
 
-  await (admin.from as any)('notifications').insert({
-    user_id: user.id,
-    role: (profile as any)?.role ?? null,
+  const role = (profile as any)?.role ?? null;
+  await notifyUser(admin, {
+    userId: user.id,
+    role,
     type: 'system',
     title: VERIFY_REMINDER_TITLE,
     body: 'Submit your national ID and other required documents to unlock jobs, payouts, and escrow-protected deals.',
-    read: false,
+    url: role && VERIFY_URL[role] ? VERIFY_URL[role] : undefined,
   });
 
   return NextResponse.json({ notified: true });

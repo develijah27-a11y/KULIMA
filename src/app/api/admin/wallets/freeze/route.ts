@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -25,8 +26,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Wallet not found or failed to update.' }, { status: 404 });
   }
 
-  await (supabase.from as any)('notifications').insert({
-    user_id: userId,
+  await notifyUser(supabase, {
+    userId: userId,
     type: 'alert',
     title: frozen ? 'Your wallet has been frozen' : 'Your wallet has been unfrozen',
     body: frozen

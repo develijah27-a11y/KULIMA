@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
+import { notifyUser } from '@/lib/notify';
 
 // Platform defaults used only when a pathologist hasn't set their own rate —
 // pathologists can set remote_fee_ugx / visit_fee_ugx on their own profile.
@@ -138,13 +139,14 @@ export async function POST(req: Request) {
 
   // Notify pathologist if matched
   if (assigned) {
-    await (db.from as any)('notifications').insert({
-      user_id: assigned.user_id,
+    await notifyUser(db, {
+      userId: assigned.user_id,
       role:    'pathologist',
       type:    'alert',
       title:   `New ${type === 'farm_visit' ? 'farm visit request' : 'remote consultation'}`,
       body:    `A farmer in ${farmerDistrict} has booked a consultation with you. Open the app to connect.`,
       data:    { consultation_id: (consultation as any)?.id },
+      url:     '/pathologist/consultations',
     });
   }
 

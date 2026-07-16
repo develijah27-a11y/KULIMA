@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { releaseEscrowForOrder, refundEscrowForOrder } from '@/lib/orders/escrow';
+import { notifyUsers } from '@/lib/notify';
 
 const ACTION_MAP: Record<string, { status: string; extraFields?: Record<string, unknown> }> = {
   review:  { status: 'under_review' },
@@ -53,6 +54,35 @@ export async function PATCH(req: Request) {
       resolution: outcome === 'refund_buyer' ? 'Refunded to buyer' : 'Released to farmer',
       resolved_at: new Date().toISOString(),
     }).eq('id', id);
+
+    // A dispute resolution moves real money — both sides need to be told
+    // what was decided, not just find out from their balance changing.
+    const { data: order } = await (admin.from as any)('orders').select('buyer_id, seller_id, crop_type').eq('id', dispute.order_id).single();
+    if (order?.buyer_id && order?.seller_id) {
+      const refundedBuyer = outcome === 'refund_buyer';
+      await notifyUsers(admin, [
+        {
+          userId: order.buyer_id,
+          type: 'payment',
+          title: refundedBuyer ? 'Dispute resolved — you were refunded' : 'Dispute resolved — funds released to seller',
+          body: refundedBuyer
+            ? `Your dispute over ${order.crop_type ?? 'this order'} was resolved in your favour. The escrowed amount has been refunded to your wallet.`
+            : `Your dispute over ${order.crop_type ?? 'this order'} was resolved. The escrowed amount has been released to the seller.`,
+          data: { order_id: dispute.order_id, dispute_id: id, outcome },
+          url: '/buyer/orders',
+        },
+        {
+          userId: order.seller_id,
+          type: 'payment',
+          title: refundedBuyer ? 'Dispute resolved — order refunded to buyer' : 'Dispute resolved — you were paid',
+          body: refundedBuyer
+            ? `The dispute over ${order.crop_type ?? 'this order'} was resolved in the buyer's favour. The escrowed amount was refunded to them.`
+            : `The dispute over ${order.crop_type ?? 'this order'} was resolved in your favour. The escrowed amount has been released to your wallet.`,
+          data: { order_id: dispute.order_id, dispute_id: id, outcome },
+          url: '/farmer/orders',
+        },
+      ]);
+    }
 
     return NextResponse.json({ success: true, status: transition.status });
   }

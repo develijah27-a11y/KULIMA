@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { AlertTriangle, TrendingUp, CheckCircle2 } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -23,6 +24,17 @@ export default function NewContractPage() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [priceMap, setPriceMap] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    fetch('/api/market-prices').then(r => r.json()).then(json => setPriceMap(json.averages ?? {})).catch(() => {});
+  }, []);
+
+  const marketPrice = priceMap[cropType] ?? null;
+  const proposedPrice = Number(priceUgx);
+  const priceDelta = marketPrice && proposedPrice > 0 ? Math.round(((proposedPrice - marketPrice) / marketPrice) * 100) : null;
+  const isLow  = priceDelta !== null && priceDelta <= -15;
+  const isHigh = priceDelta !== null && priceDelta >= 15;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -84,10 +96,33 @@ export default function NewContractPage() {
             <input type="number" value={quantityKg} onChange={e => setQuantityKg(e.target.value)} min="1" placeholder="e.g. 5000" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: 'var(--d-input-bg)', outline: 'none', boxSizing: 'border-box' }} />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Price / kg (UGX) *</label>
-            <input type="number" value={priceUgx} onChange={e => setPriceUgx(e.target.value)} min="1" placeholder="e.g. 1200" style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: 'var(--d-input-bg)', outline: 'none', boxSizing: 'border-box' }} />
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
+              Price / kg (UGX) *
+              {marketPrice && <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 600, color: C.muted }}>(market: {Math.round(marketPrice).toLocaleString()})</span>}
+            </label>
+            <input
+              type="number" value={priceUgx} onChange={e => setPriceUgx(e.target.value)} min="1" placeholder="e.g. 1200"
+              style={{
+                width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 13, color: C.text, outline: 'none', boxSizing: 'border-box',
+                border: `1.5px solid ${isLow || isHigh ? 'var(--color-danger)' : C.border}`,
+                background: isLow ? 'var(--color-danger-bg)' : 'var(--d-input-bg)',
+              }}
+            />
           </div>
         </div>
+
+        {priceDelta !== null && (
+          <p style={{
+            fontSize: 12, fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: 5,
+            color: isLow ? 'var(--color-danger)' : isHigh ? 'var(--color-harvest)' : 'var(--color-success)',
+          }}>
+            {isLow
+              ? <><AlertTriangle size={12} />{Math.abs(priceDelta)}% below market — farmers may reject this offer</>
+              : isHigh
+              ? <><TrendingUp size={12} />{priceDelta}% above market — you'll pay more than the going rate</>
+              : <><CheckCircle2 size={12} />Within market range (UGX {Math.round(marketPrice!).toLocaleString()}/kg)</>}
+          </p>
+        )}
 
         {totalValue > 0 && (
           <div style={{ padding: '12px 16px', borderRadius: 10, background: 'var(--color-sky-bg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

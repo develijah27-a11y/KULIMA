@@ -44,7 +44,7 @@ export default async function GroupSuppliersPage({
   const supplier = sp.supplier ?? '';
 
   let query = (supabase.from as any)('supplier_products')
-    .select('id, name, category, description, price_per_unit, unit, stock_qty, min_order_qty, district, image_url, supplier_id, supplier:profiles!supplier_products_supplier_id_fkey(id, full_name, business_name, location, verification_level)')
+    .select('id, name, category, description, price_per_unit, unit, stock_qty, min_order_qty, district, image_url, supplier_id, supplier:profiles!supplier_products_supplier_id_fkey(id, full_name, business_name, location, verification_level, role_verification_levels)')
     .eq('is_available', true)
     .gt('stock_qty', 0);
 
@@ -180,7 +180,9 @@ export default async function GroupSuppliersPage({
                       <p style={{ fontSize: 11, color: C.muted, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {supp.business_name || supp.full_name || 'Supplier'}
                       </p>
-                      {supp.verification_level && <VerificationBadge level={supp.verification_level as VerificationLevel} size="xs" showLabel={false} />}
+                      {(supp.role_verification_levels?.supplier ?? supp.verification_level) && (
+                        <VerificationBadge level={(supp.role_verification_levels?.supplier ?? supp.verification_level) as VerificationLevel} size="xs" showLabel={false} />
+                      )}
                     </Link>
                     <FavouriteButton kind="supplier" targetId={p.supplier_id} initialFavourited={favouritedIds.has(p.supplier_id)} size={16} />
                   </div>

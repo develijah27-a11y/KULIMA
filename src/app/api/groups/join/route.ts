@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
+import { notifyUser } from '@/lib/notify';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -76,26 +77,24 @@ export async function POST(req: Request) {
   // left the member with no in-app record of what they'd just joined.
   try {
     const { data: leaderProfile } = await supabase.from('profiles').select('user_id').eq('id', group.leader_id).single();
-    const notifRows = [];
     if (leaderProfile) {
-      notifRows.push({
-        user_id: (leaderProfile as any).user_id,
+      await notifyUser(supabase, {
+        userId: (leaderProfile as any).user_id,
         role: 'groups',
         type: 'group',
         title: 'New member joined your group',
         body: `${(profile as any).full_name ?? 'A farmer'} joined ${group.name}.`,
-        read: false,
+        url: '/groups/members',
       });
     }
-    notifRows.push({
-      user_id: user.id,
+    await notifyUser(supabase, {
+      userId: user.id,
       role: 'farmer',
       type: 'group',
       title: `You joined ${group.name}`,
       body: `You're now a member of ${group.name} in ${group.district ?? 'your district'}. You can submit produce for group sales, or leave anytime from Farmer Groups.`,
-      read: false,
+      url: '/farmer/groups',
     });
-    await (supabase.from as any)('notifications').insert(notifRows);
   } catch { /* non-critical */ }
 
   return NextResponse.json({ success: true });

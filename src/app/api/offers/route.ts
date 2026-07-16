@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
+import { notifyUser } from '@/lib/notify';
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -140,25 +141,27 @@ export async function PATCH(req: Request) {
       // Notify buyer
       const { data: farmerProf } = await supabase
         .from('profiles').select('full_name').eq('id', listing.farmer_id).single();
-      await (supabase.from as any)('notifications').insert({
-        user_id: offer.buyer_id,
+      await notifyUser(supabase, {
+        userId: offer.buyer_id,
         role:    'buyer',
         type:    'offer',
         title:   `Offer accepted — ${listing.crop_type}`,
         body:    `${(farmerProf as any)?.full_name ?? 'Farmer'} accepted your offer of UGX ${agreedPrice.toLocaleString()}/kg. Your order is confirmed!`,
         data:    { offer_id: id, order_id: (newOrder as any)?.id },
+        url:     '/buyer/orders',
       });
     }
   } else if (action === 'reject') {
     await (supabase.from as any)('offers').update({ status: 'rejected', farmer_note: farmerNote ?? null }).eq('id', id);
     // Notify buyer
-    await (supabase.from as any)('notifications').insert({
-      user_id: offer.buyer_id,
+    await notifyUser(supabase, {
+      userId: offer.buyer_id,
       role:    'buyer',
       type:    'offer',
       title:   'Offer declined',
       body:    farmerNote ? `The farmer declined your offer: "${farmerNote}"` : 'The farmer declined your offer.',
       data:    { offer_id: id },
+      url:     '/buyer/offers',
     });
   } else if (action === 'counter') {
     if (!counterPrice) return NextResponse.json({ success: false, error: 'Counter price required' }, { status: 400 });
@@ -168,13 +171,14 @@ export async function PATCH(req: Request) {
       farmer_note: farmerNote ?? null,
     }).eq('id', id);
     // Notify buyer about counter offer
-    await (supabase.from as any)('notifications').insert({
-      user_id: offer.buyer_id,
+    await notifyUser(supabase, {
+      userId: offer.buyer_id,
       role:    'buyer',
       type:    'offer',
       title:   'Counter offer received',
       body:    `The farmer countered at UGX ${Number(counterPrice).toLocaleString()}/kg. ${farmerNote ?? ''}`,
       data:    { offer_id: id, counter_price: counterPrice },
+      url:     '/buyer/offers',
     });
   } else if (action === 'accept-counter') {
     // Buyer accepts farmer's counter price — re-runs the same accept logic
@@ -212,14 +216,14 @@ export async function PATCH(req: Request) {
       const { data: farmerProf } = await supabase
         .from('profiles').select('user_id, full_name').eq('id', listing.farmer_id).single();
       if (farmerProf) {
-        await (supabase.from as any)('notifications').insert({
-          farmer_id: listing.farmer_id,
-          user_id:   (farmerProf as any).user_id,
+        await notifyUser(supabase, {
+          userId:   (farmerProf as any).user_id,
           role:      'farmer',
           type:      'offer',
           title:     'Counter offer accepted!',
           body:      `Your counter of UGX ${agreedPrice.toLocaleString()}/kg was accepted. Order confirmed for ${listing.quantity_kg} kg.`,
           data:      { offer_id: id },
+          url:       '/farmer/orders',
         });
       }
     }

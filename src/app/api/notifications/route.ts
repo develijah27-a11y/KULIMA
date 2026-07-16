@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 export async function GET() {
   const supabase = await createClient();
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ success: false }, { status: 401 });
 
-    await supabase.from('notifications').insert({ user_id: user.id, type, title: t ?? '', body: m ?? '', sent_at: new Date().toISOString(), read: false });
+    await notifyUser(supabase, { userId: user.id, type, title: t ?? '', body: m ?? '' });
     return NextResponse.json({ success: true });
   } catch { return NextResponse.json({ success: false }, { status: 500 }); }
 }

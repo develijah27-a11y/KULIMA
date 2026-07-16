@@ -10,6 +10,10 @@ export interface WeatherNow {
   feelsLike: number;
   precipitation: number;
   uvIndex?: number;
+  /** Topsoil (0-1cm) moisture, m³/m³ — Open-Meteo only, used for irrigation advice */
+  soilMoisture?: number;
+  /** Surface soil temperature, °C — Open-Meteo only */
+  soilTemp?: number;
 }
 
 export interface WeatherForecastItem {
@@ -30,6 +34,11 @@ export interface DailyForecast {
   precipMm: number;
   precipProbability: number;
   farmingNote: string;
+  /** Open-Meteo only — HH:mm local time */
+  sunrise?: string;
+  sunset?: string;
+  /** Open-Meteo only — mm/day, water lost to evaporation + transpiration */
+  evapotranspiration?: number;
 }
 
 export interface ServerWeatherData {
@@ -55,10 +64,14 @@ function wmoToIcon(code: number): { icon: string; description: string } {
   return { icon: '02d', description: 'partly cloudy' };
 }
 
-function farmingNote(code: number, precipMm: number, precipProb: number): string {
+function farmingNote(code: number, precipMm: number, precipProb: number, soilMoisture?: number): string {
   if (code === 95 || code === 96 || code === 99) return '⚠️ Avoid field work — thunderstorms expected';
   if (precipMm > 15)  return '🌧️ Heavy rain — check drainage, delay spraying';
   if (precipMm > 5)   return '🌦️ Good planting rains — ideal for germination';
+  // Below ~0.15 m³/m³ is dry topsoil for most Uganda loam/clay soils — worth
+  // flagging even on an otherwise dry, clear day since it's the one signal
+  // OWM's fallback can't provide at all.
+  if (soilMoisture !== undefined && soilMoisture < 0.15 && precipProb < 30) return '🏜️ Topsoil is dry — irrigate before planting if possible';
   if (precipProb > 70) return '☂️ High rain chance — prepare for wet conditions';
   if (code <= 2)       return '☀️ Clear weather — good for spraying and harvesting';
   if (code === 3)      return '⛅ Overcast — good fieldwork conditions';
@@ -70,8 +83,8 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
     const url = new URL('https://api.open-meteo.com/v1/forecast');
     url.searchParams.set('latitude', lat.toFixed(4));
     url.searchParams.set('longitude', lon.toFixed(4));
-    url.searchParams.set('current', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m');
-    url.searchParams.set('daily', 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max');
+    url.searchParams.set('current', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,soil_temperature_0cm,soil_moisture_0_to_1cm');
+    url.searchParams.set('daily', 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,et0_fao_evapotranspiration');
     url.searchParams.set('timezone', 'Africa/Nairobi');
     url.searchParams.set('forecast_days', '14');
 
@@ -83,12 +96,15 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
     const d = json.daily;
     const { icon: nowIcon, description: nowDesc } = wmoToIcon(c.weather_code);
 
+    const soilMoistureNow: number | undefined = c.soil_moisture_0_to_1cm;
+
     const daily: DailyForecast[] = d.time.map((date: string, i: number) => {
       const code = d.weather_code[i];
       const precip = d.precipitation_sum[i] ?? 0;
       const prob   = d.precipitation_probability_max[i] ?? 0;
       const { icon, description } = wmoToIcon(code);
       const dt = new Date(date);
+      const fmtTime = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' }) : undefined;
       return {
         date,
         dayLabel: dt.toLocaleDateString('en-UG', { weekday: 'short', day: 'numeric', month: 'short' }),
@@ -98,7 +114,12 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
         description,
         precipMm: Math.round(precip * 10) / 10,
         precipProbability: prob,
-        farmingNote: farmingNote(code, precip, prob),
+        // Only the first day (today) has an actual soil-moisture reading —
+        // Open-Meteo doesn't forecast soil moisture 14 days out.
+        farmingNote: farmingNote(code, precip, prob, i === 0 ? soilMoistureNow : undefined),
+        sunrise: fmtTime(d.sunrise?.[i]),
+        sunset: fmtTime(d.sunset?.[i]),
+        evapotranspiration: d.et0_fao_evapotranspiration?.[i] != null ? Math.round(d.et0_fao_evapotranspiration[i] * 10) / 10 : undefined,
       };
     });
 
@@ -124,6 +145,8 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
         humidity: c.relative_humidity_2m,
         wind: Math.round(c.wind_speed_10m * 10) / 10,
         precipitation: c.precipitation ?? 0,
+        soilMoisture: soilMoistureNow != null ? Math.round(soilMoistureNow * 1000) / 1000 : undefined,
+        soilTemp: c.soil_temperature_0cm != null ? Math.round(c.soil_temperature_0cm * 10) / 10 : undefined,
       },
       forecast,
       daily,

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -92,13 +93,14 @@ export async function POST(req: Request, { params }: Ctx) {
   try {
     const { data: supplierProfile } = await (supabase.from as any)('profiles').select('user_id').eq('id', product.supplier_id).single();
     if (supplierProfile?.user_id) {
-      await (supabase.from as any)('notifications').insert({
-        user_id: supplierProfile.user_id,
+      await notifyUser(supabase, {
+        userId: supplierProfile.user_id,
         role: 'supplier',
         type: 'order',
         title: `Bulk order request — ${product.name}`,
         body: `${ctx.group.name} wants ${requestedQuantity} ${product.unit} of ${product.name}. Review and name your discounted price.`,
         data: { supplier_order_id: (order as any).id },
+        url: '/supplier/orders',
       });
     }
   } catch { /* non-critical */ }

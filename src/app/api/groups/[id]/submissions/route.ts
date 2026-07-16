@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -75,13 +76,13 @@ export async function POST(req: Request, { params }: Ctx) {
     if (group) {
       const { data: leaderProfile } = await supabase.from('profiles').select('user_id').eq('id', group.leader_id).single();
       if (leaderProfile) {
-        await (supabase.from as any)('notifications').insert({
-          user_id: (leaderProfile as any).user_id,
+        await notifyUser(supabase, {
+          userId: (leaderProfile as any).user_id,
           role: 'groups',
           type: 'group',
           title: 'New produce submission',
           body: `A member submitted ${quantityKg}kg of ${cropType} for ${group.name}. Ready to organize into a listing.`,
-          read: false,
+          url: '/groups/listings/create',
         });
       }
     }

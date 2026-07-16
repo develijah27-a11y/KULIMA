@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../database.types';
+import { notifyUser } from '@/lib/notify';
 
 type AdminClient = SupabaseClient<Database>;
 
@@ -143,11 +144,12 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
               type: 'payout', amount: share, status: 'completed', order_id: orderId,
               description: `Group sale payout — ${c.quantity_kg}kg contributed (${commission.rate_percent}% fee deducted)`,
             }),
-            (db.from as any)('notifications').insert({
-              user_id: memberProfile.user_id, role: 'farmer', type: 'payment',
+            notifyUser(db, {
+              userId: memberProfile.user_id, role: 'farmer', type: 'payment',
               title: 'Group sale payout received',
               body: `UGX ${share.toLocaleString()} added to your wallet for your ${c.quantity_kg}kg contribution.`,
               data: { order_id: orderId },
+              url: '/farmer/wallet',
             }),
           ]);
         }
@@ -183,10 +185,11 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
             group_admin_id: adminId, order_id: orderId, type: 'sale_payout', amount: net,
             description: `Group sale payout (${commission.rate_percent}% fee deducted)`,
           }),
-          (db.from as any)('notifications').insert({
-            user_id: adminId, role: 'groups', type: 'payment', title: 'Group sale proceeds received',
+          notifyUser(db, {
+            userId: adminId, role: 'groups', type: 'payment', title: 'Group sale proceeds received',
             body: `UGX ${net.toLocaleString()} added to your group wallet (after ${commission.rate_percent}% platform fee).`,
             data: { order_id: orderId },
+            url: '/groups/wallet',
           }),
         ]);
         await creditPlatformWallet(db, commission.platform_wallet_user_id, fee, orderId, now);
@@ -214,10 +217,11 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
       { wallet_id: sellerWallet.id, user_id: escrow.seller_user_id, type: 'payout', amount: net, status: 'completed', order_id: orderId, description: `Payout for order (${commission.rate_percent}% fee deducted)` },
       { wallet_id: sellerWallet.id, user_id: escrow.seller_user_id, type: 'fee',    amount: fee, status: 'completed', order_id: orderId, description: `Platform fee (${commission.rate_percent}%)` },
     ]),
-    (db.from as any)('notifications').insert({
-      user_id: escrow.seller_user_id, role: 'farmer', type: 'payment', title: 'Payment released to your wallet',
+    notifyUser(db, {
+      userId: escrow.seller_user_id, role: 'farmer', type: 'payment', title: 'Payment released to your wallet',
       body: `UGX ${net.toLocaleString()} has been added to your wallet (after ${commission.rate_percent}% platform fee).`,
       data: { order_id: orderId },
+      url: '/farmer/wallet',
     }),
   ]);
   await creditPlatformWallet(db, commission.platform_wallet_user_id, fee, orderId, now);
@@ -265,8 +269,8 @@ export async function refundEscrowForOrder(db: AdminClient, orderId: string, can
       type: 'escrow_refund', amount: refundAmount, status: 'completed', order_id: orderId,
       description: cancelledStatus === 'disputed' ? 'Refund: dispute resolved in buyer\'s favor' : 'Refund: order cancelled',
     }),
-    (db.from as any)('notifications').insert({
-      user_id: escrow.buyer_user_id, type: 'payment', title: 'Refund issued',
+    notifyUser(db, {
+      userId: escrow.buyer_user_id, type: 'payment', title: 'Refund issued',
       body: `UGX ${refundAmount.toLocaleString()} has been refunded to your wallet.`,
       data: { order_id: orderId },
     }),

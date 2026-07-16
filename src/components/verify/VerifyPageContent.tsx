@@ -23,28 +23,45 @@ const ROLE_HEADER: Record<string, { title: string; subtitle: string }> = {
 };
 const DEFAULT_HEADER = { title: 'Verification & Trust', subtitle: 'Get verified to unlock escrow deals, financing, and buyer trust.' };
 
-export async function VerifyPageContent() {
+interface Props {
+  /** Which role dashboard this verify page was reached from — an account
+   *  with more than one role (e.g. a farmer who also registered as a
+   *  supplier) needs each role verified separately, since "verified" on one
+   *  hat says nothing about the documents backing the other. Falls back to
+   *  the account's primary role if omitted, for any caller that hasn't been
+   *  updated to pass it explicitly. */
+  role?: string;
+}
+
+export async function VerifyPageContent({ role: roleProp }: Props = {}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const [{ data: profile }, { data: pending }, { data: latest }] = await Promise.all([
-    (supabase.from as any)('profiles')
-      .select('id, role, verification_level, trust_score, reliability_score, completed_deals')
-      .eq('user_id', user.id)
-      .single(),
+  const { data: profile } = await (supabase.from as any)('profiles')
+    .select('id, role, verification_level, role_verification_levels, trust_score, reliability_score, completed_deals')
+    .eq('user_id', user.id)
+    .single();
+
+  const primaryRole = (profile as any)?.role ?? '';
+  const role = roleProp || primaryRole;
+
+  const [{ data: pending }, { data: latest }] = await Promise.all([
     (supabase.from as any)('verifications')
       .select('id, level, status, submitted_at')
       .eq('user_id', user.id)
+      .eq('role', role)
       .eq('status', 'pending')
       .order('submitted_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
-    // Most recent submission overall — if it was rejected and nothing newer
-    // has been submitted since, show the reason so the user knows what to fix.
+    // Most recent submission overall for THIS role — if it was rejected and
+    // nothing newer has been submitted since, show the reason so the user
+    // knows what to fix.
     (supabase.from as any)('verifications')
       .select('id, level, status, rejection_reason, submitted_at')
       .eq('user_id', user.id)
+      .eq('role', role)
       .order('submitted_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -52,11 +69,18 @@ export async function VerifyPageContent() {
 
   const rejection = latest?.status === 'rejected' ? latest : null;
 
-  const currentLevel: VerificationLevel = (profile as any)?.verification_level ?? 'grey';
+  // The flat verification_level column is only meaningful for the account's
+  // primary role (see admin/verify-kyc/route.ts) — any other role reads its
+  // own entry from the per-role map, defaulting to 'grey' (nothing submitted
+  // for that role yet) rather than borrowing a level earned under a
+  // different hat.
+  const roleLevels = ((profile as any)?.role_verification_levels ?? {}) as Record<string, VerificationLevel>;
+  const currentLevel: VerificationLevel = role === primaryRole
+    ? (roleLevels[role] ?? (profile as any)?.verification_level ?? 'grey')
+    : (roleLevels[role] ?? 'grey');
   const trustScore   = (profile as any)?.trust_score ?? 50;
   const deals        = (profile as any)?.completed_deals ?? 0;
   const currentIdx   = LEVELS.indexOf(currentLevel);
-  const role         = (profile as any)?.role ?? '';
   const header       = ROLE_HEADER[role] ?? DEFAULT_HEADER;
 
   return (
@@ -171,7 +195,7 @@ export async function VerifyPageContent() {
           <VerifyWizard
             userId={user.id}
             profileId={(profile as any)?.id ?? ''}
-            role={(profile as any)?.role ?? 'farmer'}
+            role={role}
             currentLevel={currentLevel}
             hasPending={!!pending}
             rejection={rejection ? { level: rejection.level, reason: rejection.rejection_reason ?? null } : null}

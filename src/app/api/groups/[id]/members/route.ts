@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -86,13 +87,13 @@ export async function POST(req: Request, { params }: Ctx) {
 
   // Notify the added member
   try {
-    await (supabase.from as any)('notifications').insert({
-      user_id: (found as any).user_id,
+    await notifyUser(supabase, {
+      userId: (found as any).user_id,
       role: 'farmer',
       type: 'group',
       title: `You've been added to ${group?.name ?? 'a farmer group'}`,
       body: `You're now a member of ${group?.name ?? 'a farmer group'} in ${group?.district ?? 'your district'}. You can submit produce for group sales, or leave anytime from Farmer Groups.`,
-      read: false,
+      url: '/farmer/groups',
     });
   } catch { /* non-critical */ }
 

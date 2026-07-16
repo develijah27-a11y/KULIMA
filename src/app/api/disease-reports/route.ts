@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
+import { notifyUser } from '@/lib/notify';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -109,9 +110,8 @@ export async function PATCH(req: Request) {
     const { data: farmerProfile } = await supabase
       .from('profiles').select('user_id').eq('id', (data as any).farmer_id).single();
     if (farmerProfile) {
-      await (supabase.from as any)('notifications').insert({
-        farmer_id: (data as any).farmer_id,
-        user_id:   (farmerProfile as any).user_id,
+      await notifyUser(supabase, {
+        userId:   (farmerProfile as any).user_id,
         role:      'farmer',
         type:      'system',
         title:     action === 'diagnose' ? `Diagnosis ready — ${(data as any).crop_type}` : `Case closed — ${(data as any).crop_type}`,
@@ -119,6 +119,7 @@ export async function PATCH(req: Request) {
           ? `A pathologist diagnosed your ${(data as any).crop_type} report: ${diagnosis}`
           : `Your ${(data as any).crop_type} case has been closed.`,
         data:      { disease_report_id: id },
+        url:       '/farmer/doctor',
       });
     }
   }

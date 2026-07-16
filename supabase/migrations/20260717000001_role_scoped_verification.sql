@@ -1,0 +1,12 @@
+-- Verification was a single flat profiles.verification_level field shared
+-- across every role an account holds. A farmer who verified as 'blue' and
+-- later added the supplier role would show as 'blue verified' on their
+-- supplier storefront too, despite never submitting a business registration
+-- for that role — a false trust signal for anyone browsing suppliers.
+--
+-- role_verification_levels is additive: {"farmer": "blue", "supplier": "grey"}.
+-- The flat verification_level column is kept as-is (still authoritative for
+-- an account's PRIMARY role, which is what most of the app's existing reads
+-- assume it means) and is only updated going forward when an approval is for
+-- that primary role; supplier-facing trust badges now read the per-role map.
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role_verification_levels JSONB NOT NULL DEFAULT '{}'::jsonb;

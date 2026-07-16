@@ -31,7 +31,7 @@ const Card = ({ children, style = {} }: { children: React.ReactNode; style?: Rea
 
 const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
-  const { data } = await supabase.from('profiles').select('full_name, location, id, verification_level').eq('user_id', userId).single();
+  const { data } = await supabase.from('profiles').select('full_name, location, id, role, verification_level, role_verification_levels').eq('user_id', userId).single();
   return data as any;
 });
 
@@ -384,7 +384,7 @@ export default async function GroupsDashboardPage() {
     <div className="space-y-5 max-w-5xl mx-auto">
 
       <VerificationBanner
-        level={(profile?.verification_level as VerificationLevel) ?? 'none'}
+        level={(profile?.role_verification_levels?.groups ?? (profile?.role === 'groups' ? profile?.verification_level : null) ?? 'none') as VerificationLevel}
         verifyHref="/groups/verify"
         headline="Get verified — sell with confidence"
         benefit="Unlock escrow-protected group sales and loans"

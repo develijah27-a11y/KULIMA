@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
+import { notifyUser } from '@/lib/notify';
 
 // Requester pays for the delivery after goods arrive.
 // Flow: deduct from requester wallet → pay driver their earnings (fare minus 10% commission) →
@@ -94,13 +95,13 @@ export async function POST(req: Request) {
 
   // Notify the driver of payment
   try {
-    await (admin.from as any)('notifications').insert({
-      user_id: delivery.transporter_id,
+    await notifyUser(admin, {
+      userId: delivery.transporter_id,
       role:    'transporter',
       type:    'delivery',
       title:   'Payment Received',
       body:    `UGX ${driverEarnings.toLocaleString()} has been added to your wallet for the ${delivery.pickup_district} → ${delivery.dropoff_district} delivery.`,
-      read:    false,
+      url:     '/transporter/wallet',
     });
   } catch { /* non-critical */ }
 

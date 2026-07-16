@@ -24,7 +24,7 @@ const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from('profiles')
-    .select('full_name, primary_crop, phone_number, location, latitude, longitude, id, verification_level')
+    .select('full_name, primary_crop, phone_number, location, latitude, longitude, id, role, verification_level, role_verification_levels')
     .eq('user_id', userId)
     .single();
   return data as any;
@@ -811,7 +811,7 @@ async function VerifyPrompt({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
   return (
     <VerificationBanner
-      level={(profile?.verification_level as VerificationLevel) ?? 'none'}
+      level={(profile?.role_verification_levels?.farmer ?? (profile?.role === 'farmer' ? profile?.verification_level : null) ?? 'none') as VerificationLevel}
       verifyHref="/farmer/verify"
       headline="Get verified — sell with confidence"
       benefit="Buyers see you first and you unlock escrow-protected sales"

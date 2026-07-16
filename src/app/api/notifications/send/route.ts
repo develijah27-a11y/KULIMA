@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -14,21 +15,15 @@ export async function POST(req: Request) {
 
   if (!title?.trim()) return NextResponse.json({ success: false, error: 'Title required' }, { status: 400 });
 
-  // notifications GET / the realtime bell both filter on user_id — a row
-  // with only farmer_id set is invisible to the recipient (never appears in
-  // the bell, drawer, or unread count).
-  const { error } = await (supabase.from as any)('notifications').insert({
-    farmer_id: (profile as any).id,
-    user_id:   user.id,
-    role:      (profile as any).role ?? null,
-    type:      type ?? 'info',
-    title:     title.trim(),
-    body:      message ?? '',
-    read:      false,
-    sent_at:   new Date().toISOString(),
-  });
-
-  if (error) {
+  try {
+    await notifyUser(supabase, {
+      userId: user.id,
+      role:   (profile as any).role ?? null,
+      type:   type ?? 'info',
+      title:  title.trim(),
+      body:   message ?? '',
+    });
+  } catch (error) {
     console.error('[/api/notifications/send]', error);
     return NextResponse.json({ success: false, error: 'Failed to send notification. Please try again.' }, { status: 500 });
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -129,13 +130,14 @@ export async function POST(req: Request) {
 
     // Notify group admin
     if (adminProfile) {
-      await (supabase.from as any)('notifications').insert({
-        user_id: adminProfile.user_id,
+      await notifyUser(supabase, {
+        userId: adminProfile.user_id,
         role:    'groups',
         type:    'order',
         title:   `New group order: ${gl.crop_type} · ${+quantityKg} kg`,
         body:    `${(buyerProfile as any)?.full_name ?? 'A buyer'} placed a bulk order for UGX ${total.toLocaleString()} from your group listing.`,
         data:    { order_id: (order as any).id, group_listing_id: groupListingId },
+        url:     '/groups/listings',
       });
     }
 
@@ -200,14 +202,14 @@ export async function POST(req: Request) {
     .from('profiles').select('user_id').eq('id', listing.farmer_id).single();
 
   if (farmerProfile) {
-    await (supabase.from as any)('notifications').insert({
-      farmer_id: listing.farmer_id,
-      user_id:   (farmerProfile as any).user_id,
+    await notifyUser(supabase, {
+      userId:   (farmerProfile as any).user_id,
       role:      'farmer',
       type:      'order',
       title:     `New order: ${listing.crop_type} · ${+quantityKg} kg`,
       body:      `${(buyerProfile as any)?.full_name ?? 'A buyer'} placed an order for UGX ${total.toLocaleString()}. Confirm to proceed.`,
       data:      { order_id: (order as any).id, listing_id: listingId },
+      url:       '/farmer/orders',
     });
   }
 

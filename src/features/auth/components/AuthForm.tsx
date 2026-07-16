@@ -28,6 +28,8 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [resending, setResending]   = useState(false);
   const [resent, setResent]         = useState(false);
+  const [code, setCode]             = useState('');
+  const [verifying, setVerifying]   = useState(false);
 
   const isSigningUpRef = useRef(false);
   const submitLockRef = useRef(false);
@@ -138,9 +140,11 @@ export function AuthForm({ mode }: AuthFormProps) {
         }
 
         // Standard path: email confirmation is required, so there's no
-        // session yet — the profile gets created in /auth/confirm/route.ts
-        // once the user actually clicks the link and is authenticated.
-        setSuccess(`Account created! We've sent a confirmation link to ${email} — click it to activate your account.`);
+        // session yet. The user can either type the 6-digit code below
+        // (verified client-side against Supabase, then profile creation via
+        // /api/auth/create-profile) or click the link in the same email,
+        // which /auth/confirm/route.ts handles and creates the profile there.
+        setSuccess(`Account created! We've sent a 6-digit code to ${email} — enter it below to activate your account.`);
         setNeedsConfirmation(true);
       } else {
         // ── Sign in ──────────────────────────────────────────────────────────
@@ -157,12 +161,11 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       const lower = msg.toLowerCase();
       if (err instanceof TypeError || lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('fetch')) {
-        setError(
-          'Network error — cannot reach Supabase.\n\n' +
-          '1. Check your internet connection\n' +
-          '2. Visit supabase.com/dashboard — free tier pauses after 7 days of inactivity\n' +
-          '3. Restart the dev server after editing .env.local'
-        );
+        // The underlying cause (Supabase unreachable, project paused, local
+        // env misconfigured) is a developer's problem to diagnose, not a
+        // user's — log it for us, show them a normal "try again" message.
+        console.error('[AgriNova Auth] Connection error during', mode, ':', err);
+        setError('We couldn’t connect right now. Please check your internet connection and try again in a moment.');
       } else if (lower.includes('invalid login credentials')) {
         setError('Wrong email or password. Please try again.');
       } else if (lower.includes('email not confirmed')) {
@@ -176,6 +179,49 @@ export function AuthForm({ mode }: AuthFormProps) {
     } finally {
       setLoading(false);
       submitLockRef.current = false;
+    }
+  };
+
+  const verifyCode = async () => {
+    if (code.trim().length < 6 || verifying) return;
+    setVerifying(true);
+    setError(null);
+    try {
+      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+        email, token: code.trim(), type: 'signup',
+      });
+      if (verifyError) throw verifyError;
+
+      // First time this account is confirmed — same profile-creation step
+      // /auth/confirm/route.ts does for the link-click path, just triggered
+      // from here since verifyOtp() ran client-side instead of server-side.
+      // Only for a fresh signup: on the sign-in-blocked-by-unconfirmed-email
+      // path the profile already exists, and fullName/phoneNumber/location
+      // are empty state here (that form never collects them) — upserting
+      // would blank out the real profile fields for an existing account.
+      if (data.user && mode === 'signup') {
+        await fetch('/api/auth/create-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: data.user.id,
+            fullName: fullName || data.user.email?.split('@')[0] || 'User',
+            phoneNumber: phoneNumber || null,
+            location: location || null,
+          }),
+        }).catch(() => {});
+      }
+
+      hasSubmittedRef.current = true;
+      router.push('/dashboard');
+      router.refresh();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Invalid or expired code';
+      setError(msg.toLowerCase().includes('expired') || msg.toLowerCase().includes('invalid')
+        ? 'That code is incorrect or has expired. Please check your email or request a new one.'
+        : msg);
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -202,6 +248,90 @@ export function AuthForm({ mode }: AuthFormProps) {
     return (
       <div style={{ textAlign: 'center', padding: '32px 0', color: 'rgba(240,253,244,0.55)', fontSize: 14 }}>
         Preparing sign-up form…
+      </div>
+    );
+  }
+
+  // Once signup succeeds and a confirmation email is on its way — or a
+  // sign-in attempt is blocked because the email was never confirmed —
+  // replace the form entirely with a code-entry step rather than leaving
+  // "Create account"/"Sign in" sitting there right underneath the message.
+  // A tester flagged the signup version of this as looking broken, and it
+  // was: nothing good happens from clicking the button again.
+  if (needsConfirmation) {
+    return (
+      <div className="space-y-4">
+        {success && (
+          <div
+            className="rounded-xl px-4 py-3 text-sm"
+            style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)', color: '#86efac' }}
+            role="status"
+          >
+            {success}
+          </div>
+        )}
+
+        {error && (
+          <div
+            className="rounded-xl px-4 py-3 text-sm whitespace-pre-line"
+            style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)', color: '#FCA5A5' }}
+            role="alert"
+          >
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label htmlFor="verifyCode" className="block text-sm mb-1.5" style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>
+            6-digit verification code
+          </label>
+          <input
+            id="verifyCode"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            value={code}
+            onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); verifyCode(); } }}
+            placeholder="000000"
+            disabled={verifying}
+            className="auth-input"
+            style={{ textAlign: 'center', fontSize: 22, letterSpacing: '0.4em', fontWeight: 800 }}
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={verifyCode}
+          disabled={verifying || code.trim().length < 6}
+          className="auth-btn"
+        >
+          {verifying ? 'Verifying…' : 'Verify & Continue'}
+        </button>
+
+        <div style={{ textAlign: 'center', paddingTop: 4 }}>
+          <button
+            type="button"
+            onClick={resendConfirmation}
+            disabled={resending}
+            style={{
+              background: 'none', border: 'none', padding: 0,
+              fontSize: 13, fontWeight: 700,
+              color: resending ? 'rgba(240,253,244,0.35)' : 'var(--color-primary)',
+              cursor: resending ? 'default' : 'pointer', textDecoration: 'underline',
+            }}
+          >
+            {resending ? 'Sending…' : resent ? 'Email sent — check your inbox' : "Didn't get it? Resend code"}
+          </button>
+        </div>
+
+        <Link
+          href="/auth/signin"
+          style={{ display: 'block', textAlign: 'center', fontSize: 13, fontWeight: 600, color: 'rgba(240,253,244,0.55)', marginTop: 4 }}
+        >
+          Back to sign in
+        </Link>
       </div>
     );
   }

@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { sendEmail, purchaseReceiptEmail } from '@/lib/email';
+import { notifyUser } from '@/lib/notify';
 
 async function getProfile(supabase: any, userId: string) {
   const { data } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
@@ -62,13 +63,14 @@ export async function POST(req: Request) {
 
   const { data: supplierProfile } = await (supabase.from as any)('profiles').select('user_id, full_name, business_name').eq('id', product.supplier_id).single();
   if (supplierProfile?.user_id) {
-    await (supabase.from as any)('notifications').insert({
-      user_id: supplierProfile.user_id,
+    await notifyUser(supabase, {
+      userId: supplierProfile.user_id,
       role: 'supplier',
       type: 'order',
       title: `New input order — ${product.name}`,
       body: `${(profile as any).full_name ?? 'A farmer'} ordered ${quantity} ${product.unit} of ${product.name}.`,
       data: { supplier_order_id: (order as any).id },
+      url: '/supplier/orders',
     });
   }
 

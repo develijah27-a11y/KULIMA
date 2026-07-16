@@ -17,6 +17,7 @@ const SUPPLIER_NAV = [
   { href: '/supplier/orders',      icon: 'orders',       label: 'New Orders' },
   { href: '/supplier/returns',     icon: 'orders',       label: 'Returns' },
   { href: '/supplier/flash-deals', icon: 'flash-deals',  label: 'Quick Deals' },
+  { href: '/supplier/deliveries',  icon: 'deliveries',   label: 'Deliveries' },
   // ── Market Info
   { href: '/supplier/demand',      icon: 'demand',       label: 'What Farmers Need', divider: true, sectionLabel: 'Market Info' },
   { href: '/supplier/coverage',    icon: 'coverage',     label: 'Service Area' },

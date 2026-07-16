@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
+
+const LEVEL_LABEL: Record<string, string> = { green: 'Green', blue: 'Blue', gold: 'Gold' };
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -26,6 +29,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
   }
 
+  // Fetch which role this submission was for — an account can hold several
+  // roles (e.g. a farmer who also registered as a supplier), and approving
+  // one role's documents must not silently upgrade a trust badge shown
+  // under a different role that never submitted anything.
+  const { data: verification } = await (supabase.from as any)('verifications')
+    .select('role')
+    .eq('id', verificationId)
+    .single();
+
   // Update verification record
   const { error: vErr } = await (supabase.from as any)('verifications')
     .update({
@@ -41,16 +53,48 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to update the verification record.' }, { status: 500 });
   }
 
-  // On approve: upgrade the profile's verification level
+  // On approve: upgrade the profile's per-role verification level
   if (action === 'approve') {
+    const { data: profile } = await (supabase.from as any)('profiles')
+      .select('role, role_verification_levels')
+      .eq('user_id', userId)
+      .single();
+
+    const submissionRole = (verification as any)?.role || (profile as any)?.role;
+    const roleLevels = { ...((profile as any)?.role_verification_levels ?? {}), [submissionRole]: targetLevel };
+
+    const update: Record<string, unknown> = { role_verification_levels: roleLevels };
+    // The flat verification_level column is read by most of the app as
+    // "this account's own verification" — only meaningful to keep in sync
+    // when the approval is for the account's PRIMARY role, so a secondary
+    // role's approval can't overwrite the badge the primary identity earned.
+    if (!(profile as any)?.role || submissionRole === (profile as any).role) {
+      update.verification_level = targetLevel;
+    }
+
     const { error: pErr } = await (supabase.from as any)('profiles')
-      .update({ verification_level: targetLevel })
+      .update(update)
       .eq('user_id', userId);
     if (pErr) {
       console.error('[/api/admin/verify-kyc]', pErr);
       return NextResponse.json({ error: 'Failed to update the profile verification level.' }, { status: 500 });
     }
   }
+
+  const submissionRole = (verification as any)?.role;
+  await notifyUser(supabase, {
+    userId: userId,
+    role:   submissionRole ?? null,
+    type:   'system',
+    title:  action === 'approve'
+              ? `Verification approved — ${LEVEL_LABEL[targetLevel] ?? targetLevel} badge`
+              : 'Verification not approved',
+    body:   action === 'approve'
+              ? `Your documents were reviewed and approved. You now have the ${LEVEL_LABEL[targetLevel] ?? targetLevel} trust badge.`
+              : `Your verification documents were not approved. ${reason ?? 'Please review and resubmit.'}`,
+    data:   { verification_id: verificationId, target_level: targetLevel },
+    url:    submissionRole ? `/${submissionRole}/verify` : '/dashboard',
+  });
 
   return NextResponse.json({ success: true });
 }

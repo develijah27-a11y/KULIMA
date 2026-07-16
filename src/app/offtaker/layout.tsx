@@ -16,6 +16,7 @@ const OFFTAKER_NAV = [
   { href: '/offtaker/contracts',    icon: 'contracts',    label: 'Agreements',      divider: true, sectionLabel: 'Buying' },
   { href: '/offtaker/pipeline',     icon: 'pipeline',     label: 'Suppliers' },
   { href: '/offtaker/scorecard',    icon: 'scorecard',    label: 'Rate Farmers' },
+  { href: '/offtaker/deliveries',   icon: 'deliveries',   label: 'Deliveries' },
   // ── Reports
   { href: '/offtaker/spend',        icon: 'spend',        label: 'Spending',     divider: true, sectionLabel: 'Reports' },
   { href: '/offtaker/quality',      icon: 'quality',      label: 'Crop Quality' },

@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { notifyUser } from '@/lib/notify';
 
 export async function PATCH(
   req: Request,
@@ -58,8 +59,8 @@ export async function PATCH(
   // Notify farmer
   const { data: fp } = await (db.from as any)('profiles').select('user_id').eq('id', listing.farmer_id).single();
   if (fp) {
-    await (db.from as any)('notifications').insert({
-      user_id:  (fp as any).user_id,
+    await notifyUser(db, {
+      userId:  (fp as any).user_id,
       role:     'farmer',
       type:     'order',
       title:    isApprove ? `Listing approved — ${listing.crop_type}` : `Listing not approved — ${listing.crop_type}`,
@@ -67,6 +68,7 @@ export async function PATCH(
                   ? 'Your listing is now live on the marketplace.'
                   : `Your listing was not approved. ${reason ?? 'Please review and resubmit.'}`,
       data:     { listing_id: id },
+      url:      '/farmer/listings',
     });
   }
 

@@ -5,7 +5,7 @@ import { fetchWeatherForDistrict } from '@/lib/weather-server';
 import { DISTRICT_NAMES } from '@/lib/districts';
 import { getCurrentSeasonSummary, generatePlantingAlerts } from '@/lib/planting-calendar';
 import { WeatherDistrictSelector } from './WeatherDistrictSelector';
-import { Sun, Moon, CloudSun, Cloud, CloudRain, CloudLightning, Snowflake, Wind, Droplets, CalendarDays, Leaf } from 'lucide-react';
+import { Sun, Moon, CloudSun, Cloud, CloudRain, CloudLightning, Snowflake, Wind, Droplets, CalendarDays, Leaf, Sprout } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -91,7 +91,7 @@ export default async function WeatherPage({
 
         {/* Current conditions */}
         <Card>
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x" style={{ borderColor: C.border }}>
+          <div className="grid grid-cols-2 md:grid-cols-5 divide-x" style={{ borderColor: C.border }}>
             {/* Main temp */}
             <div className="p-5 col-span-2 md:col-span-1">
               <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '10px' }}>
@@ -142,6 +142,18 @@ export default async function WeatherPage({
                 {weather.now.precipitation > 10 ? 'Heavy rain' : weather.now.precipitation > 2 ? 'Light rain' : 'No significant rain'}
               </p>
             </div>
+
+            {/* Soil moisture — only available from Open-Meteo, not the OpenWeatherMap fallback */}
+            {weather.now.soilMoisture !== undefined && (
+              <div className="p-5">
+                <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Topsoil Moisture</p>
+                <div style={{ display: 'flex', marginBottom: '4px', color: 'var(--color-primary)' }}><Sprout size={32} /></div>
+                <p style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>{Math.round(weather.now.soilMoisture * 100)}%</p>
+                <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
+                  {weather.now.soilMoisture < 0.15 ? 'Dry — consider irrigating' : weather.now.soilMoisture > 0.35 ? 'Saturated' : 'Adequate'}
+                </p>
+              </div>
+            )}
           </div>
         </Card>
 

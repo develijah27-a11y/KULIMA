@@ -15,6 +15,7 @@ const FARMER_NAV = [
   // ── Market
   { href: '/farmer/marketplace', icon: 'my-listings',  label: 'Listings',  divider: true, sectionLabel: 'Market' },
   { href: '/farmer/orders',      icon: 'orders',       label: 'Orders' },
+  { href: '/farmer/contract-offers', icon: 'contracts', label: 'Contract Offers' },
   { href: '/farmer/suppliers',   icon: 'catalogue',    label: 'Buy Inputs' },
   { href: '/farmer/inputs',      icon: 'inventory',    label: 'My Input Orders' },
   { href: '/farmer/deliveries',  icon: 'deliveries',   label: 'Deliveries' },
@@ -76,6 +77,11 @@ export default async function FarmerLayout({ children }: { children: React.React
     redirect('/onboarding/role');
   }
 
+  const { count: pendingOffersCount } = await (supabase.from as any)('offtaker_contract_offers')
+    .select('id', { count: 'exact', head: true })
+    .eq('farmer_id', (profileRes.data as any).id)
+    .eq('status', 'notified');
+
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'there';
   const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
@@ -83,6 +89,7 @@ export default async function FarmerLayout({ children }: { children: React.React
   const navWithBadge = FARMER_NAV.map(item => {
     if (item.href === '/farmer/notifications' && unreadCount > 0) return { ...item, badge: unreadCount };
     if (item.href === '/farmer/deliveries' && activeDeliveries > 0) return { ...item, badge: activeDeliveries };
+    if (item.href === '/farmer/contract-offers' && (pendingOffersCount ?? 0) > 0) return { ...item, badge: pendingOffersCount };
     return item;
   });
 

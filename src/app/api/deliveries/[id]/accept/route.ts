@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
+import { notifyUser } from '@/lib/notify';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -78,13 +79,14 @@ export async function POST(_req: Request, { params }: Params) {
     .eq('status', 'paid');
 
   // Notify requester
-  await (admin.from as any)('notifications').insert({
-    user_id: dr.requester_id,
-    role:    dr.requester_role ?? null,
-    type:    'delivery',
-    title:   `Driver assigned — ${dr.cargo_type ?? 'cargo'}`,
-    body:    `A transporter has accepted your delivery of ${dr.cargo_kg} kg from ${dr.pickup_district}.`,
-    data:    { delivery_id: id },
+  await notifyUser(admin, {
+    userId: dr.requester_id,
+    role:   dr.requester_role ?? null,
+    type:   'delivery',
+    title:  `Driver assigned — ${dr.cargo_type ?? 'cargo'}`,
+    body:   `A transporter has accepted your delivery of ${dr.cargo_kg} kg from ${dr.pickup_district}.`,
+    data:   { delivery_id: id },
+    url:    dr.requester_role === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries',
   });
 
   return NextResponse.json({ success: true });
@@ -120,13 +122,14 @@ export async function PATCH(req: Request, { params }: Params) {
     await (admin.from as any)('orders')
       .update({ status: 'in_transit', in_transit_at: now })
       .eq('delivery_request_id', id);
-    await (admin.from as any)('notifications').insert({
-      user_id: dr.requester_id,
-      role:    dr.requester_role ?? null,
-      type:    'delivery',
-      title:   `Your ${dr.cargo_type} is on the way!`,
-      body:    `The transporter has picked up your ${dr.cargo_kg} kg.`,
-      data:    { delivery_id: id },
+    await notifyUser(admin, {
+      userId: dr.requester_id,
+      role:   dr.requester_role ?? null,
+      type:   'delivery',
+      title:  `Your ${dr.cargo_type} is on the way!`,
+      body:   `The transporter has picked up your ${dr.cargo_kg} kg.`,
+      data:   { delivery_id: id },
+      url:    dr.requester_role === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries',
     });
   } else if (action === 'deliver') {
     if (dr.status !== 'in_transit') return NextResponse.json({ error: 'Must be in transit first' }, { status: 400 });
@@ -134,15 +137,16 @@ export async function PATCH(req: Request, { params }: Params) {
     await (admin.from as any)('orders')
       .update({ status: 'delivered', delivered_at: now })
       .eq('delivery_request_id', id);
-    await (admin.from as any)('notifications').insert({
-      user_id: dr.requester_id,
-      role:    dr.requester_role ?? null,
-      type:    'delivery',
-      title:   `Delivered — ${dr.cargo_type}`,
-      body:    dr.estimated_fare
+    await notifyUser(admin, {
+      userId: dr.requester_id,
+      role:   dr.requester_role ?? null,
+      type:   'delivery',
+      title:  `Delivered — ${dr.cargo_type}`,
+      body:   dr.estimated_fare
         ? `Your ${dr.cargo_kg} kg of ${dr.cargo_type} has arrived. Confirm receipt to release payment to the farmer, and pay UGX ${Math.round(Number(dr.estimated_fare)).toLocaleString()} to release the driver's earnings.`
         : `Your ${dr.cargo_kg} kg of ${dr.cargo_type} has been delivered. Please confirm receipt.`,
-      data:    { delivery_id: id },
+      data:   { delivery_id: id },
+      url:    dr.requester_role === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries',
     });
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

@@ -1,5 +1,5 @@
 import { VerifyPageContent } from '@/components/verify/VerifyPageContent';
 
 export default function VerifyPage() {
-  return <VerifyPageContent />;
+  return <VerifyPageContent role="transporter" />;
 }

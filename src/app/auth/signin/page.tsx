@@ -144,8 +144,17 @@ function SignInContent() {
       )}
 
       {checking ? (
-        <div style={{ padding: '32px 0', textAlign: 'center', color: 'rgba(240,253,244,0.45)', fontSize: 13 }}>
-          Checking your session…
+        <div style={{ padding: '40px 0', textAlign: 'center' }}>
+          <div
+            style={{
+              width: 22, height: 22, margin: '0 auto 14px',
+              border: '2.5px solid rgba(240,253,244,0.20)', borderTopColor: 'var(--color-primary)',
+              borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+            }}
+            aria-hidden="true"
+          />
+          <p style={{ color: 'rgba(240,253,244,0.55)', fontSize: 13, margin: 0 }}>Just a moment…</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       ) : existingEmail ? (
         <AlreadySignedIn email={existingEmail} />

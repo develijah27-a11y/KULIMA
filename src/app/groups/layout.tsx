@@ -17,8 +17,10 @@ const GROUPS_NAV = [
   { href: '/groups/suppliers',      icon: 'catalogue',    label: 'Order Inputs' },
   { href: '/groups/bulk-orders',    icon: 'marketplace',  label: 'Bulk Orders' },
   { href: '/groups/listings',       icon: 'my-listings',  label: 'Group Listings' },
+  { href: '/groups/deliveries',     icon: 'deliveries',   label: 'Deliveries' },
   // ── Finance & Comms
   { href: '/groups/wallet',         icon: 'wallet',       label: 'Group Wallet',  divider: true, sectionLabel: 'Finance & Comms' },
+  { href: '/groups/loans',          icon: 'finance',      label: 'Group Loans' },
   { href: '/groups/chat',           icon: 'group-chat',   label: 'Group Chat' },
   // ── Reporting
   { href: '/groups/season',         icon: 'season',       label: 'Season Summary',divider: true, sectionLabel: 'Reporting' },

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
+import { notifyUsers } from '@/lib/notify';
 
 const VALID_TYPES = ['rain', 'price', 'pest', 'offer', 'loan', 'system', 'delivery'] as const;
 const VALID_ROLES = ['farmer', 'buyer', 'transporter', 'supplier', 'pathologist', 'offtaker', 'groups'] as const;
@@ -58,8 +59,7 @@ export async function POST(req: Request) {
   for (let i = 0; i < targetProfiles.length; i += CHUNK) {
     const chunk = targetProfiles.slice(i, i + CHUNK);
     const rows = chunk.map((p: any) => ({
-      farmer_id: p.id,       // notifications.farmer_id references profiles.id
-      user_id:   p.user_id,  // GET /api/notifications and the realtime bell filter on user_id
+      userId: p.user_id,  // GET /api/notifications and the realtime bell filter on user_id
       // Pin to the role the admin actually targeted, not the recipient's own
       // primary `role` column — for a multi-role user those can differ, and
       // every dashboard's badge/list filters by `role.eq.<that dashboard>`,
@@ -68,11 +68,11 @@ export async function POST(req: Request) {
       type,
       title: title.trim(),
       body:  body.trim(),
-      read:  false,
     }));
 
-    const { error } = await (adminClient.from as any)('notifications').insert(rows);
-    if (error) {
+    try {
+      await notifyUsers(adminClient, rows);
+    } catch (error) {
       console.error('[/api/admin/alert]', error);
       return NextResponse.json({ error: 'Failed to send alert notifications. Please try again.' }, { status: 500 });
     }

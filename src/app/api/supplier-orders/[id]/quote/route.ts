@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -46,13 +47,13 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   try {
-    await (supabase.from as any)('notifications').insert({
-      user_id: order.buyer_id,
+    await notifyUser(supabase, {
+      userId: order.buyer_id,
       role: 'groups',
       type: 'order',
       title: 'Your bulk order was quoted',
       body: `The dealer quoted UGX ${Math.round(+unitPrice).toLocaleString()}/${order.unit} for ${qty}${order.unit} of ${order.product_name} — total UGX ${amount.toLocaleString()}. Review and confirm.`,
-      read: false,
+      url: '/groups/bulk-orders',
     });
   } catch { /* non-critical */ }
 

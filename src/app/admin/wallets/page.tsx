@@ -45,7 +45,10 @@ export default async function AdminWalletsPage({
 
   const { q = '' } = await searchParams;
 
-  const [walletsRes, txRes] = await Promise.all([
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const [walletsRes, txRes, feesTodayRes] = await Promise.all([
     (supabase.from as any)('wallets')
       .select('id, user_id, balance, currency, updated_at, is_frozen')
       .order('balance', { ascending: false })
@@ -54,10 +57,19 @@ export default async function AdminWalletsPage({
       .select('id, wallet_id, user_id, type, amount, description, reference, status, created_at')
       .order('created_at', { ascending: false })
       .limit(50),
+    // A separate, unbounded aggregate — the "Recent Transactions" tile used
+    // to just show transactions.length, which is silently capped by the
+    // .limit(50) above and freezes at "50" forever past that point instead
+    // of reflecting anything real.
+    (supabase.from as any)('wallet_transactions')
+      .select('amount')
+      .eq('type', 'fee')
+      .gte('created_at', todayStart.toISOString()),
   ]);
 
   const wallets: any[] = walletsRes.data ?? [];
   const transactions: any[] = txRes.data ?? [];
+  const feesToday = (feesTodayRes.data ?? []).reduce((s: number, t: any) => s + Number(t.amount), 0);
 
   // wallets.user_id and wallet_transactions.user_id both reference
   // auth.users(id) directly (no FK to profiles), so the owner's name can't
@@ -96,7 +108,7 @@ export default async function AdminWalletsPage({
         {[
           { label: 'Total Value Locked', value: `UGX ${fmt(tvl)}`, icon: <Building2 size={18} />, color: C.blue },
           { label: 'Active Wallets', value: active.toLocaleString(), icon: <CreditCard size={18} />, color: C.greenMed },
-          { label: 'Recent Transactions', value: transactions.length.toLocaleString(), icon: <ClipboardList size={18} />, color: C.amber },
+          { label: 'Platform Fees Today', value: `UGX ${fmt(feesToday)}`, icon: <ClipboardList size={18} />, color: C.amber },
         ].map(({ label, value, icon, color }) => (
           <div key={label} style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '18px 20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>

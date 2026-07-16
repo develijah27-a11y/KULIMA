@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUsers } from '@/lib/notify';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -126,14 +127,14 @@ export async function POST(req: Request, { params }: Ctx) {
     const farmerIds: string[] = Array.from(new Set<string>(pending.map((p: any) => p.farmer_id)));
     const { data: profiles } = await supabase.from('profiles').select('id, user_id').in('id', farmerIds);
     const notifRows = (profiles ?? []).map((p: any) => ({
-      user_id: p.user_id,
+      userId: p.user_id,
       role: 'farmer',
       type: 'group',
       title: 'Your submission is now listed',
       body: `${cropType} · ${totalKg}kg lot published for ${ctx.group.name}. You'll be paid when it sells.`,
-      read: false,
+      url: '/farmer/groups',
     }));
-    if (notifRows.length > 0) await (supabase.from as any)('notifications').insert(notifRows);
+    if (notifRows.length > 0) await notifyUsers(supabase, notifRows);
   } catch { /* non-critical */ }
 
   return NextResponse.json({ success: true, data: listing }, { status: 201 });

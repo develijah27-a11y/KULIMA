@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { notifyUser } from '@/lib/notify';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -64,13 +65,13 @@ export async function PATCH(req: Request) {
         agreed_price: bid.price,
         updated_at: new Date().toISOString(),
       }).eq('id', bid.delivery_id),
-      (supabase.from as any)('notifications').insert({
-        user_id: bid.transporter_id,
+      notifyUser(supabase, {
+        userId: bid.transporter_id,
         role: 'transporter',
         type: 'delivery',
         title: 'Your bid was accepted!',
         body: `The farmer accepted your bid of UGX ${Number(bid.price).toLocaleString()} for ${route}. Head to My Deliveries to coordinate pickup.`,
-        read: false,
+        url: '/transporter/active',
       }),
     ]);
 
