@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { FileText } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -9,6 +8,7 @@ import { MobileSidebarDrawer } from '@/components/layout/MobileSidebarDrawer';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
+import { DashboardFab } from '@/components/layout/DashboardFab';
 
 const OFFTAKER_NAV = [
   { href: '/offtaker/dashboard',    icon: 'dashboard',    label: 'Dashboard' },
@@ -76,9 +76,9 @@ export default async function OfftakerLayout({ children }: { children: React.Rea
       </div>
       <MobileNav navItems={navWithBadge} />
       <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
-      <Link href="/offtaker/contracts" className="fab fab-primary" aria-label="Contracts" style={{ textDecoration: 'none' }}>
+      <DashboardFab href="/offtaker/contracts" ariaLabel="Contracts">
         <FileText size={21} strokeWidth={2.5} color="#fff" />
-      </Link>
+      </DashboardFab>
       <NavCommandPalette items={navWithBadge} />
     </div>
   );

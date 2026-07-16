@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { MessageSquare } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -9,11 +8,13 @@ import { MobileSidebarDrawer } from '@/components/layout/MobileSidebarDrawer';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
+import { DashboardFab } from '@/components/layout/DashboardFab';
 
 const GROUPS_NAV = [
   { href: '/groups/dashboard',      icon: 'dashboard',    label: 'Dashboard' },
   // ── Group
   { href: '/groups/members',        icon: 'members',      label: 'Members',       divider: true, sectionLabel: 'Group' },
+  { href: '/groups/suppliers',      icon: 'catalogue',    label: 'Order Inputs' },
   { href: '/groups/bulk-orders',    icon: 'marketplace',  label: 'Bulk Orders' },
   { href: '/groups/listings',       icon: 'my-listings',  label: 'Group Listings' },
   // ── Finance & Comms
@@ -72,9 +73,9 @@ export default async function GroupsLayout({ children }: { children: React.React
       </div>
       <MobileNav navItems={navWithBadge} />
       <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
-      <Link href="/groups/chat" className="fab fab-primary" aria-label="Group chat" style={{ textDecoration: 'none' }}>
+      <DashboardFab href="/groups/chat" ariaLabel="Group chat">
         <MessageSquare size={21} strokeWidth={2.5} color="#fff" />
-      </Link>
+      </DashboardFab>
       <NavCommandPalette items={navWithBadge} />
     </div>
   );

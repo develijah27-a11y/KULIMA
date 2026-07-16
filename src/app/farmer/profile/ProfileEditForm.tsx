@@ -24,6 +24,7 @@ const CROPS = [
 interface Props {
   initial: {
     full_name: string;
+    business_name: string;
     phone_number: string;
     location: string;
     primary_crop: string;
@@ -99,6 +100,10 @@ export function ProfileEditForm({ initial }: Props) {
         <div>
           <label style={labelStyle}>Full Name</label>
           <input value={form.full_name} onChange={e => set('full_name', e.target.value)} style={inputStyle} placeholder="Your full name" />
+        </div>
+        <div>
+          <label style={labelStyle}>Business Name <span style={{ textTransform: 'none', fontWeight: 400 }}>(optional — shown on receipts instead of your name)</span></label>
+          <input value={form.business_name} onChange={e => set('business_name', e.target.value)} style={inputStyle} placeholder="e.g. Kaggwa Agro Supplies" />
         </div>
         <div>
           <label style={labelStyle}>Phone / MoMo Number</label>

@@ -69,7 +69,7 @@ async function SupplierStats({ profileId, userId }: { profileId: string; userId:
   const lowStockCount = lowStockRes.status === 'fulfilled' ? (lowStockRes.value.count ?? 0) : 0;
 
   const stats = [
-    { label: 'Products Listed',  value: productsCount, icon: <Package size={18} />,      sub: 'In your catalogue',   border: C.greenBright, color: C.greenMed },
+    { label: 'Inventory Items',  value: productsCount, icon: <Package size={18} />,      sub: 'In your inventory',   border: C.greenBright, color: C.greenMed },
     { label: 'Pending Orders',   value: ordersCount,   icon: <ShoppingCart size={18} />, sub: 'Awaiting processing', border: C.amber,       color: C.amber    },
     { label: 'Low Stock Alerts', value: lowStockCount, icon: <AlertTriangle size={18} />, sub: 'Need restocking',    border: lowStockCount ? C.red : C.muted, color: lowStockCount ? C.red : C.muted },
     { label: 'Wallet Balance',   value: `UGX ${Math.round(walletRes?.data?.balance ?? 0).toLocaleString()}`, icon: <CreditCard size={18} />, sub: 'Available balance', border: C.blue, color: C.blue },

@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { Zap } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -9,11 +8,12 @@ import { MobileSidebarDrawer } from '@/components/layout/MobileSidebarDrawer';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
+import { DashboardFab } from '@/components/layout/DashboardFab';
 
 const SUPPLIER_NAV = [
   { href: '/supplier/dashboard',   icon: 'dashboard',    label: 'Dashboard' },
   // ── Products
-  { href: '/supplier/catalogue',   icon: 'catalogue',    label: 'Products',     divider: true, sectionLabel: 'Products' },
+  { href: '/supplier/catalogue',   icon: 'catalogue',    label: 'Inventory',    divider: true, sectionLabel: 'Inventory' },
   { href: '/supplier/orders',      icon: 'orders',       label: 'New Orders' },
   { href: '/supplier/returns',     icon: 'orders',       label: 'Returns' },
   { href: '/supplier/flash-deals', icon: 'flash-deals',  label: 'Quick Deals' },
@@ -73,9 +73,9 @@ export default async function SupplierLayout({ children }: { children: React.Rea
       </div>
       <MobileNav navItems={navWithBadge} />
       <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
-      <Link href="/supplier/flash-deals" className="fab fab-primary" aria-label="Flash deals" style={{ textDecoration: 'none' }}>
+      <DashboardFab href="/supplier/flash-deals" ariaLabel="Flash deals">
         <Zap size={21} strokeWidth={2.5} color="#fff" />
-      </Link>
+      </DashboardFab>
       <NavCommandPalette items={navWithBadge} />
     </div>
   );

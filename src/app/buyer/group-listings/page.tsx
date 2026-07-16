@@ -28,7 +28,7 @@ export default async function GroupListingsPage({
   const district = sp.district ?? '';
 
   let query = (supabase.from as any)('group_listings')
-    .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, status, created_at')
+    .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, status, created_at, group_name')
     .eq('status', 'active')
     .order('crop_type', { ascending: true })
     .order('created_at', { ascending: false })
@@ -168,7 +168,10 @@ export default async function GroupListingsPage({
                         <p style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0, textTransform: 'capitalize' }}>{l.crop_type}</p>
                         <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed }}>GROUP LOT</span>
                       </div>
-                      <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0' }}>{l.district} · {l.member_count} farmer{l.member_count !== 1 ? 's' : ''}</p>
+                      <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0' }}>
+                        {l.group_name ? <><strong style={{ color: C.text, fontWeight: 700 }}>{l.group_name}</strong> · </> : ''}
+                        {l.district} · {l.member_count} farmer{l.member_count !== 1 ? 's' : ''}
+                      </p>
                     </div>
                   </div>
 

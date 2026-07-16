@@ -7,17 +7,18 @@ export async function PATCH(req: Request) {
   if (!user) return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json().catch(() => ({}));
-  const { full_name, phone_number, location, primary_crop, remote_fee_ugx, visit_fee_ugx } = body;
+  const { full_name, business_name, phone_number, location, primary_crop, remote_fee_ugx, visit_fee_ugx } = body;
 
   if (!full_name?.trim()) {
     return NextResponse.json({ ok: false, error: 'Full name is required' }, { status: 400 });
   }
 
   const update: Record<string, unknown> = {
-    full_name:    full_name.trim(),
-    phone_number: phone_number?.trim() || null,
-    location:     location?.trim()     || null,
-    primary_crop: primary_crop?.trim() || null,
+    full_name:     full_name.trim(),
+    business_name: business_name?.trim() || null,
+    phone_number:  phone_number?.trim()  || null,
+    location:      location?.trim()      || null,
+    primary_crop:  primary_crop?.trim()  || null,
   };
   // Pathologist-set consultation rates — each crop doctor decides their own
   // price. Only touch these fields when explicitly provided.

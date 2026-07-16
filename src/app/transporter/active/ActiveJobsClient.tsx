@@ -195,96 +195,7 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
         active.length === 0 ? (
           <EmptyState icon={<Car size={48} />} title="No active deliveries" body="Accept a pending request to start earning." />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {active.map((d: any) => {
-              const tm     = TYPE_META[d.delivery_type] ?? TYPE_META.standard;
-              const isBusy = busy === d.id;
-              const isAssigned  = d.status === 'assigned';
-              const isInTransit = d.status === 'in_transit';
-              return (
-                <div key={d.id} style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '18px 20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                        <span style={{ display: 'flex', color: tm.color }}>{tm.icon}</span>
-                        <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>
-                          {d.pickup_district} → {d.dropoff_district}
-                        </p>
-                      </div>
-                      <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
-                        {d.cargo_kg} kg {d.cargo_type ? `· ${d.cargo_type}` : ''} · ~{d.distance_km} km
-                      </p>
-                    </div>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, flexShrink: 0,
-                      background: isInTransit ? 'var(--color-harvest-bg)' : 'var(--color-sky-bg)',
-                      color: isInTransit ? 'var(--color-harvest)' : 'var(--color-sky)',
-                    }}>
-                      {isInTransit ? 'In Transit' : 'Assigned'}
-                    </span>
-                  </div>
-
-                  <div style={{ padding: '10px 12px', background: 'var(--color-primary-bg)', borderRadius: 10, marginBottom: 12 }}>
-                    <p style={{ fontSize: 20, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
-                      UGX {Number(d.driver_earnings ?? 0).toLocaleString()}
-                    </p>
-                    <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>Your earnings · paid after delivery confirmed</p>
-                  </div>
-
-                  {(d.pickup_location || d.dropoff_location) && (
-                    <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>
-                      {isAssigned && <p style={{ margin: '0 0 2px', fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} />Head to pickup:</p>}
-                      {d.pickup_location && <p style={{ margin: '0 0 2px' }}>{d.pickup_location}, {d.pickup_district}</p>}
-                      {isInTransit && d.dropoff_location && <p style={{ margin: '0 0 2px', fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center', gap: 4 }}><Target size={11} />Deliver to:</p>}
-                      {isInTransit && d.dropoff_location && <p style={{ margin: 0 }}>{d.dropoff_location}, {d.dropoff_district}</p>}
-                    </div>
-                  )}
-
-                  <div style={{ marginBottom: 10 }}>
-                    <NavigateButton
-                      deliveryId={d.id}
-                      fallbackAddress={
-                        isInTransit
-                          ? `${d.dropoff_location ?? ''}, ${d.dropoff_district}`
-                          : `${d.pickup_location ?? ''}, ${d.pickup_district}`
-                      }
-                    />
-                  </div>
-
-                  {/* Broadcasting is automatic once a job is accepted — matches
-                      the expected default for a driver, not an opt-in toggle */}
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                    <ShareLocationButton deliveryId={d.id} active autoStart label="location visible to requester" />
-                    {d.requester && (
-                      <button
-                        onClick={() => setTrackingId(d.id)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: 'none',
-                          cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                          background: 'var(--color-sky-bg, #E0F2FE)', color: 'var(--color-sky, #0EA5E9)',
-                        }}
-                      >
-                        <Navigation2 size={13} /> View live map
-                      </button>
-                    )}
-                  </div>
-
-                  {isAssigned && (
-                    <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'start_transit')}
-                      style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: isBusy ? 'var(--color-surface-2)' : 'var(--color-harvest)', color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
-                      {isBusy ? 'Updating…' : <><Package size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Mark Cargo Picked Up</>}
-                    </button>
-                  )}
-                  {isInTransit && (
-                    <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'complete')}
-                      style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: isBusy ? 'var(--color-surface-2)' : '#7C3AED', color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
-                      {isBusy ? 'Updating…' : <><CheckCircle2 size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Mark Delivered</>}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <ActiveJobsList active={active} busy={busy} setTrackingId={setTrackingId} updateDelivery={updateDelivery} />
         )
       )}
 
@@ -336,6 +247,143 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
             role: 'requester',
           }}
         />
+      )}
+    </div>
+  );
+}
+
+function ActiveJobGroup({ title, color, bg, children }: { title: string; color: string; bg: string; children: ReactNode }) {
+  return (
+    <div>
+      <p style={{ fontSize: 11, fontWeight: 700, color, background: bg, display: 'inline-block', padding: '3px 10px', borderRadius: 999, marginBottom: 8 }}>
+        {title}
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>
+    </div>
+  );
+}
+
+function ActiveJobsList({ active, busy, setTrackingId, updateDelivery }: {
+  active: any[]; busy: string | null;
+  setTrackingId: (id: string | null) => void;
+  updateDelivery: (id: string, action: 'start_transit' | 'complete') => void;
+}) {
+  // Multiple accepted jobs can be scattered across different pickup points in
+  // the same district — grouping by picked-up-or-not (rather than one flat
+  // list) lets a driver see at a glance which stops are still owed a pickup
+  // versus already loaded and en route.
+  const pendingPickup = active.filter((d: any) => d.status === 'assigned');
+  const pickedUp      = active.filter((d: any) => d.status === 'in_transit');
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {pendingPickup.length > 0 && (
+        <ActiveJobGroup title={`Pending Pickup (${pendingPickup.length})`} color="var(--color-sky)" bg="var(--color-sky-bg)">
+          {pendingPickup.map((d: any) => (
+            <ActiveJobCard key={d.id} d={d} busy={busy} setTrackingId={setTrackingId} updateDelivery={updateDelivery} />
+          ))}
+        </ActiveJobGroup>
+      )}
+      {pickedUp.length > 0 && (
+        <ActiveJobGroup title={`Picked Up — In Transit (${pickedUp.length})`} color="var(--color-harvest)" bg="var(--color-harvest-bg)">
+          {pickedUp.map((d: any) => (
+            <ActiveJobCard key={d.id} d={d} busy={busy} setTrackingId={setTrackingId} updateDelivery={updateDelivery} />
+          ))}
+        </ActiveJobGroup>
+      )}
+    </div>
+  );
+}
+
+function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
+  d: any; busy: string | null;
+  setTrackingId: (id: string | null) => void;
+  updateDelivery: (id: string, action: 'start_transit' | 'complete') => void;
+}) {
+  const tm     = TYPE_META[d.delivery_type] ?? TYPE_META.standard;
+  const isBusy = busy === d.id;
+  const isAssigned  = d.status === 'assigned';
+  const isInTransit = d.status === 'in_transit';
+
+  return (
+    <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '18px 20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <span style={{ display: 'flex', color: tm.color }}>{tm.icon}</span>
+            <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>
+              {d.pickup_district} → {d.dropoff_district}
+            </p>
+          </div>
+          <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
+            {d.cargo_kg} kg {d.cargo_type ? `· ${d.cargo_type}` : ''} · ~{d.distance_km} km
+          </p>
+        </div>
+        <span style={{
+          fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, flexShrink: 0,
+          background: isInTransit ? 'var(--color-harvest-bg)' : 'var(--color-sky-bg)',
+          color: isInTransit ? 'var(--color-harvest)' : 'var(--color-sky)',
+        }}>
+          {isInTransit ? 'In Transit' : 'Assigned'}
+        </span>
+      </div>
+
+      <div style={{ padding: '10px 12px', background: 'var(--color-primary-bg)', borderRadius: 10, marginBottom: 12 }}>
+        <p style={{ fontSize: 20, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
+          UGX {Number(d.driver_earnings ?? 0).toLocaleString()}
+        </p>
+        <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>Your earnings · paid after delivery confirmed</p>
+      </div>
+
+      {(d.pickup_location || d.dropoff_location) && (
+        <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>
+          {isAssigned && <p style={{ margin: '0 0 2px', fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={11} />Head to pickup:</p>}
+          {d.pickup_location && <p style={{ margin: '0 0 2px' }}>{d.pickup_location}, {d.pickup_district}</p>}
+          {isInTransit && d.dropoff_location && <p style={{ margin: '0 0 2px', fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center', gap: 4 }}><Target size={11} />Deliver to:</p>}
+          {isInTransit && d.dropoff_location && <p style={{ margin: 0 }}>{d.dropoff_location}, {d.dropoff_district}</p>}
+        </div>
+      )}
+
+      <div style={{ marginBottom: 10 }}>
+        <NavigateButton
+          deliveryId={d.id}
+          fallbackAddress={
+            isInTransit
+              ? `${d.dropoff_location ?? ''}, ${d.dropoff_district}`
+              : `${d.pickup_location ?? ''}, ${d.pickup_district}`
+          }
+        />
+      </div>
+
+      {/* Broadcasting is automatic once a job is accepted — matches
+          the expected default for a driver, not an opt-in toggle */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+        <ShareLocationButton deliveryId={d.id} active autoStart label="location visible to requester" />
+        {d.requester && (
+          <button
+            onClick={() => setTrackingId(d.id)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: 'none',
+              cursor: 'pointer', fontSize: 12, fontWeight: 700,
+              background: 'var(--color-sky-bg, #E0F2FE)', color: 'var(--color-sky, #0EA5E9)',
+            }}
+          >
+            <Navigation2 size={13} /> View live map
+          </button>
+        )}
+      </div>
+
+      {isAssigned && (
+        <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'start_transit')}
+          style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: isBusy ? 'var(--color-surface-2)' : 'var(--color-harvest)', color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
+          {isBusy ? 'Updating…' : <><Package size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Mark Cargo Picked Up</>}
+        </button>
+      )}
+      {isInTransit && (
+        <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'complete')}
+          style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: isBusy ? 'var(--color-surface-2)' : '#7C3AED', color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
+          {isBusy ? 'Updating…' : <><CheckCircle2 size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Mark Delivered</>}
+        </button>
       )}
     </div>
   );

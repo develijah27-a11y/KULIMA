@@ -37,16 +37,17 @@ export async function POST(req: Request) {
     }, { status: 400 });
   }
 
-  // One-group-per-farmer check
-  const { data: existingMembership } = await (supabase.from as any)('farmer_group_members')
-    .select('group_id, farmer_groups(name)')
+  // A farmer can belong to more than one group, as long as each one is in
+  // their own district (checked above) — just guard against joining the
+  // exact same group twice (the DB's UNIQUE(group_id, farmer_id) would also
+  // catch this, but checking here gives a clearer message).
+  const { data: alreadyInThisGroup } = await (supabase.from as any)('farmer_group_members')
+    .select('id')
+    .eq('group_id', groupId)
     .eq('farmer_id', (profile as any).id)
     .maybeSingle();
-  if (existingMembership) {
-    const existingGroupName = (existingMembership as any).farmer_groups?.name ?? 'another group';
-    return NextResponse.json({
-      error: `You're already a member of ${existingGroupName} and can only belong to one group at a time.`,
-    }, { status: 409 });
+  if (alreadyInThisGroup) {
+    return NextResponse.json({ error: `You're already a member of ${group.name}.` }, { status: 409 });
   }
 
   // A phone number is required so group sale payouts can reach this
@@ -70,11 +71,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to join group. Please try again.' }, { status: 500 });
   }
 
-  // Notify the group leader that someone joined
+  // Notify the group leader that someone joined, and confirm to the joining
+  // member which group they're now in — the leader's notification alone
+  // left the member with no in-app record of what they'd just joined.
   try {
     const { data: leaderProfile } = await supabase.from('profiles').select('user_id').eq('id', group.leader_id).single();
+    const notifRows = [];
     if (leaderProfile) {
-      await (supabase.from as any)('notifications').insert({
+      notifRows.push({
         user_id: (leaderProfile as any).user_id,
         role: 'groups',
         type: 'group',
@@ -83,6 +87,15 @@ export async function POST(req: Request) {
         read: false,
       });
     }
+    notifRows.push({
+      user_id: user.id,
+      role: 'farmer',
+      type: 'group',
+      title: `You joined ${group.name}`,
+      body: `You're now a member of ${group.name} in ${group.district ?? 'your district'}. You can submit produce for group sales, or leave anytime from Farmer Groups.`,
+      read: false,
+    });
+    await (supabase.from as any)('notifications').insert(notifRows);
   } catch { /* non-critical */ }
 
   return NextResponse.json({ success: true });

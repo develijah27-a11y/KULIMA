@@ -109,7 +109,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-            My Products
+            My Inventory
           </h1>
           <p className="text-sm mt-1" style={{ color: C.muted }}>{products.length} product{products.length !== 1 ? 's' : ''} listed</p>
         </div>

@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { sendEmail, purchaseReceiptEmail } from '@/lib/email';
 
 async function getProfile(supabase: any, userId: string) {
   const { data } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
     .update({ stock_qty: product.stock_qty - +quantity, updated_at: new Date().toISOString() })
     .eq('id', product.id);
 
-  const { data: supplierProfile } = await (supabase.from as any)('profiles').select('user_id').eq('id', product.supplier_id).single();
+  const { data: supplierProfile } = await (supabase.from as any)('profiles').select('user_id, full_name, business_name').eq('id', product.supplier_id).single();
   if (supplierProfile?.user_id) {
     await (supabase.from as any)('notifications').insert({
       user_id: supplierProfile.user_id,
@@ -69,6 +70,27 @@ export async function POST(req: Request) {
       body: `${(profile as any).full_name ?? 'A farmer'} ordered ${quantity} ${product.unit} of ${product.name}.`,
       data: { supplier_order_id: (order as any).id },
     });
+  }
+
+  // E-receipt to the buyer — best-effort, only actually sends once
+  // RESEND_API_KEY/EMAIL_FROM are configured (see lib/email.ts).
+  if (user.email) {
+    await sendEmail(
+      user.email,
+      'Your AgriNova purchase receipt',
+      purchaseReceiptEmail({
+        buyerName:   (profile as any).full_name ?? 'there',
+        dealerName:  (supplierProfile as any)?.business_name || (supplierProfile as any)?.full_name || 'Agro Dealer',
+        productName: product.name,
+        quantity:    +quantity,
+        unit:        product.unit,
+        unitPrice:   product.price_per_unit,
+        amount:      +quantity * product.price_per_unit,
+        district:    (profile as any).district ?? (profile as any).location ?? null,
+        receiptNo:   `AGN-${String((order as any).id).slice(0, 8).toUpperCase()}`,
+        purchasedAt: (order as any).created_at ?? new Date().toISOString(),
+      }),
+    );
   }
 
   return NextResponse.json({ success: true, data: order }, { status: 201 });
@@ -121,6 +143,52 @@ export async function PATCH(req: Request) {
 
   const { id, status } = await req.json();
   if (!id || !status) return NextResponse.json({ error: 'id and status required' }, { status: 400 });
+
+  // Buyer (the group leader who requested a bulk quote) accepts or declines
+  // once the supplier has named their discounted price — supplier-side
+  // transitions (confirmed/delivered/cancelled on their own orders) stay
+  // below, this only covers the buyer's own quoted-order response.
+  if (status === 'confirmed' || status === 'cancelled') {
+    const { data: buyerOwned } = await (supabase.from as any)('supplier_orders')
+      .select('id, status, product_name, quantity, unit, unit_price, amount, district, supplier_id')
+      .eq('id', id).eq('buyer_id', user.id).eq('status', 'quoted').maybeSingle();
+    if (buyerOwned) {
+      const { error } = await (supabase.from as any)('supplier_orders')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id).eq('buyer_id', user.id).eq('status', 'quoted');
+      if (error) {
+        console.error('[/api/supplier-orders]', error);
+        return NextResponse.json({ error: 'Failed to update order. Please try again.' }, { status: 500 });
+      }
+
+      // E-receipt on the moment the purchase is actually confirmed — a bulk
+      // order isn't a real purchase until the buyer accepts the dealer's quote.
+      if (status === 'confirmed' && user.email) {
+        const [{ data: dealerProfile }, { data: buyerProfile }] = await Promise.all([
+          (supabase.from as any)('profiles').select('full_name, business_name').eq('id', (buyerOwned as any).supplier_id).single(),
+          supabase.from('profiles').select('full_name').eq('id', profile.id).single(),
+        ]);
+        await sendEmail(
+          user.email,
+          'Your AgriNova purchase receipt',
+          purchaseReceiptEmail({
+            buyerName:   (buyerProfile as any)?.full_name ?? 'there',
+            dealerName:  (dealerProfile as any)?.business_name || (dealerProfile as any)?.full_name || 'Agro Dealer',
+            productName: (buyerOwned as any).product_name,
+            quantity:    Number((buyerOwned as any).quantity),
+            unit:        (buyerOwned as any).unit,
+            unitPrice:   Number((buyerOwned as any).unit_price),
+            amount:      Number((buyerOwned as any).amount),
+            district:    (buyerOwned as any).district ?? null,
+            receiptNo:   `AGN-${String(id).slice(0, 8).toUpperCase()}`,
+            purchasedAt: new Date().toISOString(),
+          }),
+        );
+      }
+
+      return NextResponse.json({ success: true });
+    }
+  }
 
   const allowed = ['confirmed', 'delivered', 'cancelled'];
   if (!allowed.includes(status)) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });

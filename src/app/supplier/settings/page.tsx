@@ -15,9 +15,9 @@ const SECTIONS = [
     ],
   },
   {
-    title: 'Products',
+    title: 'Inventory',
     items: [
-      { label: 'Product Catalogue', desc: 'Add, edit, and update stock for your products', icon: <Package size={20} />, href: '/supplier/catalogue' },
+      { label: 'Inventory', desc: 'Add, edit, and update stock for your products', icon: <Package size={20} />, href: '/supplier/catalogue' },
       { label: 'Quick Deals', desc: 'Offer lower prices to move stock quickly', icon: <Zap size={20} />, href: '/supplier/flash-deals' },
       { label: 'Pending Orders', desc: 'View and fulfil incoming farmer orders', icon: <ShoppingCart size={20} />, href: '/supplier/orders' },
     ],

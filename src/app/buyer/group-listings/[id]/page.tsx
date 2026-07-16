@@ -23,7 +23,7 @@ export default async function GroupListingDetailPage({
 
   const [listingRes, pricesRes, existingOrderRes] = await Promise.all([
     (supabase.from as any)('group_listings')
-      .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, status, created_at')
+      .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, status, created_at, group_name')
       .eq('id', id)
       .single(),
     supabase.from('market_prices').select('crop_type, price_per_kg').order('recorded_at', { ascending: false }).limit(50),
@@ -65,6 +65,9 @@ export default async function GroupListingDetailPage({
                 <p style={{ fontSize: 20, fontWeight: 900, color: C.text, margin: 0, textTransform: 'capitalize', letterSpacing: '-0.02em' }}>{listing.crop_type}</p>
                 <span style={{ fontSize: 9, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: C.green, color: '#fff' }}>GROUP LOT</span>
               </div>
+              {listing.group_name && (
+                <p style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '3px 0 0' }}>{listing.group_name}</p>
+              )}
               <p style={{ fontSize: 13, color: C.muted, margin: '3px 0 0' }}>
                 {listing.district} · {listing.member_count} contributing farmer{listing.member_count !== 1 ? 's' : ''}
               </p>

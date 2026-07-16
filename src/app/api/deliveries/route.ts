@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
 import { calcFare, type DeliveryType } from '@/lib/delivery-pricing';
 import { sendPushToUsers } from '@/lib/push';
+import { sendEmail, deliveryArrivedEmail } from '@/lib/email';
 
 // ─── GET: list open deliveries for transporters to browse ────────────────────
 export async function GET(req: Request) {
@@ -208,7 +209,12 @@ export async function PATCH(req: Request) {
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
       );
       const { data: delivery } = await (admin.from as any)('delivery_requests')
-        .select('requester_id, requester_role, estimated_fare')
+        .select(`
+          requester_id, requester_role, estimated_fare, cargo_type, cargo_kg,
+          pickup_district, pickup_location, dropoff_district, dropoff_location,
+          delivery_type, distance_km, picked_up_at, delivered_at,
+          transporter_id, assigned_vehicle_id
+        `)
         .eq('id', id)
         .single();
 
@@ -221,6 +227,46 @@ export async function PATCH(req: Request) {
           body:    `Your goods have been delivered. Please confirm and pay UGX ${Number(delivery.estimated_fare).toLocaleString()} to release the driver.`,
           read:    false,
         });
+
+        // Thank-you email with delivery details — best-effort, only actually
+        // sends once RESEND_API_KEY/EMAIL_FROM are configured (see lib/email.ts).
+        const [{ data: authUser }, { data: requesterProfile }, { data: driverProfile }, { data: vehicle }] = await Promise.all([
+          admin.auth.admin.getUserById(delivery.requester_id),
+          admin.from('profiles').select('full_name, phone_number').eq('user_id', delivery.requester_id).single(),
+          delivery.transporter_id
+            ? admin.from('profiles').select('full_name, phone_number').eq('user_id', delivery.transporter_id).single()
+            : Promise.resolve({ data: null }),
+          delivery.assigned_vehicle_id
+            ? (admin.from as any)('vehicles').select('make_model, plate_number').eq('id', delivery.assigned_vehicle_id).single()
+            : Promise.resolve({ data: null }),
+        ]);
+
+        if (authUser?.user?.email) {
+          await sendEmail(
+            authUser.user.email,
+            'Your AgriNova delivery has arrived',
+            deliveryArrivedEmail({
+              recipientName:    (requesterProfile as any)?.full_name ?? 'there',
+              recipientPhone:   (requesterProfile as any)?.phone_number ?? null,
+              cargoType:        delivery.cargo_type,
+              cargoKg:          delivery.cargo_kg,
+              pickupDistrict:   delivery.pickup_district,
+              pickupLocation:   delivery.pickup_location ?? null,
+              dropoffDistrict:  delivery.dropoff_district,
+              dropoffLocation:  delivery.dropoff_location ?? null,
+              fare:             Number(delivery.estimated_fare ?? 0),
+              distanceKm:       delivery.distance_km ?? null,
+              deliveryType:     delivery.delivery_type ?? null,
+              pickedUpAt:       delivery.picked_up_at ?? null,
+              deliveredAt:      delivery.delivered_at,
+              driverName:       (driverProfile as any)?.full_name ?? null,
+              driverPhone:      (driverProfile as any)?.phone_number ?? null,
+              vehicleMakeModel: (vehicle as any)?.make_model ?? null,
+              vehiclePlate:     (vehicle as any)?.plate_number ?? null,
+              receiptNo:        `AGN-${String(id).slice(0, 8).toUpperCase()}`,
+            }),
+          );
+        }
       }
     } catch { /* non-critical */ }
 

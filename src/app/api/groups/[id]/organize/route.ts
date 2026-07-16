@@ -97,6 +97,7 @@ export async function POST(req: Request, { params }: Ctx) {
     notes:             notes || null,
     member_count:      pending.length,
     status:            'active',
+    group_name:        ctx.group.name,
   }).select().single();
 
   if (listingErr || !listing) {

@@ -1,7 +1,8 @@
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Package, Banknote, Leaf, FlaskConical, Droplets } from 'lucide-react';
+import { Package, Banknote } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -9,115 +10,167 @@ const C = {
   amber: 'var(--color-harvest)',
 };
 
-const STATUS_COLORS: Record<string, { c: string; bg: string }> = {
-  open:       { c: 'var(--color-sky)',     bg: 'var(--color-sky-bg)'     },
-  confirmed:  { c: 'var(--color-success)', bg: 'var(--color-success-bg)' },
-  delivered:  { c: C.greenMed,             bg: 'var(--color-primary-bg)' },
-  cancelled:  { c: 'var(--color-danger)',  bg: 'var(--color-danger-bg)'  },
+const STATUS_CFG: Record<string, { label: string; c: string; bg: string }> = {
+  quote_requested: { label: 'Awaiting Quote', c: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
+  quoted:           { label: 'Quoted — Review', c: 'var(--color-sky)',    bg: 'var(--color-sky-bg)'     },
+  confirmed:        { label: 'Confirmed',        c: 'var(--color-success)', bg: 'var(--color-success-bg)' },
+  delivered:        { label: 'Delivered',        c: C.greenMed,           bg: 'var(--color-primary-bg)' },
+  cancelled:        { label: 'Cancelled',        c: 'var(--color-danger)', bg: 'var(--color-danger-bg)'  },
 };
 
-export default async function BulkOrdersPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/signin');
+interface BulkOrder {
+  id: string;
+  product_name: string;
+  unit: string;
+  requested_quantity: number;
+  quantity: number;
+  unit_price: number;
+  amount: number;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  supplier?: { full_name: string } | null;
+}
 
-  const { data: orders } = await (supabase.from as any)('bulk_orders')
-    .select('id, input_name, quantity, unit, price_ugx, supplier_name, status, delivery_date, created_at')
-    .eq('group_admin_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(30);
+export default function BulkOrdersPage() {
+  const [groupId, setGroupId] = useState<string | null>(null);
+  const [orders, setOrders]   = useState<BulkOrder[] | null>(null);
+  const [busy, setBusy]       = useState<string | null>(null);
+  const [error, setError]     = useState('');
 
-  const rows = (orders ?? []) as any[];
-  const open = rows.filter((o: any) => o.status === 'open' || o.status === 'confirmed');
-  const past = rows.filter((o: any) => o.status === 'delivered' || o.status === 'cancelled');
+  const load = useCallback(async (gid: string) => {
+    const res = await fetch(`/api/groups/${gid}/bulk-orders`);
+    const json = await res.json();
+    setOrders(json.orders ?? []);
+  }, []);
 
-  const totalSavings = rows.reduce((s: number, o: any) => s + (o.savings_ugx ?? 0), 0);
+  useEffect(() => {
+    fetch('/api/groups/my-members').then(r => r.json()).then(json => {
+      if (json.groupId) { setGroupId(json.groupId); load(json.groupId); }
+      else setOrders([]);
+    }).catch(() => setOrders([]));
+  }, [load]);
+
+  async function respond(orderId: string, status: 'confirmed' | 'cancelled') {
+    setBusy(orderId); setError('');
+    try {
+      const res = await fetch('/api/supplier-orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, status }),
+      });
+      const json = await res.json();
+      if (json.error) { setError(json.error); return; }
+      if (groupId) load(groupId);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const rows = orders ?? [];
+  const needsAttention = rows.filter(o => o.status === 'quoted');
+  const awaiting       = rows.filter(o => o.status === 'quote_requested');
+  const resolved       = rows.filter(o => ['confirmed', 'delivered', 'cancelled'].includes(o.status));
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Bulk Orders</h1>
-          <p className="text-sm mt-1" style={{ color: C.muted }}>Pool with your group to get supplier discounts on farm inputs</p>
+          <p className="text-sm mt-1" style={{ color: C.muted }}>Request large quantities from agro dealers — they name the discount</p>
         </div>
+        <Link href="/groups/suppliers" style={{ padding: '8px 16px', background: C.greenMed, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+          + New Request
+        </Link>
       </div>
 
-      {totalSavings > 0 && (
-        <div style={{ padding: '14px 18px', borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', gap: 12, alignItems: 'center' }}>
-          <span style={{ display: 'flex', color: C.greenMed }}><Banknote size={20} /></span>
-          <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: C.greenMed, margin: '0 0 2px' }}>Group Savings</p>
-            <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>UGX {totalSavings.toLocaleString()} saved vs. buying individually</p>
-          </div>
+      {error && (
+        <div style={{ background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)', borderRadius: 10, padding: '10px 14px' }}>
+          <p style={{ color: 'var(--color-danger)', fontSize: 13, margin: 0 }}>{error}</p>
         </div>
       )}
 
-      {rows.length === 0 ? (
+      {orders === null ? (
+        <p style={{ color: C.muted, fontSize: 13 }}>Loading…</p>
+      ) : rows.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '40px 24px', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: C.muted }}><Package size={48} /></div>
           <p style={{ fontSize: 16, fontWeight: 700, color: C.text }}>No bulk orders yet</p>
-          <p style={{ fontSize: 13, color: C.muted, marginTop: 4, maxWidth: 340, margin: '4px auto' }}>Start a bulk order for seeds, fertiliser, or pesticides to unlock group pricing from suppliers.</p>
-          <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: 'var(--d-bg)', display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left' }}>
-            {[{ icon: <Leaf size={18} />, t: 'Seeds', d: 'Certified maize, bean, and sorghum seed varieties' },
-              { icon: <FlaskConical size={18} />, t: 'Fertiliser', d: 'NPK, Urea, and DAP in bulk 50 kg bags' },
-              { icon: <Droplets size={18} />, t: 'Pesticides', d: 'Group-rated herbicides and insecticides' }].map(i => (
-              <div key={i.t} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <span style={{ display: 'flex', color: C.greenMed }}>{i.icon}</span>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>{i.t}</p>
-                  <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{i.d}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p style={{ marginTop: 14, fontSize: 13, color: C.muted }}>Bulk ordering is coming soon — your group will be notified when it launches.</p>
+          <p style={{ fontSize: 13, color: C.muted, marginTop: 4, maxWidth: 340, margin: '4px auto' }}>Request a large quantity from a registered agro dealer — they'll review and quote a discounted price for your group.</p>
+          <Link href="/groups/suppliers" style={{ display: 'inline-block', marginTop: 16, padding: '10px 20px', background: C.greenMed, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+            Browse Agro Dealers →
+          </Link>
         </div>
       ) : (
         <>
-          {open.length > 0 && (
-            <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Active Orders ({open.length})</p>
-              <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
-                {open.map((o: any, i: number) => {
-                  const sc = STATUS_COLORS[o.status] ?? STATUS_COLORS.open;
-                  return (
-                    <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: i < open.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                      <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: C.green }}><Package size={20} /></div>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px' }}>{o.input_name}</p>
-                        <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{o.quantity} {o.unit} · {o.supplier_name ?? 'Pending supplier'}</p>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: sc.bg, color: sc.c }}>{o.status}</span>
-                        <p style={{ fontSize: 12, fontWeight: 700, color: C.text, margin: '4px 0 0' }}>UGX {Math.round((o.price_ugx ?? 0) * (o.quantity ?? 1)).toLocaleString()}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          {needsAttention.length > 0 && (
+            <Section title={`Quoted — Needs Your Decision (${needsAttention.length})`} highlight>
+              {needsAttention.map(o => (
+                <OrderRow key={o.id} o={o} busy={busy} onRespond={respond} showActions />
+              ))}
+            </Section>
           )}
-
-          {past.length > 0 && (
-            <div>
-              <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Past Orders</p>
-              <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden', opacity: 0.7 }}>
-                {past.map((o: any, i: number) => {
-                  const sc = STATUS_COLORS[o.status] ?? STATUS_COLORS.delivered;
-                  return (
-                    <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px', borderBottom: i < past.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: '0 0 2px' }}>{o.input_name}</p>
-                        <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{new Date(o.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-                      </div>
-                      <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: sc.bg, color: sc.c }}>{o.status}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          {awaiting.length > 0 && (
+            <Section title={`Awaiting Dealer Quote (${awaiting.length})`}>
+              {awaiting.map(o => <OrderRow key={o.id} o={o} busy={busy} onRespond={respond} />)}
+            </Section>
+          )}
+          {resolved.length > 0 && (
+            <Section title="Resolved">
+              {resolved.map(o => <OrderRow key={o.id} o={o} busy={busy} onRespond={respond} />)}
+            </Section>
           )}
         </>
+      )}
+    </div>
+  );
+}
+
+function Section({ title, highlight, children }: { title: string; highlight?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <p style={{ fontSize: 11, fontWeight: 700, color: highlight ? 'var(--color-sky)' : C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{title}</p>
+      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>{children}</div>
+    </div>
+  );
+}
+
+function OrderRow({ o, busy, onRespond, showActions }: {
+  o: BulkOrder; busy: string | null; showActions?: boolean;
+  onRespond: (id: string, status: 'confirmed' | 'cancelled') => void;
+}) {
+  const st = STATUS_CFG[o.status] ?? STATUS_CFG.quote_requested;
+  const isBusy = busy === o.id;
+  return (
+    <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px' }}>{o.product_name}</p>
+          <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
+            {o.requested_quantity ?? o.quantity} {o.unit} requested{o.supplier?.full_name ? ` · ${o.supplier.full_name}` : ''}
+          </p>
+        </div>
+        <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 999, background: st.bg, color: st.c, flexShrink: 0 }}>{st.label}</span>
+      </div>
+      {o.status !== 'quote_requested' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.greenMed }}>
+          <Banknote size={14} />
+          <p style={{ fontSize: 13, fontWeight: 800, margin: 0 }}>
+            UGX {Math.round(o.unit_price).toLocaleString()}/{o.unit} · Total UGX {Math.round(o.amount).toLocaleString()}
+          </p>
+        </div>
+      )}
+      {showActions && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 4 }}>
+          <button disabled={isBusy} onClick={() => onRespond(o.id, 'cancelled')}
+            style={{ padding: '9px', borderRadius: 8, border: `1.5px solid ${C.border}`, background: 'transparent', color: C.muted, fontWeight: 700, fontSize: 13, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
+            Decline
+          </button>
+          <button disabled={isBusy} onClick={() => onRespond(o.id, 'confirmed')}
+            style={{ padding: '9px', borderRadius: 8, border: 'none', background: isBusy ? 'var(--color-surface-2)' : C.greenMed, color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 13, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
+            {isBusy ? '…' : 'Confirm Order'}
+          </button>
+        </div>
       )}
     </div>
   );

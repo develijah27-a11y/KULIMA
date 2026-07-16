@@ -7,6 +7,7 @@ import { ToastContainer } from "@/components/ui/Toast";
 import { PagePrefetcher } from "@/components/ui/PagePrefetcher";
 import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { ServiceWorkerRegistrar } from "@/components/shared/ServiceWorkerRegistrar";
+import { InstallPrompt } from "@/components/shared/InstallPrompt";
 
 // Self-hosted via next/font: fonts are fetched at build time and served from
 // our own origin, eliminating the fonts.googleapis.com/fonts.gstatic.com
@@ -71,14 +72,14 @@ export default function RootLayout({
       <head>
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* ?v=2 cache-busts the AgriNova rebrand icons — these paths aren't
+        {/* ?v=3 cache-busts the AgriNova rebrand icons — these paths aren't
             content-hashed, and the old files were served with a 1-year
             immutable Cache-Control, so browsers/CDN need a new URL to notice
             the change. Bump this version any time icon.svg's content changes. */}
-        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=2" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=2" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=2" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=2" />
+        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=3" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=3" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=3" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=3" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
@@ -100,18 +101,15 @@ export default function RootLayout({
           <svg className="app-splash-mark" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="splashBg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#2FA34F" />
-                <stop offset="1" stopColor="#166B3A" />
+                <stop offset="0" stopColor="#1E8A46" />
+                <stop offset="1" stopColor="#0B4020" />
               </linearGradient>
             </defs>
             <rect width="256" height="256" rx="57" fill="url(#splashBg)" />
-            <circle cx="128" cy="150" r="22" fill="#FFA726" />
-            <path d="M128,58 L192,200 L166,200 L150,158 L106,158 L90,200 L64,200 Z" fill="#FFFFFF" />
-            <path d="M128,58 L150,158" stroke="#166B3A" strokeWidth="3" strokeLinecap="round" opacity="0.35" />
-            <path d="M172,72 Q186,86 172,102 Q158,86 172,72 Z" fill="#7CC576" />
-            <path d="M172,76 L172,98" stroke="#FFF7E6" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
-            <path d="M58,210 Q128,200 198,210" stroke="#FFF7E6" strokeWidth="6" strokeLinecap="round" fill="none" opacity="0.55" />
-            <path d="M52,226 Q128,217 204,226" stroke="#FFF7E6" strokeWidth="6" strokeLinecap="round" fill="none" opacity="0.35" />
+            {/* Checkmark that opens into a leaf — a confirmation stroke
+                (escrow release) that grows into a leaf blade mid-line. */}
+            <path d="M66,132 L112,176" stroke="#F6EFDD" strokeWidth="30" strokeLinecap="round" />
+            <path d="M112,176 Q115,87 202,68 Q171,134 112,176 Z" fill="#F6EFDD" />
           </svg>
           <span className="app-splash-word">AgriNova</span>
           <span className="app-splash-tagline">Smart Farm Management</span>
@@ -123,6 +121,7 @@ export default function RootLayout({
         <NavigationProgress />
         <PagePrefetcher />
         <ServiceWorkerRegistrar />
+        <InstallPrompt />
       </body>
     </html>
   );

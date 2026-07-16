@@ -40,7 +40,7 @@ export default async function FarmerSuppliersPage({
   const supplier = sp.supplier ?? '';
 
   let query = (supabase.from as any)('supplier_products')
-    .select('id, name, category, description, price_per_unit, unit, stock_qty, min_order_qty, district, image_url, supplier_id, supplier:profiles!supplier_products_supplier_id_fkey(id, full_name, location, verification_level)')
+    .select('id, name, category, description, price_per_unit, unit, stock_qty, min_order_qty, district, image_url, supplier_id, supplier:profiles!supplier_products_supplier_id_fkey(id, full_name, business_name, location, verification_level)')
     .eq('is_available', true)
     .gt('stock_qty', 0);
 
@@ -170,10 +170,10 @@ export default async function FarmerSuppliersPage({
                       style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0, textDecoration: 'none' }}
                     >
                       <div style={{ width: 20, height: 20, borderRadius: 6, background: C.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
-                        {supp.full_name?.[0]?.toUpperCase() ?? 'S'}
+                        {(supp.business_name || supp.full_name)?.[0]?.toUpperCase() ?? 'S'}
                       </div>
                       <p style={{ fontSize: 11, color: C.muted, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {supp.full_name ?? 'Supplier'}
+                        {supp.business_name || supp.full_name || 'Supplier'}
                       </p>
                       {supp.verification_level && <VerificationBadge level={supp.verification_level as VerificationLevel} size="xs" showLabel={false} />}
                     </Link>

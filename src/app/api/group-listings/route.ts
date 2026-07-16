@@ -25,6 +25,13 @@ export async function POST(req: Request) {
     }
   }
 
+  // Shown to buyers browsing group listings so they know which farmer group
+  // they're actually buying from, not just the crop/district.
+  const { data: myProfile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
+  const { data: myGroup } = myProfile
+    ? await (supabase.from as any)('farmer_groups').select('name').eq('leader_id', myProfile.id).maybeSingle()
+    : { data: null };
+
   const { data, error } = await (supabase.from as any)('group_listings').insert({
     admin_id:          user.id,
     crop_type,
@@ -34,6 +41,7 @@ export async function POST(req: Request) {
     notes:             notes ?? null,
     member_count:      member_count ?? 1,
     status:            'active',
+    group_name:        myGroup?.name ?? null,
   }).select().single();
 
   if (error) {

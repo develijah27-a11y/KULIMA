@@ -25,8 +25,9 @@ export async function GET(req: Request) {
 
 // Adding a member here does double duty:
 //  - If the phone number matches a real registered AgriNova account, they're
-//    linked as a genuine group member (farmer_group_members) — enforcing one
-//    group per farmer and same-district — and get notified.
+//    linked as a genuine group member (farmer_group_members) — enforcing
+//    same-district (a farmer may belong to more than one group, as long as
+//    each is local to them) — and get notified.
 //  - Otherwise this is saved as a roster-only record (name/district/crop for
 //    the admin's own bookkeeping) with no account to link or notify yet.
 export async function POST(req: Request) {
@@ -63,19 +64,8 @@ export async function POST(req: Request) {
         }, { status: 400 });
       }
 
-      // One-group-per-farmer check
-      const { data: existingMembership } = await (supabase.from as any)('farmer_group_members')
-        .select('group_id, farmer_groups(name)')
-        .eq('farmer_id', matchedProfile.id)
-        .maybeSingle();
-
-      if (existingMembership) {
-        const groupName = (existingMembership as any).farmer_groups?.name ?? 'another group';
-        return NextResponse.json({
-          error: `${matchedProfile.full_name} is already a member of ${groupName} and can only belong to one group at a time.`,
-        }, { status: 409 });
-      }
-
+      // A farmer can belong to more than one group, as long as each is in
+      // their own district (checked above) — no longer capped at one group.
       // Resolve this admin's own farmer_groups.id and name
       const { data: myProfile } = await supabase.from('profiles').select('id, full_name').eq('user_id', user.id).single();
       const { data: myGroup } = myProfile

@@ -29,10 +29,15 @@ export async function POST(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
-  // Fetch target profile IDs
-  let profileQuery = (adminClient.from as any)('profiles').select('id, role, user_id');
+  // Fetch target profile IDs. Dashboard access (and every layout's own
+  // unread-notification query) is granted via profiles.roles[] — a
+  // multi-role user reaches e.g. /supplier/dashboard whenever 'supplier' is
+  // in their roles array, regardless of their singular primary `role`. This
+  // used to filter on `role` alone, so switching-role users targeted by a
+  // non-primary role never showed up here and never got the alert.
+  let profileQuery = (adminClient.from as any)('profiles').select('id, role, roles, user_id');
   if (targetRole && targetRole !== 'all' && VALID_ROLES.includes(targetRole)) {
-    profileQuery = profileQuery.eq('role', targetRole);
+    profileQuery = profileQuery.or(`role.eq.${targetRole},roles.cs.{${targetRole}}`);
   }
 
   const { data: profiles, error: profileErr } = await profileQuery;
@@ -55,7 +60,11 @@ export async function POST(req: Request) {
     const rows = chunk.map((p: any) => ({
       farmer_id: p.id,       // notifications.farmer_id references profiles.id
       user_id:   p.user_id,  // GET /api/notifications and the realtime bell filter on user_id
-      role:      p.role ?? null, // shows only on that recipient's own role dashboard
+      // Pin to the role the admin actually targeted, not the recipient's own
+      // primary `role` column — for a multi-role user those can differ, and
+      // every dashboard's badge/list filters by `role.eq.<that dashboard>`,
+      // so this must match the dashboard the alert is meant to appear on.
+      role: targetRole && targetRole !== 'all' ? targetRole : (p.role ?? null),
       type,
       title: title.trim(),
       body:  body.trim(),

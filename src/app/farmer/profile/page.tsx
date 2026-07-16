@@ -39,7 +39,7 @@ export default async function FarmerProfilePage() {
 
   const [profileRes, farms, crops] = await Promise.all([
     (supabase.from as any)('profiles')
-      .select('full_name, phone_number, location, primary_crop, role, verification_level, trust_score, completed_deals')
+      .select('full_name, business_name, phone_number, location, primary_crop, role, verification_level, trust_score, completed_deals')
       .eq('user_id', user.id)
       .single(),
     getFarms(user.id),
@@ -58,10 +58,11 @@ export default async function FarmerProfilePage() {
   };
 
   const editInitial = {
-    full_name:    p.full_name    ?? '',
-    phone_number: p.phone_number ?? '',
-    location:     p.location     ?? '',
-    primary_crop: p.primary_crop ?? '',
+    full_name:     p.full_name     ?? '',
+    business_name: p.business_name ?? '',
+    phone_number:  p.phone_number  ?? '',
+    location:      p.location      ?? '',
+    primary_crop:  p.primary_crop  ?? '',
   };
 
   return (
@@ -126,6 +127,7 @@ export default async function FarmerProfilePage() {
         <div className="divide-y" style={{ borderColor: C.border }}>
           {[
             { label: 'Full Name',   value: p.full_name },
+            { label: 'Business Name', value: p.business_name },
             { label: 'Phone',       value: p.phone_number },
             { label: 'District',    value: p.location },
             { label: 'Primary Crop', value: p.primary_crop },

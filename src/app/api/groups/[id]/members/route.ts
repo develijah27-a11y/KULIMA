@@ -69,18 +69,9 @@ export async function POST(req: Request, { params }: Ctx) {
     }, { status: 400 });
   }
 
-  // One-group-per-farmer check — give a clear message before hitting the DB constraint
-  const { data: existingMembership } = await (supabase.from as any)('farmer_group_members')
-    .select('group_id, farmer_groups(name)')
-    .eq('farmer_id', found.id)
-    .maybeSingle();
-  if (existingMembership) {
-    const existingGroupName = (existingMembership as any).farmer_groups?.name ?? 'another group';
-    return NextResponse.json({
-      error: `${found.full_name} is already a member of ${existingGroupName} and can only belong to one group at a time.`,
-    }, { status: 409 });
-  }
-
+  // A farmer can belong to more than one group, as long as each is in
+  // their own district (checked above). The DB's UNIQUE(group_id, farmer_id)
+  // still prevents adding the same person to this exact group twice.
   const { error } = await (supabase.from as any)('farmer_group_members').insert({
     group_id:  groupId,
     farmer_id: found.id,
@@ -99,8 +90,8 @@ export async function POST(req: Request, { params }: Ctx) {
       user_id: (found as any).user_id,
       role: 'farmer',
       type: 'group',
-      title: 'Added to a farmer group',
-      body: `You've been added to ${group?.name ?? 'a farmer group'}. Open Farmer Groups to see it.`,
+      title: `You've been added to ${group?.name ?? 'a farmer group'}`,
+      body: `You're now a member of ${group?.name ?? 'a farmer group'} in ${group?.district ?? 'your district'}. You can submit produce for group sales, or leave anytime from Farmer Groups.`,
       read: false,
     });
   } catch { /* non-critical */ }

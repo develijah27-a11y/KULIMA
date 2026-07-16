@@ -39,6 +39,7 @@
     "postcss": "^8.5.15",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "resend": "^6.17.2",
     "serwist": "^9.0.30",
     "tailwind-merge": "^3.0.1",
     "tailwindcss": "^4.3.0",

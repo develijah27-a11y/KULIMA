@@ -125,9 +125,11 @@ export async function POST(req: Request) {
     : '';
 
   let visionLabels: string[] = [];
+  let visionAttempted = false;
 
   const googleApiKey = process.env.GOOGLE_CLOUD_API_KEY;
   if (googleApiKey && base64Content) {
+    visionAttempted = true;
     try {
       const vRes = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${googleApiKey}`, {
         method: 'POST',
@@ -146,13 +148,32 @@ export async function POST(req: Request) {
       visionLabels = (vJson.responses?.[0]?.labelAnnotations ?? [])
         .map((a: any) => (a.description ?? '').toLowerCase()) as string[];
     } catch {
-      // fall through to keyword matching below
+      // visionAttempted stays true — request was made but failed, handled below
     }
   }
 
-  // Fallback: seed labels from crop type so at least crop-relevant diseases surface
-  if (visionLabels.length === 0) {
-    visionLabels = ['leaf', 'plant', 'damage', cropType.toLowerCase()].filter(Boolean);
+  // No GOOGLE_CLOUD_API_KEY configured, or the API call itself failed/returned
+  // nothing: be honest about it instead of seeding generic labels like
+  // ['leaf','plant','damage', cropType] — that fallback let the keyword
+  // matcher "diagnose" a disease from the selected crop alone, with no photo
+  // analysis behind it at all, and present it as a confident AI result.
+  if (!visionAttempted || visionLabels.length === 0) {
+    const result = {
+      diseaseName: 'AI Analysis Unavailable',
+      confidence: 0,
+      severity: 'low' as const,
+      affectedPart: 'N/A',
+      symptoms: ['Photo analysis could not run for this scan.'],
+      treatment: [
+        'This doesn’t mean your crop is healthy — it means the scan couldn’t analyze the photo.',
+        'Book a consultation with a plant pathologist for a real diagnosis.',
+      ],
+      prevention: [],
+      urgency: 'Consult a pathologist directly for an accurate diagnosis.',
+      cropType,
+      analysisUnavailable: true,
+    };
+    return NextResponse.json({ success: true, data: result });
   }
 
   // Score each disease against detected labels

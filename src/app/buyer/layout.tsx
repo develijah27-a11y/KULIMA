@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { ShoppingBag } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -9,6 +8,7 @@ import { MobileSidebarDrawer } from '@/components/layout/MobileSidebarDrawer';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
+import { DashboardFab } from '@/components/layout/DashboardFab';
 
 const BUYER_NAV = [
   { href: '/buyer/dashboard',    icon: 'dashboard',    label: 'Dashboard' },
@@ -82,9 +82,9 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
       </div>
       <MobileNav navItems={navWithBadge} />
       <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
-      <Link href="/buyer/listings" className="fab fab-primary" aria-label="Browse marketplace" style={{ textDecoration: 'none' }}>
+      <DashboardFab href="/buyer/listings" ariaLabel="Browse marketplace">
         <ShoppingBag size={21} strokeWidth={2.5} color="#fff" />
-      </Link>
+      </DashboardFab>
       <NavCommandPalette items={navWithBadge} />
     </div>
   );

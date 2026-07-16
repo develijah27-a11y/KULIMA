@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { OutbreakMap } from '@/components/pathologist/OutbreakMap';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -27,6 +28,9 @@ export default async function GeoMapPage() {
   });
 
   const hotspots = Object.entries(byDistrict).sort((a, b) => b[1].high - a[1].high || b[1].count - a[1].count);
+  const mapHotspots = hotspots.map(([district, data]) => ({
+    district, count: data.count, high: data.high, crops: Array.from(data.crops),
+  }));
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
@@ -35,13 +39,17 @@ export default async function GeoMapPage() {
         <p className="text-sm mt-1" style={{ color: C.muted }}>Disease case distribution across Uganda districts</p>
       </div>
 
-      <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 16, padding: '28px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'rgba(255,255,255,0.5)' }}><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg></div>
-        <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 6 }}>Interactive Map Coming Soon</p>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, maxWidth: 320, margin: '0 auto' }}>
-          A visual heat map of disease outbreaks by district will be available in the next update.
-        </p>
-      </div>
+      {mapHotspots.length > 0 ? (
+        <OutbreakMap hotspots={mapHotspots} />
+      ) : (
+        <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 16, padding: '28px', textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'rgba(255,255,255,0.5)' }}><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg></div>
+          <p style={{ fontSize: 16, fontWeight: 800, color: '#fff', marginBottom: 6 }}>No active cases to map</p>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, maxWidth: 320, margin: '0 auto' }}>
+            The outbreak map will populate as soon as disease reports come in.
+          </p>
+        </div>
+      )}
 
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
         <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}` }}>

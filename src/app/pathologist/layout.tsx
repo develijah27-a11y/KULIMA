@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { Stethoscope } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -9,6 +8,7 @@ import { MobileSidebarDrawer } from '@/components/layout/MobileSidebarDrawer';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
+import { DashboardFab } from '@/components/layout/DashboardFab';
 
 const PATHOLOGIST_NAV = [
   { href: '/pathologist/dashboard',       icon: 'dashboard',      label: 'Dashboard' },
@@ -76,9 +76,9 @@ export default async function PathologistLayout({ children }: { children: React.
       </div>
       <MobileNav navItems={navWithBadge} />
       <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
-      <Link href="/pathologist/cases" className="fab fab-primary" aria-label="Case queue" style={{ textDecoration: 'none' }}>
+      <DashboardFab href="/pathologist/cases" ariaLabel="Case queue">
         <Stethoscope size={21} strokeWidth={2.5} color="#fff" />
-      </Link>
+      </DashboardFab>
       <NavCommandPalette items={navWithBadge} />
     </div>
   );
