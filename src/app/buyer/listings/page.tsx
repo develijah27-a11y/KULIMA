@@ -215,7 +215,7 @@ export default async function BuyerListingsPage({
                   {/* Price */}
                   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
                     <div>
-                      <p style={{ fontSize: 18, fontWeight: 800, color, margin: 0, letterSpacing: '-0.02em' }}>
+                      <p style={{ fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-0.02em' }}>
                         UGX {Math.round(l.asking_price).toLocaleString()}
                       </p>
                       <p style={{ fontSize: 10, color: C.muted, margin: '1px 0 0' }}>per kg</p>

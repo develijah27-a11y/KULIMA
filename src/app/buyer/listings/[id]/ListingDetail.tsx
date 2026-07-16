@@ -188,7 +188,7 @@ export function ListingDetail({
                 </p>
               </div>
             )}
-            <FavouriteButton farmerId={farmerId} initialFavourited={isFavourited} size={22} />
+            <FavouriteButton kind="farmer" targetId={farmerId} initialFavourited={isFavourited} size={22} />
           </div>
         </div>
 

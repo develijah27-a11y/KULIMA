@@ -15,7 +15,8 @@ const FARMER_NAV = [
   // ── Market
   { href: '/farmer/marketplace', icon: 'my-listings',  label: 'Listings',  divider: true, sectionLabel: 'Market' },
   { href: '/farmer/orders',      icon: 'orders',       label: 'Orders' },
-  { href: '/farmer/inputs',      icon: 'inventory',    label: 'Inputs' },
+  { href: '/farmer/suppliers',   icon: 'catalogue',    label: 'Buy Inputs' },
+  { href: '/farmer/inputs',      icon: 'inventory',    label: 'My Input Orders' },
   { href: '/farmer/deliveries',  icon: 'deliveries',   label: 'Deliveries' },
   { href: '/farmer/inventory',   icon: 'inventory',    label: 'Inventory' },
   { href: '/farmer/prices',      icon: 'prices',       label: 'Market Prices' },
@@ -31,6 +32,7 @@ const FARMER_NAV = [
   { href: '/farmer/weather',     icon: 'weather',      label: 'Weather' },
   // ── Account
   { href: '/farmer/wallet',      icon: 'wallet',       label: 'Wallet',       divider: true, sectionLabel: 'Account' },
+  { href: '/farmer/favourite-suppliers', icon: 'favourites', label: 'Saved Suppliers' },
   { href: '/farmer/notifications',icon: 'notifications',label: 'Notifications' },
   { href: '/farmer/verify',      icon: 'verify',       label: 'Get Verified' },
   { href: '/farmer/settings',    icon: 'settings',     label: 'Settings' },

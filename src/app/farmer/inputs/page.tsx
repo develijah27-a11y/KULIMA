@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Leaf, FlaskConical, Wrench, Settings, Package, CheckCircle2, X } from 'lucide-react';
+import Link from 'next/link';
 import type { JSX } from 'react';
 
 const C = {
@@ -212,9 +213,15 @@ export default function FarmerInputsPage() {
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><Leaf size={48} /></div>
             <p style={{ fontWeight: 700, color: C.text, marginBottom: 4 }}>No {tab !== 'all' ? tab : ''} input orders</p>
-            <p style={{ fontSize: 13, color: C.muted }}>
+            <p style={{ fontSize: 13, color: C.muted, marginBottom: 16 }}>
               Browse the supplier catalogue to order seeds, fertilizers, and other farm inputs.
             </p>
+            <Link
+              href="/farmer/suppliers"
+              style={{ display: 'inline-block', padding: '10px 22px', borderRadius: 10, background: C.green, color: '#fff', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+            >
+              Browse Suppliers
+            </Link>
           </div>
         ) : (
           filtered.map((order, i) => {

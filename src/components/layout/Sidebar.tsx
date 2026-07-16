@@ -11,7 +11,7 @@ import {
   Navigation, Thermometer, Stethoscope, AlertCircle, ClipboardCheck,
   CheckSquare, AlertTriangle, GitMerge, Star, PieChart, Shield,
   AlertOctagon, MessageCircle, Receipt, UserPlus, CalendarDays, HardHat,
-  Map, Users2, Truck, CheckCircle2, DollarSign, LineChart, LogOut, Heart,
+  Map, Users2, Truck, CheckCircle2, DollarSign, LineChart, LogOut, Bookmark,
   ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { useLiveUnreadBadge } from './useLiveUnreadBadge';
@@ -76,7 +76,7 @@ export const ICON_MAP: Record<string, IconComponent> = {
   dispute:          Shield,
   alert:            AlertOctagon,
   history:          ClipboardList,
-  favourites:       Heart,
+  favourites:       Bookmark,
   consultations:    CalendarDays,
   chat:             MessageCircle,
   'bulk-orders':    Package,
