@@ -116,11 +116,19 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
           }
 
           const { data: memberWallet } = await (db.from as any)('wallets')
-            .select('id, balance').eq('user_id', memberProfile.user_id).single();
+            .select('id, balance, is_frozen').eq('user_id', memberProfile.user_id).single();
           if (!memberWallet) {
             await (db.from as any)('notifications').insert({
               type: 'alert', title: `Group payout could not reach a member — order #${orderId.slice(0, 8)}`,
               body: `Member ${memberProfile.user_id} has no wallet. UGX ${share.toLocaleString()} was not paid out — needs manual resolution.`,
+              data: { order_id: orderId, user_id: memberProfile.user_id },
+            });
+            continue;
+          }
+          if (memberWallet.is_frozen) {
+            await (db.from as any)('notifications').insert({
+              type: 'alert', title: `Group payout blocked — frozen wallet — order #${orderId.slice(0, 8)}`,
+              body: `Member ${memberProfile.user_id}'s wallet is frozen. UGX ${share.toLocaleString()} was withheld — needs manual resolution.`,
               data: { order_id: orderId, user_id: memberProfile.user_id },
             });
             continue;
@@ -190,10 +198,14 @@ export async function releaseEscrowForOrder(db: AdminClient, orderId: string) {
 
   // ── Individual seller ──
   const { data: sellerWallet } = await (db.from as any)('wallets')
-    .select('id, balance').eq('user_id', escrow.seller_user_id).single();
+    .select('id, balance, is_frozen').eq('user_id', escrow.seller_user_id).single();
   if (!sellerWallet) {
     await revertClaim();
     return { ok: false, error: 'Seller wallet not found' };
+  }
+  if (sellerWallet.is_frozen) {
+    await revertClaim();
+    return { ok: false, error: 'Seller wallet is frozen — payout blocked pending review' };
   }
 
   await Promise.all([

@@ -32,11 +32,12 @@ export async function POST(req: Request) {
   const admin = createServiceClient(serviceUrl, serviceKey);
 
   const { data: wallet, error: walletErr } = await (admin.from as any)('wallets')
-    .select('id, balance')
+    .select('id, balance, is_frozen')
     .eq('user_id', user.id)
     .single();
 
   if (walletErr || !wallet) return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
+  if (wallet.is_frozen) return NextResponse.json({ error: 'This wallet is frozen pending review. Contact support for assistance.' }, { status: 403 });
   if (wallet.balance < amount) return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
 
   const txRef = `kulima-wdl-${user.id.slice(0, 8)}-${Date.now()}`;

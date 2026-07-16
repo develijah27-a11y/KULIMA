@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { showToast } from '@/components/ui/NotificationToast';
 
 const C = {
   text:      'var(--d-text)',
@@ -31,9 +32,11 @@ const TARGET_ROLES = [
   { value: 'transporter',  label: 'Transporters',   desc: 'All transporters'   },
   { value: 'supplier',     label: 'Suppliers',      desc: 'All suppliers'      },
   { value: 'pathologist',  label: 'Pathologists',   desc: 'All pathologists'   },
+  { value: 'offtaker',     label: 'Offtakers',      desc: 'All bulk buyers'    },
+  { value: 'groups',       label: 'Farmer Groups',  desc: 'All group leaders'  },
 ];
 
-type SendState = 'idle' | 'sending' | 'done' | 'error';
+type SendState = 'idle' | 'sending' | 'done' | 'empty' | 'error';
 
 export default function AdminAlertPage() {
   const [notifType,   setNotifType]   = useState('system');
@@ -57,13 +60,22 @@ export default function AdminAlertPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Unknown error');
-      setSentCount(json.sent ?? 0);
-      setState('done');
-      setTitle('');
-      setBody('');
+      const sent = json.sent ?? 0;
+      setSentCount(sent);
+      if (sent === 0) {
+        setState('empty');
+        showToast({ title: 'No one to notify', body: `No ${TARGET_ROLES.find(r => r.value === targetRole)?.label.toLowerCase() ?? 'users'} found — nothing was sent.`, type: 'system' });
+      } else {
+        setState('done');
+        showToast({ title: 'Broadcast sent', body: `Delivered to ${sent} ${sent === 1 ? 'user' : 'users'}.`, type: 'system' });
+        setTitle('');
+        setBody('');
+      }
     } catch (e: any) {
-      setErrorMsg(e.message ?? 'Failed to send');
+      const msg = e.message ?? 'Failed to send';
+      setErrorMsg(msg);
       setState('error');
+      showToast({ title: 'Broadcast failed', body: msg, type: 'system' });
     }
   }
 
@@ -186,6 +198,13 @@ export default function AdminAlertPage() {
             <div style={{ padding: '12px 16px', borderRadius: 10, background: 'var(--color-success-bg)' }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-success)' }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Sent to {sentCount} {sentCount === 1 ? 'user' : 'users'}
+              </p>
+            </div>
+          )}
+          {state === 'empty' && (
+            <div style={{ padding: '12px 16px', borderRadius: 10, background: 'var(--color-harvest-bg)' }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-harvest)' }}>
+                No {TARGET_ROLES.find(r => r.value === targetRole)?.label.toLowerCase()} were found — nothing was sent. Try a different audience.
               </p>
             </div>
           )}

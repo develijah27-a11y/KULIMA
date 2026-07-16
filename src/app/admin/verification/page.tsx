@@ -20,7 +20,7 @@ const STATUS_CFG = {
 async function VerificationQueue({ filter }: { filter: string }) {
   const supabase = await createClient();
   let q = (supabase.from as any)('verifications')
-    .select('id, level, status, role, submitted_at, reviewed_at, rejection_reason, profile:profiles(full_name, phone_number, location)')
+    .select('id, user_id, level, status, role, submitted_at, reviewed_at, rejection_reason, profile:profiles(full_name, phone_number, location)')
     .order('submitted_at', { ascending: false })
     .limit(50);
 
