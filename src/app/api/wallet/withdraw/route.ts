@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
 import { verifyPin, isValidPinFormat } from '@/lib/wallet-pin';
+import { logSystemEvent } from '@/lib/system-log';
 
 const FLW_BASE = 'https://api.flutterwave.com/v3';
 
@@ -51,6 +52,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Too many incorrect PIN attempts. Please wait a few minutes.' }, { status: 429 });
   }
   if (!isValidPinFormat(pin) || !verifyPin(pin, wallet.pin_hash)) {
+    logSystemEvent({
+      category: 'auth_failure',
+      level: 'warn',
+      route: '/api/wallet/withdraw',
+      method: 'POST',
+      userId: user.id,
+      message: 'Incorrect wallet PIN on withdraw attempt',
+    });
     return NextResponse.json({ error: 'Incorrect PIN', code: 'PIN_INCORRECT' }, { status: 403 });
   }
 
@@ -123,6 +132,15 @@ export async function POST(req: Request) {
         (admin.from as any)('wallet_transactions').update({ status: 'failed' }).eq('id', txnInsert.data.id),
         (admin.from as any)('mobile_money_requests').update({ status: 'failed', failure_reason: flwData.message }).eq('id', momoInsert.data.id),
       ]);
+      logSystemEvent({
+        category: 'failed_payment',
+        level: 'warn',
+        route: '/api/wallet/withdraw',
+        method: 'POST',
+        userId: user.id,
+        message: `Withdrawal transfer failed: ${flwData.message ?? 'Transfer failed'}`,
+        metadata: { amount, provider },
+      });
       return NextResponse.json({ error: flwData.message ?? 'Transfer failed' }, { status: 400 });
     }
 
@@ -140,6 +158,15 @@ export async function POST(req: Request) {
       (admin.from as any)('wallet_transactions').update({ status: 'failed' }).eq('id', txnInsert.data.id),
       (admin.from as any)('mobile_money_requests').update({ status: 'failed', failure_reason: 'Network error' }).eq('id', momoInsert.data.id),
     ]);
+    logSystemEvent({
+      category: 'failed_payment',
+      level: 'error',
+      route: '/api/wallet/withdraw',
+      method: 'POST',
+      userId: user.id,
+      message: 'Network error contacting Flutterwave on withdrawal',
+      metadata: { amount, provider },
+    });
     return NextResponse.json({ error: 'Payment service unavailable' }, { status: 503 });
   }
 }

@@ -390,10 +390,10 @@ export default async function SupplierDashboardPage() {
       </Suspense>
 
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[400px] rounded-xl" />}>
           <RecentOrders profileId={profileId} />
         </Suspense>
-        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[400px] rounded-xl" />}>
           <CataloguePreview profileId={profileId} />
         </Suspense>
       </div>

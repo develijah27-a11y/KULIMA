@@ -564,7 +564,6 @@ async function DiseasePanel({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
   const month = new Date().getMonth();
   const alerts = generateDiseaseAlerts(month, profile?.primary_crop ?? '');
-  if (alerts.length === 0) return null;
 
   return (
     <Card>
@@ -573,6 +572,13 @@ async function DiseasePanel({ userId }: { userId: string }) {
           Crop Disease Alerts
         </p>
       </div>
+      {alerts.length === 0 ? (
+        <div className="px-5 py-10 text-center">
+          <CheckCircle2 size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No disease alerts right now</p>
+          <p className="text-xs mt-1" style={{ color: C.muted }}>We'll flag seasonal risks here for your crop as they come up</p>
+        </div>
+      ) : (
       <div className="divide-y" style={{ borderColor: C.border }}>
         {alerts.map((a) => {
           const cfg = SEVERITY_MAP[a.severity];
@@ -593,6 +599,7 @@ async function DiseasePanel({ userId }: { userId: string }) {
           );
         })}
       </div>
+      )}
     </Card>
   );
 }
@@ -611,7 +618,6 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
 
   const now = new Date();
   const alerts = generatePlantingAlerts(now.getMonth(), now.getDate(), farmerCrops);
-  if (alerts.length === 0) return null;
 
   const URGENCY: Record<string, { bg: string; color: string; border: string }> = {
     high:   { bg: 'var(--color-danger-bg)',  color: 'var(--color-danger)',  border: 'var(--color-danger-border)'  },
@@ -627,11 +633,18 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
             Planting Alerts
           </p>
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-            {alerts.length} alert{alerts.length !== 1 ? 's' : ''} for your crops
+            {alerts.length > 0 ? `${alerts.length} alert${alerts.length !== 1 ? 's' : ''} for your crops` : 'Nothing due for your crops right now'}
           </p>
         </div>
         <Link href="/farmer/planting" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View calendar →</Link>
       </div>
+      {alerts.length === 0 ? (
+        <div className="px-5 py-10 text-center">
+          <Calendar size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No planting alerts right now</p>
+          <p className="text-xs mt-1" style={{ color: C.muted }}>Check back as the season progresses for timely planting reminders</p>
+        </div>
+      ) : (
       <div className="divide-y" style={{ borderColor: C.border }}>
         {alerts.slice(0, 3).map((alert, i) => {
           const cfg = URGENCY[alert.urgency];
@@ -655,6 +668,7 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
           );
         })}
       </div>
+      )}
     </Card>
   );
 }
@@ -832,12 +846,12 @@ export default async function FarmerDashboardPage() {
     <div className="space-y-5 max-w-5xl mx-auto">
 
       {/* 0 · Verification prompt */}
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="dash-skeleton h-16 rounded-xl" />}>
         <VerifyPrompt userId={userId} />
       </Suspense>
 
       {/* 1 · Weather card */}
-      <Suspense fallback={<div className="dash-skeleton h-36 rounded-xl" />}>
+      <Suspense fallback={<div className="dash-skeleton h-[420px] sm:h-36 rounded-xl" />}>
         <WeatherCard userId={userId} />
       </Suspense>
 
@@ -856,13 +870,13 @@ export default async function FarmerDashboardPage() {
       </Suspense>
 
       {/* 4 · Delivery history */}
-      <Suspense fallback={<div className="dash-skeleton h-52 rounded-xl" />}>
+      <Suspense fallback={<div className="dash-skeleton h-[420px] rounded-xl" />}>
         <DeliveryHistory userId={userId} />
       </Suspense>
 
       {/* 5 · Market prices + Weather forecast (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[440px] rounded-xl" />}>
           <MarketPricesTable userId={userId} />
         </Suspense>
         <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>

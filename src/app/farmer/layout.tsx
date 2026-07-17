@@ -9,6 +9,7 @@ import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { DashboardFab } from '@/components/layout/DashboardFab';
+import { logSystemEvent } from '@/lib/system-log';
 
 const FARMER_NAV = [
   { href: '/farmer/dashboard',   icon: 'dashboard',    label: 'Dashboard' },
@@ -62,7 +63,10 @@ export default async function FarmerLayout({ children }: { children: React.React
     const userRoles: string[] = profileRes.data.roles ?? [];
     const primaryRole: string = (profileRes.data as any).role ?? '';
     // Role guard: must have 'farmer' in roles array, OR be an admin
-    if (!userRoles.includes('farmer') && primaryRole !== 'farmer' && primaryRole !== 'admin') redirect('/dashboard');
+    if (!userRoles.includes('farmer') && primaryRole !== 'farmer' && primaryRole !== 'admin') {
+      logSystemEvent({ category: 'auth_failure', level: 'warn', route: '/farmer', userId: user.id, message: 'Role mismatch: user without farmer role attempted /farmer' });
+      redirect('/dashboard');
+    }
 
     profile = { name: profileRes.data.full_name ?? 'Farmer', role: 'Farmer' };
     location = profileRes.data.location ?? '';

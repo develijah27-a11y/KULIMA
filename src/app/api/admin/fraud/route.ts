@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { withApiLogging } from '@/lib/system-log';
 
 const ACTION_MAP: Record<string, string> = {
   investigate: 'investigating',
@@ -7,7 +8,7 @@ const ACTION_MAP: Record<string, string> = {
   dismiss:     'dismissed',
 };
 
-export async function PATCH(req: Request) {
+async function handlePATCH(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -32,3 +33,5 @@ export async function PATCH(req: Request) {
   }
   return NextResponse.json({ success: true, status: nextStatus });
 }
+
+export const PATCH = withApiLogging('/api/admin/fraud', handlePATCH);

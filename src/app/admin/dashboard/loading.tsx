@@ -19,8 +19,11 @@ export default function AdminDashboardLoading() {
       </div>
 
       {/* Admin tools */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {[1, 2, 3, 4, 5, 6, 7].map(i => <div key={i} className="dash-skeleton h-16 rounded-xl" />)}
+      <div>
+        <div className="dash-skeleton h-3 w-24 rounded mb-3" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => <div key={i} className="dash-skeleton h-[72px] rounded-xl" />)}
+        </div>
       </div>
 
       {/* Growth + Role Breakdown (2-col) */}

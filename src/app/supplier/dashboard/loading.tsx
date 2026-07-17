@@ -17,15 +17,15 @@ export default function Loading() {
       </div>
 
       {/* Quick Actions */}
-      <div className="dash-skeleton h-28 rounded-xl" />
+      <div className="dash-skeleton h-48 rounded-xl" />
 
       {/* Demand intelligence */}
       <div className="dash-skeleton h-36 rounded-xl" />
 
       {/* Orders + Catalogue (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <div className="dash-skeleton h-72 rounded-xl" />
-        <div className="dash-skeleton h-72 rounded-xl" />
+        <div className="dash-skeleton h-[400px] rounded-xl" />
+        <div className="dash-skeleton h-[400px] rounded-xl" />
       </div>
 
       {/* Getting started */}

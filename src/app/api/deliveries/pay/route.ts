@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
 import { notifyUser } from '@/lib/notify';
+import { logSystemEvent } from '@/lib/system-log';
 
 // Requester pays for the delivery after goods arrive.
 // Flow: deduct from requester wallet → pay driver their earnings (fare minus 10% commission) →
@@ -80,6 +81,15 @@ export async function POST(req: Request) {
   });
   if (payErr) {
     console.error('[deliveries/pay]', payErr);
+    logSystemEvent({
+      category: 'failed_payment',
+      level: 'error',
+      route: '/api/deliveries/pay',
+      method: 'POST',
+      userId: user.id,
+      message: `Delivery payment failed: ${payErr.message}`,
+      metadata: { delivery_id, totalFare },
+    });
     return NextResponse.json({ error: payErr.message?.includes('Insufficient') ? payErr.message : 'Payment failed. Please try again.' }, { status: 400 });
   }
   if (!paid) {

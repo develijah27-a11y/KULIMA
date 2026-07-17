@@ -6,8 +6,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { notifyUser } from '@/lib/notify';
+import { withApiLogging } from '@/lib/system-log';
 
-export async function PATCH(
+async function handlePATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -74,3 +75,5 @@ export async function PATCH(
 
   return NextResponse.json({ success: true });
 }
+
+export const PATCH = withApiLogging('/api/admin/listings/[id]', handlePATCH);

@@ -3,7 +3,7 @@ export default function FarmerDashboardLoading() {
     <div className="space-y-5 max-w-5xl mx-auto">
 
       {/* Weather card */}
-      <div className="dash-skeleton h-36 rounded-xl" />
+      <div className="dash-skeleton h-[420px] sm:h-36 rounded-xl" />
 
       {/* Quick stats (4) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -13,9 +13,12 @@ export default function FarmerDashboardLoading() {
       {/* AI recommendation */}
       <div className="dash-skeleton h-20 rounded-xl" />
 
+      {/* Delivery history */}
+      <div className="dash-skeleton h-[420px] rounded-xl" />
+
       {/* Market prices + Weather forecast (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <div className="dash-skeleton h-72 rounded-xl" />
+        <div className="dash-skeleton h-[440px] rounded-xl" />
         <div className="dash-skeleton h-72 rounded-xl" />
       </div>
 
@@ -32,7 +35,7 @@ export default function FarmerDashboardLoading() {
       <div className="dash-skeleton h-40 rounded-xl" />
 
       {/* Quick actions */}
-      <div className="dash-skeleton h-28 rounded-xl" />
+      <div className="dash-skeleton h-48 rounded-xl" />
 
     </div>
   );

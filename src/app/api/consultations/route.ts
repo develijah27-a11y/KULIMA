@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
 import { notifyUser } from '@/lib/notify';
+import { logSystemEvent } from '@/lib/system-log';
 
 // Platform defaults used only when a pathologist hasn't set their own rate —
 // pathologists can set remote_fee_ugx / visit_fee_ugx on their own profile.
@@ -116,6 +117,15 @@ export async function POST(req: Request) {
   });
   if (payErr) {
     console.error('[/api/consultations]', payErr);
+    logSystemEvent({
+      category: 'failed_payment',
+      level: 'error',
+      route: '/api/consultations',
+      method: 'POST',
+      userId: user.id,
+      message: `Consultation payment failed: ${payErr.message}`,
+      metadata: { type, feeUgx },
+    });
     return NextResponse.json({ error: payErr.message?.includes('Insufficient') ? payErr.message : 'Payment failed. Please try again.' }, { status: 400 });
   }
 

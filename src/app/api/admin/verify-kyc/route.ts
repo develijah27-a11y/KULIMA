@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
+import { withApiLogging } from '@/lib/system-log';
 
 const LEVEL_LABEL: Record<string, string> = { green: 'Green', blue: 'Blue', gold: 'Gold' };
 
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -98,3 +99,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ success: true });
 }
+
+export const POST = withApiLogging('/api/admin/verify-kyc', handlePOST);

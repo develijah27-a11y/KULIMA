@@ -5,6 +5,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { withApiLogging } from '@/lib/system-log';
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -15,7 +16,7 @@ async function requireAdmin() {
   return { user, status: 200 as const };
 }
 
-export async function GET(req: Request) {
+async function handleGET(req: Request) {
   const { user, status } = await requireAdmin();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status });
 
@@ -39,3 +40,5 @@ export async function GET(req: Request) {
   }
   return NextResponse.json({ data: data ?? [] });
 }
+
+export const GET = withApiLogging('/api/admin/listings', handleGET);

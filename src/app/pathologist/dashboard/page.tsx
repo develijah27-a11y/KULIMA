@@ -368,14 +368,14 @@ export default async function PathologistDashboardPage() {
       <QuickActions />
 
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-80 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[450px] rounded-xl" />}>
           <CaseQueue />
         </Suspense>
         <DiseaseAlertPanel />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-60 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[360px] rounded-xl" />}>
           <RecentScans />
         </Suspense>
         <OutbreakSummary />

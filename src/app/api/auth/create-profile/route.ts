@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { logSystemEvent, withApiLogging } from '@/lib/system-log';
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const { userId, fullName, phoneNumber, location } = await req.json().catch(() => ({}));
 
   if (!userId || !fullName) {
@@ -17,6 +18,15 @@ export async function POST(req: Request) {
   const authed = await createClient();
   const { data: { user } } = await authed.auth.getUser();
   if (!user || user.id !== userId) {
+    logSystemEvent({
+      category: 'auth_failure',
+      level: 'warn',
+      route: '/api/auth/create-profile',
+      method: 'POST',
+      userId: user?.id ?? null,
+      message: user ? `Session user did not match requested profile userId` : 'Unauthenticated create-profile attempt',
+      metadata: { requestedUserId: userId },
+    });
     return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -41,3 +51,5 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withApiLogging('/api/auth/create-profile', handlePOST);

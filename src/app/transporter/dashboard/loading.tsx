@@ -17,14 +17,14 @@ export default function Loading() {
       </div>
 
       {/* Quick Actions */}
-      <div className="dash-skeleton h-28 rounded-xl" />
+      <div className="dash-skeleton h-48 rounded-xl" />
 
       {/* Vehicle */}
       <div className="dash-skeleton h-24 rounded-xl" />
 
       {/* Open Jobs + Active Jobs (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <div className="dash-skeleton h-72 rounded-xl" />
+        <div className="dash-skeleton h-[480px] rounded-xl" />
         <div className="dash-skeleton h-72 rounded-xl" />
       </div>
 

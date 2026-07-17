@@ -17,15 +17,15 @@ export default function Loading() {
       </div>
 
       {/* Quick Actions */}
-      <div className="dash-skeleton h-28 rounded-xl" />
+      <div className="dash-skeleton h-48 rounded-xl" />
 
       {/* Season Banner */}
       <div className="dash-skeleton h-24 rounded-xl" />
 
       {/* Members + Listings (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <div className="dash-skeleton h-72 rounded-xl" />
-        <div className="dash-skeleton h-72 rounded-xl" />
+        <div className="dash-skeleton h-[450px] rounded-xl" />
+        <div className="dash-skeleton h-[320px] rounded-xl" />
       </div>
 
       {/* Finance + Setup Guide (2-col) */}

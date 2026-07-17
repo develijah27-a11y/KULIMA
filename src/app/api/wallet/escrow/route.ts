@@ -4,6 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { calcFare } from '@/lib/delivery-pricing';
 import { rateLimit } from '@/lib/rate-limit';
 import { sendPushToUsers } from '@/lib/push';
+import { logSystemEvent } from '@/lib/system-log';
 
 const admin = () => createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -122,6 +123,17 @@ export async function POST(req: Request) {
       });
       if (claimErr || !claimedId) {
         const alreadyFunded = claimErr?.message?.includes('already funded');
+        if (!alreadyFunded) {
+          logSystemEvent({
+            category: 'failed_payment',
+            level: 'error',
+            route: '/api/wallet/escrow',
+            method: 'POST',
+            userId: user.id,
+            message: `Escrow fund failed: ${claimErr?.message ?? 'claim_escrow_fund returned no id'}`,
+            metadata: { orderId, amount: totalAmount },
+          });
+        }
         return NextResponse.json({
           error: alreadyFunded ? 'Escrow already funded for this order' : (claimErr?.message ?? 'Failed to create escrow'),
         }, { status: alreadyFunded ? 409 : 500 });
@@ -145,7 +157,18 @@ export async function POST(req: Request) {
           description: `Escrow funded for offer`,
         }),
       ]);
-      if (escrowInsert.error) return NextResponse.json({ error: 'Failed to create escrow' }, { status: 500 });
+      if (escrowInsert.error) {
+        logSystemEvent({
+          category: 'failed_payment',
+          level: 'error',
+          route: '/api/wallet/escrow',
+          method: 'POST',
+          userId: user.id,
+          message: `Legacy offer escrow fund failed: ${escrowInsert.error.message}`,
+          metadata: { offerId, amount: totalAmount },
+        });
+        return NextResponse.json({ error: 'Failed to create escrow' }, { status: 500 });
+      }
       escrowId = escrowInsert.data.id;
     }
 

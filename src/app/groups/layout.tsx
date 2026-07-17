@@ -9,6 +9,7 @@ import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { DashboardFab } from '@/components/layout/DashboardFab';
+import { logSystemEvent } from '@/lib/system-log';
 
 const GROUPS_NAV = [
   { href: '/groups/dashboard',      icon: 'dashboard',    label: 'Dashboard' },
@@ -48,7 +49,10 @@ export default async function GroupsLayout({ children }: { children: React.React
   if (profileRes.data) {
     const userRoles: string[] = profileRes.data.roles ?? [];
     const primaryRole: string = (profileRes.data as any).role ?? '';
-    if (!userRoles.includes('groups') && primaryRole !== 'groups' && primaryRole !== 'admin') redirect('/dashboard');
+    if (!userRoles.includes('groups') && primaryRole !== 'groups' && primaryRole !== 'admin') {
+      logSystemEvent({ category: 'auth_failure', level: 'warn', route: '/groups', userId: user.id, message: 'Role mismatch: user without groups role attempted /groups' });
+      redirect('/dashboard');
+    }
 
     profile = { name: profileRes.data.full_name ?? 'Group Lead', role: 'Farmer Group' };
     location = profileRes.data.location ?? '';

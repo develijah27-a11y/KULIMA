@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rate-limit';
+import { logSystemEvent } from '@/lib/system-log';
 
 const FLW_BASE = 'https://api.flutterwave.com/v3';
 
@@ -100,6 +101,16 @@ export async function POST(req: Request) {
         failure_reason: flwData.message ?? 'Flutterwave charge failed',
       }).eq('id', momoReq.id);
 
+      logSystemEvent({
+        category: 'failed_payment',
+        level: 'warn',
+        route: '/api/wallet/deposit',
+        method: 'POST',
+        userId: user.id,
+        message: `Deposit charge failed: ${flwData.message ?? 'Flutterwave charge failed'}`,
+        metadata: { amount, provider },
+      });
+
       return NextResponse.json({ error: flwData.message ?? 'Payment initiation failed' }, { status: 400 });
     }
 
@@ -117,6 +128,16 @@ export async function POST(req: Request) {
       status: 'failed',
       failure_reason: 'Network error contacting payment provider',
     }).eq('id', momoReq.id);
+
+    logSystemEvent({
+      category: 'failed_payment',
+      level: 'error',
+      route: '/api/wallet/deposit',
+      method: 'POST',
+      userId: user.id,
+      message: err instanceof Error ? `Network error contacting Flutterwave: ${err.message}` : 'Network error contacting payment provider',
+      metadata: { amount, provider },
+    });
 
     return NextResponse.json({ error: 'Payment service unavailable' }, { status: 503 });
   }

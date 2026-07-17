@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { verifyPin, isValidPinFormat } from '@/lib/wallet-pin';
+import { logSystemEvent } from '@/lib/system-log';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -29,6 +30,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Too many incorrect PIN attempts. Please wait a few minutes.' }, { status: 429 });
   }
   if (!isValidPinFormat(pin) || !verifyPin(pin, (wallet as any).pin_hash)) {
+    logSystemEvent({
+      category: 'auth_failure',
+      level: 'warn',
+      route: '/api/wallet/transfer',
+      method: 'POST',
+      userId: user.id,
+      message: 'Incorrect wallet PIN on transfer attempt',
+    });
     return NextResponse.json({ error: 'Incorrect PIN', code: 'PIN_INCORRECT' }, { status: 403 });
   }
 
@@ -39,6 +48,15 @@ export async function POST(req: Request) {
   });
 
   if (error) {
+    logSystemEvent({
+      category: 'failed_payment',
+      level: 'warn',
+      route: '/api/wallet/transfer',
+      method: 'POST',
+      userId: user.id,
+      message: `Transfer failed: ${error.message}`,
+      metadata: { amount, accountNumber },
+    });
     // Postgres RAISE EXCEPTION messages from the function surface here —
     // they're already written to be shown to the sender (no internal ids/etc).
     return NextResponse.json({ error: error.message }, { status: 400 });

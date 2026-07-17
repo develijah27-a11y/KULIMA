@@ -17,17 +17,17 @@ export default function Loading() {
       </div>
 
       {/* Quick Actions */}
-      <div className="dash-skeleton h-28 rounded-xl" />
+      <div className="dash-skeleton h-48 rounded-xl" />
 
       {/* Case Queue + Disease Alerts (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <div className="dash-skeleton h-80 rounded-xl" />
+        <div className="dash-skeleton h-[450px] rounded-xl" />
         <div className="dash-skeleton h-80 rounded-xl" />
       </div>
 
       {/* Recent Scans + Outbreak Map (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <div className="dash-skeleton h-60 rounded-xl" />
+        <div className="dash-skeleton h-[360px] rounded-xl" />
         <div className="dash-skeleton h-60 rounded-xl" />
       </div>
 

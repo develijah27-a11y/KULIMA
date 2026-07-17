@@ -50,6 +50,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   members: 'Members',
   favourites: 'Saved Items',
   'audit-logs': 'Audit Logs',
+  logs: 'System Logs',
   commission: 'Commission',
   users: 'Users',
   verify: 'Get Verified',

@@ -9,6 +9,7 @@ import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { DashboardFab } from '@/components/layout/DashboardFab';
+import { logSystemEvent } from '@/lib/system-log';
 
 const OFFTAKER_NAV = [
   { href: '/offtaker/dashboard',    icon: 'dashboard',    label: 'Dashboard' },
@@ -50,7 +51,10 @@ export default async function OfftakerLayout({ children }: { children: React.Rea
   if (profileRes.data) {
     const userRoles: string[] = profileRes.data.roles ?? [];
     const primaryRole: string = (profileRes.data as any).role ?? '';
-    if (!userRoles.includes('offtaker') && primaryRole !== 'offtaker' && primaryRole !== 'admin') redirect('/dashboard');
+    if (!userRoles.includes('offtaker') && primaryRole !== 'offtaker' && primaryRole !== 'admin') {
+      logSystemEvent({ category: 'auth_failure', level: 'warn', route: '/offtaker', userId: user.id, message: 'Role mismatch: user without offtaker role attempted /offtaker' });
+      redirect('/dashboard');
+    }
 
     profile = { name: profileRes.data.full_name ?? 'Buyer', role: 'Bulk Buyer' };
     location = profileRes.data.location ?? '';

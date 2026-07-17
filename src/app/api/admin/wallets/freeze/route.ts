@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
+import { withApiLogging } from '@/lib/system-log';
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -36,13 +37,20 @@ export async function POST(req: Request) {
     data: { admin_action: frozen ? 'freeze' : 'unfreeze' },
   });
 
-  await (supabase.from as any)('audit_logs').insert({
+  // Column names here previously didn't match the audit_logs schema
+  // (table_name/record_id/new_data vs. the actual resource_type/resource_id/
+  // metadata columns), so every freeze/unfreeze silently failed to write an
+  // audit row — the insert error was never checked, so nothing surfaced it.
+  const { error: auditErr } = await (supabase.from as any)('audit_logs').insert({
     user_id: user.id,
     action: frozen ? 'wallet_frozen' : 'wallet_unfrozen',
-    table_name: 'wallets',
-    record_id: wallet.id,
-    new_data: { user_id: userId, is_frozen: frozen, reason: reason ?? null },
+    resource_type: 'wallets',
+    resource_id: wallet.id,
+    metadata: { user_id: userId, is_frozen: frozen, reason: reason ?? null },
   });
+  if (auditErr) console.error('[/api/admin/wallets/freeze] audit_logs insert failed:', auditErr);
 
   return NextResponse.json({ success: true });
 }
+
+export const POST = withApiLogging('/api/admin/wallets/freeze', handlePOST);

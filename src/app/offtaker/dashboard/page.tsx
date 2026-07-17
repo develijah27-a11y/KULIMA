@@ -388,15 +388,15 @@ export default async function OfftakerDashboardPage() {
       </Suspense>
 
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[390px] rounded-xl" />}>
           <ActiveContracts userId={userId} />
         </Suspense>
-        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[400px] rounded-xl" />}>
           <AvailableSupply />
         </Suspense>
       </div>
 
-      <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
+      <Suspense fallback={<div className="dash-skeleton h-[340px] rounded-xl" />}>
         <SupplierScorecard userId={userId} />
       </Suspense>
 

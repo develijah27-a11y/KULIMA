@@ -5,7 +5,7 @@ import Link from 'next/link';
 import {
   Users, TrendingUp, Package, DollarSign, AlertTriangle, CheckCircle2,
   Building2, MessageCircle, Microscope, Truck, ShoppingCart, BarChart3,
-  Bell, ShieldCheck, CreditCard,
+  Bell, ShieldCheck, CreditCard, Activity,
 } from 'lucide-react';
 
 const C = {
@@ -533,6 +533,58 @@ async function SystemHealth() {
   );
 }
 
+// ─── Recent System Errors ──────────────────────────────────────────────────────
+// Pulls from system_logs (src/lib/system-log.ts) — errors, failed payments,
+// and auth failures from instrumented routes. Separate from the audit_logs-
+// driven "Pending Actions"/business widgets above: this is operational
+// health, not business state.
+async function RecentErrors() {
+  const supabase = await createClient();
+  const { data: logs, error } = await (supabase.from as any)('system_logs')
+    .select('id, category, route, message, created_at')
+    .in('category', ['error', 'failed_payment', 'auth_failure'])
+    .order('created_at', { ascending: false })
+    .limit(6);
+
+  if (error) return null; // migration not applied yet — fail quiet, not visible to admins as a false alarm
+
+  const rows = logs ?? [];
+  const CAT_LABEL: Record<string, string> = { error: 'Error', failed_payment: 'Payment', auth_failure: 'Auth' };
+
+  return (
+    <Card>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <div>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Recent System Errors</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Errors, failed payments &amp; auth failures</p>
+        </div>
+        <Link href="/admin/logs" className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
+      </div>
+      {rows.length === 0 ? (
+        <div className="px-5 py-8 text-center">
+          <CheckCircle2 size={28} style={{ margin: '0 auto 8px', color: 'var(--color-success)' }} />
+          <p className="text-sm" style={{ color: C.muted }}>No errors logged recently</p>
+        </div>
+      ) : (
+        <div className="divide-y" style={{ borderColor: C.border }}>
+          {rows.map((log: any) => (
+            <div key={log.id} className="px-5 py-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ background: 'var(--color-danger-bg)', color: C.red }}>
+                  {CAT_LABEL[log.category] ?? log.category}
+                </span>
+                <span className="text-[10px] shrink-0" style={{ color: C.muted }}>{timeAgo(log.created_at)}</span>
+              </div>
+              <p className="text-xs mt-1 truncate" style={{ color: C.text }} title={log.message}>{log.message}</p>
+              {log.route && <p className="text-[10px] mt-0.5" style={{ color: C.muted, fontFamily: 'monospace' }}>{log.route}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // ─── Admin Quick Actions ───────────────────────────────────────────────────────
 function AdminTools() {
   const tools = [
@@ -545,6 +597,7 @@ function AdminTools() {
     { href: '/admin/analytics',    icon: <TrendingUp size={20} />,   label: 'Analytics',      sub: 'Growth, revenue & trends',         bg: 'var(--color-cyan-bg)',       color: 'var(--color-cyan)' },
     { href: '/admin/commission',   icon: <CreditCard size={20} />,   label: 'Platform Wallet', sub: 'Commission balance & account no.', bg: 'var(--color-primary-bg)',    color: C.green   },
     { href: '/admin/disease-reports', icon: <Microscope size={20} />, label: 'Disease Reports', sub: 'Assign & track crop cases',       bg: 'var(--color-warning-bg)',    color: 'var(--color-warning)' },
+    { href: '/admin/logs',         icon: <Activity size={20} />,     label: 'System Logs',    sub: 'Errors, payments & performance',  bg: 'var(--color-danger-bg)',     color: C.red },
   ];
 
   return (
@@ -612,7 +665,7 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="dash-skeleton h-16 rounded-xl" />}>
         <AlertBanner />
       </Suspense>
 
@@ -633,7 +686,7 @@ export default async function AdminDashboardPage() {
 
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2">
-          <Suspense fallback={<div className="dash-skeleton h-80 rounded-xl" />}>
+          <Suspense fallback={<div className="dash-skeleton h-[560px] rounded-xl" />}>
             <RecentRegistrations />
           </Suspense>
         </div>
@@ -646,7 +699,7 @@ export default async function AdminDashboardPage() {
 
       <div className="grid lg:grid-cols-5 gap-5">
         <div className="lg:col-span-3">
-          <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+          <Suspense fallback={<div className="dash-skeleton h-[480px] rounded-xl" />}>
             <MarketplaceActivity />
           </Suspense>
         </div>
@@ -657,12 +710,15 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-5">
+      <div className="grid lg:grid-cols-3 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-56 rounded-xl" />}>
           <MarketPriceSummary />
         </Suspense>
         <Suspense fallback={<div className="dash-skeleton h-56 rounded-xl" />}>
           <SystemHealth />
+        </Suspense>
+        <Suspense fallback={<div className="dash-skeleton h-56 rounded-xl" />}>
+          <RecentErrors />
         </Suspense>
       </div>
 

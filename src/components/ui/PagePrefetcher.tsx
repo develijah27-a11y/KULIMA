@@ -51,6 +51,7 @@ const ROUTES_BY_ROLE: Record<string, string[]> = {
     '/admin/alert',
     '/admin/analytics',
     '/admin/audit-logs',
+    '/admin/logs',
   ],
   supplier: [
     '/supplier/dashboard',

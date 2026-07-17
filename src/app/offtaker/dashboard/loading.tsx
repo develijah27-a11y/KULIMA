@@ -17,19 +17,19 @@ export default function Loading() {
       </div>
 
       {/* Quick Actions */}
-      <div className="dash-skeleton h-28 rounded-xl" />
+      <div className="dash-skeleton h-48 rounded-xl" />
 
       {/* Market Intelligence */}
       <div className="dash-skeleton h-36 rounded-xl" />
 
       {/* Active Contracts + Available Supply (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <div className="dash-skeleton h-72 rounded-xl" />
-        <div className="dash-skeleton h-72 rounded-xl" />
+        <div className="dash-skeleton h-[390px] rounded-xl" />
+        <div className="dash-skeleton h-[400px] rounded-xl" />
       </div>
 
       {/* Supplier Scorecard */}
-      <div className="dash-skeleton h-48 rounded-xl" />
+      <div className="dash-skeleton h-[340px] rounded-xl" />
 
     </div>
   );

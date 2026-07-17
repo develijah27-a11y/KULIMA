@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { withApiLogging } from '@/lib/system-log';
 
 const DOC_COLUMNS = [
   'national_id_url', 'selfie_url', 'business_reg_url',
@@ -11,7 +12,7 @@ const DOC_COLUMNS = [
 // be read directly from the verifications table anymore (those columns now
 // hold storage paths, not public URLs). This mints short-lived signed URLs
 // on demand instead of ever exposing a permanent public link.
-export async function POST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -44,3 +45,5 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ urls });
 }
+
+export const POST = withApiLogging('/api/admin/kyc-signed-url', handlePOST);

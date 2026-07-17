@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { withApiLogging } from '@/lib/system-log';
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -19,7 +20,7 @@ async function requireAdmin() {
   return { user, error: null, status: 200 };
 }
 
-export async function GET() {
+async function handleGET() {
   const { user, error, status } = await requireAdmin();
   if (!user) return NextResponse.json({ error }, { status });
 
@@ -60,7 +61,7 @@ export async function GET() {
   });
 }
 
-export async function PUT(req: Request) {
+async function handlePUT(req: Request) {
   const { user, error, status } = await requireAdmin();
   if (!user) return NextResponse.json({ error }, { status });
 
@@ -110,3 +111,6 @@ export async function PUT(req: Request) {
 
   return NextResponse.json({ success: true, data });
 }
+
+export const GET = withApiLogging('/api/admin/commission', handleGET);
+export const PUT = withApiLogging('/api/admin/commission', handlePUT);

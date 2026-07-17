@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { logSystemEvent } from '@/lib/system-log';
 
 export async function POST(req: Request) {
   const signature = req.headers.get('verif-hash') ?? '';
   const secret    = process.env.FLUTTERWAVE_WEBHOOK_SECRET;
-  if (!secret || signature !== secret) return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+  if (!secret || signature !== secret) {
+    logSystemEvent({
+      category: 'auth_failure',
+      level: 'error',
+      route: '/api/webhooks/flutterwave',
+      method: 'POST',
+      message: secret ? 'Flutterwave webhook signature mismatch' : 'FLUTTERWAVE_WEBHOOK_SECRET not configured',
+    });
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+  }
 
   const body  = await req.json();
   const event = body.event;
@@ -58,6 +68,17 @@ export async function POST(req: Request) {
       status,
       updated_at: new Date().toISOString(),
     }).eq('flutterwave_ref', txRef);
+
+    if (status === 'failed') {
+      logSystemEvent({
+        category: 'failed_payment',
+        level: 'error',
+        route: '/api/webhooks/flutterwave',
+        method: 'POST',
+        message: `Withdrawal transfer reported failed by Flutterwave: ${data?.complete_message ?? data?.status}`,
+        metadata: { txRef },
+      });
+    }
   }
 
   return NextResponse.json({ received: true });

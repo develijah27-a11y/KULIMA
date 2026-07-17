@@ -9,6 +9,7 @@ import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { DashboardFab } from '@/components/layout/DashboardFab';
+import { logSystemEvent } from '@/lib/system-log';
 
 const PATHOLOGIST_NAV = [
   { href: '/pathologist/dashboard',       icon: 'dashboard',      label: 'Dashboard' },
@@ -49,7 +50,10 @@ export default async function PathologistLayout({ children }: { children: React.
   if (profileRes.data) {
     const userRoles: string[] = profileRes.data.roles ?? [];
     const primaryRole: string = (profileRes.data as any).role ?? '';
-    if (!userRoles.includes('pathologist') && primaryRole !== 'pathologist' && primaryRole !== 'admin') redirect('/dashboard');
+    if (!userRoles.includes('pathologist') && primaryRole !== 'pathologist' && primaryRole !== 'admin') {
+      logSystemEvent({ category: 'auth_failure', level: 'warn', route: '/pathologist', userId: user.id, message: 'Role mismatch: user without pathologist role attempted /pathologist' });
+      redirect('/dashboard');
+    }
 
     profile = { name: profileRes.data.full_name ?? 'Crop Doctor', role: 'Crop Doctor' };
     location = profileRes.data.location ?? '';

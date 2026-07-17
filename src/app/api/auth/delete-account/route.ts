@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { withApiLogging } from '@/lib/system-log';
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,3 +30,5 @@ export async function POST(request: NextRequest) {
 
   return response;
 }
+
+export const POST = withApiLogging('/api/auth/delete-account', handlePOST);

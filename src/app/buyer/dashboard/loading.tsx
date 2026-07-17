@@ -16,7 +16,7 @@ export default function BuyerDashboardLoading() {
       </div>
 
       {/* Quick Actions */}
-      <div className="dash-skeleton h-28 rounded-xl" />
+      <div className="dash-skeleton h-48 rounded-xl" />
 
       {/* Active Offers + Recent Deliveries */}
       <div className="grid lg:grid-cols-2 gap-5">

@@ -7,6 +7,7 @@ import { MobileSidebarDrawer } from '@/components/layout/MobileSidebarDrawer';
 import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
+import { logSystemEvent } from '@/lib/system-log';
 
 const ADMIN_NAV = [
   { href: '/admin/dashboard',    icon: 'dashboard',    label: 'Overview' },
@@ -24,6 +25,7 @@ const ADMIN_NAV = [
   { href: '/admin/alert',        icon: 'notifications',label: 'Alerts' },
   { href: '/admin/analytics',    icon: 'analytics',    label: 'Analytics',  divider: true, sectionLabel: 'Reports' },
   { href: '/admin/audit-logs',   icon: 'history',      label: 'Audit Logs' },
+  { href: '/admin/logs',         icon: 'system-logs',  label: 'System Logs' },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -39,7 +41,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .single();
 
   // Hard block — only role='admin' may enter any /admin route
-  if ((data as any)?.role !== 'admin') redirect('/dashboard');
+  if ((data as any)?.role !== 'admin') {
+    logSystemEvent({ category: 'auth_failure', level: 'error', route: '/admin', userId: user.id, message: 'Non-admin user attempted to access /admin' });
+    redirect('/dashboard');
+  }
 
   let profile: { name: string; role: string } | null = null;
   let location = '';

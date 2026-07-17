@@ -9,6 +9,7 @@ import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { DashboardFab } from '@/components/layout/DashboardFab';
+import { logSystemEvent } from '@/lib/system-log';
 
 const TRANSPORTER_NAV = [
   { href: '/transporter/dashboard',  icon: 'dashboard',    label: 'Dashboard' },
@@ -45,7 +46,10 @@ export default async function TransporterLayout({ children }: { children: React.
   if (profileRes.data) {
     const userRoles: string[] = profileRes.data.roles ?? [];
     const primaryRole: string = (profileRes.data as any).role ?? '';
-    if (!userRoles.includes('transporter') && primaryRole !== 'transporter' && primaryRole !== 'admin') redirect('/dashboard');
+    if (!userRoles.includes('transporter') && primaryRole !== 'transporter' && primaryRole !== 'admin') {
+      logSystemEvent({ category: 'auth_failure', level: 'warn', route: '/transporter', userId: user.id, message: 'Role mismatch: user without transporter role attempted /transporter' });
+      redirect('/dashboard');
+    }
 
     profile = { name: profileRes.data.full_name ?? 'Driver', role: 'Delivery Agent' };
     location = profileRes.data.location ?? '';

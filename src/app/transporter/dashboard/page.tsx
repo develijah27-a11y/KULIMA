@@ -323,17 +323,23 @@ async function MyActiveJobs({ userId }: { userId: string }) {
     .order('accepted_at', { ascending: false });
 
   const rows = (deliveries ?? []) as any[];
-  if (rows.length === 0) return null;
 
   return (
     <Card>
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
           <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>My Active Jobs</p>
-          <p className="text-xs mt-0.5" style={{ color: C.muted }}>{rows.length} job{rows.length !== 1 ? 's' : ''} in progress</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>{rows.length > 0 ? `${rows.length} job${rows.length !== 1 ? 's' : ''} in progress` : 'Nothing in progress right now'}</p>
         </div>
         <Link href="/transporter/active" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Manage →</Link>
       </div>
+      {rows.length === 0 ? (
+        <div className="px-5 py-10 text-center">
+          <Truck size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No active jobs</p>
+          <p className="text-xs mt-1" style={{ color: C.muted }}>Accept a job from the open jobs list to get moving</p>
+        </div>
+      ) : (
       <div className="divide-y" style={{ borderColor: C.border }}>
         {rows.map((d: any) => {
           const cfg = STATUS_CFG[d.status] ?? STATUS_CFG.assigned;
@@ -362,6 +368,7 @@ async function MyActiveJobs({ userId }: { userId: string }) {
           );
         })}
       </div>
+      )}
     </Card>
   );
 }
@@ -378,7 +385,6 @@ async function EarningsHistory({ userId }: { userId: string }) {
     .limit(5);
 
   const rows = (recent ?? []) as any[];
-  if (rows.length === 0) return null;
 
   const paidTotal = rows.filter((d: any) => d.payment_status === 'paid').reduce((s: number, d: any) => s + (d.driver_earnings ?? 0), 0);
 
@@ -387,12 +393,19 @@ async function EarningsHistory({ userId }: { userId: string }) {
       <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
         <div>
           <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Recent Earnings</p>
-          <p className="text-xs mt-0.5" style={{ color: C.green, fontWeight: 700 }}>
-            UGX {Math.round(paidTotal).toLocaleString()} received
+          <p className="text-xs mt-0.5" style={{ color: rows.length > 0 ? C.green : C.muted, fontWeight: rows.length > 0 ? 700 : 400 }}>
+            {rows.length > 0 ? `UGX ${Math.round(paidTotal).toLocaleString()} received` : 'No earnings yet'}
           </p>
         </div>
         <Link href="/transporter/wallet" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Full history →</Link>
       </div>
+      {rows.length === 0 ? (
+        <div className="px-5 py-10 text-center">
+          <DollarSign size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No completed deliveries yet</p>
+          <p className="text-xs mt-1" style={{ color: C.muted }}>Your earnings will show up here after your first completed job</p>
+        </div>
+      ) : (
       <div className="divide-y" style={{ borderColor: C.border }}>
         {rows.map((d: any) => {
           const typeIcon = TYPE_ICON[d.delivery_type ?? 'standard'] ?? TYPE_ICON.standard;
@@ -429,6 +442,7 @@ async function EarningsHistory({ userId }: { userId: string }) {
           );
         })}
       </div>
+      )}
     </Card>
   );
 }
@@ -489,7 +503,7 @@ export default async function TransporterDashboard() {
 
       {/* Open Jobs + Active Jobs (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[480px] rounded-xl" />}>
           <OpenJobs userId={userId} />
         </Suspense>
         <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>

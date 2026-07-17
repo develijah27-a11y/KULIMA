@@ -414,10 +414,10 @@ export default async function GroupsDashboardPage() {
       </Suspense>
 
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[450px] rounded-xl" />}>
           <MembersList userId={userId} />
         </Suspense>
-        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+        <Suspense fallback={<div className="dash-skeleton h-[320px] rounded-xl" />}>
           <GroupListings userId={userId} />
         </Suspense>
       </div>

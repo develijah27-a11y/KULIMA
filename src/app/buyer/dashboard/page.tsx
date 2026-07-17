@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import {
   ShoppingBag, MessageCircle, CheckCircle2, CreditCard, Package,
-  Truck, Snowflake, Zap, DollarSign, Leaf, Clock, RefreshCw,
+  Truck, Snowflake, Zap, DollarSign, Leaf, Clock, RefreshCw, BarChart3,
 } from 'lucide-react';
 import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
@@ -215,7 +215,6 @@ async function RecentDeliveries({ userId }: { userId: string }) {
     .limit(4);
 
   const rows = (deliveries ?? []) as any[];
-  if (rows.length === 0) return null;
 
   const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
     open:       { label: 'Finding Driver',  color: C.amber,  bg: 'var(--color-harvest-bg)' },
@@ -234,6 +233,13 @@ async function RecentDeliveries({ userId }: { userId: string }) {
         </div>
         <Link href="/buyer/deliveries" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>View all →</Link>
       </div>
+      {rows.length === 0 ? (
+        <div className="px-5 py-10 text-center">
+          <Truck size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No deliveries yet</p>
+          <p className="text-xs mt-1" style={{ color: C.muted }}>Deliveries will appear here once a seller books transport for your order</p>
+        </div>
+      ) : (
       <div className="divide-y" style={{ borderColor: C.border }}>
         {rows.map((d: any) => {
           const cfg = STATUS_CFG[d.status] ?? STATUS_CFG.open;
@@ -262,6 +268,7 @@ async function RecentDeliveries({ userId }: { userId: string }) {
           );
         })}
       </div>
+      )}
     </Card>
   );
 }
@@ -336,7 +343,6 @@ async function MarketPulse() {
   const supabase = await createClient();
   const { data: prices } = await supabase.from('market_prices').select('crop_type, price_per_kg').order('recorded_at', { ascending: false }).limit(40);
   const rows = prices ?? [];
-  if (rows.length === 0) return null;
 
   const groups: Record<string, number[]> = {};
   rows.forEach((p: any) => {
@@ -360,6 +366,12 @@ async function MarketPulse() {
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Market Pulse</p>
         <Link href="/buyer/listings" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Browse market →</Link>
       </div>
+      {pulse.length === 0 ? (
+        <div className="px-5 py-10 text-center">
+          <BarChart3 size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
+          <p className="text-sm font-medium" style={{ color: C.muted }}>No price data yet</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-2 gap-3 p-4">
         {pulse.map(({ crop, avg, trend }) => {
           const color = COLORS[crop] ?? C.greenMed;
@@ -391,6 +403,7 @@ async function MarketPulse() {
           );
         })}
       </div>
+      )}
     </Card>
   );
 }
@@ -500,7 +513,7 @@ export default async function BuyerDashboardPage() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="dash-skeleton h-16 rounded-xl" />}>
         <VerifyPrompt userId={userId} />
       </Suspense>
 
@@ -526,7 +539,7 @@ export default async function BuyerDashboardPage() {
 
       <QuickActions />
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
         <SpendingSummary userId={userId} />
       </Suspense>
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { releaseEscrowForOrder, refundEscrowForOrder } from '@/lib/orders/escrow';
 import { notifyUsers } from '@/lib/notify';
+import { withApiLogging, logSystemEvent } from '@/lib/system-log';
 
 const ACTION_MAP: Record<string, { status: string; extraFields?: Record<string, unknown> }> = {
   review:  { status: 'under_review' },
@@ -9,7 +10,7 @@ const ACTION_MAP: Record<string, { status: string; extraFields?: Record<string, 
   close:   { status: 'closed' },
 };
 
-export async function PATCH(req: Request) {
+async function handlePATCH(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -41,7 +42,18 @@ export async function PATCH(req: Request) {
       ? await refundEscrowForOrder(admin as any, dispute.order_id, 'disputed')
       : await releaseEscrowForOrder(admin as any, dispute.order_id);
 
-    if (!result.ok) return NextResponse.json({ error: result.error ?? 'Failed to settle order' }, { status: 500 });
+    if (!result.ok) {
+      logSystemEvent({
+        category: 'failed_payment',
+        level: 'error',
+        route: '/api/admin/disputes',
+        method: 'PATCH',
+        userId: user.id,
+        message: `Dispute settlement failed: ${result.error ?? 'unknown error'}`,
+        metadata: { disputeId: id, orderId: dispute.order_id, outcome },
+      });
+      return NextResponse.json({ error: result.error ?? 'Failed to settle order' }, { status: 500 });
+    }
 
     if (outcome === 'refund_buyer') {
       await (admin.from as any)('orders').update({
@@ -99,3 +111,5 @@ export async function PATCH(req: Request) {
   }
   return NextResponse.json({ success: true, status: transition.status });
 }
+
+export const PATCH = withApiLogging('/api/admin/disputes', handlePATCH);

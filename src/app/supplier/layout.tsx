@@ -9,6 +9,7 @@ import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { DashboardFab } from '@/components/layout/DashboardFab';
+import { logSystemEvent } from '@/lib/system-log';
 
 const SUPPLIER_NAV = [
   { href: '/supplier/dashboard',   icon: 'dashboard',    label: 'Dashboard' },
@@ -47,7 +48,10 @@ export default async function SupplierLayout({ children }: { children: React.Rea
   if (profileRes.data) {
     const userRoles: string[] = profileRes.data.roles ?? [];
     const primaryRole: string = (profileRes.data as any).role ?? '';
-    if (!userRoles.includes('supplier') && primaryRole !== 'supplier' && primaryRole !== 'admin') redirect('/dashboard');
+    if (!userRoles.includes('supplier') && primaryRole !== 'supplier' && primaryRole !== 'admin') {
+      logSystemEvent({ category: 'auth_failure', level: 'warn', route: '/supplier', userId: user.id, message: 'Role mismatch: user without supplier role attempted /supplier' });
+      redirect('/dashboard');
+    }
 
     profile = { name: profileRes.data.full_name ?? 'Agro-dealer', role: 'Agro-dealer' };
     location = profileRes.data.location ?? '';

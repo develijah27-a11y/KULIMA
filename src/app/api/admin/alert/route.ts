@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
 import { notifyUsers } from '@/lib/notify';
+import { withApiLogging } from '@/lib/system-log';
 
 const VALID_TYPES = ['rain', 'price', 'pest', 'offer', 'loan', 'system', 'delivery'] as const;
 const VALID_ROLES = ['farmer', 'buyer', 'transporter', 'supplier', 'pathologist', 'offtaker', 'groups'] as const;
 
-export async function POST(req: Request) {
+async function handlePOST(req: Request) {
   // Auth: must be admin
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -81,3 +82,5 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ sent: totalSent });
 }
+
+export const POST = withApiLogging('/api/admin/alert', handlePOST);

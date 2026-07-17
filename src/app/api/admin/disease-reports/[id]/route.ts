@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
+import { withApiLogging } from '@/lib/system-log';
 
 const STATUS_MSG: Record<string, string> = {
   assigned:  'A crop pathologist has been assigned to your case.',
@@ -19,7 +20,7 @@ async function requireAdmin() {
 
 const VALID_STATUSES = ['reported', 'assigned', 'diagnosed', 'closed'];
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+async function handlePATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdmin();
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
@@ -62,3 +63,5 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   return NextResponse.json({ success: true });
 }
+
+export const PATCH = withApiLogging('/api/admin/disease-reports/[id]', handlePATCH);
