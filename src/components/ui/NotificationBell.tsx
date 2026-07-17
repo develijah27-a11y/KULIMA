@@ -145,7 +145,7 @@ export function NotificationBell({ initialUnreadCount = 0, currentRole }: Notifi
     if (loaded) return;
     try {
       const url = currentRole ? `/api/notifications?role=${encodeURIComponent(currentRole)}` : '/api/notifications';
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) return;
       const json = await res.json();
       const items: Notification[] = (json.data ?? []).map((n: ApiNotif) => ({

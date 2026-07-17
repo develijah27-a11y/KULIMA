@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { CheckCircle2, X, Truck, Zap, Snowflake, MapPin, Calendar, Map } from 'lucide-react';
 
 const C = {
@@ -54,6 +55,7 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
 }
 
 function JobCard({ job, onAccepted }: { job: Job; onAccepted: (id: string) => void }) {
+  const router = useRouter();
   const [pending, startT] = useTransition();
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const meta = TYPE_META[job.delivery_type ?? 'standard'] ?? TYPE_META.standard;
@@ -69,6 +71,11 @@ function JobCard({ job, onAccepted }: { job: Job; onAccepted: (id: string) => vo
       const json = await res.json();
       if (json.success) {
         showToast('Job accepted! Check your active deliveries.', true);
+        // /transporter/active is server-rendered and may already be sitting
+        // in the router cache (prefetched by the sidebar link) with the
+        // pre-accept state — refresh() invalidates that cache so it shows
+        // the newly-accepted job instead of appearing to have "lost" it.
+        router.refresh();
         setTimeout(() => onAccepted(job.id), 1500);
       } else {
         showToast(json.error ?? 'Failed to accept job', false);

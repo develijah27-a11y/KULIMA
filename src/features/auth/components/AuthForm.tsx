@@ -84,6 +84,13 @@ export function AuthForm({ mode }: AuthFormProps) {
     setNeedsConfirmation(false);
     setResent(false);
 
+    // Set once a successful path is about to navigate away, so `finally`
+    // doesn't flip the button back to "Sign in" mid-redirect — that reset,
+    // combined with sign-in depending solely on the async onAuthStateChange
+    // listener below to redirect, is what let a slow/missed SIGNED_IN event
+    // make it look like sign-in "just stops" with no error and no redirect.
+    let navigatingAway = false;
+
     try {
       if (mode === 'signup') {
         isSigningUpRef.current = true;
@@ -134,6 +141,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               location: location || null,
             }),
           }).catch(() => {});
+          navigatingAway = true;
           router.push('/dashboard');
           router.refresh();
           return;
@@ -148,12 +156,22 @@ export function AuthForm({ mode }: AuthFormProps) {
         setNeedsConfirmation(true);
       } else {
         // ── Sign in ──────────────────────────────────────────────────────────
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (signInError) throw signInError;
-        // onAuthStateChange fires SIGNED_IN → router.push('/dashboard')
+        // Redirect immediately — signInWithPassword resolving with a session
+        // and no error IS success, full stop. The onAuthStateChange listener
+        // above also fires SIGNED_IN and redirects, but that's now a backup,
+        // not the only path: waiting on it exclusively meant a delayed or
+        // missed event left the user signed in with a stuck sign-in form.
+        if (data.session) {
+          navigatingAway = true;
+          fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
+          router.push('/dashboard');
+          router.refresh();
+        }
       }
     } catch (err: unknown) {
       isSigningUpRef.current = false;
@@ -177,7 +195,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         setError(msg);
       }
     } finally {
-      setLoading(false);
+      if (!navigatingAway) setLoading(false);
       submitLockRef.current = false;
     }
   };

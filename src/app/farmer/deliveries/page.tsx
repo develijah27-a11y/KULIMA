@@ -1,10 +1,11 @@
 import type { JSX, ReactNode } from 'react';
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Search, Car, Truck, Package, X as XIcon, Zap, Snowflake, User, CheckCircle2 } from 'lucide-react';
 import { PayDeliveryButton } from '@/app/buyer/deliveries/PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
+import { TrackDeliveryButton } from '@/components/delivery/TrackDeliveryButton';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -35,7 +36,7 @@ export default async function FarmerDeliveriesPage() {
     .select(`
       id, pickup_district, pickup_location, dropoff_district, dropoff_location,
       cargo_kg, cargo_type, delivery_type, estimated_fare, distance_km,
-      driver_earnings, status, payment_status, pickup_date, created_at,
+      driver_earnings, status, payment_status, pickup_date, created_at, transporter_id,
       transporter:profiles!delivery_requests_transporter_profile_fkey(full_name, phone_number)
     `)
     .eq('requester_id', user.id)
@@ -44,6 +45,35 @@ export default async function FarmerDeliveriesPage() {
     .limit(50);
 
   const rows = deliveries ?? [];
+
+  // vehicles has no direct FK to delivery_requests (both reference
+  // auth.users independently), so it can't be embedded in the query above —
+  // fetch separately and join in memory by transporter user_id.
+  const transporterIds = [...new Set(rows.map((d: any) => d.transporter_id).filter(Boolean))];
+  const { data: vehicleRows } = transporterIds.length
+    ? await (supabase.from as any)('vehicles')
+        .select('user_id, vehicle_type, plate_number, make_model, is_cold_capable')
+        .in('user_id', transporterIds)
+    : { data: [] };
+  const vehicleByUser = new Map((vehicleRows ?? []).map((v: any) => [v.user_id, v]));
+
+  // Selfie photos live in the private kyc-documents bucket — mint short-lived
+  // signed URLs server-side, scoped to only the drivers actually assigned to
+  // one of THIS farmer's own deliveries.
+  const photoByUser = new Map<string, string>();
+  if (transporterIds.length) {
+    const service = createServiceRoleClient();
+    const { data: verificationRows } = await (service.from as any)('verifications')
+      .select('user_id, selfie_url')
+      .in('user_id', transporterIds)
+      .eq('role', 'transporter')
+      .eq('status', 'approved')
+      .not('selfie_url', 'is', null);
+    await Promise.all((verificationRows ?? []).map(async (v: any) => {
+      const { data: signed } = await service.storage.from('kyc-documents').createSignedUrl(v.selfie_url, 3600);
+      if (signed?.signedUrl) photoByUser.set(v.user_id, signed.signedUrl);
+    }));
+  }
 
   const active    = rows.filter((d: any) => ['open', 'assigned', 'in_transit'].includes(d.status));
   const delivered = rows.filter((d: any) => d.status === 'delivered');
@@ -80,13 +110,13 @@ export default async function FarmerDeliveriesPage() {
 
       {active.length > 0 && (
         <Section title="Active" count={active.length}>
-          {active.map((d: any) => <DeliveryRow key={d.id} d={d} />)}
+          {active.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} photoUrl={photoByUser.get(d.transporter_id)} />)}
         </Section>
       )}
 
       {delivered.length > 0 && (
         <Section title="Delivered — Payment Due" count={delivered.length} highlight>
-          {delivered.map((d: any) => <DeliveryRow key={d.id} d={d} showPay />)}
+          {delivered.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} photoUrl={photoByUser.get(d.transporter_id)} showPay />)}
         </Section>
       )}
 
@@ -117,10 +147,11 @@ function Section({ title, count, highlight, children }: { title: string; count: 
   );
 }
 
-function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
+function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any; photoUrl?: string; showPay?: boolean }) {
   const st   = STATUS_CFG[d.status] ?? STATUS_CFG.open;
   const tm   = TYPE_META[d.delivery_type] ?? TYPE_META.standard;
   const paid = d.payment_status === 'paid';
+  const canTrack = ['assigned', 'in_transit'].includes(d.status) && d.transporter;
 
   return (
     <div style={{ padding: '15px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -146,17 +177,35 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
         {d.transporter && (
           <p style={{ fontSize: 11, color: C.muted, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
             <User size={10} /> Driver: {d.transporter.full_name ?? 'Assigned'}
-            {d.transporter.phone_number && ` · ${d.transporter.phone_number}`}
+            {d.transporter.phone_number && (
+              <> · <a href={`tel:${d.transporter.phone_number}`} style={{ color: C.green, fontWeight: 700, textDecoration: 'none' }}>{d.transporter.phone_number}</a></>
+            )}
           </p>
         )}
 
         {/* Live location — helps the driver find you without a phone call while driving */}
-        <ShareLocationButton
-          deliveryId={d.id}
-          active={['assigned', 'in_transit'].includes(d.status) && !!d.transporter}
-          autoStart
-          label="location visible to driver"
-        />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <ShareLocationButton
+            deliveryId={d.id}
+            active={['assigned', 'in_transit'].includes(d.status) && !!d.transporter}
+            autoStart
+            label="location visible to driver"
+          />
+          {canTrack && (
+            <TrackDeliveryButton
+              delivery={d}
+              driver={{
+                name: d.transporter.full_name ?? 'Your driver',
+                phone: d.transporter.phone_number,
+                vehicleType: vehicle?.vehicle_type,
+                plateNumber: vehicle?.plate_number,
+                makeModel: vehicle?.make_model,
+                isColdCapable: vehicle?.is_cold_capable,
+                photoUrl,
+              }}
+            />
+          )}
+        </div>
       </div>
 
       {showPay && !paid && (

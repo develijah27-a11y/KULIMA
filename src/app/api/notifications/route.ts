@@ -2,15 +2,25 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
 
-export async function GET() {
+export async function GET(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ success: false, error: { message: 'Not authenticated' } }, { status: 401 });
 
-  const { data } = await supabase.from('notifications').select('*').eq('user_id', user.id).order('sent_at', { ascending: false }).limit(20);
+  const { searchParams } = new URL(req.url);
+  const role = searchParams.get('role');
+
+  let query = supabase.from('notifications').select('*').eq('user_id', user.id);
+  if (role) query = query.or(`role.eq.${role},role.is.null`);
+  const { data } = await query.order('sent_at', { ascending: false }).limit(20);
+
+  // This list mutates on every mark-read click — a 30s browser cache meant a
+  // notification you'd just read could come back as unread if you reopened
+  // the bell within that window, since the fetch replayed the stale response
+  // instead of asking the server again.
   return NextResponse.json(
     { success: true, data: (data ?? []).map(normalizeNotif) },
-    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } }
+    { headers: { 'Cache-Control': 'no-store' } }
   );
 }
 

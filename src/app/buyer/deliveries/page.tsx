@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { PayDeliveryButton } from './PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
@@ -59,6 +59,25 @@ export default async function BuyerDeliveriesPage() {
     : { data: [] };
   const vehicleByUser = new Map((vehicleRows ?? []).map((v: any) => [v.user_id, v]));
 
+  // Selfie photos live in the private kyc-documents bucket, so the raw path
+  // on `verifications` can't be shown directly — mint short-lived signed
+  // URLs server-side, scoped to only the drivers actually assigned to one of
+  // THIS buyer's own deliveries.
+  const photoByUser = new Map<string, string>();
+  if (transporterIds.length) {
+    const service = createServiceRoleClient();
+    const { data: verificationRows } = await (service.from as any)('verifications')
+      .select('user_id, selfie_url')
+      .in('user_id', transporterIds)
+      .eq('role', 'transporter')
+      .eq('status', 'approved')
+      .not('selfie_url', 'is', null);
+    await Promise.all((verificationRows ?? []).map(async (v: any) => {
+      const { data: signed } = await service.storage.from('kyc-documents').createSignedUrl(v.selfie_url, 3600);
+      if (signed?.signedUrl) photoByUser.set(v.user_id, signed.signedUrl);
+    }));
+  }
+
   const active    = rows.filter((d: any) => ['open','assigned','in_transit'].includes(d.status));
   const delivered = rows.filter((d: any) => d.status === 'delivered');
   const past      = rows.filter((d: any) => d.status === 'cancelled');
@@ -93,14 +112,14 @@ export default async function BuyerDeliveriesPage() {
       {/* Active & in-transit */}
       {active.length > 0 && (
         <Section title="Active" count={active.length}>
-          {active.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} />)}
+          {active.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} photoUrl={photoByUser.get(d.transporter_id)} />)}
         </Section>
       )}
 
       {/* Arrived — needs payment */}
       {delivered.length > 0 && (
         <Section title="Delivered — Payment Due" count={delivered.length} highlight>
-          {delivered.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} showPay />)}
+          {delivered.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} photoUrl={photoByUser.get(d.transporter_id)} showPay />)}
         </Section>
       )}
 
@@ -132,7 +151,7 @@ function Section({ title, count, highlight, children }: { title: string; count: 
   );
 }
 
-function DeliveryRow({ d, vehicle, showPay }: { d: any; vehicle?: any; showPay?: boolean }) {
+function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any; photoUrl?: string; showPay?: boolean }) {
   const st   = STATUS_CFG[d.status] ?? STATUS_CFG.open;
   const tm   = TYPE_META[d.delivery_type] ?? TYPE_META.standard;
   const paid = d.payment_status === 'paid';
@@ -166,7 +185,9 @@ function DeliveryRow({ d, vehicle, showPay }: { d: any; vehicle?: any; showPay?:
         {d.transporter && (
           <p style={{ fontSize: 11, color: C.muted, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
             <User size={11} />Driver: {d.transporter.full_name ?? 'Assigned'}
-            {d.transporter.phone_number && ` · ${d.transporter.phone_number}`}
+            {d.transporter.phone_number && (
+              <> · <a href={`tel:${d.transporter.phone_number}`} style={{ color: C.greenMed, fontWeight: 700, textDecoration: 'none' }}>{d.transporter.phone_number}</a></>
+            )}
           </p>
         )}
 
@@ -188,6 +209,7 @@ function DeliveryRow({ d, vehicle, showPay }: { d: any; vehicle?: any; showPay?:
                 plateNumber: vehicle?.plate_number,
                 makeModel: vehicle?.make_model,
                 isColdCapable: vehicle?.is_cold_capable,
+                photoUrl,
               }}
             />
           )}

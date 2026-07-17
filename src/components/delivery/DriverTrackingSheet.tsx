@@ -45,6 +45,10 @@ interface Props {
     vehicleType?: string | null;
     plateNumber?: string | null;
     makeModel?: string | null;
+    /** The selfie submitted with the driver's transporter verification —
+     *  lets a waiting buyer/farmer recognize the actual person, not just a
+     *  vehicle icon, before they arrive. */
+    photoUrl?: string | null;
   };
   /** Whether THIS viewer should broadcast their own position while the sheet is open */
   shareOwnLocation?: boolean;
@@ -107,9 +111,13 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
       }}>
         <div style={{
           width: 44, height: 44, borderRadius: 12, background: 'var(--color-primary-bg, #e3efe4)',
-          color: 'var(--color-primary, #166B3A)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          color: 'var(--color-primary, #166B3A)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0, overflow: 'hidden',
         }}>
-          {otherParty.role === 'driver'
+          {otherParty.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={otherParty.photoUrl} alt={otherParty.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : otherParty.role === 'driver'
             ? (VEHICLE_ICON[otherParty.vehicleType ?? ''] ?? <Truck size={22} />)
             : <User size={22} />}
         </div>

@@ -20,6 +20,7 @@ interface Props {
     plateNumber?: string | null;
     makeModel?: string | null;
     isColdCapable?: boolean;
+    photoUrl?: string | null;
   };
 }
 
@@ -54,6 +55,7 @@ export function TrackDeliveryButton({ delivery, driver }: Props) {
             vehicleType: driver.vehicleType,
             plateNumber: driver.plateNumber,
             makeModel: driver.makeModel,
+            photoUrl: driver.photoUrl,
           }}
           shareOwnLocation={['open', 'assigned'].includes(delivery.status)}
         />

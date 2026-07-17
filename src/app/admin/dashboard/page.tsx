@@ -494,10 +494,17 @@ async function SystemHealth() {
   const lastPriceAt = latestPrice.status === 'fulfilled' ? (latestPrice.value.data as any)?.recorded_at : null;
   const priceCronOk = !!lastPriceAt && (Date.now() - new Date(lastPriceAt).getTime()) < 36 * 3600 * 1000;
 
+  // Weather always works: OpenWeatherMap is used when OPENWEATHER_API_KEY is
+  // set, otherwise weather-server.ts falls back to Open-Meteo, which needs no
+  // key at all. Checking only for the optional key made this read "not
+  // connected" forever even though the feature has been live via Open-Meteo
+  // the whole time — flag which provider is actually active instead.
+  const weatherProvider = process.env.OPENWEATHER_API_KEY ? 'OpenWeatherMap' : 'Open-Meteo (keyless)';
+
   const services = [
     { name: 'Database',                   ok: dbOk },
     { name: 'File Storage',               ok: storageOk },
-    { name: 'Weather API',                ok: !!process.env.OPENWEATHER_API_KEY },
+    { name: 'Weather API',                ok: true, detail: weatherProvider },
     { name: 'Mobile Money (Flutterwave)', ok: !!process.env.FLUTTERWAVE_SECRET_KEY },
     { name: 'Daily Price Cron',           ok: priceCronOk, detail: lastPriceAt ? `last ran ${new Date(lastPriceAt).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}` : 'never ran' },
   ];
