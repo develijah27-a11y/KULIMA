@@ -12,6 +12,18 @@ interface AuthFormProps {
 
 const supabase = createClient();
 
+// Matches the project's Auth → Email OTP expiry setting (Supabase dashboard,
+// currently 3600s/1h). Purely a display countdown — the server is still the
+// one that actually rejects an expired code; this just stops the user from
+// being surprised by "invalid code" after sitting on the entry screen.
+const OTP_EXPIRY_SECONDS = 3600;
+
+function formatCountdown(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
 
@@ -30,6 +42,8 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [resent, setResent]         = useState(false);
   const [code, setCode]             = useState('');
   const [verifying, setVerifying]   = useState(false);
+  const [codeSentAt, setCodeSentAt] = useState<number | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
 
   const isSigningUpRef = useRef(false);
   const submitLockRef = useRef(false);
@@ -65,6 +79,20 @@ export function AuthForm({ mode }: AuthFormProps) {
     });
     return () => subscription.unsubscribe();
   }, [router]);
+
+  // Live countdown to when the current code expires — recalculated from the
+  // wall-clock send time each tick, so it stays correct even if the tab was
+  // backgrounded and setInterval ticks got throttled/delayed.
+  useEffect(() => {
+    if (!codeSentAt) { setSecondsLeft(null); return; }
+    const tick = () => {
+      const remaining = OTP_EXPIRY_SECONDS - Math.floor((Date.now() - codeSentAt) / 1000);
+      setSecondsLeft(Math.max(0, remaining));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [codeSentAt]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -154,6 +182,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         // which /auth/confirm/route.ts handles and creates the profile there.
         setSuccess(`Account created! We've sent a 6-digit code to ${email} — enter it below to activate your account.`);
         setNeedsConfirmation(true);
+        setCodeSentAt(Date.now());
       } else {
         // ── Sign in ──────────────────────────────────────────────────────────
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -255,6 +284,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       });
       if (resendError) throw resendError;
       setResent(true);
+      setCodeSentAt(Date.now());
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Could not resend the email. Please try again.');
     } finally {
@@ -317,12 +347,23 @@ export function AuthForm({ mode }: AuthFormProps) {
             className="auth-input"
             style={{ textAlign: 'center', fontSize: 22, letterSpacing: '0.4em', fontWeight: 800 }}
           />
+          {secondsLeft !== null && (
+            secondsLeft > 0 ? (
+              <p style={{ fontSize: 12, color: 'rgba(240,253,244,0.5)', textAlign: 'center', marginTop: 8 }}>
+                Code expires in <span style={{ fontWeight: 700, color: secondsLeft < 60 ? '#FCA5A5' : 'var(--color-text-on-dark)' }}>{formatCountdown(secondsLeft)}</span>
+              </p>
+            ) : (
+              <p style={{ fontSize: 12, color: '#FCA5A5', textAlign: 'center', marginTop: 8, fontWeight: 700 }}>
+                This code has expired — request a new one below.
+              </p>
+            )
+          )}
         </div>
 
         <button
           type="button"
           onClick={verifyCode}
-          disabled={verifying || code.trim().length < 6}
+          disabled={verifying || code.trim().length < 6 || secondsLeft === 0}
           className="auth-btn"
         >
           {verifying ? 'Verifying…' : 'Verify & Continue'}
