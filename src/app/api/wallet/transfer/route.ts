@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Enter a valid amount' }, { status: 400 });
   }
 
-  const { data: wallet } = await supabase.from('wallets').select('pin_hash').eq('user_id', user.id).single();
+  const { data: wallet } = await (supabase.from as any)('wallets').select('pin_hash').eq('user_id', user.id).single();
   if (!(wallet as any)?.pin_hash) {
     return NextResponse.json({ error: 'Set up your wallet PIN before sending money.', code: 'PIN_NOT_SET' }, { status: 403 });
   }

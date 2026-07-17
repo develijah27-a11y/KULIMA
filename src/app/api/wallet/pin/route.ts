@@ -10,7 +10,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: wallet } = await supabase.from('wallets').select('pin_hash').eq('user_id', user.id).single();
+  const { data: wallet } = await (supabase.from as any)('wallets').select('pin_hash').eq('user_id', user.id).single();
   return NextResponse.json({ hasPin: !!(wallet as any)?.pin_hash });
 }
 
