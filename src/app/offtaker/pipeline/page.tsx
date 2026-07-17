@@ -18,7 +18,7 @@ export default async function SupplyPipelinePage() {
   if (!user) redirect('/auth/signin');
 
   const { data: listings } = await (supabase.from as any)('listings')
-    .select('id, crop_type, quantity_kg, asking_price, district, created_at, verification_level')
+    .select('id, crop_type, quantity_kg, asking_price, district, created_at')
     .eq('status', 'active')
     .order('created_at', { ascending: false })
     .limit(60);

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { AlertTriangle, TrendingUp, Map } from 'lucide-react';
 
 const C = {
@@ -18,9 +18,22 @@ export default async function GeoClusterPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
+  // disease_scans/farms RLS only lets a farmer read their OWN farm's rows —
+  // correct for every other page, but this one's whole point is a
+  // cross-farmer district hotspot map, which the regular client could never
+  // show (every other farmer's rows are invisible to it). Read-only,
+  // aggregate-only (district + counts, never a farmer's identity), via the
+  // service role, matching how the app already does other cross-user
+  // aggregate reads.
+  const service = createServiceRoleClient();
+
   const [{ data: diseaseData }, { data: priceData }] = await Promise.all([
-    (supabase.from as any)('disease_scans')
-      .select('district, disease_detected, confidence_score, created_at')
+    (service.from as any)('disease_scans')
+      // disease_scans has no district of its own — it belongs to a farm,
+      // and the farm has the district (this select previously asked for
+      // disease_scans.district directly, which doesn't exist, so the whole
+      // query errored and every hotspot/count on this page silently read 0).
+      .select('disease_detected, confidence_score, created_at, farm:farms(district)')
       .not('disease_detected', 'is', null)
       .gte('created_at', new Date(Date.now() - 30 * 86400000).toISOString())
       .order('created_at', { ascending: false })
@@ -37,7 +50,8 @@ export default async function GeoClusterPage() {
   // Aggregate disease hotspots
   const districtDiseaseCount: Record<string, number> = {};
   scans.forEach((s: any) => {
-    if (s.district) districtDiseaseCount[s.district] = (districtDiseaseCount[s.district] ?? 0) + 1;
+    const district = s.farm?.district;
+    if (district) districtDiseaseCount[district] = (districtDiseaseCount[district] ?? 0) + 1;
   });
 
   // Top crop prices by district
