@@ -69,7 +69,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </main>
       </div>
       <MobileNav navItems={ADMIN_NAV} />
-      <MobileSidebarDrawer navItems={ADMIN_NAV} profile={profile} />
+      <MobileSidebarDrawer navItems={ADMIN_NAV} profile={profile} roleSwitcher={<RoleSwitcher currentRole="admin" allRoles={roles} />} />
       <NavCommandPalette items={ADMIN_NAV} />
     </div>
   );

@@ -11,6 +11,7 @@ import { useLiveUnreadBadge } from './useLiveUnreadBadge';
 interface Props {
   navItems: NavItem[];
   profile: { name: string; role: string } | null;
+  roleSwitcher?: React.ReactNode;
 }
 
 const DASHBOARD_ROOTS = [
@@ -19,7 +20,7 @@ const DASHBOARD_ROOTS = [
   '/offtaker/dashboard', '/groups/dashboard',
 ];
 
-export function MobileSidebarDrawer({ navItems, profile }: Props) {
+export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -89,8 +90,12 @@ export function MobileSidebarDrawer({ navItems, profile }: Props) {
           </button>
         </div>
 
-        {/* ── Role label ── */}
-        {profile && (
+        {/* ── Role label / switcher ── */}
+        {roleSwitcher ? (
+          <div className="agrinova-drawer-role" style={{ padding: '8px 12px' }}>
+            {roleSwitcher}
+          </div>
+        ) : profile && (
           <div className="agrinova-drawer-role">
             <p className="agrinova-drawer-role-text">{profile.role}</p>
           </div>

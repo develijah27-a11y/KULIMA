@@ -6,6 +6,8 @@ import { ChevronDown, MapPin } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { OfflineStatusPill } from '@/components/ui/OfflineStatusPill';
 import { ROLE_META } from '@/components/layout/RoleSwitcher';
+
+const SELF_ADD_ROLES = ['farmer', 'buyer', 'transporter', 'supplier', 'pathologist', 'offtaker', 'groups'];
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { Breadcrumb } from '@/components/layout/Breadcrumb';
 import { NotificationToastContainer } from '@/components/ui/NotificationToast';
@@ -30,10 +32,39 @@ export function TopBar({
   const shortGreeting = greeting.replace(/^Good (morning|afternoon|evening), /, '');
   const router = useRouter();
   const [roleOpen, setRoleOpen] = useState(false);
+  const [addingRole, setAddingRole] = useState<string | null>(null);
 
   const currentMeta = currentRole ? ROLE_META[currentRole] : null;
-  const otherRoles = (allRoles ?? []).filter(r => r !== currentRole && ROLE_META[r]);
+  // Every self-addable role is listed here, not just ones the account
+  // already holds — a brand-new, single-role account still needs a way to
+  // pick up a second role from mobile, the same as the desktop sidebar
+  // switcher already allows.
+  const otherRoles = SELF_ADD_ROLES.filter(r => r !== currentRole && ROLE_META[r]);
   const showRoleSwitch = !!(currentMeta && otherRoles.length > 0);
+
+  const handleRoleClick = async (role: string) => {
+    const meta = ROLE_META[role];
+    if (!meta || addingRole) return;
+
+    if (!(allRoles ?? []).includes(role)) {
+      setAddingRole(role);
+      try {
+        const res = await fetch('/api/profile/add-role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role }),
+        });
+        if (!res.ok) { setAddingRole(null); return; }
+      } catch {
+        setAddingRole(null);
+        return;
+      }
+      setAddingRole(null);
+    }
+
+    setRoleOpen(false);
+    router.push(meta.href);
+  };
 
   return (
     <>
@@ -143,11 +174,14 @@ export function TopBar({
                   </p>
                   {otherRoles.map(role => {
                     const meta = ROLE_META[role];
+                    const hasRole = (allRoles ?? []).includes(role);
+                    const isLoading = addingRole === role;
                     return (
                       <button
                         key={role}
                         className="no-min-touch"
-                        onClick={() => { setRoleOpen(false); router.push(meta.href); }}
+                        onClick={() => handleRoleClick(role)}
+                        disabled={!!addingRole}
                         style={{
                           width: '100%',
                           display: 'flex',
@@ -157,17 +191,30 @@ export function TopBar({
                           borderRadius: 8,
                           background: 'transparent',
                           border: 'none',
-                          cursor: 'pointer',
+                          cursor: addingRole ? 'wait' : 'pointer',
                           textAlign: 'left',
                           transition: 'background 0.1s',
+                          opacity: isLoading ? 0.6 : 1,
                         }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-2)'; }}
+                        onMouseEnter={e => { if (!addingRole) (e.currentTarget as HTMLElement).style.background = 'var(--color-surface-2)'; }}
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                       >
                         <span style={{ display: 'inline-flex', alignItems: 'center' }}>{meta.icon}</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)' }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text)', flex: 1 }}>
                           {meta.label}
                         </span>
+                        {!hasRole && (
+                          <span style={{
+                            fontSize: 8, fontWeight: 800,
+                            color: 'rgba(34,197,94,0.95)',
+                            background: 'rgba(34,197,94,0.15)',
+                            padding: '2px 6px', borderRadius: 99,
+                            textTransform: 'uppercase', letterSpacing: '0.06em',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {isLoading ? '…' : '+ Add'}
+                          </span>
+                        )}
                       </button>
                     );
                   })}

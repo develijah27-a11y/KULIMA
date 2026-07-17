@@ -81,7 +81,7 @@ export default async function BuyerLayout({ children }: { children: React.ReactN
         </main>
       </div>
       <MobileNav navItems={navWithBadge} />
-      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
+      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} roleSwitcher={<RoleSwitcher currentRole="buyer" allRoles={roles} />} />
       <DashboardFab href="/buyer/listings" ariaLabel="Browse marketplace">
         <ShoppingBag size={21} strokeWidth={2.5} color="#fff" />
       </DashboardFab>

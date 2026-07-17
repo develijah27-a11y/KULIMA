@@ -73,7 +73,7 @@ export default async function SupplierLayout({ children }: { children: React.Rea
         <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6"><PageTransition>{children}</PageTransition></main>
       </div>
       <MobileNav navItems={navWithBadge} />
-      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
+      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} roleSwitcher={<RoleSwitcher currentRole="supplier" allRoles={roles} />} />
       <DashboardFab href="/supplier/flash-deals" ariaLabel="Flash deals">
         <Zap size={21} strokeWidth={2.5} color="#fff" />
       </DashboardFab>

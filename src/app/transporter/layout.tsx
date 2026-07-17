@@ -16,8 +16,8 @@ const TRANSPORTER_NAV = [
   { href: '/transporter/job-queue',  icon: 'job-queue',    label: 'Available Jobs', divider: true, sectionLabel: 'Jobs' },
   { href: '/transporter/active',     icon: 'active-jobs',  label: 'Active Jobs' },
   { href: '/transporter/deliveries', icon: 'deliveries',   label: 'Completed' },
-  // ── Fleet
-  { href: '/transporter/vehicle',    icon: 'farm',         label: 'Fleet',       divider: true, sectionLabel: 'Fleet' },
+  // ── My Vehicle
+  { href: '/transporter/vehicle',    icon: 'farm',         label: 'My Vehicle',  divider: true, sectionLabel: 'My Vehicle' },
   { href: '/transporter/cold-chain', icon: 'cold-logs',    label: 'Cool Transport Logs' },
   // ── Account
   { href: '/transporter/wallet',     icon: 'earnings',     label: 'Wallet & Earnings', divider: true, sectionLabel: 'Account' },
@@ -75,7 +75,7 @@ export default async function TransporterLayout({ children }: { children: React.
         </main>
       </div>
       <MobileNav navItems={navWithBadge} />
-      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
+      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} roleSwitcher={<RoleSwitcher currentRole="transporter" allRoles={roles} />} />
       <DashboardFab href="/transporter/job-queue" ariaLabel="View job queue">
         <Truck size={21} strokeWidth={2.5} color="#fff" />
       </DashboardFab>

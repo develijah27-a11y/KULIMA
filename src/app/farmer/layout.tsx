@@ -103,7 +103,7 @@ export default async function FarmerLayout({ children }: { children: React.React
         </main>
       </div>
       <MobileNav navItems={navWithBadge} />
-      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} />
+      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} roleSwitcher={<RoleSwitcher currentRole="farmer" allRoles={roles} />} />
       <DashboardFab href="/farmer/marketplace/new" ariaLabel="New listing">
         <Plus size={22} strokeWidth={2.5} color="#fff" />
       </DashboardFab>

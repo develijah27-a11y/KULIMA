@@ -27,6 +27,15 @@ const BUNDLE_TMP = '.tmp-sw-bundle.js';
 const config = await serwist({
   swSrc: 'src/app/sw.ts',
   swDest: 'public/sw.js',
+  // Prerendered HTML shells (every page, including /auth/signin and
+  // /auth/signup) were being precached and served cache-first ahead of the
+  // network — a fix shipped in a new deploy stayed invisible to a returning
+  // visitor's already-installed service worker until it happened to re-fetch
+  // that exact page. Pages already go through the NetworkFirst "navigate"
+  // runtimeCaching rule in sw.ts (3s timeout, falls back to /offline), which
+  // is enough for offline support without ever preferring stale HTML over a
+  // live network response.
+  precachePrerendered: false,
 });
 
 const { esbuildOptions, swSrc, ...manifestConfig } = config;
