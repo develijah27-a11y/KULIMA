@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
+import { verifyPin, isValidPinFormat } from '@/lib/wallet-pin';
 
 const FLW_BASE = 'https://api.flutterwave.com/v3';
 
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Too many withdrawal attempts. Please wait a minute and try again.' }, { status: 429 });
   }
 
-  const { amount, phone, provider } = await req.json();
+  const { amount, phone, provider, pin } = await req.json();
 
   if (!amount || amount < 500) return NextResponse.json({ error: 'Minimum withdrawal is UGX 500' }, { status: 400 });
   if (!phone) return NextResponse.json({ error: 'Phone number required' }, { status: 400 });
@@ -32,12 +33,27 @@ export async function POST(req: Request) {
   const admin = createServiceClient(serviceUrl, serviceKey);
 
   const { data: wallet, error: walletErr } = await (admin.from as any)('wallets')
-    .select('id, balance, is_frozen')
+    .select('id, balance, is_frozen, pin_hash')
     .eq('user_id', user.id)
     .single();
 
   if (walletErr || !wallet) return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
   if (wallet.is_frozen) return NextResponse.json({ error: 'This wallet is frozen pending review. Contact support for assistance.' }, { status: 403 });
+
+  // A PIN separate from the account password is what actually stops someone
+  // who's picked up an unlocked, already-signed-in phone from emptying the
+  // wallet — rate-limited independently since a 4-digit PIN has few enough
+  // combinations that unlimited guessing would matter.
+  if (!wallet.pin_hash) {
+    return NextResponse.json({ error: 'Set up your wallet PIN before withdrawing.', code: 'PIN_NOT_SET' }, { status: 403 });
+  }
+  if (!(await rateLimit(`wallet-pin-verify:${user.id}`, 5, 300))) {
+    return NextResponse.json({ error: 'Too many incorrect PIN attempts. Please wait a few minutes.' }, { status: 429 });
+  }
+  if (!isValidPinFormat(pin) || !verifyPin(pin, wallet.pin_hash)) {
+    return NextResponse.json({ error: 'Incorrect PIN', code: 'PIN_INCORRECT' }, { status: 403 });
+  }
+
   if (wallet.balance < amount) return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
 
   const txRef = `kulima-wdl-${user.id.slice(0, 8)}-${Date.now()}`;

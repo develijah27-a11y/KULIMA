@@ -1,8 +1,8 @@
 ﻿'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Lock } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -16,6 +16,12 @@ interface Props {
   escrowBalance: number;
 }
 
+const pinInputStyle = {
+  width: '100%', padding: '10px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`,
+  fontSize: 20, letterSpacing: '0.5em', textAlign: 'center' as const, outline: 'none',
+  boxSizing: 'border-box' as const, color: C.text, background: 'var(--d-input-bg)',
+};
+
 export function WalletActions({ balance, escrowBalance }: Props) {
   const router = useRouter();
   const [mode, setMode]       = useState<Mode>(null);
@@ -24,17 +30,61 @@ export function WalletActions({ balance, escrowBalance }: Props) {
   const [provider, setProvider] = useState<'mtn' | 'airtel'>('mtn');
   const [toAccount, setToAccount] = useState('');
   const [note, setNote]       = useState('');
+  const [pin, setPin]         = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const [success, setSuccess] = useState('');
 
-  function reset() { setMode(null); setAmount(''); setPhone(''); setToAccount(''); setNote(''); setError(''); setSuccess(''); }
+  // A PIN is only needed for withdraw/send, so this stays unknown (and
+  // unfetched) for anyone who's only ever deposited.
+  const [hasPin, setHasPin]   = useState<boolean | null>(null);
+  const [pinCheckDone, setPinCheckDone] = useState(false);
+  const [setupPin, setSetupPin]         = useState('');
+  const [setupPinConfirm, setSetupPinConfirm] = useState('');
+
+  const needsPinCheck = mode === 'withdraw' || mode === 'send';
+
+  useEffect(() => {
+    if (!needsPinCheck || pinCheckDone) return;
+    fetch('/api/wallet/pin')
+      .then(res => res.json())
+      .then(json => { setHasPin(!!json.hasPin); setPinCheckDone(true); })
+      .catch(() => setPinCheckDone(true));
+  }, [needsPinCheck, pinCheckDone]);
+
+  function reset() {
+    setMode(null); setAmount(''); setPhone(''); setToAccount(''); setNote('');
+    setPin(''); setSetupPin(''); setSetupPinConfirm(''); setError(''); setSuccess('');
+  }
+
+  async function submitPinSetup(e: FormEvent) {
+    e.preventDefault();
+    if (!/^\d{4}$/.test(setupPin)) { setError('PIN must be exactly 4 digits'); return; }
+    if (setupPin !== setupPinConfirm) { setError('PINs don\'t match'); return; }
+    setLoading(true); setError('');
+    try {
+      const res = await fetch('/api/wallet/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: setupPin }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error ?? 'Failed to set PIN');
+      setHasPin(true);
+      setSetupPin(''); setSetupPinConfirm('');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     const n = parseFloat(amount);
     if (!n || n < 500) { setError('Minimum amount is UGX 500'); return; }
     if ((mode === 'withdraw' || mode === 'send') && n > balance) { setError('Insufficient balance'); return; }
+    if (needsPinCheck && !/^\d{4}$/.test(pin)) { setError('Enter your 4-digit wallet PIN'); return; }
 
     if (mode === 'send') {
       if (!toAccount.trim()) { setError('Enter the recipient\'s account number'); return; }
@@ -43,7 +93,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
         const res = await fetch('/api/wallet/transfer', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accountNumber: toAccount.trim(), amount: n, note: note || undefined }),
+          body: JSON.stringify({ accountNumber: toAccount.trim(), amount: n, note: note || undefined, pin }),
         });
         const json = await res.json();
         if (!json.success) throw new Error(json.error ?? 'Transfer failed');
@@ -64,7 +114,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
       const res = await fetch(`/api/wallet/${mode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: n, phone, provider }),
+        body: JSON.stringify({ amount: n, phone, provider, pin: mode === 'withdraw' ? pin : undefined }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Request failed');
@@ -95,6 +145,51 @@ export function WalletActions({ balance, escrowBalance }: Props) {
           Done
         </button>
       </div>
+    );
+  }
+
+  // Withdraw/send both move money out — gate on a PIN existing before
+  // showing either form. Deposits don't touch this at all.
+  if (needsPinCheck && pinCheckDone && hasPin === false) {
+    return (
+      <form onSubmit={submitPinSetup} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <p style={{ color: C.text, fontWeight: 700, fontSize: 14, margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Lock size={15} /> Set Up Your Wallet PIN
+        </p>
+        <p style={{ color: C.muted, fontSize: 12, margin: 0 }}>
+          A 4-digit PIN protects your money — you'll enter it every time you withdraw or send funds, so a stolen or unlocked phone alone can't move your balance.
+        </p>
+
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 4 }}>New 4-digit PIN</label>
+          <input
+            type="password" inputMode="numeric" maxLength={4} value={setupPin}
+            onChange={e => setSetupPin(e.target.value.replace(/\D/g, ''))}
+            placeholder="••••" style={pinInputStyle}
+          />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 4 }}>Confirm PIN</label>
+          <input
+            type="password" inputMode="numeric" maxLength={4} value={setupPinConfirm}
+            onChange={e => setSetupPinConfirm(e.target.value.replace(/\D/g, ''))}
+            placeholder="••••" style={pinInputStyle}
+          />
+        </div>
+
+        {error && <p style={{ color: 'var(--color-danger)', fontSize: 12, margin: 0 }}>{error}</p>}
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="button" onClick={reset}
+            style={{ flex: 1, padding: '10px', background: 'var(--color-surface-2)', color: C.muted, border: 'none', borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+            Cancel
+          </button>
+          <button type="submit" disabled={loading}
+            style={{ flex: 2, padding: '10px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer' }}>
+            {loading ? 'Saving...' : 'Save PIN & Continue'}
+          </button>
+        </div>
+      </form>
     );
   }
 
@@ -136,6 +231,17 @@ export function WalletActions({ balance, escrowBalance }: Props) {
             type="text" value={note} onChange={e => setNote(e.target.value)}
             placeholder="What's this for?"
             style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: 'var(--d-input-bg)' }}
+          />
+        </div>
+
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+            <Lock size={11} /> Wallet PIN
+          </label>
+          <input
+            type="password" inputMode="numeric" maxLength={4} value={pin}
+            onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
+            placeholder="••••" style={pinInputStyle}
           />
         </div>
 
@@ -204,6 +310,19 @@ export function WalletActions({ balance, escrowBalance }: Props) {
             style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: 'var(--d-input-bg)' }}
           />
         </div>
+
+        {!isDeposit && (
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+              <Lock size={11} /> Wallet PIN
+            </label>
+            <input
+              type="password" inputMode="numeric" maxLength={4} value={pin}
+              onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
+              placeholder="••••" style={pinInputStyle}
+            />
+          </div>
+        )}
 
         {error && <p style={{ color: 'var(--color-danger)', fontSize: 12, margin: 0 }}>{error}</p>}
 
