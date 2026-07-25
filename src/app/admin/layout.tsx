@@ -24,8 +24,12 @@ const ADMIN_NAV = [
   { href: '/admin/prices',       icon: 'prices',       label: 'Prices',     divider: true, sectionLabel: 'Content' },
   { href: '/admin/alert',        icon: 'notifications',label: 'Alerts' },
   { href: '/admin/analytics',    icon: 'analytics',    label: 'Analytics',  divider: true, sectionLabel: 'Reports' },
+  { href: '/admin/revenue',      icon: 'finance',      label: 'Revenue' },
   { href: '/admin/audit-logs',   icon: 'history',      label: 'Audit Logs' },
   { href: '/admin/logs',         icon: 'system-logs',  label: 'System Logs' },
+  { href: '/admin/security',     icon: 'alert',        label: 'Security' },
+  { href: '/admin/moderation',   icon: 'fraud',        label: 'Moderation' },
+  { href: '/admin/support',      icon: 'support',      label: 'Support Tickets', divider: true, sectionLabel: 'Support' },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {

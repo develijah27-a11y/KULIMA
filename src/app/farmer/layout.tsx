@@ -36,7 +36,9 @@ const FARMER_NAV = [
   { href: '/farmer/wallet',      icon: 'wallet',       label: 'Wallet',       divider: true, sectionLabel: 'Account' },
   { href: '/farmer/favourite-suppliers', icon: 'favourites', label: 'Saved Suppliers' },
   { href: '/farmer/notifications',icon: 'notifications',label: 'Notifications' },
-  { href: '/farmer/verify',      icon: 'verify',       label: 'Get Verified' },
+  { href: '/farmer/account',     icon: 'verify',       label: 'My Account' },
+  { href: '/farmer/premium',     icon: 'premium',      label: 'Farmer Pro' },
+  { href: '/farmer/support',     icon: 'support',      label: 'Support' },
   { href: '/farmer/settings',    icon: 'settings',     label: 'Settings' },
 ];
 

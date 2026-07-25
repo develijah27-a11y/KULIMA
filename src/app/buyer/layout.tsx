@@ -26,7 +26,8 @@ const BUYER_NAV = [
   // ── Account
   { href: '/buyer/wallet',       icon: 'wallet',       label: 'Wallet',       divider: true, sectionLabel: 'Account' },
   { href: '/buyer/notifications',icon: 'notifications',label: 'Notifications' },
-  { href: '/buyer/verify',       icon: 'verify',       label: 'Get Verified' },
+  { href: '/buyer/account',      icon: 'verify',       label: 'My Account' },
+  { href: '/buyer/support',      icon: 'support',      label: 'Support' },
   { href: '/buyer/settings',     icon: 'settings',     label: 'Settings' },
 ];
 
