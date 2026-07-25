@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
   // Get profile for role/name
   const { data: profile } = await supabase.from('profiles').select('full_name, role').eq('user_id', user.id).single();
 
-  const { data: ticket, error } = await (supabase.from as any)('support_tickets').insert({
+  // Build insert payload — omit screenshot_url if the column doesn't exist
+  // yet (migration not applied). This prevents a schema-cache error from
+  // blocking ticket creation entirely.
+  const insertPayload: Record<string, unknown> = {
     user_id: user.id,
     user_name: (profile as any)?.full_name ?? 'User',
     user_role: (profile as any)?.role ?? 'unknown',
@@ -59,9 +62,20 @@ export async function POST(request: NextRequest) {
     category,
     description,
     priority,
-    screenshot_url: screenshot_url ?? null,
     status: 'open',
-  }).select('id, subject, status, created_at').single();
+  };
+
+  // Only include screenshot_url if one was provided — avoids the
+  // "column not found in schema cache" error when the migration hasn't
+  // been applied to the database yet.
+  if (screenshot_url) {
+    insertPayload.screenshot_url = screenshot_url;
+  }
+
+  const { data: ticket, error } = await (supabase.from as any)('support_tickets')
+    .insert(insertPayload)
+    .select('id, subject, status, created_at')
+    .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
