@@ -72,9 +72,11 @@ export function AuthForm({ mode }: AuthFormProps) {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session && !isSigningUpRef.current && hasSubmittedRef.current) {
-        fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
+        setTimeout(() => {
+          fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
+        }, 0);
         router.push('/dashboard');
-        router.refresh();
+        // No router.refresh() — see comment in handleSubmit
       }
     });
     return () => subscription.unsubscribe();
@@ -171,7 +173,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           }).catch(() => {});
           navigatingAway = true;
           router.push('/dashboard');
-          router.refresh();
+          // No router.refresh() — session cookie is set, push is enough
           return;
         }
 
@@ -197,9 +199,15 @@ export function AuthForm({ mode }: AuthFormProps) {
         // missed event left the user signed in with a stuck sign-in form.
         if (data.session) {
           navigatingAway = true;
-          fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
+          // Fire verification-check completely in background — don't let it
+          // delay the redirect. The check is best-effort telemetry only.
+          setTimeout(() => {
+            fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
+          }, 0);
           router.push('/dashboard');
-          router.refresh();
+          // Do NOT call router.refresh() here — it triggers a full server
+          // re-render and adds 1-3 seconds of freeze on mobile. The session
+          // cookie is already set by signInWithPassword; router.push is enough.
         }
       }
     } catch (err: unknown) {
@@ -261,7 +269,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       hasSubmittedRef.current = true;
       router.push('/dashboard');
-      router.refresh();
+      // No router.refresh() — unnecessary and slow on mobile
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid or expired code';
       setError(msg.toLowerCase().includes('expired') || msg.toLowerCase().includes('invalid')

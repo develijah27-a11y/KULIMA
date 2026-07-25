@@ -18,22 +18,21 @@ const PROD = process.env.NODE_ENV === 'production';
 // Key: string the pathname must startsWith
 // Value: { limit: requests, windowMs: sliding window }
 const RATE_LIMIT_RULES: { prefix: string; limit: number; windowMs: number }[] = [
-  // Auth endpoints — tight limit to block brute-force and credential stuffing
-  { prefix: '/auth/signin',             limit: 10, windowMs: 60_000  },
-  { prefix: '/auth/signup',             limit: 5,  windowMs: 60_000  },
-  { prefix: '/auth/forgot-password',    limit: 5,  windowMs: 60_000  },
-  { prefix: '/auth/reset-password',     limit: 5,  windowMs: 60_000  },
+  // Auth API endpoints only — NOT the /auth/signin or /auth/signup pages.
+  // Rate-limiting the page itself blocks legitimate users who share a carrier
+  // NAT IP (very common on MTN/Airtel Uganda where many phones share one IP).
+  { prefix: '/api/auth/',              limit: 10, windowMs: 60_000  },
   // Wallet mutations — prevent scripted deposit/withdraw flooding
-  { prefix: '/api/wallet/deposit',      limit: 20, windowMs: 60_000  },
-  { prefix: '/api/wallet/withdraw',     limit: 10, windowMs: 60_000  },
-  { prefix: '/api/wallet/transfer',     limit: 15, windowMs: 60_000  },
+  { prefix: '/api/wallet/deposit',     limit: 20, windowMs: 60_000  },
+  { prefix: '/api/wallet/withdraw',    limit: 10, windowMs: 60_000  },
+  { prefix: '/api/wallet/transfer',    limit: 15, windowMs: 60_000  },
   // AI diagnosis — expensive upstream calls
-  { prefix: '/api/doctor',             limit: 10, windowMs: 60_000  },
-  { prefix: '/api/disease-scans',      limit: 10, windowMs: 60_000  },
+  { prefix: '/api/doctor',            limit: 10, windowMs: 60_000  },
+  { prefix: '/api/disease-scans',     limit: 10, windowMs: 60_000  },
   // Support tickets
-  { prefix: '/api/support',            limit: 30, windowMs: 60_000  },
+  { prefix: '/api/support',           limit: 30, windowMs: 60_000  },
   // General API — generous fallback to catch abusive scraping
-  { prefix: '/api/',                   limit: 120, windowMs: 60_000 },
+  { prefix: '/api/',                  limit: 120, windowMs: 60_000 },
 ];
 
 function getIp(req: NextRequest): string {
