@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Eye, EyeOff } from 'lucide-react';
@@ -20,8 +19,6 @@ function formatCountdown(s: number) {
 }
 
 export function AuthForm({ mode }: AuthFormProps) {
-  const router = useRouter();
-
   const [email, setEmail]                     = useState('');
   const [password, setPassword]               = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -79,7 +76,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       }
     });
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, []);
 
   // ── OTP countdown ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -94,7 +91,6 @@ export function AuthForm({ mode }: AuthFormProps) {
   }, [codeSentAt]);
 
   // ── Sign in ───────────────────────────────────────────────────────────────
-  // ── Sign in ───────────────────────────────────────────────────────────────
   // Redirects SYNCHRONOUSLY — does NOT rely on onAuthStateChange.
   // On mobile, the Supabase Realtime WebSocket that delivers auth events
   // can fail silently, leaving the user stuck on "Signing in…" forever.
@@ -106,9 +102,19 @@ export function AuthForm({ mode }: AuthFormProps) {
       setTimeout(() => {
         fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
       }, 0);
-      router.push('/dashboard');
+      // Hard navigation, not router.push — the just-set sb-* cookies need to
+      // be on the very next request to a protected route (proxy.ts reads
+      // them server-side to decide the redirect target). A client-side
+      // router.push reuses the existing SPA session/fetch machinery, which
+      // on some mobile browsers (especially in-app WebViews — WhatsApp/
+      // Facebook browser is extremely common in Uganda) can fire before the
+      // cookie write from signInWithPassword has actually propagated,
+      // silently bouncing back to /auth/signin as if unauthenticated. A full
+      // navigation guarantees the fresh cookies are on that request. Same
+      // pattern already used for sign-out in Sidebar.tsx.
+      window.location.href = '/dashboard';
     }
-  }, [email, password, router]);
+  }, [email, password]);
 
   // ── Sign up ───────────────────────────────────────────────────────────────
   const signUp = useCallback(async () => {
@@ -149,7 +155,8 @@ export function AuthForm({ mode }: AuthFormProps) {
           location: location || null,
         }),
       }).catch(() => {});
-      router.push('/dashboard');
+      // Hard navigation — see the comment in signIn() above for why.
+      window.location.href = '/dashboard';
       return;
     }
 
@@ -217,8 +224,10 @@ export function AuthForm({ mode }: AuthFormProps) {
     } finally {
       submitLockRef.current = false;
       submittingRef.current = false;
-      // Always reset loading — redirect happens via router.push in signIn(),
-      // not via a state update here, so we must clear loading regardless.
+      // Always reset loading — a successful sign-in navigates away via
+      // window.location in signIn(), not via a state update here, so we
+      // must clear loading regardless (harmless on the success path since
+      // the page is about to unload anyway).
       setLoading(false);
     }
   }, [mode, password, confirmPassword, signIn, signUp]);
@@ -246,8 +255,9 @@ export function AuthForm({ mode }: AuthFormProps) {
           }),
         }).catch(() => {});
       }
-      // Redirect directly — don't wait for onAuthStateChange
-      router.push('/dashboard');
+      // Redirect directly — don't wait for onAuthStateChange. Hard
+      // navigation — see the comment in signIn() above for why.
+      window.location.href = '/dashboard';
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid or expired code';
       setError(
