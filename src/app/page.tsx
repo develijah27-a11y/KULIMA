@@ -104,6 +104,12 @@ function Nav() {
           <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Link href="/auth/signin" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 700, color: INK_MID, textDecoration: 'none', padding: '14px', textAlign: 'center', border: `1.5px solid ${LINE}`, borderRadius: 12 }}>Sign in</Link>
             <Link href="/auth/signup" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 800, color: '#fff', textDecoration: 'none', padding: '14px', textAlign: 'center', background: GREEN, borderRadius: 12 }}>Create free account</Link>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
 function Hero() {
