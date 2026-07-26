@@ -44,7 +44,7 @@ export default async function GroupSuppliersPage({
   const supplier = sp.supplier ?? '';
 
   let query = (supabase.from as any)('supplier_products')
-    .select('id, name, category, description, price_per_unit, unit, stock_qty, min_order_qty, district, image_url, supplier_id, supplier:profiles!supplier_products_supplier_id_fkey(id, full_name, business_name, location, verification_level, role_verification_levels)')
+    .select('id, name, category, description, price_per_unit, unit, stock_qty, min_order_qty, district, image_url, supplier_id, is_flash_deal, flash_price_ugx, flash_ends_at, supplier:profiles!supplier_products_supplier_id_fkey(id, full_name, business_name, location, verification_level, role_verification_levels)')
     .eq('is_available', true)
     .gt('stock_qty', 0);
 
@@ -146,6 +146,8 @@ export default async function GroupSuppliersPage({
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {rows.map((p: any) => {
             const supp = p.supplier ?? {};
+            const flashActive = !!p.is_flash_deal && !!p.flash_ends_at && new Date(p.flash_ends_at) > new Date();
+            const effectivePrice = flashActive ? Number(p.flash_price_ugx) : Number(p.price_per_unit);
             return (
               <div key={p.id} style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 {/* Photo header */}
@@ -163,6 +165,11 @@ export default async function GroupSuppliersPage({
                   <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: 'rgba(0,0,0,0.45)', color: '#fff', backdropFilter: 'blur(4px)' }}>
                     {p.stock_qty.toLocaleString()} {p.unit} left
                   </span>
+                  {flashActive && (
+                    <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 999, background: 'var(--color-harvest)', color: '#fff' }}>
+                      ⚡ Flash Deal
+                    </span>
+                  )}
                 </div>
 
                 <div style={{ padding: '14px 16px', flex: 1 }}>
@@ -189,8 +196,13 @@ export default async function GroupSuppliersPage({
 
                   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 12 }}>
                     <div>
-                      <p style={{ fontSize: 18, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-0.02em' }}>
-                        UGX {Math.round(p.price_per_unit).toLocaleString()}
+                      {flashActive && (
+                        <p style={{ fontSize: 12, color: C.muted, margin: 0, textDecoration: 'line-through' }}>
+                          UGX {Math.round(p.price_per_unit).toLocaleString()}
+                        </p>
+                      )}
+                      <p style={{ fontSize: 18, fontWeight: 800, color: flashActive ? 'var(--color-harvest)' : C.text, margin: 0, letterSpacing: '-0.02em' }}>
+                        UGX {Math.round(effectivePrice).toLocaleString()}
                       </p>
                       <p style={{ fontSize: 10, color: C.muted, margin: '1px 0 0' }}>per {p.unit}</p>
                     </div>
@@ -203,7 +215,7 @@ export default async function GroupSuppliersPage({
                     unit={p.unit}
                     minOrderQty={p.min_order_qty}
                     stockQty={p.stock_qty}
-                    pricePerUnit={p.price_per_unit}
+                    pricePerUnit={effectivePrice}
                   />
                   <Link
                     href={`/groups/bulk-orders/new?productId=${p.id}&name=${encodeURIComponent(p.name)}&unit=${encodeURIComponent(p.unit)}&price=${p.price_per_unit}`}

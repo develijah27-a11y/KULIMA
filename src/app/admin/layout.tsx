@@ -40,8 +40,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .eq('user_id', user.id)
     .single();
 
-  // Hard block — only role='admin' may enter any /admin route
-  if ((data as any)?.role !== 'admin') {
+  // Hard block — role='admin' OR 'admin' present in the multi-role roles[]
+  // array may enter any /admin route. Every other role layout accepts both
+  // forms (primary role match OR roles[] membership); this one previously
+  // only checked the primary role column, which would incorrectly lock out
+  // a multi-role user who has admin as a secondary role.
+  const userRoles: string[] = (data as any)?.roles ?? [];
+  const primaryRole: string = (data as any)?.role ?? '';
+  if (primaryRole !== 'admin' && !userRoles.includes('admin')) {
     logSystemEvent({ category: 'auth_failure', level: 'error', route: '/admin', userId: user.id, message: 'Non-admin user attempted to access /admin' });
     redirect('/dashboard');
   }

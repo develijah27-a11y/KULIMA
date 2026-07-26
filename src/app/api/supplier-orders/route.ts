@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   }
 
   const { data: product } = await (supabase.from as any)('supplier_products')
-    .select('id, supplier_id, name, unit, price_per_unit, stock_qty, min_order_qty, is_available')
+    .select('id, supplier_id, name, unit, price_per_unit, stock_qty, min_order_qty, is_available, is_flash_deal, flash_price_ugx, flash_ends_at')
     .eq('id', productId)
     .single();
 
@@ -34,6 +34,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Only ${product.stock_qty} ${product.unit} left in stock` }, { status: 400 });
   }
 
+  // Charge the live flash price when a deal is actually active — computed
+  // fresh from the DB (never trusted from the client, which doesn't send a
+  // price at all), so a flash deal that just expired can't still be
+  // honored by a stale page.
+  const flashActive = !!product.is_flash_deal && !!product.flash_ends_at && new Date(product.flash_ends_at) > new Date();
+  const unitPrice = flashActive ? Number(product.flash_price_ugx) : Number(product.price_per_unit);
+
   const { data: order, error } = await (supabase.from as any)('supplier_orders').insert({
     supplier_id:  product.supplier_id,
     buyer_id:     user.id,
@@ -42,8 +49,8 @@ export async function POST(req: Request) {
     product_name: product.name,
     quantity:     +quantity,
     unit:         product.unit,
-    unit_price:   product.price_per_unit,
-    amount:       +quantity * product.price_per_unit,
+    unit_price:   unitPrice,
+    amount:       +quantity * unitPrice,
     district:     (profile as any).district ?? (profile as any).location ?? null,
     notes:        notes ?? null,
     status:       'pending',
@@ -86,8 +93,8 @@ export async function POST(req: Request) {
         productName: product.name,
         quantity:    +quantity,
         unit:        product.unit,
-        unitPrice:   product.price_per_unit,
-        amount:      +quantity * product.price_per_unit,
+        unitPrice:   unitPrice,
+        amount:      +quantity * unitPrice,
         district:    (profile as any).district ?? (profile as any).location ?? null,
         receiptNo:   `AGN-${String((order as any).id).slice(0, 8).toUpperCase()}`,
         purchasedAt: (order as any).created_at ?? new Date().toISOString(),

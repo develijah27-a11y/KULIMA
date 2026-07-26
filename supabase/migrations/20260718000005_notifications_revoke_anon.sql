@@ -1,0 +1,27 @@
+-- ============================================================================
+-- KULIMA — notifications: revoke anon grants
+-- Confirmed live: the `anon` role (the public NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+-- shipped in the client bundle, usable with zero login) had raw
+-- INSERT/SELECT/UPDATE/DELETE table grants on notifications — likely the
+-- default Supabase project grant, never revoked here the way wallets/
+-- mobile_money_requests already were. The INSERT policy is `WITH CHECK
+-- (true)` (by design — any authenticated user can legitimately notify a
+-- different user, e.g. a buyer's own session notifying the farmer on their
+-- order), so an anon caller could forge an arbitrary notification (fake
+-- "Payment received", fake "KYC rejected — re-enter your PIN", etc.) via a
+-- raw REST call with no login at all. SELECT/UPDATE are already scoped by
+-- auth.uid() in their policies, which is always NULL for anon, so those two
+-- were not actually exploitable — only the permissive INSERT was.
+--
+-- This does NOT touch `authenticated`'s INSERT grant, since real logged-in
+-- users legitimately insert notifications for a *different* user today
+-- (e.g. order/offer/dispute notifications sent via the acting user's own
+-- session client, not always service-role) — revoking it would break those
+-- flows. A signed-in user could still forge a notification for someone else
+-- via direct REST; closing that fully needs routing every notify call site
+-- through the service-role client, which is a larger change than this
+-- migration and is intentionally out of scope here.
+-- Safe to re-run.
+-- ============================================================================
+
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON notifications FROM anon;
