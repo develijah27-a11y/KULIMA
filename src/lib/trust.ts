@@ -11,6 +11,12 @@ export const BADGE_CONFIG = {
 
 export const LEVEL_ORDER: VerificationLevel[] = ['grey', 'green', 'blue', 'gold'];
 
+// What a user could upgrade to next, from wherever they currently are.
+// 'gold' has no entry — it's the max tier, nothing further to offer.
+export const NEXT_LEVEL: Partial<Record<VerificationLevel, 'green' | 'blue' | 'gold'>> = {
+  none: 'green', grey: 'green', green: 'blue', blue: 'gold',
+};
+
 export function canUpgradeTo(current: VerificationLevel, target: 'green' | 'blue' | 'gold'): boolean {
   return LEVEL_ORDER.indexOf(current) < LEVEL_ORDER.indexOf(target);
 }
