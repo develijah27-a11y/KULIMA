@@ -12,17 +12,26 @@ export async function POST(_req: Request, { params }: Params) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // Verify transporter role
+  // Verify transporter role — 'transporter' can be either the account's
+  // primary role or a secondary one held alongside another (this app is
+  // one-account-multiple-roles; the /transporter layout itself gates on the
+  // `roles` array for exactly this reason), so admin must accept both.
   const { data: profile } = await supabase
-    .from('profiles').select('role, verification_level').eq('user_id', user.id).single();
-  if (!profile || !['transporter', 'admin'].includes((profile as any).role)) {
+    .from('profiles').select('role, roles, verification_level, role_verification_levels').eq('user_id', user.id).single();
+  const isTransporter = (profile as any)?.role === 'transporter' || ((profile as any)?.roles ?? []).includes('transporter');
+  if (!profile || !(isTransporter || (profile as any).role === 'admin')) {
     return NextResponse.json({ error: 'Only transporters can accept jobs' }, { status: 403 });
   }
   // Blue-tier verification is what actually collects a driving permit +
   // vehicle registration + selfie — require it before dispatch so a
-  // misplaced delivery or bad-faith driver can always be traced.
-  const level = (profile as any).verification_level;
-  if ((profile as any).role === 'transporter' && level !== 'blue' && level !== 'gold') {
+  // misplaced delivery or bad-faith driver can always be traced. Prefer the
+  // transporter-ROLE level (role_verification_levels.transporter) over the
+  // flat column — an account whose primary role isn't 'transporter' only
+  // ever gets its transporter approval written there (see
+  // /api/admin/verify-kyc), so checking the flat column alone wrongly
+  // re-blocked an already-verified secondary-role transporter.
+  const level = (profile as any).role_verification_levels?.transporter ?? (profile as any).verification_level;
+  if (isTransporter && level !== 'blue' && level !== 'gold') {
     return NextResponse.json({
       error: 'Submit your driving license, vehicle registration, and a selfie for verification before accepting jobs.',
     }, { status: 403 });
