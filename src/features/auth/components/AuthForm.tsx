@@ -61,16 +61,21 @@ export function AuthForm({ mode }: AuthFormProps) {
     });
   }, [mode]);
 
-  // ── Listen for SIGNED_IN and redirect ────────────────────────────────────
-  // This fires on EVERY sign-in (including the mobile keyboard "Go" path)
-  // regardless of refs, so it is now the PRIMARY redirect path, not a backup.
+  // ── Listen for SIGNED_IN — used for signup confirmation path only ────────
+  // Sign-in redirects directly from signIn() below — we do NOT rely on
+  // onAuthStateChange for the sign-in redirect because on mobile it depends
+  // on a Supabase Realtime WebSocket connection which can fail silently,
+  // leaving the user stuck on "Signing in…" forever.
+  // This listener only handles the signup OTP verification path where
+  // verifyOtp() triggers a SIGNED_IN event.
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session && !isSigningUpRef.current) {
+      if (event === 'SIGNED_IN' && session && isSigningUpRef.current === false) {
+        // Only act on this for the OTP/signup confirmation flow —
+        // sign-in already redirected synchronously in signIn() below.
         setTimeout(() => {
           fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
         }, 0);
-        router.push('/dashboard');
       }
     });
     return () => subscription.unsubscribe();
@@ -89,14 +94,21 @@ export function AuthForm({ mode }: AuthFormProps) {
   }, [codeSentAt]);
 
   // ── Sign in ───────────────────────────────────────────────────────────────
+  // ── Sign in ───────────────────────────────────────────────────────────────
+  // Redirects SYNCHRONOUSLY — does NOT rely on onAuthStateChange.
+  // On mobile, the Supabase Realtime WebSocket that delivers auth events
+  // can fail silently, leaving the user stuck on "Signing in…" forever.
+  // signInWithPassword returning a session is enough — redirect immediately.
   const signIn = useCallback(async () => {
-    // Do not redirect here — the onAuthStateChange listener above handles
-    // ALL redirects. This keeps the redirect path to a single place and
-    // means mobile keyboard "Go" works exactly the same as button tap.
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError) throw signInError;
-    // onAuthStateChange will fire SIGNED_IN and push to /dashboard
-  }, [email, password]);
+    if (data.session) {
+      setTimeout(() => {
+        fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
+      }, 0);
+      router.push('/dashboard');
+    }
+  }, [email, password, router]);
 
   // ── Sign up ───────────────────────────────────────────────────────────────
   const signUp = useCallback(async () => {
@@ -137,7 +149,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           location: location || null,
         }),
       }).catch(() => {});
-      // onAuthStateChange fires SIGNED_IN and redirects
+      router.push('/dashboard');
       return;
     }
 
@@ -205,10 +217,9 @@ export function AuthForm({ mode }: AuthFormProps) {
     } finally {
       submitLockRef.current = false;
       submittingRef.current = false;
-      // Note: setLoading(false) is NOT called here on success —
-      // we stay in loading state while onAuthStateChange fires and redirects.
-      // This prevents the button flashing back to "Sign in" before the
-      // page navigates, which looks broken on slow mobile connections.
+      // Always reset loading — redirect happens via router.push in signIn(),
+      // not via a state update here, so we must clear loading regardless.
+      setLoading(false);
     }
   }, [mode, password, confirmPassword, signIn, signUp]);
 
@@ -235,7 +246,8 @@ export function AuthForm({ mode }: AuthFormProps) {
           }),
         }).catch(() => {});
       }
-      // onAuthStateChange fires SIGNED_IN and redirects
+      // Redirect directly — don't wait for onAuthStateChange
+      router.push('/dashboard');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid or expired code';
       setError(
