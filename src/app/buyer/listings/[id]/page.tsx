@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ListingDetail } from './ListingDetail';
 import { getCropPhotoUrl, getCropGradient, getCropColor } from '@/lib/crop-photos';
 import { FavouriteButton } from '@/components/ui/FavouriteButton';
+import { ACTIVE_ORDER_STATUSES } from '@/lib/orders/status';
 
 
 export default async function BuyerListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,7 +39,7 @@ export default async function BuyerListingDetailPage({ params }: { params: Promi
       .select('id')
       .eq('listing_id', id)
       .eq('buyer_id', user.id)
-      .in('status', ['pending', 'confirmed', 'dispatched', 'in_transit'])
+      .in('status', ACTIVE_ORDER_STATUSES)
       .maybeSingle(),
   ]);
 

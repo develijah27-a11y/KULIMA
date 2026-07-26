@@ -4,11 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
 import { verifyPin, isValidPinFormat } from '@/lib/wallet-pin';
 import { logSystemEvent } from '@/lib/system-log';
-
-const FLW_BASE = 'https://api.flutterwave.com/v3';
-
-// MTN Uganda and Airtel Uganda bank codes for Flutterwave transfers
-const PROVIDER_BANK: Record<string, string> = { mtn: 'MPS', airtel: 'AIRTEL' };
+import { nylonpay } from '@/lib/nylon-pay';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -25,10 +21,9 @@ export async function POST(req: Request) {
   if (!phone) return NextResponse.json({ error: 'Phone number required' }, { status: 400 });
   if (!['mtn', 'airtel'].includes(provider)) return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
 
-  const flwSecret = process.env.FLUTTERWAVE_SECRET_KEY;
   const serviceUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  if (!flwSecret) return NextResponse.json({ error: 'Payment service not configured' }, { status: 503 });
+  if (!nylonpay) return NextResponse.json({ error: 'Payment service not configured' }, { status: 503 });
 
   // Use service role to check + deduct balance atomically
   const admin = createServiceClient(serviceUrl, serviceKey);
@@ -65,8 +60,6 @@ export async function POST(req: Request) {
 
   if (wallet.balance < amount) return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
 
-  const txRef = `kulima-wdl-${user.id.slice(0, 8)}-${Date.now()}`;
-
   // Atomic conditional debit (UPDATE ... WHERE balance >= amount, single row
   // lock) — closes the race where two concurrent withdrawal requests both
   // pass the soft balance check above and both trigger a real payout.
@@ -86,7 +79,6 @@ export async function POST(req: Request) {
       phone,
       provider,
       status: 'pending',
-      flutterwave_ref: txRef,
     }).select('id').single(),
     (admin.from as any)('wallet_transactions').insert({
       wallet_id: wallet.id,
@@ -94,7 +86,6 @@ export async function POST(req: Request) {
       type: 'withdrawal',
       amount,
       status: 'pending',
-      reference: txRef,
       description: `Withdrawal to ${provider.toUpperCase()} ${phone}`,
     }).select('id').single(),
   ]);
@@ -104,69 +95,53 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to create withdrawal request' }, { status: 500 });
   }
 
-  const normalizedPhone = phone.startsWith('+') ? phone.replace('+', '') : phone.startsWith('0') ? `256${phone.slice(1)}` : `256${phone}`;
+  const normalizedPhone = phone.startsWith('+') ? phone : phone.startsWith('0') ? `+256${phone.slice(1)}` : `+256${phone}`;
 
   try {
-    const flwRes = await fetch(`${FLW_BASE}/transfers`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${flwSecret}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        account_bank: PROVIDER_BANK[provider],
-        account_number: normalizedPhone,
-        amount,
-        narration: 'AgriNova Pay withdrawal',
-        currency: 'UGX',
-        reference: txRef,
-      }),
+    const payout = await nylonpay.makePayout({
+      amount,
+      currency: 'UGX',
+      description: 'AgriNova Pay withdrawal',
+      customer: { name: user.email ?? 'Kulima user', phoneNumber: normalizedPhone },
+      destination: { accountHolderName: user.email ?? 'Kulima user', accountNumber: normalizedPhone },
     });
 
-    const flwData = await flwRes.json();
-
-    if (flwData.status !== 'success') {
-      // Refund balance and mark failed
-      await Promise.all([
-        (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: amount }),
-        (admin.from as any)('wallet_transactions').update({ status: 'failed' }).eq('id', txnInsert.data.id),
-        (admin.from as any)('mobile_money_requests').update({ status: 'failed', failure_reason: flwData.message }).eq('id', momoInsert.data.id),
-      ]);
-      logSystemEvent({
-        category: 'failed_payment',
-        level: 'warn',
-        route: '/api/wallet/withdraw',
-        method: 'POST',
-        userId: user.id,
-        message: `Withdrawal transfer failed: ${flwData.message ?? 'Transfer failed'}`,
-        metadata: { amount, provider },
-      });
-      return NextResponse.json({ error: flwData.message ?? 'Transfer failed' }, { status: 400 });
-    }
-
-    // Mark as processing
+    // Nylon Pay auto-generates the reference — store it, and leave the final
+    // completed/failed transition (plus refund-on-failure) to the webhook,
+    // since a payout can take longer than this request should stay open for.
+    // wallet_transactions.status has no 'processing' value (pending/completed/
+    // failed only), so it stays 'pending' until the webhook resolves it.
     await Promise.all([
-      (admin.from as any)('wallet_transactions').update({ status: 'completed' }).eq('id', txnInsert.data.id),
-      (admin.from as any)('mobile_money_requests').update({ status: 'processing' }).eq('id', momoInsert.data.id),
+      (admin.from as any)('mobile_money_requests').update({
+        status: 'processing',
+        provider_ref: payout.reference,
+      }).eq('id', momoInsert.data.id),
+      (admin.from as any)('wallet_transactions').update({
+        reference: payout.reference,
+      }).eq('id', txnInsert.data.id),
     ]);
 
     return NextResponse.json({ success: true, message: 'Withdrawal initiated' });
-  } catch {
-    // Refund on network error
+  } catch (err) {
+    // makePayout() only throws on client-side validation errors — a
+    // provider-side rejection instead arrives later via webhook.
     await Promise.all([
       (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: amount }),
       (admin.from as any)('wallet_transactions').update({ status: 'failed' }).eq('id', txnInsert.data.id),
-      (admin.from as any)('mobile_money_requests').update({ status: 'failed', failure_reason: 'Network error' }).eq('id', momoInsert.data.id),
+      (admin.from as any)('mobile_money_requests').update({
+        status: 'failed',
+        failure_reason: err instanceof Error ? err.message : 'Nylon Pay rejected the withdrawal request',
+      }).eq('id', momoInsert.data.id),
     ]);
     logSystemEvent({
       category: 'failed_payment',
-      level: 'error',
+      level: 'warn',
       route: '/api/wallet/withdraw',
       method: 'POST',
       userId: user.id,
-      message: 'Network error contacting Flutterwave on withdrawal',
+      message: err instanceof Error ? `Withdrawal payout failed: ${err.message}` : 'Withdrawal payout failed',
       metadata: { amount, provider },
     });
-    return NextResponse.json({ error: 'Payment service unavailable' }, { status: 503 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'Transfer failed' }, { status: 400 });
   }
 }

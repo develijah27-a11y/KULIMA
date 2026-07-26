@@ -69,8 +69,16 @@ async function handlePATCH(req: Request) {
 
     // A dispute resolution moves real money — both sides need to be told
     // what was decided, not just find out from their balance changing.
-    const { data: order } = await (admin.from as any)('orders').select('buyer_id, seller_id, crop_type').eq('id', dispute.order_id).single();
-    if (order?.buyer_id && order?.seller_id) {
+    // orders has no seller_id column — the farmer side is farmer_profile_id,
+    // which points at profiles.id, not auth.users.id, so it has to be
+    // resolved separately before it can be used as a notification userId.
+    const { data: order } = await (admin.from as any)('orders').select('buyer_id, farmer_profile_id, crop_type').eq('id', dispute.order_id).single();
+    const { data: farmerProfile } = order?.farmer_profile_id
+      ? await (admin.from as any)('profiles').select('user_id').eq('id', order.farmer_profile_id).single()
+      : { data: null };
+    const sellerUserId = farmerProfile?.user_id;
+
+    if (order?.buyer_id && sellerUserId) {
       const refundedBuyer = outcome === 'refund_buyer';
       await notifyUsers(admin, [
         {
@@ -84,7 +92,7 @@ async function handlePATCH(req: Request) {
           url: '/buyer/orders',
         },
         {
-          userId: order.seller_id,
+          userId: sellerUserId,
           type: 'payment',
           title: refundedBuyer ? 'Dispute resolved — order refunded to buyer' : 'Dispute resolved — you were paid',
           body: refundedBuyer

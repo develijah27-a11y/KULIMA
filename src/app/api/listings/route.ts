@@ -57,8 +57,8 @@ export async function POST(req: Request) {
   const imageUrl      = body.imageUrl      ?? body.image_url;
   const { district, notes, is_group_listing } = body;
 
-  if (!cropType || !quantityKg || !askingPrice || !district) {
-    return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+  if (!cropType || !district || !(Number(quantityKg) > 0) || !(Number(askingPrice) > 0)) {
+    return NextResponse.json({ success: false, error: 'Missing required fields, or quantity/price is not greater than zero' }, { status: 400 });
   }
   if (!imageUrl) {
     return NextResponse.json({ success: false, error: 'A live photo of your produce is required' }, { status: 400 });
@@ -73,7 +73,11 @@ export async function POST(req: Request) {
     district,
     notes:          notes ?? null,
     image_url:      imageUrl,
-    status:         'active',
+    // Not 'active' — a listing only becomes visible/buyable once an admin
+    // approves it (approval_status defaults to 'pending'). Every buyer-
+    // facing listings query filters on status = 'active', so this alone is
+    // what keeps a brand-new listing off the marketplace until reviewed.
+    status:         'pending_review',
   };
   if (is_group_listing) {
     insertPayload.is_group_listing = true;
@@ -98,6 +102,14 @@ export async function PATCH(req: Request) {
 
   const { id, status } = await req.json();
   if (!id || !status) return NextResponse.json({ success: false, error: 'Missing fields' }, { status: 400 });
+
+  // A farmer can pause or manually mark their own listing sold, but can't
+  // self-set 'active' — that would skip the admin approval gate that decides
+  // whether a listing is allowed on the marketplace at all.
+  const FARMER_SETTABLE_STATUSES = ['inactive', 'sold'];
+  if (!FARMER_SETTABLE_STATUSES.includes(status)) {
+    return NextResponse.json({ success: false, error: `You can only set status to: ${FARMER_SETTABLE_STATUSES.join(', ')}` }, { status: 403 });
+  }
 
   const profile = await getOrCreateProfile(supabase, user);
   if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 500 });

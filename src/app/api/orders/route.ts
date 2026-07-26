@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
+import { ACTIVE_ORDER_STATUSES } from '@/lib/orders/status';
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -92,12 +93,14 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    // Prevent duplicate active order from same buyer on same group listing
+    // Prevent duplicate active order from same buyer on same group listing —
+    // must include every status between creation and completion (including
+    // 'paid') or a buyer can fund escrow twice on the same lot.
     const { data: existingGl } = await (supabase.from as any)('orders')
       .select('id')
       .eq('group_listing_id', groupListingId)
       .eq('buyer_id', user.id)
-      .in('status', ['pending','confirmed','dispatched','in_transit','delivered'])
+      .in('status', ACTIVE_ORDER_STATUSES)
       .maybeSingle();
     if (existingGl) {
       return NextResponse.json({ error: 'You already have an active order for this group listing' }, { status: 409 });
@@ -108,6 +111,19 @@ export async function POST(req: Request) {
     // Resolve group admin's profile id for farmer_profile_id
     const { data: adminProfile } = await supabase
       .from('profiles').select('id, user_id').eq('user_id', gl.admin_id).single();
+
+    // Atomic conditional decrement (UPDATE ... WHERE total_quantity_kg >=
+    // requested, single row lock) — closes the race where two concurrent
+    // orders on the same group lot both pass the soft check above and both
+    // get accepted against stock that only exists once.
+    const stockAdmin = createServiceRoleClient();
+    const { data: claimed } = await (stockAdmin as any).rpc('claim_group_listing_stock', {
+      p_group_listing_id: groupListingId,
+      p_quantity_kg: +quantityKg,
+    });
+    if (!claimed) {
+      return NextResponse.json({ error: 'This group lot no longer has enough stock for your order. Please refresh and try again.' }, { status: 409 });
+    }
 
     const { data: order, error: orderErr } = await (supabase.from as any)('orders').insert({
       group_listing_id:  groupListingId,
@@ -125,6 +141,7 @@ export async function POST(req: Request) {
 
     if (orderErr) {
       console.error('[/api/orders]', orderErr);
+      await (stockAdmin as any).rpc('release_group_listing_stock', { p_group_listing_id: groupListingId, p_quantity_kg: +quantityKg });
       return NextResponse.json({ error: 'Failed to create order. Please try again.' }, { status: 500 });
     }
 
@@ -164,18 +181,34 @@ export async function POST(req: Request) {
     }, { status: 400 });
   }
 
-  // Prevent duplicate pending order from same buyer on same listing
+  // Prevent duplicate active order from same buyer on same listing — must
+  // include every status between creation and completion (including 'paid')
+  // or a buyer can fund escrow twice on the same listing.
   const { data: existing } = await (supabase.from as any)('orders')
     .select('id')
     .eq('listing_id', listingId)
     .eq('buyer_id', user.id)
-    .in('status', ['pending', 'confirmed', 'dispatched', 'in_transit'])
+    .in('status', ACTIVE_ORDER_STATUSES)
     .maybeSingle();
   if (existing) {
     return NextResponse.json({ error: 'You already have an active order for this listing' }, { status: 409 });
   }
 
   const total = Math.round(+quantityKg * listing.asking_price);
+
+  // Atomic conditional decrement (UPDATE ... WHERE quantity_kg >= requested,
+  // single row lock) — closes the race where two concurrent orders on the
+  // same listing both pass the soft check above and both get accepted
+  // against stock that only exists once. Flips the listing to 'sold' once
+  // the remaining quantity hits zero.
+  const stockAdmin = createServiceRoleClient();
+  const { data: claimed } = await (stockAdmin as any).rpc('claim_listing_stock', {
+    p_listing_id: listingId,
+    p_quantity_kg: +quantityKg,
+  });
+  if (!claimed) {
+    return NextResponse.json({ error: 'This listing no longer has enough stock for your order. Please refresh and try again.' }, { status: 409 });
+  }
 
   // Create order
   const { data: order, error: orderErr } = await (supabase.from as any)('orders').insert({
@@ -194,6 +227,7 @@ export async function POST(req: Request) {
 
   if (orderErr) {
     console.error('[/api/orders]', orderErr);
+    await (stockAdmin as any).rpc('release_listing_stock', { p_listing_id: listingId, p_quantity_kg: +quantityKg });
     return NextResponse.json({ error: 'Failed to create order. Please try again.' }, { status: 500 });
   }
 

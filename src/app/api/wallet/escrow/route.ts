@@ -36,7 +36,6 @@ export async function POST(req: Request) {
 
     let sellerUserId: string;
     let totalAmount: number;
-    let escrowInsertData: Record<string, unknown>;
 
     if (orderId) {
       // Order-based escrow — buyer pays once the farmer has confirmed. Payment
@@ -60,13 +59,6 @@ export async function POST(req: Request) {
       if (!sellerUserId) return NextResponse.json({ error: 'Seller not found' }, { status: 404 });
 
       totalAmount = Math.round(Number(order.total_amount));
-      escrowInsertData = {
-        order_id:       orderId,
-        buyer_user_id:  user.id,
-        seller_user_id: sellerUserId,
-        amount:         totalAmount,
-        status:         'funded',
-      };
     } else {
       // Legacy offer-based escrow
       const { data: offer, error: offerErr } = await (db.from as any)('offers')
@@ -88,14 +80,6 @@ export async function POST(req: Request) {
       const finalPrice = offer.counter_price ?? offer.offered_price;
       totalAmount = Math.round(finalPrice * (offer.listing?.quantity_kg ?? 0));
       if (totalAmount <= 0) return NextResponse.json({ error: 'Invalid offer amount' }, { status: 400 });
-
-      escrowInsertData = {
-        offer_id:       offerId,
-        buyer_user_id:  user.id,
-        seller_user_id: sellerUserId,
-        amount:         totalAmount,
-        status:         'funded',
-      };
     }
 
     // Check buyer balance (soft pre-check for a clean error message — the
@@ -140,40 +124,46 @@ export async function POST(req: Request) {
       }
       escrowId = claimedId;
     } else {
-      // Legacy offer-based escrow — backstopped by a unique index on
-      // escrow_accounts.offer_id, but not fully atomic like the order path.
-      const [walletUpdate, escrowInsert, txnInsert] = await Promise.all([
-        (db.from as any)('wallets').update({
-          balance:    Number(buyerWallet.balance) - totalAmount,
-          updated_at: new Date().toISOString(),
-        }).eq('id', buyerWallet.id),
-        (db.from as any)('escrow_accounts').insert(escrowInsertData).select('id').single(),
-        (db.from as any)('wallet_transactions').insert({
-          wallet_id:   buyerWallet.id,
-          user_id:     user.id,
-          type:        'escrow_lock',
-          amount:      totalAmount,
-          status:      'completed',
-          description: `Escrow funded for offer`,
-        }),
-      ]);
-      if (escrowInsert.error) {
-        logSystemEvent({
-          category: 'failed_payment',
-          level: 'error',
-          route: '/api/wallet/escrow',
-          method: 'POST',
-          userId: user.id,
-          message: `Legacy offer escrow fund failed: ${escrowInsert.error.message}`,
-          metadata: { offerId, amount: totalAmount },
-        });
-        return NextResponse.json({ error: 'Failed to create escrow' }, { status: 500 });
+      // Atomic: locks the buyer's wallet row, inserts the escrow row (unique
+      // on offer_id), then debits — same claim_escrow_fund pattern as the
+      // order-based path. Previously this was a plain read-balance ->
+      // compute -> write-balance, so two different accepted offers funded
+      // concurrently by the same buyer could lose one debit (the unique
+      // index on offer_id only blocks double-funding the *same* offer).
+      const { data: claimedId, error: claimErr } = await (db as any).rpc('claim_escrow_fund_offer', {
+        p_offer_id: offerId,
+        p_buyer_user_id: user.id,
+        p_seller_user_id: sellerUserId,
+        p_amount: totalAmount,
+      });
+      if (claimErr || !claimedId) {
+        const alreadyFunded = claimErr?.message?.includes('already funded');
+        if (!alreadyFunded) {
+          logSystemEvent({
+            category: 'failed_payment',
+            level: 'error',
+            route: '/api/wallet/escrow',
+            method: 'POST',
+            userId: user.id,
+            message: `Legacy offer escrow fund failed: ${claimErr?.message ?? 'claim_escrow_fund_offer returned no id'}`,
+            metadata: { offerId, amount: totalAmount },
+          });
+        }
+        return NextResponse.json({
+          error: alreadyFunded ? 'Escrow already funded for this offer' : (claimErr?.message ?? 'Failed to create escrow'),
+        }, { status: alreadyFunded ? 409 : 500 });
       }
-      escrowId = escrowInsert.data.id;
+      escrowId = claimedId;
     }
 
     // Link escrow to order + update status to 'paid'
-    if (orderId) {
+    // Everything from here on is order/delivery orchestration AFTER the
+    // money has already moved (escrow is funded) — wrapped so a failure
+    // here (a bad join, a transient insert error) can't turn into a false
+    // 500 telling the buyer their payment failed when it actually
+    // succeeded. Logged to system_logs so it's still visible on
+    // /admin/logs instead of silently swallowed.
+    if (orderId) try {
       const now = new Date().toISOString();
       await (db.from as any)('orders').update({
         escrow_id:  escrowId,
@@ -265,6 +255,16 @@ export async function POST(req: Request) {
           }
         }
       }
+    } catch (err) {
+      logSystemEvent({
+        category: 'error',
+        level: 'error',
+        route: '/api/wallet/escrow',
+        method: 'POST',
+        userId: user.id,
+        message: err instanceof Error ? `Post-fund order/delivery orchestration failed: ${err.message}` : 'Post-fund order/delivery orchestration failed',
+        metadata: { orderId, escrowId },
+      });
     }
 
     return NextResponse.json({ success: true, escrowId });

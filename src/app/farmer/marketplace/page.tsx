@@ -12,9 +12,11 @@ const C = {
 };
 
 const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
-  active:  { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Active' },
-  sold:    { color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)',     label: 'Sold' },
-  expired: { color: 'var(--d-muted)',       bg: 'var(--color-surface-2)',  label: 'Expired' },
+  active:         { color: 'var(--color-success)', bg: 'var(--color-success-bg)', label: 'Active' },
+  pending_review: { color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)', label: 'Pending Review' },
+  inactive:       { color: 'var(--d-muted)',        bg: 'var(--color-surface-2)',  label: 'Paused' },
+  sold:           { color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)',     label: 'Sold' },
+  expired:        { color: 'var(--d-muted)',        bg: 'var(--color-surface-2)',  label: 'Expired' },
 };
 
 function timeAgo(iso: string) {

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { GroupListingOrderForm } from './GroupListingOrderForm';
 import { Leaf, ShieldCheck, CheckCircle2, BarChart3, Tag, TrendingUp } from 'lucide-react';
 import { getCropColor } from '@/lib/crop-photos';
+import { ACTIVE_ORDER_STATUSES } from '@/lib/orders/status';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -31,7 +32,7 @@ export default async function GroupListingDetailPage({
       .select('id, status')
       .eq('group_listing_id', id)
       .eq('buyer_id', user.id)
-      .in('status', ['pending','confirmed','dispatched','in_transit','delivered'])
+      .in('status', ACTIVE_ORDER_STATUSES)
       .maybeSingle(),
   ]);
 

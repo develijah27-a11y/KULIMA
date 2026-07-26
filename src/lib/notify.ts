@@ -19,20 +19,38 @@ export interface NotifyInput {
 // already has the app open (the realtime bell subscription), which is why
 // so much of the app went silent outside of the couple of paths that
 // remembered to call sendPushToUsers by hand.
-export async function notifyUsers(supabase: any, notifications: NotifyInput[]): Promise<void> {
-  if (notifications.length === 0) return;
+//
+// Notifying is inherently non-critical relative to whatever real action
+// (payment, order status change, admin decision) triggered it — many
+// callers run this in the same Promise.all as, or immediately after, a
+// financial/state write that has already committed. This function must
+// therefore never throw: a transient notifications-insert failure should
+// never look like the triggering action itself failed. Callers that want to
+// know about a failure can still inspect the return value; none currently
+// need to, which is why this was a silent footgun in the first place.
+export async function notifyUsers(supabase: any, notifications: NotifyInput[]): Promise<{ ok: boolean }> {
+  if (notifications.length === 0) return { ok: true };
 
-  await supabase.from('notifications').insert(
-    notifications.map(n => ({
-      user_id: n.userId,
-      role: n.role ?? null,
-      type: n.type,
-      title: n.title,
-      body: n.body,
-      data: n.data ?? null,
-      read: false,
-    })),
-  );
+  try {
+    const { error } = await supabase.from('notifications').insert(
+      notifications.map(n => ({
+        user_id: n.userId,
+        role: n.role ?? null,
+        type: n.type,
+        title: n.title,
+        body: n.body,
+        data: n.data ?? null,
+        read: false,
+      })),
+    );
+    if (error) {
+      console.error('[notify] insert failed:', error);
+      return { ok: false };
+    }
+  } catch (err) {
+    console.error('[notify] insert threw:', err);
+    return { ok: false };
+  }
 
   // Pushes are best-effort and independent per recipient — one failing
   // subscription must never block the in-app row (already written above)
@@ -42,8 +60,10 @@ export async function notifyUsers(supabase: any, notifications: NotifyInput[]): 
       sendPushToUsers([n.userId], { title: n.title, body: n.body, url: n.url ?? '/dashboard' }).catch(() => {}),
     ),
   );
+
+  return { ok: true };
 }
 
-export async function notifyUser(supabase: any, notification: NotifyInput): Promise<void> {
+export async function notifyUser(supabase: any, notification: NotifyInput): Promise<{ ok: boolean }> {
   return notifyUsers(supabase, [notification]);
 }

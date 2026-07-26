@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 // Buyer accepts a farmer's counter-offer on a listing.
 // Client sends { listingId } — we look up the buyer's 'countered' offer on that listing.
@@ -25,11 +25,25 @@ export async function POST(req: Request) {
   }
   if (!offer) return NextResponse.json({ success: false, error: 'No pending counter-offer found on this listing' }, { status: 404 });
 
-  // Accept this offer, reject others, mark listing sold
+  const { data: listing } = await (supabase.from as any)('listings')
+    .select('id, quantity_kg').eq('id', listingId).single();
+  if (!listing) return NextResponse.json({ success: false, error: 'Listing not found' }, { status: 404 });
+
+  // Atomic claim — same guard as the PATCH /api/offers accept/accept-counter
+  // actions, so this route can't double-sell a listing either.
+  const stockAdmin = createServiceRoleClient();
+  const { data: claimed } = await (stockAdmin as any).rpc('claim_listing_stock', {
+    p_listing_id: listing.id,
+    p_quantity_kg: listing.quantity_kg,
+  });
+  if (!claimed) {
+    return NextResponse.json({ success: false, error: 'This listing is no longer available — it may have already been sold.' }, { status: 409 });
+  }
+
+  // Accept this offer, reject others
   await Promise.all([
     (supabase.from as any)('offers').update({ status: 'accepted' }).eq('id', offer.id),
     (supabase.from as any)('offers').update({ status: 'rejected' }).eq('listing_id', listingId).neq('id', offer.id),
-    (supabase.from as any)('listings').update({ status: 'sold' }).eq('id', listingId),
   ]);
 
   return NextResponse.json({ success: true });

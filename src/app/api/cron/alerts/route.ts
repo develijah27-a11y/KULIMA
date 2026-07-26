@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { sendPushToUsers } from '@/lib/push';
 
 // Vercel cron — every 6 hours
@@ -7,7 +7,23 @@ export async function GET(req: Request) {
   const v = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
   if (v !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const supabase = await createClient();
+  // Service-role client — a Vercel Cron request has no Supabase session, so
+  // the owner-scoped farm_inventory read below (and any RLS-gated table)
+  // would otherwise silently return zero rows.
+  const supabase = createServiceRoleClient();
+
+  // 0. Reset expired flash deals. is_flash_deal otherwise stays true forever
+  // once flash_ends_at passes (nothing else clears it) — the product just
+  // silently vanishes from the "Active Deals" list AND stays excluded from
+  // "Ready to Flash" candidates, so a supplier has no way back in short of
+  // finding and manually ending a deal they can no longer even see as
+  // active. Same field reset as the manual "End early" action
+  // (DELETE /api/supplier-products/[id]/flash).
+  const { data: expiredFlashDeals } = await (supabase.from as any)('supplier_products')
+    .update({ is_flash_deal: false, flash_price_ugx: null, flash_starts_at: null, flash_ends_at: null })
+    .eq('is_flash_deal', true)
+    .lte('flash_ends_at', new Date().toISOString())
+    .select('id');
 
   // 1. Fetch latest weather to detect rain forecast
   const { data: cache } = await supabase.from('weather_cache').select('*').limit(10);
@@ -148,6 +164,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     success: true,
+    expiredFlashDeals: (expiredFlashDeals ?? []).length,
     priceChanges: priceChanges.length,
     lowInventory: (lowInventory ?? []).length,
     lowProducts: (lowProducts ?? []).length,

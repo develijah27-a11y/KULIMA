@@ -50,7 +50,7 @@ export default function TermsPage() {
 
       <h2>5. Payments &amp; escrow</h2>
       <ul>
-        <li>Deposits and withdrawals are processed through Flutterwave via MTN Mobile Money and Airtel Money. AgriNova does not have access to, and never asks for, your mobile money PIN.</li>
+        <li>Deposits and withdrawals are processed through Nylon Pay via MTN Mobile Money and Airtel Money. AgriNova does not have access to, and never asks for, your mobile money PIN.</li>
         <li>When a buyer pays for an order, funds move into <strong>escrow</strong> — held by AgriNova, not released to the seller — until the order is marked delivered and the buyer confirms receipt (or a 48-hour window passes without a dispute).</li>
         <li>If a buyer raises a dispute within that window, an AgriNova administrator reviews the case and decides whether funds are released to the seller or refunded to the buyer. This decision is final within the Platform's dispute process.</li>
         <li>AgriNova deducts a commission from each completed transaction, calculated as a percentage of the transaction value. The exact fee is shown to you before you confirm any payment — nothing is deducted silently.</li>

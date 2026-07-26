@@ -19,7 +19,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   // Load order
   const { data: order } = await (supabase.from as any)('orders')
-    .select('id, buyer_id, farmer_profile_id, status, crop_type, quantity_kg, total_amount, listing_id, pickup_district, dropoff_district, delivered_at, escrow_id, return_requested_at')
+    .select('id, buyer_id, farmer_profile_id, status, crop_type, quantity_kg, total_amount, listing_id, group_listing_id, pickup_district, dropoff_district, delivered_at, escrow_id, return_requested_at')
     .eq('id', id)
     .single();
 
@@ -76,13 +76,22 @@ export async function PATCH(req: Request, { params }: Params) {
       .update({ status: 'cancelled', cancelled_at: now, farmer_note: note ?? null })
       .eq('id', id);
 
-    // Restore listing to active if it was marked sold from a Buy Now
-    await (supabase.from as any)('listings').update({ status: 'active' }).eq('id', order.listing_id).eq('status', 'sold');
+    // Give the claimed stock back to the listing — quantity_kg was reserved
+    // atomically at order-creation time (see POST /api/orders), so a
+    // cancelled order must release it back the same way, not just flip
+    // status back to 'active' (which would leave quantity_kg permanently
+    // understated, and never fires at all for a partial-quantity order that
+    // never pushed the listing to 'sold' in the first place).
+    const admin = createServiceRoleClient();
+    if (order.listing_id) {
+      await (admin as any).rpc('release_listing_stock', { p_listing_id: order.listing_id, p_quantity_kg: order.quantity_kg });
+    } else if (order.group_listing_id) {
+      await (admin as any).rpc('release_group_listing_stock', { p_group_listing_id: order.group_listing_id, p_quantity_kg: order.quantity_kg });
+    }
 
     // Refund escrow to the buyer if it was already funded — otherwise a
     // cancelled order silently kept the buyer's money locked forever.
     if (order.escrow_id) {
-      const admin = createServiceRoleClient();
       await refundEscrowForOrder(admin as any, id);
     }
 
