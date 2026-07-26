@@ -4,7 +4,7 @@ import { notifyUser } from '@/lib/notify';
 
 type AdminClient = SupabaseClient<Database>;
 
-async function getCommissionRate(db: AdminClient) {
+export async function getCommissionRate(db: AdminClient) {
   const { data } = await (db.from as any)('platform_commission')
     .select('rate_percent, min_fee_ugx, max_fee_ugx, platform_wallet_user_id')
     .eq('active', true)
@@ -12,14 +12,14 @@ async function getCommissionRate(db: AdminClient) {
   return data ?? { rate_percent: 2.5, min_fee_ugx: 500, max_fee_ugx: null, platform_wallet_user_id: null };
 }
 
-function computeFee(gross: number, commission: { rate_percent: number; min_fee_ugx: number; max_fee_ugx: number | null }) {
+export function computeFee(gross: number, commission: { rate_percent: number; min_fee_ugx: number; max_fee_ugx: number | null }) {
   let fee = Math.round(gross * commission.rate_percent / 100);
   if (fee < commission.min_fee_ugx) fee = commission.min_fee_ugx;
   if (commission.max_fee_ugx && fee > commission.max_fee_ugx) fee = commission.max_fee_ugx;
   return fee;
 }
 
-async function creditPlatformWallet(
+export async function creditPlatformWallet(
   db: AdminClient,
   platformWalletUserId: string | null,
   feeAmount: number,
