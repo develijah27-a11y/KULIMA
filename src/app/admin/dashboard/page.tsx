@@ -7,7 +7,6 @@ import {
   Building2, MessageCircle, Microscope, Truck, ShoppingCart, BarChart3,
   Bell, ShieldCheck, CreditCard, Activity,
 } from 'lucide-react';
-
 const C = {
   text:       'var(--d-text)',
   muted:      'var(--d-muted)',
@@ -598,6 +597,10 @@ function AdminTools() {
     { href: '/admin/commission',   icon: <CreditCard size={20} />,   label: 'Platform Wallet', sub: 'Commission balance & account no.', bg: 'var(--color-primary-bg)',    color: C.green   },
     { href: '/admin/disease-reports', icon: <Microscope size={20} />, label: 'Disease Reports', sub: 'Assign & track crop cases',       bg: 'var(--color-warning-bg)',    color: 'var(--color-warning)' },
     { href: '/admin/logs',         icon: <Activity size={20} />,     label: 'System Logs',    sub: 'Errors, payments & performance',  bg: 'var(--color-danger-bg)',     color: C.red },
+    { href: '/admin/revenue',      icon: <DollarSign size={20} />,   label: 'Revenue',        sub: 'Fees, commissions & escrow flow',  bg: 'var(--color-success-bg)',    color: C.greenMed },
+    { href: '/admin/security',     icon: <ShieldCheck size={20} />,  label: 'Security',       sub: 'Auth failures & fraud flags',      bg: 'var(--color-danger-bg)',     color: C.red },
+    { href: '/admin/moderation',   icon: <AlertTriangle size={20} />,label: 'Moderation',     sub: 'Reported listings & disputes',     bg: 'var(--color-warning-bg)',    color: 'var(--color-warning)' },
+    { href: '/admin/support',      icon: <MessageCircle size={20} />,label: 'Support Tickets',sub: 'User support requests',           bg: 'var(--color-sky-bg)',        color: C.blue },
   ];
 
   return (

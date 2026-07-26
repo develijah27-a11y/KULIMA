@@ -23,7 +23,8 @@ const TRANSPORTER_NAV = [
   // ── Account
   { href: '/transporter/wallet',     icon: 'earnings',     label: 'Wallet & Earnings', divider: true, sectionLabel: 'Account' },
   { href: '/transporter/notifications', icon: 'notifications', label: 'Notifications' },
-  { href: '/transporter/verify',     icon: 'verify',        label: 'Get Verified' },
+  { href: '/transporter/account',    icon: 'verify',       label: 'My Account' },
+  { href: '/transporter/support',    icon: 'support',       label: 'Support' },
   { href: '/transporter/settings',   icon: 'settings',     label: 'Settings' },
 ];
 

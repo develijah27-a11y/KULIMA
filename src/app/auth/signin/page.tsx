@@ -79,13 +79,19 @@ function SignInContent() {
   const [existingEmail, setExistingEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    // Skip the check entirely if we're here because a session just expired —
-    // no point asking "continue as X" right after forcing a fresh sign-in.
+    // Skip the check entirely if we're here because a session just expired.
     if (reason === 'session_expired') { setChecking(false); return; }
-    supabase.auth.getUser().then(({ data }) => {
-      setExistingEmail(data.user?.email ?? null);
+    // Use getSession() — reads from localStorage, zero network round-trip.
+    // getUser() makes a network call to Supabase on every page load which
+    // adds 500-2000ms on mobile before the form even renders.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setExistingEmail(session?.user?.email ?? null);
       setChecking(false);
     });
+    // Hard safety: if getSession somehow hangs (e.g. localStorage locked),
+    // show the form after 800ms so mobile users are never stuck on a spinner.
+    const fallback = setTimeout(() => setChecking(false), 800);
+    return () => clearTimeout(fallback);
   }, [reason]);
 
   return (

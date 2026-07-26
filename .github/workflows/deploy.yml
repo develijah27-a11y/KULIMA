@@ -1,4 +1,4 @@
-name: CI
+name: Type Check
 
 on:
   push:
@@ -7,6 +7,10 @@ on:
   pull_request:
     branches:
       - main
+
+# Vercel deploys automatically from GitHub via its built-in Git integration.
+# This workflow only runs a type-check to catch TypeScript errors before
+# Vercel builds — it does NOT deploy (that would duplicate Vercel's work).
 
 jobs:
   typecheck:
