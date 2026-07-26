@@ -83,7 +83,7 @@ function Nav() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="hidden md:flex">
           <Link href="/auth/signin" style={{ fontSize: 13.5, fontWeight: 700, color: INK_MID, textDecoration: 'none', padding: '9px 16px' }}>Sign in</Link>
           <Link href="/auth/signup" style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', textDecoration: 'none', padding: '10px 22px', borderRadius: 11, background: GREEN, boxShadow: '0 4px 14px rgba(21,122,61,0.30)' }}>
-            Get started
+            Create free account
           </Link>
         </div>
 
@@ -104,12 +104,6 @@ function Nav() {
           <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Link href="/auth/signin" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 700, color: INK_MID, textDecoration: 'none', padding: '14px', textAlign: 'center', border: `1.5px solid ${LINE}`, borderRadius: 12 }}>Sign in</Link>
             <Link href="/auth/signup" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 800, color: '#fff', textDecoration: 'none', padding: '14px', textAlign: 'center', background: GREEN, borderRadius: 12 }}>Create free account</Link>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
 
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
 function Hero() {
@@ -154,7 +148,7 @@ function Hero() {
 
             {/* Stats row */}
             <div className="landing-fade-up" style={{ display: 'flex', gap: 32, flexWrap: 'wrap', animationDelay: '290ms' }}>
-              {[['30+', 'Districts covered'], ['7', 'Roles, one account'], ['Free', 'Always for farmers']].map(([v, l]) => (
+              {[['30+', 'Districts covered'], ['3 min', 'To sign up'], ['Free', 'Always for farmers']].map(([v, l]) => (
                 <div key={l}>
                   <p style={{ fontSize: 22, fontWeight: 900, color: INK, margin: 0, letterSpacing: '-0.04em' }}>{v}</p>
                   <p style={{ fontSize: 11.5, color: INK_MUTE, margin: '3px 0 0', fontWeight: 600 }}>{l}</p>
@@ -335,7 +329,8 @@ function RolesSection() {
       <div style={{ maxWidth: 940, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 44 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>Who it&rsquo;s for</p>
-          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>One platform for every link in the chain.</h2>
+          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: INK, margin: '0 0 12px', lineHeight: 1.06 }}>One platform for every link in the chain.</h2>
+          <p style={{ fontSize: 14, color: INK_MUTE, margin: 0 }}>Also for input suppliers, cooperatives, and agribusiness — <Link href="/auth/signup" style={{ color: GREEN, fontWeight: 700 }}>pick your role on signup.</Link></p>
         </div>
 
         {/* Tabs */}
@@ -441,7 +436,7 @@ function FinalCTA() {
         </p>
 
         <Link href="/auth/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '16px 34px', borderRadius: 16, background: '#fff', color: GREEN_DEEP, fontWeight: 900, fontSize: 16.5, textDecoration: 'none', boxShadow: '0 16px 40px rgba(0,0,0,0.28)', letterSpacing: '-0.02em' }}>
-          Create your free account <ArrowRight size={18} strokeWidth={2.5} />
+          Create free account <ArrowRight size={18} strokeWidth={2.5} />
         </Link>
         <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginTop: 16, fontWeight: 600 }}>No card. No contract. Ready in 2 minutes.</p>
       </div>
