@@ -39,12 +39,16 @@ interface Product {
   district?: string;
   is_available: boolean;
   image_url?: string;
+  sku?: string | null;
+  barcode?: string | null;
+  cost_price_ugx?: number | null;
   created_at: string;
 }
 
 const EMPTY: Omit<Product,'id'|'created_at'> = {
   name:'', category:'seeds', description:'', price_per_unit:0,
   unit:'kg', stock_qty:0, min_order_qty:1, low_stock_threshold:null, district:'', is_available:true, image_url:'',
+  sku:'', barcode:'', cost_price_ugx:null,
 };
 
 // Falls back to 5 units when a supplier hasn't set their own threshold —
@@ -271,6 +275,9 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                 { label: 'Minimum Order Qty', key: 'min_order_qty', type: 'number', placeholder: '1' },
                 { label: 'Low Stock Alert Below (optional, default 5)', key: 'low_stock_threshold', type: 'number', placeholder: '5' },
                 { label: 'District (optional)', key: 'district', type: 'text', placeholder: 'e.g. Kampala' },
+                { label: 'SKU (optional)', key: 'sku', type: 'text', placeholder: 'e.g. SEED-MAIZE-01' },
+                { label: 'Barcode (optional — scanned at POS checkout)', key: 'barcode', type: 'text', placeholder: 'Scan or type a barcode' },
+                { label: 'Cost Price (optional — what you paid, for profit reports)', key: 'cost_price_ugx', type: 'number', placeholder: '0' },
               ] as const).map(({ label, key, type, placeholder }) => (
                 <div key={key}>
                   <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>{label}</label>

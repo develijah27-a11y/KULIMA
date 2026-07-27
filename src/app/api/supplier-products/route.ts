@@ -40,7 +40,7 @@ export async function POST(req: Request) {
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
   const body = await req.json();
-  const { name, category, description, price_per_unit, unit, stock_qty, min_order_qty, low_stock_threshold, district, image_url } = body;
+  const { name, category, description, price_per_unit, unit, stock_qty, min_order_qty, low_stock_threshold, district, image_url, sku, barcode, cost_price_ugx } = body;
 
   if (!name || !price_per_unit || price_per_unit <= 0) {
     return NextResponse.json({ error: 'Name and valid price are required' }, { status: 400 });
@@ -49,8 +49,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'A live photo of the product is required' }, { status: 400 });
   }
 
+  // Every product belongs to a store — lazily create the supplier's default
+  // one if this is their first product (matches the same fallback in
+  // /api/pos/checkout for suppliers who registered before stores existed).
+  let { data: store } = await (supabase.from as any)('stores')
+    .select('id').eq('supplier_id', profile.id).eq('is_primary', true).maybeSingle();
+  if (!store) {
+    const { data: newStore } = await (supabase.from as any)('stores')
+      .insert({ supplier_id: profile.id, name: 'Main Branch', is_primary: true })
+      .select('id').single();
+    store = newStore;
+  }
+
   const { data, error } = await (supabase.from as any)('supplier_products').insert({
     supplier_id: profile.id,
+    store_id: store?.id ?? null,
     name: name.trim(),
     category: category ?? 'other',
     description: description ?? null,
@@ -61,6 +74,9 @@ export async function POST(req: Request) {
     low_stock_threshold: low_stock_threshold != null && low_stock_threshold !== '' ? +low_stock_threshold : null,
     district: district ?? null,
     image_url,
+    sku: sku?.trim() || null,
+    barcode: barcode?.trim() || null,
+    cost_price_ugx: cost_price_ugx != null && cost_price_ugx !== '' ? +cost_price_ugx : null,
     is_available: true,
   }).select().single();
 
@@ -83,7 +99,7 @@ export async function PATCH(req: Request) {
   const { id, ...fields } = body;
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-  const allowed = ['name','category','description','price_per_unit','unit','stock_qty','min_order_qty','low_stock_threshold','district','is_available','image_url'];
+  const allowed = ['name','category','description','price_per_unit','unit','stock_qty','min_order_qty','low_stock_threshold','district','is_available','image_url','sku','barcode','cost_price_ugx'];
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
   for (const k of allowed) {
     if (k in fields) update[k] = fields[k];

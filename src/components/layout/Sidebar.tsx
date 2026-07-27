@@ -49,6 +49,7 @@ export const ICON_MAP: Record<string, IconComponent> = {
   'cold-chain':     Snowflake,
   deliveries:       Truck,
   catalogue:        BookOpen,
+  pos:              ShoppingCart,
   'flash-deals':    Zap,
   demand:           LineChart,
   coverage:         MapPin,
