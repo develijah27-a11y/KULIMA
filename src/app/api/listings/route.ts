@@ -2,6 +2,9 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
+import { getEffectiveTier } from '@/lib/subscriptions/getEffectiveTier';
+
+const FREE_TIER_ACTIVE_LISTING_CAP = 3;
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -62,6 +65,27 @@ export async function POST(req: Request) {
   }
   if (!imageUrl) {
     return NextResponse.json({ success: false, error: 'A live photo of your produce is required' }, { status: 400 });
+  }
+
+  // Free tier is advertised (marketing copy on /premium) as "list up to 3
+  // crops at a time" — this was never actually enforced server-side.
+  // 'pending_review' counts too, not just 'active': the cap is about how
+  // many live-or-about-to-go-live listings a free farmer can hold at once,
+  // and a pile of pending listings would otherwise let someone dodge the
+  // cap just by never getting approved.
+  const { data: profileRow } = await (supabase.from as any)('profiles')
+    .select('role, subscription_tier, role_subscription_tiers').eq('user_id', user.id).single();
+  if (getEffectiveTier(profileRow ?? {}, 'farmer') === 'free') {
+    const { count } = await (supabase.from as any)('listings')
+      .select('id', { count: 'exact', head: true })
+      .eq('farmer_id', profile.id)
+      .in('status', ['active', 'pending_review']);
+    if ((count ?? 0) >= FREE_TIER_ACTIVE_LISTING_CAP) {
+      return NextResponse.json({
+        success: false,
+        error: `Free plan is limited to ${FREE_TIER_ACTIVE_LISTING_CAP} active listings. Pause or sell an existing one, or upgrade to Farmer Pro for unlimited listings.`,
+      }, { status: 403 });
+    }
   }
 
   const insertPayload: Record<string, unknown> = {

@@ -24,6 +24,7 @@ const TRANSPORTER_NAV = [
   { href: '/transporter/wallet',     icon: 'earnings',     label: 'Wallet & Earnings', divider: true, sectionLabel: 'Account' },
   { href: '/transporter/notifications', icon: 'notifications', label: 'Notifications' },
   { href: '/transporter/account',    icon: 'verify',       label: 'My Account' },
+  { href: '/transporter/premium',    icon: 'premium',      label: 'Driver Pro' },
   { href: '/transporter/support',    icon: 'support',       label: 'Support' },
   { href: '/transporter/settings',   icon: 'settings',     label: 'Settings' },
 ];
