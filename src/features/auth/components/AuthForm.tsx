@@ -212,7 +212,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       } else if (lower.includes('user already registered') || lower.includes('already exists')) {
         setError('An account with this email already exists. Sign in instead.');
       } else if (lower.includes('password') && (lower.includes('weak') || lower.includes('strength'))) {
-        setError('Password is too weak — use at least 6 characters.');
+        setError('Password is too weak — use at least 8 characters.');
       } else if (lower.includes('invalid email') || lower.includes('unable to validate email')) {
         setError("That email address doesn't look right. Please check it.");
       } else {
@@ -369,7 +369,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   // ── Main form ─────────────────────────────────────────────────────────────
   const emailInvalid = !!email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const pwMismatch   = !!confirmPassword && confirmPassword !== password;
-  const pwMatch      = !!confirmPassword && confirmPassword === password && password.length >= 6;
+  const pwMatch      = !!confirmPassword && confirmPassword === password && password.length >= 8;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4"
@@ -464,7 +464,12 @@ export function AuthForm({ mode }: AuthFormProps) {
             }}
             placeholder={showPassword ? 'Enter your password' : '••••••••'}
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-            required minLength={6} disabled={loading} className="auth-input"
+            // Only enforce the 8-char minimum on signup — an existing
+            // account's real (server-side) password could be shorter under
+            // the old 6-char policy, and this is the sign-in form's field,
+            // not a password-change field, so it must never block a
+            // correct legacy password from being submitted.
+            required minLength={mode === 'signup' ? 8 : undefined} disabled={loading} className="auth-input"
             style={{ paddingRight: 48 }}
           />
           <button type="button" onClick={() => setShowPwd(v => !v)} tabIndex={-1}
@@ -480,7 +485,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         {mode === 'signup' && (
           <div style={{ marginTop: 8, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {[
-              { label: 'At least 6 characters', met: password.length >= 6 },
+              { label: 'At least 8 characters', met: password.length >= 8 },
               { label: 'Not only spaces', met: password.length > 0 && password.trim().length > 0 },
             ].map(({ label, met }) => (
               <span key={label} style={{ fontSize: 11.5, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4,
@@ -508,7 +513,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
             placeholder={showPassword ? 'Re-enter your password' : '••••••••'}
-            autoComplete="new-password" required minLength={6} disabled={loading}
+            autoComplete="new-password" required minLength={8} disabled={loading}
             className="auth-input"
             style={pwMismatch
               ? { borderColor: '#EF4444', boxShadow: '0 0 0 3px rgba(239,68,68,0.15)' }
