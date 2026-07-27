@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Leaf, FlaskConical, Wrench, Settings, Package, Store } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/CameraCapture';
 
@@ -42,8 +42,11 @@ interface Product {
   sku?: string | null;
   barcode?: string | null;
   cost_price_ugx?: number | null;
+  store_id?: string | null;
   created_at: string;
 }
+
+interface StoreOption { id: string; name: string; is_primary: boolean; }
 
 const EMPTY: Omit<Product,'id'|'created_at'> = {
   name:'', category:'seeds', description:'', price_per_unit:0,
@@ -64,6 +67,13 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
   const [saving, setSaving]     = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError]       = useState('');
+  const [stores, setStores]     = useState<StoreOption[]>([]);
+
+  // Only relevant once there's more than one branch (Enterprise tier) — the
+  // picker in the add/edit modal stays hidden for everyone else.
+  useEffect(() => {
+    fetch('/api/pos/stores').then(r => r.json()).then(json => setStores(json.stores ?? []));
+  }, []);
 
   const visible = filter === 'all' ? products : products.filter(p => p.category === filter);
   const isEdit  = !!(modal as any)?.id;
@@ -290,6 +300,16 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                   />
                 </div>
               ))}
+
+              {stores.length > 1 && (
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Branch</label>
+                  <select value={modal.store_id ?? stores.find(s => s.is_primary)?.id ?? ''} onChange={e => setModal(m => ({ ...m!, store_id: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13 }}>
+                    {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>

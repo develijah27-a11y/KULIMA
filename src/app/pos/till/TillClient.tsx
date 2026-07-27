@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ScanLine, Search, Trash2, Plus, Minus, Loader2, ShoppingCart } from 'lucide-react';
+import { ScanLine, Search, Trash2, Plus, Minus, Loader2, ShoppingCart, Store } from 'lucide-react';
 
 interface Product {
   id: string;
@@ -14,6 +14,12 @@ interface Product {
   unit: string;
   stock_qty: number;
   is_available: boolean;
+}
+
+interface StoreOption {
+  id: string;
+  name: string;
+  is_primary: boolean;
 }
 
 interface CartLine {
@@ -40,6 +46,8 @@ export function TillClient() {
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [stores, setStores] = useState<StoreOption[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('');
   const [barcode, setBarcode] = useState('');
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -52,13 +60,28 @@ export function TillClient() {
   const [scanError, setScanError] = useState('');
   const barcodeRef = useRef<HTMLInputElement>(null);
 
+  // Store switcher only matters once there's more than one branch
+  // (Enterprise tier) — for everyone else this list has exactly one row
+  // and the switcher never renders.
   useEffect(() => {
-    fetch('/api/supplier-products')
+    fetch('/api/pos/stores').then(r => r.json()).then(json => {
+      const list: StoreOption[] = json.stores ?? [];
+      setStores(list);
+      const primary = list.find(s => s.is_primary) ?? list[0];
+      if (primary) setSelectedStoreId(primary.id);
+    });
+    barcodeRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedStoreId) return;
+    setLoadingProducts(true);
+    setCart([]); // switching branch clears the cart — line items belong to a specific store's stock
+    fetch(`/api/supplier-products?storeId=${selectedStoreId}`)
       .then(r => r.json())
       .then(json => setProducts((json.data ?? []).filter((p: Product) => p.is_available)))
       .finally(() => setLoadingProducts(false));
-    barcodeRef.current?.focus();
-  }, []);
+  }, [selectedStoreId]);
 
   function addToCart(p: Product) {
     setCart(prev => {
@@ -118,6 +141,7 @@ export function TillClient() {
           customerName: customerName.trim() || null,
           customerPhone: customerPhone.trim() || null,
           discountUgx,
+          storeId: selectedStoreId || null,
         }),
       });
       const json = await res.json();
@@ -143,7 +167,21 @@ export function TillClient() {
           <h1 style={{ fontSize: 20, fontWeight: 900, color: C.text, letterSpacing: '-0.02em', margin: 0 }}>Point of Sale</h1>
           <p style={{ fontSize: 12.5, color: C.muted, margin: '4px 0 0' }}>Scan, search, or tap a product to add it to the sale.</p>
         </div>
-        <Link href="/supplier/dashboard" style={{ fontSize: 13, fontWeight: 700, color: C.muted, textDecoration: 'none' }}>Back to dashboard</Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {stores.length > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 10px', borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.card }}>
+              <Store size={14} style={{ color: C.green }} />
+              <select
+                value={selectedStoreId}
+                onChange={e => setSelectedStoreId(e.target.value)}
+                style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: 12.5, fontWeight: 700, color: C.text }}
+              >
+                {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+          )}
+          <Link href="/supplier/dashboard" style={{ fontSize: 13, fontWeight: 700, color: C.muted, textDecoration: 'none' }}>Back to dashboard</Link>
+        </div>
       </div>
 
       <div className="pos-till-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)', gap: 20 }}>

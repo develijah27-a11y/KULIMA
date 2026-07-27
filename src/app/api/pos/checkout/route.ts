@@ -51,7 +51,18 @@ export async function POST(req: Request) {
   const { data: ownerProfile } = await (admin.from as any)('profiles').select('user_id').eq('id', actor.ownerId).single();
   if (!ownerProfile?.user_id) return NextResponse.json({ error: 'Store owner not found' }, { status: 500 });
 
-  let storeId = actor.storeId;
+  // Staff are pinned to their assigned store — they can't switch branches
+  // from the client even if the request tries to. The owner can pick any
+  // of their own stores (multi-branch, Enterprise tier); requestedStoreId
+  // is validated against the owner's actual stores below either way.
+  const requestedStoreId: string | null = actor.kind === 'staff' ? actor.storeId : (body.storeId ?? null);
+
+  let storeId: string | null = null;
+  if (requestedStoreId) {
+    const { data: requestedStore } = await (admin.from as any)('stores')
+      .select('id').eq('id', requestedStoreId).eq('supplier_id', actor.ownerId).maybeSingle();
+    storeId = requestedStore?.id ?? null;
+  }
   if (!storeId) {
     const { data: store } = await (admin.from as any)('stores')
       .select('id').eq('supplier_id', actor.ownerId).eq('is_primary', true).maybeSingle();
