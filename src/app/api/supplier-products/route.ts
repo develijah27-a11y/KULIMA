@@ -1,6 +1,7 @@
 ﻿import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
+import { getPosActor } from '@/lib/pos/getPosActor';
 
 async function getProfile(supabase: any, userId: string) {
   const { data } = await supabase.from('profiles').select('id').eq('user_id', userId).single();
@@ -12,12 +13,18 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const profile = await getProfile(supabase, user.id);
-  if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+  // A POS staff account needs to browse their owner's catalogue at the
+  // till (to scan/search products) even though their own profiles.id has
+  // no products of its own — resolve the effective owner via getPosActor
+  // instead of assuming the caller's own profile is always the supplier.
+  const admin = createServiceRoleClient();
+  const actor = await getPosActor(admin, user.id);
+  const ownerProfileId = actor?.ownerId ?? (await getProfile(supabase, user.id))?.id;
+  if (!ownerProfileId) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
-  const { data, error } = await (supabase.from as any)('supplier_products')
+  const { data, error } = await (admin.from as any)('supplier_products')
     .select('*')
-    .eq('supplier_id', profile.id)
+    .eq('supplier_id', ownerProfileId)
     .order('created_at', { ascending: false })
     .limit(200);
 

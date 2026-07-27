@@ -16,6 +16,7 @@ const SUPPLIER_NAV = [
   // ── Products
   { href: '/supplier/catalogue',   icon: 'catalogue',    label: 'Inventory',    divider: true, sectionLabel: 'Inventory' },
   { href: '/pos/till',             icon: 'pos',          label: 'Point of Sale' },
+  { href: '/supplier/pos/staff',   icon: 'members',      label: 'Staff Accounts' },
   { href: '/supplier/orders',      icon: 'orders',       label: 'New Orders' },
   { href: '/supplier/returns',     icon: 'orders',       label: 'Returns' },
   { href: '/supplier/flash-deals', icon: 'flash-deals',  label: 'Quick Deals' },

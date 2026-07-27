@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { getPosActor } from '@/lib/pos/getPosActor';
 import { PrintButton } from '@/app/buyer/orders/[id]/receipt/PrintButton';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -13,18 +14,26 @@ export default async function PosReceiptPage({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await (supabase.from as any)('profiles').select('id, full_name, business_name, location, phone_number').eq('user_id', user.id).single();
+  // A staff member who rang up this sale needs to see/print it too — their
+  // own profiles.id has nothing to do with pos_sales.supplier_id (that's
+  // always the store owner's), so ownership is resolved via getPosActor
+  // instead of a direct profile-id match.
+  const admin = createServiceRoleClient();
+  const actor = await getPosActor(admin, user.id);
+  if (!actor) redirect('/auth/signin');
+
+  const { data: profile } = await (admin.from as any)('profiles').select('id, full_name, business_name, location, phone_number').eq('id', actor.ownerId).single();
   if (!profile) redirect('/auth/signin');
 
-  const { data: sale } = await (supabase.from as any)('pos_sales')
+  const { data: sale } = await (admin.from as any)('pos_sales')
     .select('id, customer_name, customer_phone, subtotal_ugx, discount_ugx, total_ugx, payment_method, status, created_at')
     .eq('id', saleId)
-    .eq('supplier_id', profile.id)
+    .eq('supplier_id', actor.ownerId)
     .single();
 
   if (!sale) redirect('/pos/till');
 
-  const { data: items } = await (supabase.from as any)('pos_sale_items')
+  const { data: items } = await (admin.from as any)('pos_sale_items')
     .select('id, product_name, sku, quantity, unit_price_ugx, line_total_ugx')
     .eq('pos_sale_id', saleId);
 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { getPosActor, hasPermission } from '@/lib/pos/getPosActor';
 
 interface CheckoutItem {
   productId: string | null;
@@ -18,9 +19,10 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: profile } = await (supabase.from as any)('profiles').select('id, role, roles').eq('user_id', user.id).single();
-  const isSupplier = profile?.role === 'supplier' || (profile?.roles ?? []).includes('supplier');
-  if (!profile || !isSupplier) return NextResponse.json({ error: 'Only suppliers can use the POS till' }, { status: 403 });
+  const admin = createServiceRoleClient();
+  const actor = await getPosActor(admin, user.id);
+  if (!actor) return NextResponse.json({ error: 'Only suppliers and store staff can use the POS till' }, { status: 403 });
+  if (!hasPermission(actor, 'checkout')) return NextResponse.json({ error: 'You do not have permission to check out sales' }, { status: 403 });
 
   const body = await req.json();
   const items: CheckoutItem[] = Array.isArray(body.items) ? body.items : [];
@@ -30,6 +32,9 @@ export async function POST(req: Request) {
   const discountUgx: number = Number(body.discountUgx ?? 0);
 
   if (items.length === 0) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
+  if (discountUgx > 0 && !hasPermission(actor, 'discount')) {
+    return NextResponse.json({ error: 'You do not have permission to apply discounts' }, { status: 403 });
+  }
   if (!['cash', 'wallet', 'mobile_money'].includes(paymentMethod)) {
     return NextResponse.json({ error: 'Invalid payment method' }, { status: 400 });
   }
@@ -39,24 +44,32 @@ export async function POST(req: Request) {
     }
   }
 
-  const admin = createServiceRoleClient();
+  // The wallet credited by create_pos_sale is always the STORE OWNER's,
+  // regardless of who rang up the sale — resolve the owner's auth uid
+  // (not their profiles.id, which is what PosActor.ownerId holds) for the
+  // RPC's p_supplier_user_id parameter.
+  const { data: ownerProfile } = await (admin.from as any)('profiles').select('user_id').eq('id', actor.ownerId).single();
+  if (!ownerProfile?.user_id) return NextResponse.json({ error: 'Store owner not found' }, { status: 500 });
 
-  const { data: store } = await (admin.from as any)('stores')
-    .select('id').eq('supplier_id', profile.id).eq('is_primary', true).maybeSingle();
-  let storeId = store?.id;
+  let storeId = actor.storeId;
   if (!storeId) {
-    // Lazily create the default store — covers suppliers who registered
-    // products before this migration's backfill, or a first-ever POS user.
-    const { data: newStore } = await (admin.from as any)('stores')
-      .insert({ supplier_id: profile.id, name: 'Main Branch', is_primary: true })
-      .select('id').single();
-    storeId = newStore?.id;
+    const { data: store } = await (admin.from as any)('stores')
+      .select('id').eq('supplier_id', actor.ownerId).eq('is_primary', true).maybeSingle();
+    storeId = store?.id;
+    if (!storeId) {
+      // Lazily create the default store — covers suppliers who registered
+      // products before this migration's backfill, or a first-ever POS use.
+      const { data: newStore } = await (admin.from as any)('stores')
+        .insert({ supplier_id: actor.ownerId, name: 'Main Branch', is_primary: true })
+        .select('id').single();
+      storeId = newStore?.id;
+    }
   }
   if (!storeId) return NextResponse.json({ error: 'Could not resolve your store. Please try again.' }, { status: 500 });
 
   const { data: saleId, error } = await (admin as any).rpc('create_pos_sale', {
     p_store_id: storeId,
-    p_supplier_user_id: user.id,
+    p_supplier_user_id: ownerProfile.user_id,
     p_items: items.map(i => ({
       product_id: i.productId ?? null,
       product_name: i.productName,
@@ -68,6 +81,7 @@ export async function POST(req: Request) {
     p_customer_name: customerName,
     p_customer_phone: customerPhone,
     p_discount_ugx: discountUgx,
+    p_staff_id: actor.staffId,
   });
 
   if (error || !saleId) {
