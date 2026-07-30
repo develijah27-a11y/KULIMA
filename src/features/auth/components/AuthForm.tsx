@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Eye, EyeOff } from 'lucide-react';
@@ -20,8 +19,6 @@ function formatCountdown(s: number) {
 }
 
 export function AuthForm({ mode }: AuthFormProps) {
-  const router = useRouter();
-
   const [email, setEmail]                     = useState('');
   const [password, setPassword]               = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -79,7 +76,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       }
     });
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, []);
 
   // ── OTP countdown ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -93,22 +90,50 @@ export function AuthForm({ mode }: AuthFormProps) {
     return () => clearInterval(id);
   }, [codeSentAt]);
 
+  // ── Shared helper: exchange client-side tokens for server-set cookies ────
+  // After any client-side sign-in (signInWithPassword, verifyOtp, signUp
+  // with immediate session), createBrowserClient has written the session to
+  // document.cookie — but those are non-httpOnly client cookies.  The
+  // middleware (src/proxy.ts) uses createServerClient which expects the
+  // session to be in httpOnly cookies set via Set-Cookie response headers.
+  // On desktop browsers the client cookie write can lose the race against
+  // the navigation request, so the middleware sees no session and bounces
+  // the user back to /auth/signin.
+  //
+  // The fix: POST the raw tokens to /api/auth/set-session first.  That
+  // route calls supabase.auth.setSession() server-side, which causes
+  // createServerClient's setAll() handler to write proper httpOnly Set-Cookie
+  // headers on the response.  By the time that fetch() resolves, the browser
+  // has applied those Set-Cookie headers — so the subsequent navigation
+  // arrives at the middleware with the cookies already committed.
+  const exchangeSessionAndRedirect = useCallback(async (
+    session: { access_token: string; refresh_token: string },
+  ) => {
+    await fetch('/api/auth/set-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        access_token:  session.access_token,
+        refresh_token: session.refresh_token,
+      }),
+    });
+    // Fire verification nudge in the background — don't block navigation.
+    fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
+    // Full-page navigation so the browser sends the newly-written cookies
+    // on the request to /dashboard (client-side router.push would not).
+    window.location.href = '/dashboard';
+  }, []);
+
   // ── Sign in ───────────────────────────────────────────────────────────────
-  // ── Sign in ───────────────────────────────────────────────────────────────
-  // Redirects SYNCHRONOUSLY — does NOT rely on onAuthStateChange.
-  // On mobile, the Supabase Realtime WebSocket that delivers auth events
-  // can fail silently, leaving the user stuck on "Signing in…" forever.
-  // signInWithPassword returning a session is enough — redirect immediately.
+  // Redirects via exchangeSessionAndRedirect — does NOT rely on
+  // onAuthStateChange (WebSocket can fail silently on mobile/flaky networks).
   const signIn = useCallback(async () => {
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     if (signInError) throw signInError;
     if (data.session) {
-      setTimeout(() => {
-        fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
-      }, 0);
-      router.push('/dashboard');
+      await exchangeSessionAndRedirect(data.session);
     }
-  }, [email, password, router]);
+  }, [email, password, exchangeSessionAndRedirect]);
 
   // ── Sign up ───────────────────────────────────────────────────────────────
   const signUp = useCallback(async () => {
@@ -138,7 +163,8 @@ export function AuthForm({ mode }: AuthFormProps) {
         await supabase.auth.signOut();
         throw new Error('An account with this email already exists. Please sign in instead.');
       }
-      // Genuinely new account + immediate session — create profile and redirect
+      // Genuinely new account + immediate session — create profile then redirect.
+      // Exchange tokens for server-set httpOnly cookies before navigating.
       await fetch('/api/auth/create-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -149,7 +175,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           location: location || null,
         }),
       }).catch(() => {});
-      router.push('/dashboard');
+      await exchangeSessionAndRedirect(data.session);
       return;
     }
 
@@ -157,7 +183,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     setSuccess(`Account created! We sent a 6-digit code to ${email} — enter it below to activate your account.`);
     setNeedsConfirmation(true);
     setCodeSentAt(Date.now());
-  }, [email, password, fullName, phoneNumber, location]);
+  }, [email, password, fullName, phoneNumber, location, exchangeSessionAndRedirect]);
 
   // ── handleSubmit ──────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
@@ -246,8 +272,13 @@ export function AuthForm({ mode }: AuthFormProps) {
           }),
         }).catch(() => {});
       }
-      // Redirect directly — don't wait for onAuthStateChange
-      router.push('/dashboard');
+      // Exchange client tokens for server-set httpOnly cookies before
+      // navigating — same desktop cookie-race fix as signIn().
+      if (data.session) {
+        await exchangeSessionAndRedirect(data.session);
+      } else {
+        window.location.href = '/dashboard';
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Invalid or expired code';
       setError(
@@ -257,7 +288,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       );
       setVerifying(false);
     }
-  }, [code, verifying, email, mode, fullName, phoneNumber, location]);
+  }, [code, verifying, email, mode, fullName, phoneNumber, location, exchangeSessionAndRedirect]);
 
   // ── resendConfirmation ────────────────────────────────────────────────────
   const resendConfirmation = useCallback(async () => {

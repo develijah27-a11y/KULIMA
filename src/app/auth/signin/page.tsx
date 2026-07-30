@@ -49,9 +49,14 @@ function AlreadySignedIn({ email }: { email: string }) {
         </div>
       </div>
 
-      <Link href="/dashboard" className="auth-btn" style={{ display: 'block', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
+      {/* Use a plain <a> (full-page navigation) instead of Next.js <Link>.
+          The session cookie is already in document.cookie from the previous
+          sign-in, but <Link> fires a client-side fetch that can arrive at
+          the middleware before the browser has fully flushed that cookie.
+          A hard navigation guarantees cookies are sent with the request. */}
+      <a href="/dashboard" className="auth-btn" style={{ display: 'block', textDecoration: 'none', textAlign: 'center', boxSizing: 'border-box' }}>
         Continue to dashboard
-      </Link>
+      </a>
 
       <button
         type="button"
@@ -81,9 +86,19 @@ function SignInContent() {
   useEffect(() => {
     // Skip the check entirely if we're here because a session just expired.
     if (reason === 'session_expired') { setChecking(false); return; }
-    // Use getSession() — reads from localStorage, zero network round-trip.
-    // getUser() makes a network call to Supabase on every page load which
-    // adds 500-2000ms on mobile before the form even renders.
+    // ⚠️  Intentionally using getSession() here — NOT getUser().
+    // This check is purely for the "you're already signed in as X" UI widget.
+    // It reads from localStorage with zero network round-trip, so the form
+    // appears instantly on mobile instead of blocking 500-2000 ms waiting for
+    // a Supabase network call.
+    //
+    // getUser() is the right call in middleware (src/proxy.ts) where it runs
+    // server-side and validates the JWT with Supabase on every protected
+    // request.  Using getUser() here (client-side, on a public page) would
+    // add an unnecessary network call and cause the same "logged in then
+    // immediately bounced" symptom if the request races against cookie writes.
+    //
+    // DO NOT replace getSession() with getUser() on this client-side page.
     supabase.auth.getSession().then(({ data: { session } }) => {
       setExistingEmail(session?.user?.email ?? null);
       setChecking(false);
