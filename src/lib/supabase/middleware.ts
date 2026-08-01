@@ -44,11 +44,13 @@ export async function createClient(request: NextRequest) {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // Refresh token is invalid or expired — clear all stale Supabase auth
-    // cookies so the browser stops sending them on every request.
-    request.cookies.getAll().forEach(({ name }) => {
-      if (name.startsWith('sb-')) response.cookies.delete(name);
-    });
+    // Network failure reaching Supabase — do NOT delete cookies.
+    // Deleting valid sb-* cookies on a transient network error would
+    // sign out a legitimately authenticated user. Return user=null so
+    // the middleware treats this request as unauthenticated for routing
+    // purposes, but the cookies stay intact for the next request.
+    // The browser will retry and the session will be recognised again.
+    console.warn('[middleware] getUser() failed — treating as unauthenticated without clearing cookies');
   }
 
   return { supabase, response, user };

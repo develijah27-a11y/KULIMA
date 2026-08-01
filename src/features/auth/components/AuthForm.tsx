@@ -109,18 +109,37 @@ export function AuthForm({ mode }: AuthFormProps) {
   const exchangeSessionAndRedirect = useCallback(async (
     session: { access_token: string; refresh_token: string },
   ) => {
-    await fetch('/api/auth/set-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        access_token:  session.access_token,
-        refresh_token: session.refresh_token,
-      }),
-    });
+    // POST tokens to set-session so the server writes proper httpOnly
+    // sb-* cookies via Set-Cookie headers. If this call fails (network
+    // blip, token already expired, rate limit), we fall back gracefully —
+    // createBrowserClient already wrote the session to document.cookie and
+    // the middleware can read those too.
+    try {
+      const res = await fetch('/api/auth/set-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          access_token:  session.access_token,
+          refresh_token: session.refresh_token,
+        }),
+      });
+
+      if (!res.ok) {
+        // set-session failed — log it but don't block navigation.
+        // The browser-written cookies from signInWithPassword are still
+        // present and the middleware will read them on the next request.
+        console.warn('[AgriNova] set-session returned', res.status, '— navigating with browser cookies');
+      }
+    } catch (err) {
+      // Network error — same fallback: browser cookies are present.
+      console.warn('[AgriNova] set-session fetch failed:', err);
+    }
+
     // Fire verification nudge in the background — don't block navigation.
     fetch('/api/auth/verification-check', { method: 'POST' }).catch(() => {});
-    // Full-page navigation so the browser sends the newly-written cookies
-    // on the request to /dashboard (client-side router.push would not).
+
+    // Full-page navigation so the browser sends all cookies
+    // (both the httpOnly ones from set-session AND the browser-written ones).
     window.location.href = '/dashboard';
   }, []);
 
