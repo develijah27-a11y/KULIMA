@@ -58,7 +58,7 @@ export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProp
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-2 text-sm" style={{ color: 'rgba(240,253,244,0.55)', fontWeight: 600 }}>
+            <p className="mt-2 text-sm" style={{ color: 'rgba(240,253,244,0.80)', fontWeight: 500 }}>
               {subtitle}
             </p>
           )}
@@ -75,8 +75,8 @@ export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProp
             className="px-8 py-4 text-center text-sm"
             style={{
               borderTop: '1px solid rgba(255,255,255,0.08)',
-              color: 'rgba(240,253,244,0.55)',
-              fontWeight: 600,
+              color: 'rgba(240,253,244,0.75)',
+              fontWeight: 500,
             }}
           >
             {footer}

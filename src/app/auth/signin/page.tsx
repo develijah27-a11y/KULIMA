@@ -174,7 +174,7 @@ function SignInContent() {
             }}
             aria-hidden="true"
           />
-          <p style={{ color: 'rgba(240,253,244,0.55)', fontSize: 13, margin: 0 }}>Just a moment…</p>
+          <p style={{ color: 'rgba(240,253,244,0.75)', fontSize: 13, margin: 0 }}>Just a moment…</p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       ) : existingEmail ? (
@@ -186,7 +186,7 @@ function SignInContent() {
             <Link
               href="/auth/forgot-password"
               className="text-sm"
-              style={{ color: 'rgba(240,253,244,0.55)', fontWeight: 600 }}
+              style={{ color: 'rgba(240,253,244,0.75)', fontWeight: 600 }}
             >
               Forgot your password?
             </Link>

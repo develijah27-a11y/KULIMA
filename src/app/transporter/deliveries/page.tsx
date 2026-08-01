@@ -129,7 +129,23 @@ export default async function TransporterDeliveriesPage({
                     <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
                       {d?.cargo_kg} kg {d?.cargo_type ?? 'cargo'}
                       {d?.pickup_date && ` · ${new Date(d.pickup_date).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}`}
-                      {price && ` · UGX ${Math.round(price).toLocaleString()} earnings`}
+                      {price && (
+                        <>
+                          {` · `}
+                          <span style={{ fontWeight: 700, color: C.greenMed }}>
+                            UGX {Math.round(price).toLocaleString()}
+                          </span>
+                          {` your earnings`}
+                          {/* Show if driver_earnings is set and differs from estimated_fare,
+                              so driver knows this is their net amount after platform fee */}
+                          {d?.driver_earnings && d?.estimated_fare && d.driver_earnings !== d.estimated_fare && (
+                            <span
+                              title={`Total fare: UGX ${Math.round(d.estimated_fare).toLocaleString()}\nYour earnings: UGX ${Math.round(d.driver_earnings).toLocaleString()}\nPlatform service fee: UGX ${Math.round(d.estimated_fare - d.driver_earnings).toLocaleString()}`}
+                              style={{ marginLeft: 4, fontSize: 10, cursor: 'help', border: '1px solid var(--d-border)', borderRadius: 99, padding: '0 5px', lineHeight: '16px', display: 'inline-block' }}
+                            >?</span>
+                          )}
+                        </>
+                      )}
                     </p>
                   </div>
                   {isAssignment && d?.id && (

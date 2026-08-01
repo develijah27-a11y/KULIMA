@@ -382,7 +382,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         </div>
 
         <Link href="/auth/signin"
-          style={{ display: 'block', textAlign: 'center', fontSize: 13, fontWeight: 600, color: 'rgba(240,253,244,0.55)', marginTop: 4 }}>
+          style={{ display: 'block', textAlign: 'center', fontSize: 13, fontWeight: 600, color: 'rgba(240,253,244,0.75)', marginTop: 4 }}>
           Back to sign in
         </Link>
       </div>

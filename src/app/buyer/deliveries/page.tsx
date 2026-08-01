@@ -214,7 +214,36 @@ function DeliveryRow({
 
         <p style={{ fontSize: 12, fontWeight: 700, color: C.green, margin: '0 0 4px' }}>
           UGX {Number(d.estimated_fare || 0).toLocaleString()}
+          {/* Payment breakdown: show itemised amounts when available */}
+          {(d.commission_amount > 0 || d.driver_earnings > 0) && (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 6 }}>
+              <span style={{ fontSize: 10, fontWeight: 600, color: C.muted }}>total</span>
+              <span
+                title={`Breakdown:\n• Driver earns: UGX ${Number(d.driver_earnings || 0).toLocaleString()}\n• Platform fee: UGX ${Number(d.commission_amount || 0).toLocaleString()}\n\nThe total you pay covers the driver's earnings plus AgriNova's service fee.`}
+                style={{
+                  fontSize: 10, fontWeight: 800, color: C.muted, cursor: 'help',
+                  border: `1px solid ${C.border}`, borderRadius: 99,
+                  padding: '1px 5px', lineHeight: 1.4,
+                }}
+                role="img"
+                aria-label={`Driver earns UGX ${Number(d.driver_earnings || 0).toLocaleString()}, platform fee UGX ${Number(d.commission_amount || 0).toLocaleString()}`}
+              >
+                ?
+              </span>
+            </span>
+          )}
         </p>
+        {/* Itemised breakdown visible on delivered/paid rows */}
+        {(d.commission_amount > 0 || d.driver_earnings > 0) && (
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '0 0 4px' }}>
+            <span style={{ fontSize: 10, color: C.muted }}>
+              🚛 Driver: <strong style={{ color: C.text }}>UGX {Number(d.driver_earnings || 0).toLocaleString()}</strong>
+            </span>
+            <span style={{ fontSize: 10, color: C.muted }}>
+              🏛 Service fee: <strong style={{ color: C.text }}>UGX {Number(d.commission_amount || 0).toLocaleString()}</strong>
+            </span>
+          </div>
+        )}
 
         {driver && (
           <p style={{ fontSize: 11, color: C.muted, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
