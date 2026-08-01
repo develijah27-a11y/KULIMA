@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { DeleteMemberButton } from './DeleteMemberButton';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -62,6 +63,7 @@ export default async function GroupMembersPage() {
                       <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>{m.district} · {m.phone_number ?? 'No phone'}</p>
                     </div>
                     <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed }}>{ROLE_LABEL[m.role] ?? m.role}</span>
+                    <DeleteMemberButton memberId={m.id} memberName={m.full_name ?? 'Member'} />
                   </div>
                 ))}
               </div>
@@ -93,6 +95,7 @@ export default async function GroupMembersPage() {
                     {m.contribution_total > 0 && (
                       <p style={{ fontSize: 12, fontWeight: 700, color: C.greenMed, margin: 0 }}>UGX {(m.contribution_total ?? 0).toLocaleString()}</p>
                     )}
+                    <DeleteMemberButton memberId={m.id} memberName={m.full_name ?? 'Member'} />
                   </div>
                 ))}
               </div>

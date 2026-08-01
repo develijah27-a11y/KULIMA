@@ -85,8 +85,15 @@ export async function POST(req: Request) {
     // Check buyer balance (soft pre-check for a clean error message — the
     // real enforcement is the atomic RPC below)
     const { data: buyerWallet } = await (db.from as any)('wallets')
-      .select('id, balance').eq('user_id', user.id).single();
-    if (!buyerWallet || Number(buyerWallet.balance) < totalAmount) {
+      .select('id, balance, is_frozen').eq('user_id', user.id).single();
+    if (!buyerWallet || buyerWallet.is_frozen) {
+      return NextResponse.json({
+        error: buyerWallet?.is_frozen
+          ? 'Your wallet is frozen pending review. Contact support for assistance.'
+          : 'Wallet not found',
+      }, { status: buyerWallet?.is_frozen ? 403 : 404 });
+    }
+    if (Number(buyerWallet.balance) < totalAmount) {
       return NextResponse.json({
         error: `Insufficient balance. Need UGX ${totalAmount.toLocaleString()}. Please top up your wallet.`,
       }, { status: 400 });

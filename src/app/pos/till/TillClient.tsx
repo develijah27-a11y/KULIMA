@@ -93,6 +93,27 @@ export function TillClient() {
     });
   }
 
+  // Barcode scanner sends characters very rapidly (< 50 ms apart) then fires
+  // Enter. Normal keyboard typing is much slower. We track the time between
+  // keystrokes — if a key comes in within 50 ms of the previous one, it's a
+  // scanner; otherwise it's manual typing and we swallow the character so
+  // the field stays scan-only.
+  const lastKeyTimeRef = useRef<number>(0);
+
+  function handleBarcodeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    const now = Date.now();
+    const gap = now - lastKeyTimeRef.current;
+    lastKeyTimeRef.current = now;
+
+    // Always allow Enter (to submit) and Backspace (to clear mistakes)
+    if (e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete') return;
+
+    // If the gap since the last keystroke is > 50 ms this is a human typing,
+    // not a scanner firing. Block it so only scanner input is accepted.
+    if (gap > 50) {
+      e.preventDefault();
+    }
+  }
   function handleBarcodeSubmit(e: React.FormEvent) {
     e.preventDefault();
     const code = barcode.trim();
@@ -107,7 +128,7 @@ export function TillClient() {
     setBarcode('');
   }
 
-  function updateQty(productId: string | null, delta: number) {
+  function handleBarcodeSubmit(e: React.FormEvent) {
     setCart(prev => prev
       .map(l => l.productId === productId ? { ...l, quantity: Math.max(1, l.quantity + delta) } : l)
       .filter(l => l.quantity > 0));
@@ -197,7 +218,9 @@ export function TillClient() {
                 ref={barcodeRef}
                 value={barcode}
                 onChange={e => setBarcode(e.target.value)}
-                placeholder="Scan or type a barcode/SKU, then Enter"
+                onKeyDown={handleBarcodeKeyDown}
+                placeholder="Point scanner at barcode to scan"
+                autoComplete="off"
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: C.text }}
               />
             </div>

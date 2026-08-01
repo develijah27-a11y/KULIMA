@@ -215,7 +215,7 @@ function PlanCard({ plan, cycle }: { plan: Plan; cycle: Cycle }) {
             Saves {fmt(plan.monthlyPrice * 12 - plan.yearlyPrice)} vs monthly
           </p>
         )}
-        <p style={{ fontSize: 12, color: plan.highlighted ? 'rgba(255,255,255,0.7)' : MUTED, margin: '6px 0 0', lineHeight: 1.5 }}>{plan.tagline}</p>
+        <p style={{ fontSize: 12, color: plan.highlighted ? 'rgba(255,255,255,0.7)' : TEXT, margin: '6px 0 0', lineHeight: 1.5 }}>{plan.tagline}</p>
       </div>
 
       {/* Divider */}
@@ -261,7 +261,7 @@ export default function PremiumPage() {
       {/* Nav */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 40,
-        background: 'rgba(var(--d-page-rgb, 248,250,252), 0.9)',
+        background: 'var(--d-card)',
         backdropFilter: 'blur(14px)',
         borderBottom: `1px solid ${BORDER}`,
         padding: '0 clamp(16px,5vw,64px)', height: 60,

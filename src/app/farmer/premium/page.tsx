@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Check, Zap, Crown, ArrowRight, Shield } from 'lucide-react';
 import { getEffectiveTier } from '@/lib/subscriptions/getEffectiveTier';
+import { PLANS, priceFor } from '@/lib/subscriptions/plans';
 import { SubscribeButton } from '@/components/subscriptions/SubscribeButton';
 import { CancelSubscriptionButton } from '@/components/subscriptions/CancelSubscriptionButton';
 
@@ -36,6 +37,7 @@ export default async function FarmerPremiumPage() {
 
   const currentTier = getEffectiveTier(profile as any, 'farmer');
   const isAlreadyPro = currentTier !== 'free';
+  const plan = PLANS.farmer_pro;
 
   const { data: activeSub } = isAlreadyPro
     ? await (supabase.from as any)('subscriptions')
@@ -76,17 +78,17 @@ export default async function FarmerPremiumPage() {
             <Zap size={22} color="#fff" />
           </div>
           <div>
-            <p style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>Farmer Pro</p>
+            <p style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.02em' }}>{plan.label}</p>
             <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.7)', margin: '2px 0 0' }}>Most popular plan</p>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
-          <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em' }}>UGX 15K</span>
+          <span style={{ fontSize: 36, fontWeight: 900, color: '#fff', letterSpacing: '-0.04em' }}>UGX {(plan.priceMonthlyUgx / 1000).toFixed(0)}K</span>
           <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>/month</span>
         </div>
         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)', margin: '0 0 20px' }}>
-          Or UGX 144K/year — saves UGX 36,000 (20%)
+          Or UGX {(plan.priceYearlyUgx / 1000).toFixed(0)}K/year — saves UGX {(plan.priceMonthlyUgx * 12 - plan.priceYearlyUgx).toLocaleString()} (20%)
         </p>
 
         <div style={{ height: 1, background: 'rgba(255,255,255,0.2)', marginBottom: 20 }} />
@@ -106,7 +108,7 @@ export default async function FarmerPremiumPage() {
           <SubscribeButton
             planId="farmer_pro"
             billingCycle="monthly"
-            label="Subscribe — UGX 15K/month"
+            label={`Subscribe — UGX ${(priceFor(plan, 'monthly') / 1000).toFixed(0)}K/month`}
             style={{
               width: '100%', padding: '14px', borderRadius: 12, border: 'none',
               background: '#fff', color: C.amber, fontWeight: 900, fontSize: 15,
@@ -125,7 +127,9 @@ export default async function FarmerPremiumPage() {
           </div>
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>Annual plan — save 20%</p>
-            <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0' }}>Pay UGX 144,000/year instead of UGX 180,000. Cancel anytime.</p>
+            <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0' }}>
+              Pay UGX {plan.priceYearlyUgx.toLocaleString()}/year instead of UGX {(plan.priceMonthlyUgx * 12).toLocaleString()}. Cancel anytime.
+            </p>
           </div>
           <SubscribeButton
             planId="farmer_pro"

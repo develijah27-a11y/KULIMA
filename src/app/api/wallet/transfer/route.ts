@@ -22,7 +22,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Enter a valid amount' }, { status: 400 });
   }
 
-  const { data: wallet } = await (supabase.from as any)('wallets').select('pin_hash').eq('user_id', user.id).single();
+  const { data: wallet } = await (supabase.from as any)('wallets').select('is_frozen, pin_hash').eq('user_id', user.id).single();
+  if ((wallet as any)?.is_frozen) {
+    return NextResponse.json({ error: 'Your wallet is frozen pending review. Contact support for assistance.' }, { status: 403 });
+  }
   if (!(wallet as any)?.pin_hash) {
     return NextResponse.json({ error: 'Set up your wallet PIN before sending money.', code: 'PIN_NOT_SET' }, { status: 403 });
   }

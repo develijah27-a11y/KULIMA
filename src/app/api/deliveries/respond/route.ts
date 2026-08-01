@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdmin } from '@supabase/supabase-js';
+import { notifyUser } from '@/lib/notify';
 
 // Driver accepts or declines a delivery that was matched to them
 export async function POST(req: Request) {
@@ -122,14 +123,13 @@ export async function POST(req: Request) {
   // Notify the requester that a driver is on their way
   try {
     const typeLabel = delivery.delivery_type === 'cold' ? '❄️ Cold' : delivery.delivery_type === 'fast' ? '⚡ Fast' : '🚛 Standard';
-
-    await (admin.from as any)('notifications').insert({
-      user_id: delivery.requester_id,
-      role:    delivery.requester_role ?? null,
-      type:    'delivery',
-      title:   'Driver Accepted Your Delivery',
-      body:    `${typeLabel} driver is on the way for your ${delivery.cargo_kg}kg shipment from ${delivery.pickup_district} → ${delivery.dropoff_district}.`,
-      read:    false,
+    await notifyUser(admin, {
+      userId: delivery.requester_id,
+      role:   delivery.requester_role ?? null,
+      type:   'delivery',
+      title:  'Driver Accepted Your Delivery',
+      body:   `${typeLabel} driver is on the way for your ${delivery.cargo_kg}kg shipment from ${delivery.pickup_district} → ${delivery.dropoff_district}.`,
+      url:    delivery.requester_role === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries',
     });
   } catch { /* non-critical */ }
 
