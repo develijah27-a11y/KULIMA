@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 
 // Vercel cron — runs daily at 07:00 EAT (04:00 UTC)
 // Fetches real global commodity prices and stores them in market_prices
@@ -148,7 +148,7 @@ async function fetchFromWorldBank(
 // quote — it's what buyers on this platform actually paid Ugandan farmers
 // this week. Aggregates completed orders (real money changed hands, not
 // just an asking price) grouped by crop + pickup district.
-async function insertOwnFarmerPrices(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function insertOwnFarmerPrices(supabase: ReturnType<typeof createServiceRoleClient>) {
   const since = new Date(Date.now() - 7 * 86400000).toISOString();
   const { data: orders } = await (supabase.from as any)('orders')
     .select('crop_type, unit_price, pickup_district')
@@ -190,10 +190,13 @@ export async function GET(req: Request) {
   }
 
   const avKey = process.env.ALPHAVANTAGE_API_KEY ?? '';
-  const [usdToUgx, supabase] = await Promise.all([
-    getUsdToUgx(),
-    createClient(),
-  ]);
+  // Service-role client — a Vercel Cron request carries no Supabase session
+  // (only the CRON_SECRET header), so the regular session-scoped client
+  // would have auth.uid() = NULL and get silently zeroed out by RLS on the
+  // admin-only market_prices insert below and the owner-scoped orders read
+  // inside insertOwnFarmerPrices.
+  const supabase = createServiceRoleClient();
+  const usdToUgx = await getUsdToUgx();
 
   const inserted: string[] = [];
   const skipped: string[] = [];

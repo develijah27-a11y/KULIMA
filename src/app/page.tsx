@@ -104,11 +104,28 @@ function Nav() {
           <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Link href="/auth/signin" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 700, color: INK_MID, textDecoration: 'none', padding: '14px', textAlign: 'center', border: `1.5px solid ${LINE}`, borderRadius: 12 }}>Sign in</Link>
             <Link href="/auth/signup" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 800, color: '#fff', textDecoration: 'none', padding: '14px', textAlign: 'center', background: GREEN, borderRadius: 12 }}>Create free account</Link>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
 function Hero() {
   return (
     <section style={{ background: PAPER, padding: 'clamp(96px,14vh,128px) clamp(16px,5vw,60px) clamp(56px,8vh,80px)', position: 'relative', overflow: 'hidden', fontFamily: FONT }}>
+      {/* Fine dot-grid texture — the kind of quiet detail that reads as
+          "designed," not just "styled." Faded via a radial mask so it
+          never competes with the copy. */}
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: `radial-gradient(${INK} 1px, transparent 1px)`,
+        backgroundSize: '28px 28px',
+        opacity: 0.035,
+        maskImage: 'radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)',
+        WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 50% 0%, black 0%, transparent 75%)',
+      }} />
       {/* Ambient blobs */}
       <div aria-hidden style={{ position: 'absolute', top: -100, right: '6%', width: 500, height: 500, borderRadius: '50%', background: `radial-gradient(circle, ${GREEN_SOFT} 0%, transparent 68%)`, pointerEvents: 'none', opacity: 0.85 }} />
       <div aria-hidden style={{ position: 'absolute', top: 60, left: '-4%', width: 380, height: 380, borderRadius: '50%', background: `radial-gradient(circle, ${GOLD_SOFT} 0%, transparent 68%)`, pointerEvents: 'none', opacity: 0.7 }} />
@@ -137,13 +154,28 @@ function Hero() {
             </p>
 
             {/* CTAs */}
-            <div className="landing-fade-up" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 42, animationDelay: '215ms' }}>
+            <div className="landing-fade-up" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28, animationDelay: '215ms' }}>
               <Link href="/auth/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 14, background: GREEN, color: '#fff', fontWeight: 800, fontSize: 15.5, textDecoration: 'none', boxShadow: '0 12px 28px rgba(21,122,61,0.32)', letterSpacing: '-0.01em' }}>
                 Create free account <ArrowRight size={17} strokeWidth={2.5} />
               </Link>
               <a href="#how-it-works" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 26px', borderRadius: 14, background: CARD, border: `1.5px solid ${LINE}`, color: INK_MID, fontWeight: 700, fontSize: 15.5, textDecoration: 'none' }}>
                 See how it works
               </a>
+            </div>
+
+            {/* Trust signal row — concrete, checkable claims (payment rails,
+                escrow, verification) read as more credible this close to
+                the fold than another adjective in the headline would. */}
+            <div className="landing-fade-up" style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap', marginBottom: 38, animationDelay: '250ms' }}>
+              {[
+                { icon: <Lock size={13} />, label: 'Escrow-protected' },
+                { icon: <Smartphone size={13} />, label: 'MTN & Airtel Money' },
+                { icon: <ShieldCheck size={13} />, label: 'ID-verified users' },
+              ].map(({ icon, label }) => (
+                <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: INK_MUTE }}>
+                  <span style={{ color: GREEN, display: 'flex' }}>{icon}</span>{label}
+                </span>
+              ))}
             </div>
 
             {/* Stats row */}
@@ -157,9 +189,29 @@ function Hero() {
             </div>
           </div>
 
-          {/* Right — phone */}
-          <div className="landing-fade-up landing-float" style={{ flex: '0 0 auto', display: 'flex', justifyContent: 'center', animationDelay: '175ms' }}>
-            <PhoneMockup />
+          {/* Right — phone, with a floating proof card for depth */}
+          <div style={{ flex: '0 0 auto', position: 'relative', display: 'flex', justifyContent: 'center' }}>
+            <div className="landing-fade-up landing-float phone-mockup-slot" style={{ animationDelay: '175ms' }}>
+              <PhoneMockup />
+            </div>
+            <div
+              aria-hidden
+              className="landing-fade-up landing-badge-float hero-escrow-badge"
+              style={{
+                position: 'absolute', left: -34, bottom: 64, zIndex: 2, animationDelay: '420ms',
+                display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px 11px 12px',
+                borderRadius: 16, background: CARD, border: `1px solid ${LINE}`,
+                boxShadow: '0 18px 40px rgba(15,31,21,0.16)',
+              }}
+            >
+              <div style={{ width: 34, height: 34, borderRadius: 11, background: GREEN_SOFT, color: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Lock size={16} strokeWidth={2.3} />
+              </div>
+              <div>
+                <p style={{ fontSize: 12.5, fontWeight: 900, color: INK, margin: 0, letterSpacing: '-0.02em' }}>UGX 480,000</p>
+                <p style={{ fontSize: 10, color: INK_MUTE, margin: '1px 0 0', fontWeight: 700 }}>held safely in escrow</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -178,6 +230,78 @@ function ProofBar() {
         ))}
       </div>
     </div>
+  );
+}
+
+/* ─── Stats band ──────────────────────────────────────────────────────────── */
+function StatsBand() {
+  const stats = [
+    { icon: <Users size={18}/>, value: '30+', label: 'Districts covered', color: GREEN, bg: GREEN_SOFT },
+    { icon: <Wallet size={18}/>, value: '0%', label: 'Fee to list your harvest', color: GOLD, bg: GOLD_SOFT },
+    { icon: <Lock size={18}/>, value: '100%', label: 'Payments escrow-protected', color: SKY, bg: SKY_SOFT },
+    { icon: <Microscope size={18}/>, value: '<30s', label: 'AI crop disease diagnosis', color: PLUM, bg: PLUM_SOFT },
+  ];
+  return (
+    <section style={{ padding: 'clamp(48px,7vh,64px) clamp(16px,5vw,60px)', background: PAPER, fontFamily: FONT }}>
+      <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
+        {stats.map(({ icon, value, label, color, bg }) => (
+          <div key={label} className="landing-card-hover" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px', borderRadius: 18, background: CARD, border: `1px solid ${LINE}` }}>
+            <div style={{ width: 42, height: 42, borderRadius: 13, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
+            <div>
+              <p style={{ fontSize: 21, fontWeight: 900, color: INK, margin: 0, letterSpacing: '-0.035em' }}>{value}</p>
+              <p style={{ fontSize: 11.5, color: INK_MUTE, margin: '2px 0 0', fontWeight: 700 }}>{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─── Why AgriNova (old way vs new way) ──────────────────────────────────── */
+function WhyDifferent() {
+  const rows = [
+    { old: 'Sell at whatever price shows up at your gate', now: 'See live district prices before you harvest' },
+    { old: 'Trust a stranger to pay after you hand over the goods', now: 'Payment sits in escrow until you confirm delivery' },
+    { old: 'Wait days for a diagnosis on a sick crop', now: 'AI diagnosis with treatment advice in under 30 seconds' },
+    { old: 'No record if a buyer or transporter disappears', now: 'Every user verified, every deal has a paper trail' },
+  ];
+  return (
+    <section style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: PAPER, fontFamily: FONT }}>
+      <div style={{ maxWidth: 900, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 44 }}>
+          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>The difference</p>
+          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>
+            The old way, versus AgriNova.
+          </h2>
+        </div>
+
+        <div className="landing-card-hover why-different" style={{ borderRadius: 22, background: CARD, border: `1px solid ${LINE}`, boxShadow: '0 20px 50px rgba(15,31,21,0.06)', overflow: 'hidden' }}>
+          <div className="why-different-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${LINE}`, borderRight: `1px solid ${LINE}` }}>
+              <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: INK_MUTE, margin: 0 }}>Before</p>
+            </div>
+            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${LINE}`, background: GREEN_SOFT }}>
+              <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN_DEEP, margin: 0 }}>With AgriNova</p>
+            </div>
+          </div>
+          {rows.map(({ old, now }, i) => (
+            <div key={old} className="why-different-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: i < rows.length - 1 ? `1px solid ${LINE}` : 'none' }}>
+              <div style={{ padding: '18px 20px', borderRight: `1px solid ${LINE}`, display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <span style={{ fontSize: 14, color: '#C4453A', fontWeight: 900, lineHeight: 1.4, flexShrink: 0 }}>&times;</span>
+                <p style={{ fontSize: 13.5, color: INK_MID, margin: 0, lineHeight: 1.55 }}>{old}</p>
+              </div>
+              <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <span style={{ width: 17, height: 17, borderRadius: 99, background: GREEN_SOFT, color: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                  <Check size={10} strokeWidth={3.2} />
+                </span>
+                <p style={{ fontSize: 13.5, color: INK, fontWeight: 600, margin: 0, lineHeight: 1.55 }}>{now}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -206,7 +330,7 @@ function Features() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(275px,1fr))', gap: 16, gridAutoFlow: 'dense' }}>
           {items.map(({ icon, title, body, color, bg, wide }) => (
-            <div key={title} style={{ padding: '26px 24px', borderRadius: 20, background: CARD, border: `1px solid ${LINE}`, gridColumn: wide ? 'span 2' : 'span 1', boxShadow: '0 2px 10px rgba(15,31,21,0.04)', display: 'flex', flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: wide ? 20 : 0 }}>
+            <div key={title} className="landing-card-hover" style={{ padding: '26px 24px', borderRadius: 20, background: CARD, border: `1px solid ${LINE}`, gridColumn: wide ? 'span 2' : 'span 1', boxShadow: '0 2px 10px rgba(15,31,21,0.04)', display: 'flex', flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: wide ? 20 : 0 }}>
               <div style={{ width: 50, height: 50, borderRadius: 14, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: wide ? 0 : 18, flexShrink: 0 }}>{icon}</div>
               <div>
                 <p style={{ fontSize: wide ? 18 : 15.5, fontWeight: 800, color: INK, margin: '0 0 8px', letterSpacing: '-0.02em' }}>{title}</p>
@@ -288,7 +412,7 @@ function TrustSection() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
           {items.map(({ icon, title, body }) => (
-            <div key={title} style={{ padding: '28px 26px', borderRadius: 20, background: FOREST_2, border: '1px solid rgba(255,255,255,0.07)' }}>
+            <div key={title} className="landing-card-hover" style={{ padding: '28px 26px', borderRadius: 20, background: FOREST_2, border: '1px solid rgba(255,255,255,0.07)' }}>
               <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(95,224,160,0.13)', color: MINT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>{icon}</div>
               <p style={{ fontSize: 15.5, fontWeight: 800, color: '#fff', margin: '0 0 10px', letterSpacing: '-0.015em', lineHeight: 1.3 }}>{title}</p>
               <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.56)', margin: 0, lineHeight: 1.7 }}>{body}</p>
@@ -336,7 +460,7 @@ function RolesSection() {
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 14, background: PAPER_2, border: `1px solid ${LINE}`, marginBottom: 22 }}>
           {roles.map((role, i) => (
-            <button key={role.label} onClick={() => setActive(i)} style={{ flex: 1, padding: 'clamp(10px,2vw,12px) 8px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: FONT, fontWeight: 800, fontSize: 'clamp(12px,2.5vw,14px)', transition: 'all 0.18s ease', background: active === i ? CARD : 'transparent', color: active === i ? role.color : INK_MUTE, boxShadow: active === i ? '0 2px 8px rgba(15,31,21,0.08)' : 'none' }}>
+            <button key={role.label} onClick={() => setActive(i)} style={{ flex: 1, minWidth: 0, padding: 'clamp(10px,2vw,12px) 6px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: FONT, fontWeight: 800, fontSize: 'clamp(11px,2.5vw,14px)', lineHeight: 1.2, whiteSpace: 'normal', wordBreak: 'break-word', transition: 'all 0.18s ease', background: active === i ? CARD : 'transparent', color: active === i ? role.color : INK_MUTE, boxShadow: active === i ? '0 2px 8px rgba(15,31,21,0.08)' : 'none' }}>
               {role.label}
             </button>
           ))}
@@ -399,7 +523,7 @@ function Testimonials() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20 }}>
           {quotes.map(({ quote, name, role, initials, color, bg }) => (
-            <div key={name} style={{ background: CARD, border: `1px solid ${LINE}`, borderRadius: 20, padding: '28px 26px', boxShadow: '0 2px 16px rgba(15,31,21,0.05)' }}>
+            <div key={name} className="landing-card-hover" style={{ background: CARD, border: `1px solid ${LINE}`, borderRadius: 20, padding: '28px 26px', boxShadow: '0 2px 16px rgba(15,31,21,0.05)' }}>
               <p style={{ fontSize: 42, lineHeight: 1, color: LINE, margin: '0 0 10px', fontFamily: 'Georgia, serif', fontWeight: 900 }}>&ldquo;</p>
               <p style={{ fontSize: 14.5, color: INK_MID, lineHeight: 1.78, margin: '0 0 24px', fontStyle: 'italic' }}>{quote}</p>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -499,7 +623,7 @@ function Footer() {
 /* ─── Phone mockup ────────────────────────────────────────────────────────── */
 function PhoneMockup() {
   return (
-    <div style={{ width: 244, height: 494, background: '#0A140C', borderRadius: 42, border: '8px solid #0F1F15', boxShadow: ['0 0 0 1px rgba(21,122,61,0.10)', '0 40px 80px rgba(15,31,21,0.28)', '0 20px 40px rgba(15,31,21,0.16)'].join(', '), overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+    <div className="phone-mockup" style={{ width: 244, height: 494, background: '#0A140C', borderRadius: 42, border: '8px solid #0F1F15', boxShadow: ['0 0 0 1px rgba(21,122,61,0.10)', '0 40px 80px rgba(15,31,21,0.28)', '0 20px 40px rgba(15,31,21,0.16)'].join(', '), overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
       <div style={{ position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)', width: 70, height: 10, background: '#0A140C', borderRadius: 99, zIndex: 10, boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)' }} />
 
       <div style={{ height: '100%', background: '#101A0D', display: 'flex', flexDirection: 'column' }}>
@@ -579,10 +703,41 @@ function PhoneMockup() {
 export default function Home() {
   return (
     <div style={{ background: PAPER, color: INK, fontFamily: FONT, overflowX: 'hidden' }}>
+      {/* Phone mockup is built from fixed pixel values so its internal
+          type/spacing stays crisp — scaled as a whole unit via `transform`
+          (not resized) so it never crowds or overflows the smallest real
+          phone viewports (~320px CSS width). The slot around it reserves
+          the already-scaled footprint so nothing collapses or leaves a gap. */}
+      <style>{`
+        @media (max-width: 420px) {
+          .phone-mockup-slot { width: 210px; height: 426px; }
+          .phone-mockup { transform: scale(0.861); transform-origin: top center; }
+        }
+        @media (max-width: 350px) {
+          .phone-mockup-slot { width: 184px; height: 373px; }
+          .phone-mockup { transform: scale(0.754); transform-origin: top center; }
+        }
+        /* The floating escrow badge overlaps the phone's left edge by
+           design (34px) — on narrow phones that would push it past the
+           viewport edge and force horizontal scroll, so it tucks fully
+           inside the mockup's footprint below 480px instead of hiding
+           outright (still communicates the same trust signal). */
+        @media (max-width: 480px) {
+          .hero-escrow-badge { left: 4px !important; bottom: 40px !important; }
+        }
+        /* Two full-sentence columns get too tight below ~560px — stack
+           "before" over "with AgriNova" per row instead of side-by-side. */
+        @media (max-width: 560px) {
+          .why-different-row { grid-template-columns: 1fr !important; }
+          .why-different-row > div:first-child { border-right: none !important; }
+        }
+      `}</style>
       <Nav />
       <Hero />
       <ProofBar />
+      <StatsBand />
       <Features />
+      <WhyDifferent />
       <HowItWorks />
       <TrustSection />
       <RolesSection />

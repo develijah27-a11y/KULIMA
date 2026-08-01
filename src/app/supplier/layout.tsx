@@ -15,6 +15,12 @@ const SUPPLIER_NAV = [
   { href: '/supplier/dashboard',   icon: 'dashboard',    label: 'Dashboard' },
   // ── Products
   { href: '/supplier/catalogue',   icon: 'catalogue',    label: 'Inventory',    divider: true, sectionLabel: 'Inventory' },
+  { href: '/pos/till',             icon: 'pos',          label: 'Point of Sale' },
+  { href: '/supplier/pos/staff',   icon: 'members',      label: 'Staff Accounts' },
+  { href: '/supplier/pos/stores',  icon: 'coverage',     label: 'Branches' },
+  { href: '/supplier/pos/reports', icon: 'analytics',    label: 'Sales Reports' },
+  { href: '/supplier/pos/customers', icon: 'buyers',     label: 'Customers' },
+  { href: '/supplier/pos/purchase-orders', icon: 'deliveries', label: 'Purchase Orders' },
   { href: '/supplier/orders',      icon: 'orders',       label: 'New Orders' },
   { href: '/supplier/returns',     icon: 'orders',       label: 'Returns' },
   { href: '/supplier/flash-deals', icon: 'flash-deals',  label: 'Quick Deals' },
@@ -26,6 +32,7 @@ const SUPPLIER_NAV = [
   { href: '/supplier/wallet',      icon: 'wallet',       label: 'Wallet',        divider: true, sectionLabel: 'Account' },
   { href: '/supplier/notifications',icon: 'notifications',label: 'Notifications' },
   { href: '/supplier/account',     icon: 'verify',       label: 'My Account' },
+  { href: '/supplier/premium',     icon: 'premium',      label: 'Business' },
   { href: '/supplier/support',     icon: 'support',      label: 'Support' },
   { href: '/supplier/settings',    icon: 'settings',     label: 'Settings' },
 ];

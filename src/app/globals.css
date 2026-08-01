@@ -1280,6 +1280,15 @@ input.auth-input:-webkit-autofill:active {
 }
 .landing-float { animation: landingFloat 5s ease-in-out infinite; }
 
+@keyframes landingBadgeFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.landing-badge-float { animation: landingBadgeFloat 4.2s ease-in-out infinite; }
+
+.landing-card-hover { transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, border-color 0.22s ease; }
+.landing-card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(15,31,21,0.10); }
+
 /* ═══════════════════════════════════════════════════════════════════
    TAILWIND OVERRIDE CLASSES
    Explicit classes for legacy token names used in JSX files.

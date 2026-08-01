@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Leaf, FlaskConical, Wrench, Settings, Package, Store } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/CameraCapture';
 
@@ -39,12 +39,19 @@ interface Product {
   district?: string;
   is_available: boolean;
   image_url?: string;
+  sku?: string | null;
+  barcode?: string | null;
+  cost_price_ugx?: number | null;
+  store_id?: string | null;
   created_at: string;
 }
+
+interface StoreOption { id: string; name: string; is_primary: boolean; }
 
 const EMPTY: Omit<Product,'id'|'created_at'> = {
   name:'', category:'seeds', description:'', price_per_unit:0,
   unit:'kg', stock_qty:0, min_order_qty:1, low_stock_threshold:null, district:'', is_available:true, image_url:'',
+  sku:'', barcode:'', cost_price_ugx:null,
 };
 
 // Falls back to 5 units when a supplier hasn't set their own threshold —
@@ -60,6 +67,13 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
   const [saving, setSaving]     = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError]       = useState('');
+  const [stores, setStores]     = useState<StoreOption[]>([]);
+
+  // Only relevant once there's more than one branch (Enterprise tier) — the
+  // picker in the add/edit modal stays hidden for everyone else.
+  useEffect(() => {
+    fetch('/api/pos/stores').then(r => r.json()).then(json => setStores(json.stores ?? []));
+  }, []);
 
   const visible = filter === 'all' ? products : products.filter(p => p.category === filter);
   const isEdit  = !!(modal as any)?.id;
@@ -271,6 +285,9 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                 { label: 'Minimum Order Qty', key: 'min_order_qty', type: 'number', placeholder: '1' },
                 { label: 'Low Stock Alert Below (optional, default 5)', key: 'low_stock_threshold', type: 'number', placeholder: '5' },
                 { label: 'District (optional)', key: 'district', type: 'text', placeholder: 'e.g. Kampala' },
+                { label: 'SKU (optional)', key: 'sku', type: 'text', placeholder: 'e.g. SEED-MAIZE-01' },
+                { label: 'Barcode (optional — scanned at POS checkout)', key: 'barcode', type: 'text', placeholder: 'Scan or type a barcode' },
+                { label: 'Cost Price (optional — what you paid, for profit reports)', key: 'cost_price_ugx', type: 'number', placeholder: '0' },
               ] as const).map(({ label, key, type, placeholder }) => (
                 <div key={key}>
                   <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>{label}</label>
@@ -283,6 +300,16 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                   />
                 </div>
               ))}
+
+              {stores.length > 1 && (
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Branch</label>
+                  <select value={modal.store_id ?? stores.find(s => s.is_primary)?.id ?? ''} onChange={e => setModal(m => ({ ...m!, store_id: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13 }}>
+                    {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+              )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div>

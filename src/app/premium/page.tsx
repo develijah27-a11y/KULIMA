@@ -1,6 +1,6 @@
 'use client';
 
-make sure that you revise it and unde....make the best authenticationimport React from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
@@ -331,14 +331,6 @@ export default function PremiumPage() {
         {PLANS.map(plan => <PlanCard key={plan.id} plan={plan} cycle={cycle} />)}
       </div>
 
-      {/* Feature comparison table */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 clamp(16px,5vw,40px) 80px' }}>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: TEXT, textAlign: 'center', letterSpacing: '-0.03em', marginBottom: 32 }}>
-          What's included
-        </h2>
-        <ComparisonTable />
-      </div>
-
       {/* Trust section */}
       <div style={{ background: 'var(--color-primary-bg)', borderTop: `1px solid ${BORDER}`, padding: 'clamp(40px,6vh,64px) clamp(16px,5vw,64px)' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px,1fr))', gap: 24 }}>
@@ -373,65 +365,3 @@ export default function PremiumPage() {
   );
 }
 
-// ─── Feature comparison table ──────────────────────────────────────────────────
-
-const COMPARISON_ROWS: { feature: string; free: string | boolean; pro: string | boolean; business: string | boolean; enterprise: string | boolean }[] = [
-  { feature: 'Crop listings',          free: '3',          pro: 'Unlimited',  business: 'Unlimited',  enterprise: 'Unlimited' },
-  { feature: 'AI Crop Doctor scans',   free: '5/month',    pro: 'Unlimited',  business: 'Unlimited',  enterprise: 'Unlimited' },
-  { feature: 'Market prices',          free: true,         pro: true,         business: true,          enterprise: true },
-  { feature: 'Weather forecast',       free: 'Basic',      pro: 'Advanced',   business: 'Advanced',   enterprise: 'Advanced' },
-  { feature: 'Wallet & payments',      free: true,         pro: true,         business: true,          enterprise: true },
-  { feature: 'Farm analytics reports', free: false,        pro: true,         business: true,          enterprise: true },
-  { feature: 'Planting SMS reminders', free: false,        pro: true,         business: true,          enterprise: true },
-  { feature: 'Loan pre-qualification', free: false,        pro: true,         business: true,          enterprise: true },
-  { feature: 'Staff accounts',         free: false,        pro: false,        business: 'Up to 5',    enterprise: 'Unlimited' },
-  { feature: 'Inventory management',   free: false,        pro: false,        business: true,          enterprise: true },
-  { feature: 'Sales analytics',        free: false,        pro: false,        business: true,          enterprise: true },
-  { feature: 'Bulk order tools',        free: false,        pro: false,        business: true,          enterprise: true },
-  { feature: 'API access',             free: false,        pro: false,        business: false,         enterprise: true },
-  { feature: 'Custom reporting',       free: false,        pro: false,        business: false,         enterprise: true },
-  { feature: 'Dedicated manager',      free: false,        pro: false,        business: false,         enterprise: true },
-  { feature: 'Support response time',  free: 'Standard',   pro: '4 hours',    business: '2 hours',    enterprise: 'Dedicated' },
-];
-
-function Cell({ value, color }: { value: string | boolean; color: string }) {
-  if (value === true)  return <Check size={16} style={{ color: 'var(--color-success)' }} />;
-  if (value === false) return <span style={{ fontSize: 16, color: 'var(--d-muted)' }}>—</span>;
-  return <span style={{ fontSize: 12, fontWeight: 700, color }}>{value as string}</span>;
-}
-
-function ComparisonTable() {
-  const cols = [
-    { label: 'Free',        color: GREEN  },
-    { label: 'Farmer Pro',  color: AMBER  },
-    { label: 'Business',    color: BLUE   },
-    { label: 'Enterprise',  color: PURPLE },
-  ];
-
-  return (
-    <div style={{ background: CARD, borderRadius: 16, boxShadow: SHADOW, overflow: 'auto' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
-        <thead>
-          <tr style={{ background: 'var(--color-surface-2)' }}>
-            <th style={{ padding: '12px 20px', textAlign: 'left', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: MUTED, minWidth: 180 }}>Feature</th>
-            {cols.map(c => (
-              <th key={c.label} style={{ padding: '12px 16px', textAlign: 'center', fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: c.color }}>{c.label}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {COMPARISON_ROWS.map((row, i) => (
-            <tr key={row.feature} style={{ borderBottom: i < COMPARISON_ROWS.length - 1 ? `1px solid ${BORDER}` : 'none', background: i % 2 === 0 ? 'transparent' : 'var(--color-surface-2)' }}>
-              <td style={{ padding: '11px 20px', fontSize: 13, fontWeight: 600, color: TEXT }}>{row.feature}</td>
-              {([row.free, row.pro, row.business, row.enterprise] as const).map((val, ci) => (
-                <td key={ci} style={{ padding: '11px 16px', textAlign: 'center' }}>
-                  <Cell value={val} color={cols[ci].color} />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}

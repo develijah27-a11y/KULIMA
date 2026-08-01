@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
 import { withApiLogging } from '@/lib/system-log';
+import { NEXT_LEVEL, getLevelDetails, type VerificationLevel } from '@/lib/trust';
 
 const LEVEL_LABEL: Record<string, string> = { green: 'Green', blue: 'Blue', gold: 'Gold' };
 
@@ -83,6 +84,17 @@ async function handlePOST(req: NextRequest) {
   }
 
   const submissionRole = (verification as any)?.role;
+
+  // On approval, tell the user what they can still upgrade to (unless
+  // they're already at the max tier) — previously this notification just
+  // confirmed the badge and stopped, so a green-tier user never learned
+  // blue/gold existed or what it'd unlock for them (same benefits copy the
+  // dashboard's VerificationBanner now surfaces on an ongoing basis).
+  const nextLevel = action === 'approve' ? NEXT_LEVEL[targetLevel as VerificationLevel] : undefined;
+  const nextLevelTeaser = nextLevel && submissionRole
+    ? ` Want more? Upgrade to ${getLevelDetails(nextLevel, submissionRole).title} to unlock ${getLevelDetails(nextLevel, submissionRole).benefits[0]?.toLowerCase()}.`
+    : '';
+
   await notifyUser(supabase, {
     userId: userId,
     role:   submissionRole ?? null,
@@ -91,7 +103,7 @@ async function handlePOST(req: NextRequest) {
               ? `Verification approved — ${LEVEL_LABEL[targetLevel] ?? targetLevel} badge`
               : 'Verification not approved',
     body:   action === 'approve'
-              ? `Your documents were reviewed and approved. You now have the ${LEVEL_LABEL[targetLevel] ?? targetLevel} trust badge.`
+              ? `Your documents were reviewed and approved. You now have the ${LEVEL_LABEL[targetLevel] ?? targetLevel} trust badge.${nextLevelTeaser}`
               : `Your verification documents were not approved. ${reason ?? 'Please review and resubmit.'}`,
     data:   { verification_id: verificationId, target_level: targetLevel },
     url:    submissionRole ? `/${submissionRole}/verify` : '/dashboard',

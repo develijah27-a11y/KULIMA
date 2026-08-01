@@ -56,10 +56,17 @@ export async function POST(req: Request) {
   // ── ACCEPT ─────────────────────────────────────────────────────────────────
   // Must be verified at blue tier or above (driving license + vehicle
   // registration + selfie on file) before taking a job — so a misplaced
-  // delivery or bad-faith driver can always be traced.
+  // delivery or bad-faith driver can always be traced. Checks the transporter
+  // ROLE's verification level first (role_verification_levels.transporter),
+  // falling back to the flat column only when no per-role entry exists — an
+  // account whose primary role isn't 'transporter' gets its per-role level
+  // approved into role_verification_levels only (see /api/admin/verify-kyc),
+  // never into the flat column, so checking the flat column alone here
+  // wrongly re-blocked an already-verified secondary-role transporter.
   const { data: driverProfile } = await (admin.from as any)('profiles')
-    .select('verification_level').eq('user_id', user.id).single();
-  if (!driverProfile || !['blue', 'gold'].includes(driverProfile.verification_level)) {
+    .select('verification_level, role_verification_levels').eq('user_id', user.id).single();
+  const driverLevel = driverProfile?.role_verification_levels?.transporter ?? driverProfile?.verification_level;
+  if (!driverProfile || !['blue', 'gold'].includes(driverLevel)) {
     return NextResponse.json({
       error: 'Submit your driving license, vehicle registration, and a selfie for verification before accepting jobs.',
     }, { status: 403 });

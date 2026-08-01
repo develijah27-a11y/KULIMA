@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { ShieldAlert, ArrowRight } from 'lucide-react';
-import { type VerificationLevel } from '@/lib/trust';
+import { ShieldAlert, TrendingUp, ArrowRight } from 'lucide-react';
+import { type VerificationLevel, getLevelDetails, NEXT_LEVEL } from '@/lib/trust';
 
 interface Props {
   level: VerificationLevel;
@@ -13,36 +13,55 @@ interface Props {
   requiredDocsLabel?: string;
 }
 
-// Shown until a user has at least their ID verified ('green'). Below that,
-// they can't be trusted for escrow deals, payouts, or sensitive transactions.
-// Framed as an opportunity to unlock a role-specific benefit rather than a
-// compliance warning — this is the main lever for getting people to actually
-// finish verifying instead of dismissing it as red tape.
+// Below 'green' this is a hard nudge to get minimally verified at all (a
+// compliance-adjacent prompt, framed as an opportunity). From 'green' up to
+// 'blue'/'gold' it becomes a softer "here's what you're leaving on the
+// table" upgrade prompt using the same per-role benefit copy from
+// getLevelDetails — previously this banner just vanished once verified at
+// all, so a green-tier user never learned blue/gold existed or why it'd be
+// worth the extra documents. Only hides once at the true max tier (gold).
 export function VerificationBanner({ level, verifyHref, headline, benefit, requiredDocsLabel }: Props) {
-  if (level === 'green' || level === 'blue' || level === 'gold') return null;
+  const nextLevel = NEXT_LEVEL[level];
+  if (!nextLevel) return null;
+
+  const isUpgrade = level === 'green' || level === 'blue';
+  const role = verifyHref.split('/').filter(Boolean)[0] ?? '';
+
+  let shownHeadline = headline;
+  let shownBenefit = benefit;
+  let shownDocs = requiredDocsLabel;
+
+  if (isUpgrade) {
+    const next = getLevelDetails(nextLevel, role);
+    shownHeadline = `Upgrade to ${next.title}`;
+    shownBenefit = next.benefits.slice(0, 2).join(' · ');
+    shownDocs = undefined; // the upgrade line leads with payoff, not paperwork — docs are on the verify page itself
+  }
 
   return (
     <Link
       href={verifyHref}
       className="flex items-center gap-3 rounded-xl px-4 py-3"
       style={{
-        background: 'linear-gradient(135deg, var(--color-primary-bg) 0%, var(--color-sky-bg) 100%)',
-        border: '1px solid var(--color-primary-muted)',
+        background: isUpgrade
+          ? 'linear-gradient(135deg, var(--color-harvest-bg) 0%, var(--color-primary-bg) 100%)'
+          : 'linear-gradient(135deg, var(--color-primary-bg) 0%, var(--color-sky-bg) 100%)',
+        border: `1px solid ${isUpgrade ? 'var(--color-harvest)' : 'var(--color-primary-muted)'}`,
         textDecoration: 'none',
       }}
     >
-      <span style={{ color: 'var(--color-primary)', flexShrink: 0, display: 'flex' }}>
-        <ShieldAlert size={22} />
+      <span style={{ color: isUpgrade ? 'var(--color-harvest)' : 'var(--color-primary)', flexShrink: 0, display: 'flex' }}>
+        {isUpgrade ? <TrendingUp size={22} /> : <ShieldAlert size={22} />}
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold" style={{ color: 'var(--d-text)' }}>
-          {headline}
+          {shownHeadline}
         </p>
         <p className="text-xs mt-0.5" style={{ color: 'var(--d-muted)' }}>
-          {benefit}{requiredDocsLabel ? ` — just your ${requiredDocsLabel}.` : ''}
+          {shownBenefit}{shownDocs ? ` — just your ${shownDocs}.` : ''}
         </p>
       </div>
-      <ArrowRight size={18} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+      <ArrowRight size={18} style={{ color: isUpgrade ? 'var(--color-harvest)' : 'var(--color-primary)', flexShrink: 0 }} />
     </Link>
   );
 }

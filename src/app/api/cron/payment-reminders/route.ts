@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { sendPushToUsers } from '@/lib/push';
 
 // Vercel cron — reminds buyers/requesters who placed an order or delivery
@@ -13,7 +13,10 @@ export async function GET(req: Request) {
   const v = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
   if (v !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const supabase = await createClient();
+  // Service-role client — a Vercel Cron request has no Supabase session, so
+  // the regular session-scoped client would see zero rows on both
+  // owner-scoped tables queried below (orders, delivery_requests).
+  const supabase = createServiceRoleClient();
   const cutoff = new Date(Date.now() - REMINDER_AFTER_MS).toISOString();
   const quietSince = new Date(Date.now() - REMIND_EVERY_MS).toISOString();
 

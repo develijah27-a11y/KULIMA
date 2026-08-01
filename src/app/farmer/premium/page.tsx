@@ -2,6 +2,9 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Check, Zap, Crown, ArrowRight, Shield } from 'lucide-react';
+import { getEffectiveTier } from '@/lib/subscriptions/getEffectiveTier';
+import { SubscribeButton } from '@/components/subscriptions/SubscribeButton';
+import { CancelSubscriptionButton } from '@/components/subscriptions/CancelSubscriptionButton';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -27,11 +30,17 @@ export default async function FarmerPremiumPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, subscription_tier')
+    .select('full_name, role, subscription_tier, role_subscription_tiers')
     .eq('user_id', user.id)
     .single();
 
-  const isAlreadyPro = (profile as any)?.subscription_tier === 'farmer_pro' || (profile as any)?.subscription_tier === 'business' || (profile as any)?.subscription_tier === 'enterprise';
+  const currentTier = getEffectiveTier(profile as any, 'farmer');
+  const isAlreadyPro = currentTier !== 'free';
+
+  const { data: activeSub } = isAlreadyPro
+    ? await (supabase.from as any)('subscriptions')
+        .select('id').eq('role', 'farmer').eq('status', 'active').maybeSingle()
+    : { data: null };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -47,11 +56,14 @@ export default async function FarmerPremiumPage() {
 
       {/* Already subscribed banner */}
       {isAlreadyPro && (
-        <div style={{ padding: '14px 18px', borderRadius: 14, background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Check size={20} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
-          <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-success)', margin: 0 }}>
-            You are already on the {(profile as any)?.subscription_tier?.replace(/_/g, ' ')} plan. Enjoy!
-          </p>
+        <div style={{ padding: '14px 18px', borderRadius: 14, background: 'var(--color-success-bg)', border: '1px solid var(--color-success-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Check size={20} style={{ color: 'var(--color-success)', flexShrink: 0 }} />
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-success)', margin: 0 }}>
+              You are already on the {currentTier.replace(/_/g, ' ')} plan. Enjoy!
+            </p>
+          </div>
+          {activeSub && <CancelSubscriptionButton subscriptionId={activeSub.id} />}
         </div>
       )}
 
@@ -91,17 +103,17 @@ export default async function FarmerPremiumPage() {
         </ul>
 
         {!isAlreadyPro && (
-          <button
+          <SubscribeButton
+            planId="farmer_pro"
+            billingCycle="monthly"
+            label="Subscribe — UGX 15K/month"
             style={{
-              width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer',
+              width: '100%', padding: '14px', borderRadius: 12, border: 'none',
               background: '#fff', color: C.amber, fontWeight: 900, fontSize: 15,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
             }}
-            onClick={() => alert('Payment integration coming soon. Subscription will be processed through your AgriNova wallet.')}
-          >
-            Subscribe — UGX 15K/month <ArrowRight size={16} strokeWidth={2.5} />
-          </button>
+          />
         )}
       </div>
 
@@ -115,12 +127,12 @@ export default async function FarmerPremiumPage() {
             <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>Annual plan — save 20%</p>
             <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0' }}>Pay UGX 144,000/year instead of UGX 180,000. Cancel anytime.</p>
           </div>
-          <button
-            style={{ padding: '9px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'var(--color-success)', color: '#fff', fontWeight: 800, fontSize: 13, flexShrink: 0, whiteSpace: 'nowrap' }}
-            onClick={() => alert('Annual subscription coming soon.')}
-          >
-            Save 20%
-          </button>
+          <SubscribeButton
+            planId="farmer_pro"
+            billingCycle="yearly"
+            label="Save 20%"
+            style={{ padding: '9px 18px', borderRadius: 10, border: 'none', background: 'var(--color-success)', color: '#fff', fontWeight: 800, fontSize: 13, flexShrink: 0, whiteSpace: 'nowrap' }}
+          />
         </div>
       )}
 

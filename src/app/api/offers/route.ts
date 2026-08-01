@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
 import { notifyUser } from '@/lib/notify';
 
@@ -59,7 +59,7 @@ export async function PATCH(req: Request) {
   if (!id || !action) return NextResponse.json({ success: false, error: 'Missing fields' }, { status: 400 });
 
   const { data: offer } = await (supabase.from as any)('offers')
-    .select('id, listing_id, buyer_id, status')
+    .select('id, listing_id, buyer_id, status, offered_price, counter_price')
     .eq('id', id)
     .single();
   if (!offer) return NextResponse.json({ success: false, error: 'Offer not found' }, { status: 404 });
@@ -89,11 +89,26 @@ export async function PATCH(req: Request) {
       .eq('id', offer.listing_id)
       .single();
 
+    if (!listing) return NextResponse.json({ success: false, error: 'Listing not found' }, { status: 404 });
+
+    // Atomically claim the whole remaining listing quantity — same RPC Buy
+    // Now uses, so an offer-accept and a concurrent Buy Now (or a second
+    // offer-accept) on the same listing can't both succeed. Replaces the
+    // old unconditional `listings.update({status:'sold'})`, which had no
+    // guard and could double-sell.
+    const stockAdmin = createServiceRoleClient();
+    const { data: claimed } = await (stockAdmin as any).rpc('claim_listing_stock', {
+      p_listing_id: listing.id,
+      p_quantity_kg: listing.quantity_kg,
+    });
+    if (!claimed) {
+      return NextResponse.json({ success: false, error: 'This listing is no longer available — it may have already been sold.' }, { status: 409 });
+    }
+
     // Mark this offer accepted, reject all others on same listing
     await Promise.all([
       (supabase.from as any)('offers').update({ status: 'accepted', farmer_note: farmerNote ?? null }).eq('id', id),
       (supabase.from as any)('offers').update({ status: 'rejected' }).eq('listing_id', offer.listing_id).neq('id', id),
-      (supabase.from as any)('listings').update({ status: 'sold' }).eq('id', offer.listing_id),
     ]);
 
     if (listing) {
@@ -104,7 +119,7 @@ export async function PATCH(req: Request) {
       const total = Math.round(listing.quantity_kg * agreedPrice);
 
       // Create order (already confirmed — both parties agreed via negotiation)
-      const { data: newOrder } = await (supabase.from as any)('orders').insert({
+      const { data: newOrder, error: orderErr } = await (supabase.from as any)('orders').insert({
         listing_id:         offer.listing_id,
         offer_id:           offer.id,
         buyer_id:           offer.buyer_id,
@@ -118,6 +133,12 @@ export async function PATCH(req: Request) {
         pickup_district:    listing.district,
         dropoff_district:   (buyerProfile as any)?.location ?? null,
       }).select().single();
+
+      if (orderErr) {
+        console.error('[/api/offers accept]', orderErr);
+        await (stockAdmin as any).rpc('release_listing_stock', { p_listing_id: listing.id, p_quantity_kg: listing.quantity_kg });
+        return NextResponse.json({ success: false, error: 'Failed to create order from this offer. Please try again.' }, { status: 500 });
+      }
 
       // Create delivery request
       if (newOrder) {
@@ -186,10 +207,22 @@ export async function PATCH(req: Request) {
       .select('id, farmer_id, crop_type, quantity_kg, district')
       .eq('id', offer.listing_id).single();
 
+    if (!listing) return NextResponse.json({ success: false, error: 'Listing not found' }, { status: 404 });
+
+    // Same atomic claim as the 'accept' branch — a concurrent Buy Now or
+    // second offer-accept on this listing can't also succeed.
+    const stockAdmin = createServiceRoleClient();
+    const { data: claimed } = await (stockAdmin as any).rpc('claim_listing_stock', {
+      p_listing_id: listing.id,
+      p_quantity_kg: listing.quantity_kg,
+    });
+    if (!claimed) {
+      return NextResponse.json({ success: false, error: 'This listing is no longer available — it may have already been sold.' }, { status: 409 });
+    }
+
     await Promise.all([
       (supabase.from as any)('offers').update({ status: 'accepted' }).eq('id', id),
       (supabase.from as any)('offers').update({ status: 'rejected' }).eq('listing_id', offer.listing_id).neq('id', id),
-      (supabase.from as any)('listings').update({ status: 'sold' }).eq('id', offer.listing_id),
     ]);
 
     if (listing) {
@@ -198,7 +231,7 @@ export async function PATCH(req: Request) {
       const { data: buyerProfile } = await supabase
         .from('profiles').select('location').eq('user_id', offer.buyer_id).single();
 
-      await (supabase.from as any)('orders').insert({
+      const { error: orderErr } = await (supabase.from as any)('orders').insert({
         listing_id:         offer.listing_id,
         offer_id:           offer.id,
         buyer_id:           offer.buyer_id,
@@ -212,6 +245,12 @@ export async function PATCH(req: Request) {
         pickup_district:    listing.district,
         dropoff_district:   (buyerProfile as any)?.location ?? null,
       });
+
+      if (orderErr) {
+        console.error('[/api/offers accept-counter]', orderErr);
+        await (stockAdmin as any).rpc('release_listing_stock', { p_listing_id: listing.id, p_quantity_kg: listing.quantity_kg });
+        return NextResponse.json({ success: false, error: 'Failed to create order from this offer. Please try again.' }, { status: 500 });
+      }
 
       const { data: farmerProf } = await supabase
         .from('profiles').select('user_id, full_name').eq('id', listing.farmer_id).single();

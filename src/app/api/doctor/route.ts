@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
+import { getEffectiveTier } from '@/lib/subscriptions/getEffectiveTier';
+
+const FREE_TIER_MONTHLY_SCAN_CAP = 5;
 
 const DISEASES = [
   {
@@ -117,6 +120,38 @@ export async function POST(req: Request) {
   const { imageBase64, cropType = '' } = body ?? {};
   if (!imageBase64) {
     return NextResponse.json({ success: false, error: 'imageBase64 required' }, { status: 400 });
+  }
+
+  // Free tier is advertised (marketing copy on /premium) as "5 AI Crop
+  // Doctor scans/month" — this was never enforced server-side, and every
+  // scan spends a real (paid) Google Vision API call regardless of who's
+  // calling. Checked before the Vision call, not after, so a farmer over
+  // their cap doesn't cost anything to reject.
+  const supabaseAuth = await createClient();
+  const { data: { user: callingUser } } = await supabaseAuth.auth.getUser();
+  if (!callingUser) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+
+  const { data: callerProfile } = await (supabaseAuth.from as any)('profiles')
+    .select('role, subscription_tier, role_subscription_tiers').eq('user_id', callingUser.id).single();
+  if (getEffectiveTier(callerProfile ?? {}, 'farmer') === 'free') {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    // Service-role, not the session client: diagnoses' RLS SELECT policy
+    // filters on profiles.id, but the insert below stores the raw auth
+    // uid — a pre-existing mismatch (out of scope to fix here) that would
+    // silently undercount every farmer's own scans via the session client.
+    const admin = createServiceRoleClient();
+    const { count } = await (admin.from as any)('diagnoses')
+      .select('id', { count: 'exact', head: true })
+      .eq('farmer_id', callingUser.id)
+      .gte('created_at', monthStart.toISOString());
+    if ((count ?? 0) >= FREE_TIER_MONTHLY_SCAN_CAP) {
+      return NextResponse.json({
+        success: false,
+        error: `You've used all ${FREE_TIER_MONTHLY_SCAN_CAP} free AI Crop Doctor scans this month. Upgrade to Farmer Pro for unlimited scans.`,
+      }, { status: 403 });
+    }
   }
 
   // Strip data URL prefix if present: "data:image/jpeg;base64,..."

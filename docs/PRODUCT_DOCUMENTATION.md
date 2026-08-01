@@ -6,7 +6,7 @@
 
 ## 1. What AgriNova is
 
-AgriNova is a full-stack web application (Next.js + Supabase) that digitizes the agricultural supply chain in Uganda: it connects smallholder farmers, produce buyers, agri-input suppliers, transporters, crop-disease pathologists, large offtakers, and farmer groups on one platform, with an escrow-based mobile-money payment system (Flutterwave, MTN/Airtel) so that no party has to trust the other with money up front.
+AgriNova is a full-stack web application (Next.js + Supabase) that digitizes the agricultural supply chain in Uganda: it connects smallholder farmers, produce buyers, agri-input suppliers, transporters, crop-disease pathologists, large offtakers, and farmer groups on one platform, with an escrow-based mobile-money payment system (Nylon Pay, MTN/Airtel) so that no party has to trust the other with money up front.
 
 It is a **Progressive Web App** — installable, works from a phone browser, no app-store dependency for the initial launch (a native Android build via TWA/Capacitor is a planned follow-up once a Google Play developer account is set up).
 
@@ -40,7 +40,7 @@ Every paid transaction is escrow-backed:
 4. On delivery confirmation (or after the 48-hour return window closes with no dispute), escrow releases to the farmer, minus platform commission.
 5. If the buyer disputes within 48 hours, an admin reviews and resolves — either releasing to the farmer or refunding the buyer.
 
-Wallets (`wallets`) hold a UGX balance per user, funded via Flutterwave mobile-money deposits and cashed out via mobile-money withdrawals. A full ledger (`wallet_transactions`) records every movement. Wallet-to-wallet transfers by account number are supported (`transfer_between_wallets` — see §5).
+Wallets (`wallets`) hold a UGX balance per user, funded via Nylon Pay mobile-money deposits and cashed out via mobile-money withdrawals. A full ledger (`wallet_transactions`) records every movement. Wallet-to-wallet transfers by account number are supported (`transfer_between_wallets` — see §5).
 
 **As of 2026-07-14**, every balance-changing operation (deposit, withdrawal, escrow funding, escrow release/refund) runs through an atomic, row-locked database function rather than an application-level read-then-write — see §5 and `docs/PROVENANCE.md` for why that changed.
 
@@ -69,7 +69,7 @@ Admins approve listings, review KYC submissions (with on-demand signed-URL docum
 
 - **Frontend/Backend**: Next.js (App Router), TypeScript, Tailwind
 - **Database/Auth/Storage/Realtime**: Supabase (Postgres + Row Level Security, GoTrue auth, Storage buckets, Realtime channels)
-- **Payments**: Flutterwave (MTN Mobile Money, Airtel Money, Uganda)
+- **Payments**: Nylon Pay (MTN Mobile Money, Airtel Money, Uganda)
 - **Crop disease AI**: Google Cloud Vision API
 - **Weather**: OpenWeatherMap
 - **Hosting/CI**: Vercel, deployed via GitHub Actions on push to `main`

@@ -25,7 +25,7 @@ export default function PrivacyPolicyPage() {
         <li><strong>Profile information:</strong> district/location, bio, farm size and crops, avatar photo.</li>
         <li><strong>Identity verification (KYC):</strong> depending on the trust tier you apply for — a national ID photo, a selfie, a driving permit, vehicle registration, business registration documents, or professional qualifications (for pathologists). These are stored in a private file store that only you and an AgriNova administrator reviewing your application can access — never a public link.</li>
         <li><strong>Marketplace content:</strong> crop listings, prices, offers, orders, delivery requests, reviews, disputes, and messages you send to other users (e.g. farmer-to-buyer or farmer-to-pathologist chat).</li>
-        <li><strong>Financial information:</strong> your in-app wallet balance and transaction history, and the mobile money phone number/provider you use to deposit or withdraw. <strong>We do not collect or store your mobile money PIN or card details</strong> — deposits and withdrawals are processed directly by our payment partner, Flutterwave.</li>
+        <li><strong>Financial information:</strong> your in-app wallet balance and transaction history, and the mobile money phone number/provider you use to deposit or withdraw. <strong>We do not collect or store your mobile money PIN or card details</strong> — deposits and withdrawals are processed directly by our payment partner, Nylon Pay.</li>
         <li><strong>Photos you submit for crop disease diagnosis</strong>, and any notes describing the issue.</li>
       </ul>
 
@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
       <ul>
         <li>To create and secure your account, and verify your identity for higher trust tiers.</li>
         <li>To operate the marketplace — showing listings, matching buyers with farmers, matching delivery requests with available transporters, and connecting farmers with pathologists.</li>
-        <li>To process payments: funding and releasing escrow, wallet deposits/withdrawals, and paying commissions — via Flutterwave, our licensed mobile-money payment processor.</li>
+        <li>To process payments: funding and releasing escrow, wallet deposits/withdrawals, and paying commissions — via Nylon Pay, our licensed mobile-money payment processor.</li>
         <li>To run AI-assisted crop disease detection on photos you submit.</li>
         <li>To show relevant weather forecasts and market price data for your district.</li>
         <li>To detect and prevent fraud, abuse, and violations of our <a href="/terms">Terms &amp; Conditions</a>.</li>
@@ -54,7 +54,7 @@ export default function PrivacyPolicyPage() {
         <thead><tr><th>Provider</th><th>Purpose</th><th>Data involved</th></tr></thead>
         <tbody>
           <tr><td>Supabase</td><td>Database, authentication, and file storage hosting</td><td>All account and marketplace data</td></tr>
-          <tr><td>Flutterwave</td><td>Mobile money deposits, withdrawals, and payment processing</td><td>Phone number, transaction amounts</td></tr>
+          <tr><td>Nylon Pay</td><td>Mobile money deposits, withdrawals, and payment processing</td><td>Phone number, transaction amounts</td></tr>
           <tr><td>Google Cloud (Vision API)</td><td>Automated crop disease image analysis</td><td>Photos you submit for diagnosis</td></tr>
           <tr><td>OpenWeatherMap</td><td>Weather forecasts by district</td><td>District/location only</td></tr>
         </tbody>

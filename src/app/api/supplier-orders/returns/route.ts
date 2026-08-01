@@ -101,6 +101,18 @@ export async function PATCH(req: Request) {
   const allowed = ['approved', 'rejected'];
   if (!allowed.includes(status)) return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
 
+  // Need the return's quantity + linked product before updating, so an
+  // approval can restock the product — stock was decremented when the
+  // order was originally placed (see POST /api/supplier-orders), but
+  // approving a return never gave it back, permanently understating
+  // inventory for every approved return.
+  const { data: ret } = await (supabase.from as any)('input_returns')
+    .select('id, order_id, quantity_returned, status')
+    .eq('id', id)
+    .eq('supplier_id', profile.id)
+    .single();
+  if (!ret) return NextResponse.json({ error: 'Return request not found' }, { status: 404 });
+
   const update: Record<string, unknown> = {
     status,
     resolved_at: new Date().toISOString(),
@@ -116,5 +128,20 @@ export async function PATCH(req: Request) {
     console.error('[/api/supplier-orders/returns]', error);
     return NextResponse.json({ error: 'Failed to update return request. Please try again.' }, { status: 500 });
   }
+
+  if (status === 'approved' && ret.status !== 'approved') {
+    const { data: order } = await (supabase.from as any)('supplier_orders')
+      .select('product_id').eq('id', ret.order_id).single();
+    if (order?.product_id) {
+      const { data: product } = await (supabase.from as any)('supplier_products')
+        .select('id, stock_qty').eq('id', order.product_id).single();
+      if (product) {
+        await (supabase.from as any)('supplier_products')
+          .update({ stock_qty: Number(product.stock_qty) + Number(ret.quantity_returned ?? 0), updated_at: new Date().toISOString() })
+          .eq('id', product.id);
+      }
+    }
+  }
+
   return NextResponse.json({ success: true });
 }

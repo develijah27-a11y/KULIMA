@@ -27,6 +27,7 @@ const GROUPS_NAV = [
   { href: '/groups/season',         icon: 'season',       label: 'Season Summary',divider: true, sectionLabel: 'Reporting' },
   { href: '/groups/notifications',  icon: 'notifications',label: 'Notifications' },
   { href: '/groups/verify',         icon: 'verify',       label: 'Get Verified' },
+  { href: '/groups/premium',        icon: 'premium',      label: 'Group Pro' },
   { href: '/groups/settings',       icon: 'settings',     label: 'Settings' },
 ];
 

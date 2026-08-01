@@ -15,7 +15,7 @@ export default async function SupplierCataloguePage() {
   if (!profile) redirect('/auth/signin');
 
   const { data: products } = await (supabase.from as any)('supplier_products')
-    .select('id, name, category, description, price_per_unit, unit, stock_qty, min_order_qty, district, is_available, created_at')
+    .select('id, name, category, description, price_per_unit, unit, stock_qty, min_order_qty, district, is_available, sku, barcode, cost_price_ugx, created_at')
     .eq('supplier_id', profile.id)
     .order('created_at', { ascending: false });
 

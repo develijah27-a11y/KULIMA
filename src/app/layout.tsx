@@ -85,7 +85,13 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
         <meta name="theme-color" content="#166B3A" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)" />
-        {/* Preconnect to external origins — reduces DNS lookup time */}
+        {/* Preconnect to Supabase — every page hits it for session/auth
+            checks, sign-in included, so this pays for the DNS+TLS handshake
+            ahead of the actual request instead of during it (worth 100-300ms
+            on a mobile connection, which is exactly what makes sign-in feel
+            slow). dns-prefetch alone (kept as a fallback for browsers that
+            cap preconnect count) only resolves the name, not the handshake. */}
+        <link rel="preconnect" href="https://hjvnkintvjogwljchwcq.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://hjvnkintvjogwljchwcq.supabase.co" />
         <link rel="dns-prefetch" href="https://api.openweathermap.org" />
       </head>
