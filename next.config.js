@@ -71,8 +71,9 @@ const nextConfig = {
       { key: 'X-Content-Type-Options',   value: 'nosniff' },
       { key: 'X-Frame-Options',          value: 'DENY' },
       { key: 'Referrer-Policy',          value: 'strict-origin-when-cross-origin' },
-      // Restrict powerful browser APIs — geolocation is self-origin only (used by weather)
-      { key: 'Permissions-Policy',       value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()' },
+      // Allow camera on self-origin — used by CameraCapture in supplier/farmer product photos.
+      // Geolocation is self-origin only (used by weather).
+      { key: 'Permissions-Policy',       value: 'camera=(self), microphone=(), geolocation=(self), interest-cohort=()' },
       { key: 'Content-Security-Policy',  value: csp },
     ];
     // HSTS: tell browsers to always use HTTPS for 2 years (production only)

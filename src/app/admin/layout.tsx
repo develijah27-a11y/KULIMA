@@ -10,22 +10,24 @@ import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { logSystemEvent } from '@/lib/system-log';
 
 const ADMIN_NAV = [
+  // Bottom bar shows first 4: Overview, Users, KYC, Deliveries
   { href: '/admin/dashboard',    icon: 'dashboard',    label: 'Overview' },
-  { href: '/admin/users',        icon: 'workers',      label: 'Users',      divider: true, sectionLabel: 'Management' },
+  { href: '/admin/users',        icon: 'workers',      label: 'Users' },
   { href: '/admin/verification', icon: 'verify',       label: 'KYC Queue' },
+  { href: '/admin/deliveries',   icon: 'deliveries',   label: 'Deliveries', divider: true, sectionLabel: 'Management' },
+  // Everything below goes into "More" on mobile
   { href: '/admin/buyers',       icon: 'marketplace',  label: 'Buyers' },
   { href: '/admin/disputes',     icon: 'dispute',      label: 'Disputes' },
-  { href: '/admin/deliveries',   icon: 'deliveries',   label: 'Deliveries' },
   { href: '/admin/disease-reports', icon: 'disease-alerts', label: 'Disease Reports' },
   { href: '/admin/wallets',      icon: 'finance',      label: 'Wallets' },
   { href: '/admin/fraud',        icon: 'alert',        label: 'Fraud Flags' },
-  { href: '/admin/commission',   icon: 'finance',      label: 'Commission', divider: true, sectionLabel: 'Settings' },
-  { href: '/admin/listings',     icon: 'marketplace',  label: 'Listings' },
-  { href: '/admin/prices',       icon: 'prices',       label: 'Prices',     divider: true, sectionLabel: 'Content' },
-  { href: '/admin/alert',        icon: 'notifications',label: 'Alerts' },
-  { href: '/admin/analytics',    icon: 'analytics',    label: 'Analytics',  divider: true, sectionLabel: 'Reports' },
+  { href: '/admin/commission',   icon: 'finance',      label: 'Commission', divider: true, sectionLabel: 'Finance' },
   { href: '/admin/revenue',      icon: 'finance',      label: 'Revenue' },
-  { href: '/admin/audit-logs',   icon: 'history',      label: 'Audit Logs' },
+  { href: '/admin/analytics',    icon: 'analytics',    label: 'Analytics' },
+  { href: '/admin/listings',     icon: 'marketplace',  label: 'Listings',   divider: true, sectionLabel: 'Content' },
+  { href: '/admin/prices',       icon: 'prices',       label: 'Prices' },
+  { href: '/admin/alert',        icon: 'notifications',label: 'Alerts' },
+  { href: '/admin/audit-logs',   icon: 'history',      label: 'Audit Logs', divider: true, sectionLabel: 'Logs & Settings' },
   { href: '/admin/logs',         icon: 'system-logs',  label: 'System Logs' },
   { href: '/admin/security',     icon: 'alert',        label: 'Security' },
   { href: '/admin/moderation',   icon: 'fraud',        label: 'Moderation' },

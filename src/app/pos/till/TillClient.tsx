@@ -60,9 +60,11 @@ export function TillClient() {
   const [scanError, setScanError] = useState('');
   const barcodeRef = useRef<HTMLInputElement>(null);
 
-  // Store switcher only matters once there's more than one branch
-  // (Enterprise tier) — for everyone else this list has exactly one row
-  // and the switcher never renders.
+  // Timestamp of the last character received by the barcode input.
+  // Scanners fire characters < 30 ms apart then send Enter.
+  // Human keystrokes are typically > 100 ms apart.
+  const lastKeyTimeRef = useRef<number>(0);
+
   useEffect(() => {
     fetch('/api/pos/stores').then(r => r.json()).then(json => {
       const list: StoreOption[] = json.stores ?? [];
@@ -76,7 +78,7 @@ export function TillClient() {
   useEffect(() => {
     if (!selectedStoreId) return;
     setLoadingProducts(true);
-    setCart([]); // switching branch clears the cart — line items belong to a specific store's stock
+    setCart([]);
     fetch(`/api/supplier-products?storeId=${selectedStoreId}`)
       .then(r => r.json())
       .then(json => setProducts((json.data ?? []).filter((p: Product) => p.is_available)))
@@ -89,31 +91,31 @@ export function TillClient() {
       if (existing) {
         return prev.map(l => l.productId === p.id ? { ...l, quantity: l.quantity + 1 } : l);
       }
-      return [...prev, { productId: p.id, productName: p.name, sku: p.sku, unitPriceUgx: Number(p.price_per_unit), quantity: 1, maxStock: Number(p.stock_qty) }];
+      return [...prev, {
+        productId: p.id, productName: p.name, sku: p.sku,
+        unitPriceUgx: Number(p.price_per_unit), quantity: 1, maxStock: Number(p.stock_qty),
+      }];
     });
   }
 
-  // Barcode scanner sends characters very rapidly (< 50 ms apart) then fires
-  // Enter. Normal keyboard typing is much slower. We track the time between
-  // keystrokes — if a key comes in within 50 ms of the previous one, it's a
-  // scanner; otherwise it's manual typing and we swallow the character so
-  // the field stays scan-only.
-  const lastKeyTimeRef = useRef<number>(0);
-
+  // ── Barcode scan-only handler ──────────────────────────────────────────────
+  // Scanners send all characters in a burst (< 30 ms between each) and finish
+  // with Enter. We allow any key that arrives quickly after the previous one.
+  // Keys that arrive slowly (> 60 ms gap) are manual keyboard input — blocked.
+  // Backspace and Delete are always allowed so staff can clear a bad scan.
   function handleBarcodeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete') return;
     const now = Date.now();
     const gap = now - lastKeyTimeRef.current;
     lastKeyTimeRef.current = now;
-
-    // Always allow Enter (to submit) and Backspace (to clear mistakes)
-    if (e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete') return;
-
-    // If the gap since the last keystroke is > 50 ms this is a human typing,
-    // not a scanner firing. Block it so only scanner input is accepted.
-    if (gap > 50) {
+    if (gap > 60) {
+      // Manual keystroke — swallow it
       e.preventDefault();
     }
   }
+
+  // Called on form submit (Enter from scanner or from handleBarcodeKeyDown
+  // passing through when gap is small).
   function handleBarcodeSubmit(e: React.FormEvent) {
     e.preventDefault();
     const code = barcode.trim();
@@ -126,9 +128,11 @@ export function TillClient() {
       setScanError(`No product found for "${code}"`);
     }
     setBarcode('');
+    // Immediately re-focus the scanner field for the next scan
+    requestAnimationFrame(() => barcodeRef.current?.focus());
   }
 
-  function handleBarcodeSubmit(e: React.FormEvent) {
+  function updateQty(productId: string | null, delta: number) {
     setCart(prev => prev
       .map(l => l.productId === productId ? { ...l, quantity: Math.max(1, l.quantity + delta) } : l)
       .filter(l => l.quantity > 0));
@@ -141,7 +145,9 @@ export function TillClient() {
   const searchResults = useMemo(() => {
     if (!search.trim()) return [];
     const q = search.trim().toLowerCase();
-    return products.filter(p => p.name.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q)).slice(0, 8);
+    return products.filter(p =>
+      p.name.toLowerCase().includes(q) || p.sku?.toLowerCase().includes(q)
+    ).slice(0, 8);
   }, [search, products]);
 
   const subtotal = cart.reduce((s, l) => s + l.unitPriceUgx * l.quantity, 0);
@@ -157,7 +163,10 @@ export function TillClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: cart.map(l => ({ productId: l.productId, productName: l.productName, sku: l.sku, quantity: l.quantity, unitPriceUgx: l.unitPriceUgx })),
+          items: cart.map(l => ({
+            productId: l.productId, productName: l.productName,
+            sku: l.sku, quantity: l.quantity, unitPriceUgx: l.unitPriceUgx,
+          })),
           paymentMethod,
           customerName: customerName.trim() || null,
           customerPhone: customerPhone.trim() || null,
@@ -186,7 +195,7 @@ export function TillClient() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 900, color: C.text, letterSpacing: '-0.02em', margin: 0 }}>Point of Sale</h1>
-          <p style={{ fontSize: 12.5, color: C.muted, margin: '4px 0 0' }}>Scan, search, or tap a product to add it to the sale.</p>
+          <p style={{ fontSize: 12.5, color: C.muted, margin: '4px 0 0' }}>Scan a barcode or search for a product to add to the sale.</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           {stores.length > 1 && (
@@ -208,6 +217,8 @@ export function TillClient() {
       <div className="pos-till-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)', gap: 20 }}>
         {/* Left: scan/search + cart */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+
+          {/* Barcode scanner input */}
           <form onSubmit={handleBarcodeSubmit} style={{ background: C.card, borderRadius: 16, boxShadow: C.shadow, padding: 16 }}>
             <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 8 }}>
               Scan barcode
@@ -219,14 +230,20 @@ export function TillClient() {
                 value={barcode}
                 onChange={e => setBarcode(e.target.value)}
                 onKeyDown={handleBarcodeKeyDown}
-                placeholder="Point scanner at barcode to scan"
+                placeholder="Point scanner at barcode"
                 autoComplete="off"
+                inputMode="none"
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: C.text }}
               />
             </div>
-            {scanError && <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: '8px 0 0', fontWeight: 600 }}>{scanError}</p>}
+            {scanError && (
+              <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: '8px 0 0', fontWeight: 600 }}>
+                {scanError}
+              </p>
+            )}
           </form>
 
+          {/* Name search */}
           <div style={{ background: C.card, borderRadius: 16, boxShadow: C.shadow, padding: 16, position: 'relative' }}>
             <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 8 }}>
               Or search by name
@@ -249,7 +266,9 @@ export function TillClient() {
                     style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'var(--d-input-bg)', cursor: 'pointer', textAlign: 'left' }}
                   >
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{p.name}</span>
-                    <span style={{ fontSize: 12, color: C.muted, flexShrink: 0 }}>UGX {Number(p.price_per_unit).toLocaleString()} · {p.stock_qty} {p.unit} left</span>
+                    <span style={{ fontSize: 12, color: C.muted, flexShrink: 0 }}>
+                      UGX {Number(p.price_per_unit).toLocaleString()} · {p.stock_qty} {p.unit} left
+                    </span>
                   </button>
                 ))}
               </div>
@@ -263,22 +282,47 @@ export function TillClient() {
               <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: 0 }}>Cart ({cart.length})</p>
             </div>
             {cart.length === 0 ? (
-              <p style={{ fontSize: 13, color: C.muted, margin: 0, padding: '20px 0', textAlign: 'center' }}>No items yet — scan or search a product above.</p>
+              <p style={{ fontSize: 13, color: C.muted, margin: 0, padding: '20px 0', textAlign: 'center' }}>
+                No items yet — scan or search a product above.
+              </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {cart.map(line => (
                   <div key={line.productId ?? line.productName} style={{ display: 'flex', alignItems: 'center', gap: 10, paddingBottom: 10, borderBottom: `1px solid ${C.border}` }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{line.productName}</p>
-                      <p style={{ fontSize: 11.5, color: C.muted, margin: '2px 0 0' }}>UGX {line.unitPriceUgx.toLocaleString()} each</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {line.productName}
+                      </p>
+                      <p style={{ fontSize: 11.5, color: C.muted, margin: '2px 0 0' }}>
+                        UGX {line.unitPriceUgx.toLocaleString()} each
+                      </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                      <button onClick={() => updateQty(line.productId, -1)} style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Minus size={12} /></button>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: C.text, minWidth: 20, textAlign: 'center' }}>{line.quantity}</span>
-                      <button onClick={() => updateQty(line.productId, 1)} style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={12} /></button>
+                      <button
+                        onClick={() => updateQty(line.productId, -1)}
+                        style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Minus size={12} />
+                      </button>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: C.text, minWidth: 20, textAlign: 'center' }}>
+                        {line.quantity}
+                      </span>
+                      <button
+                        onClick={() => updateQty(line.productId, 1)}
+                        style={{ width: 26, height: 26, borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <Plus size={12} />
+                      </button>
                     </div>
-                    <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: 0, minWidth: 78, textAlign: 'right', flexShrink: 0 }}>UGX {(line.unitPriceUgx * line.quantity).toLocaleString()}</p>
-                    <button onClick={() => removeLine(line.productId)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', flexShrink: 0 }}><Trash2 size={15} /></button>
+                    <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: 0, minWidth: 78, textAlign: 'right', flexShrink: 0 }}>
+                      UGX {(line.unitPriceUgx * line.quantity).toLocaleString()}
+                    </p>
+                    <button
+                      onClick={() => removeLine(line.productId)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', flexShrink: 0 }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -313,7 +357,9 @@ export function TillClient() {
             />
           </div>
 
-          <p style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>Payment method</p>
+          <p style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>
+            Payment method
+          </p>
           <div style={{ display: 'flex', gap: 6, marginBottom: 18 }}>
             {PAYMENT_METHODS.map(m => (
               <button
@@ -345,18 +391,26 @@ export function TillClient() {
             </div>
           </div>
 
-          {error && <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: '0 0 10px', fontWeight: 600 }}>{error}</p>}
+          {error && (
+            <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: '0 0 10px', fontWeight: 600 }}>
+              {error}
+            </p>
+          )}
 
           <button
             onClick={completeSale}
             disabled={submitting || cart.length === 0}
             style={{
-              width: '100%', padding: '13px', borderRadius: 12, border: 'none', cursor: submitting || cart.length === 0 ? 'not-allowed' : 'pointer',
-              background: submitting || cart.length === 0 ? C.border : C.green, color: '#fff', fontWeight: 800, fontSize: 14,
+              width: '100%', padding: '13px', borderRadius: 12, border: 'none',
+              cursor: submitting || cart.length === 0 ? 'not-allowed' : 'pointer',
+              background: submitting || cart.length === 0 ? C.border : C.green,
+              color: '#fff', fontWeight: 800, fontSize: 14,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}
           >
-            {submitting ? <><Loader2 size={16} className="animate-spin" /> Processing…</> : 'Complete Sale'}
+            {submitting
+              ? <><Loader2 size={16} className="animate-spin" /> Processing…</>
+              : 'Complete Sale'}
           </button>
         </div>
       </div>

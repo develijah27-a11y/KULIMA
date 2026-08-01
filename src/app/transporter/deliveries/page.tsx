@@ -109,6 +109,8 @@ export default async function TransporterDeliveriesPage({
             {rows.map((row: any) => {
               const isAssignment = tab === 'assignments';
               const d     = isAssignment ? row.delivery : (tab === 'my_bids' ? row.delivery : row);
+              // Guard: skip rows where the delivery join returned null
+              if (!d) return null;
               const st    = STATUS_CFG[isAssignment ? (row.status === 'accepted' ? 'accepted' : 'open') : (tab === 'my_bids' ? row.status : d?.status)] ?? STATUS_CFG.open;
               const price = isAssignment ? (d?.driver_earnings ?? d?.estimated_fare) : (tab === 'my_bids' ? row.price : d?.agreed_price);
               const typeIcon: JSX.Element = d?.delivery_type === 'cold' ? <Snowflake size={14} style={{ color: '#0EA5E9' }} /> : d?.delivery_type === 'fast' ? <Zap size={14} style={{ color: 'var(--color-harvest)' }} /> : <Truck size={14} style={{ color: 'var(--color-primary)' }} />;
@@ -130,8 +132,8 @@ export default async function TransporterDeliveriesPage({
                       {price && ` · UGX ${Math.round(price).toLocaleString()} earnings`}
                     </p>
                   </div>
-                  {isAssignment && (
-                    <Link href={`/transporter/deliveries/${d?.id}`}
+                  {isAssignment && d?.id && (
+                    <Link href={`/transporter/deliveries/${d.id}`}
                       style={{ padding: '6px 14px', background: C.green, color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
                       Accept →
                     </Link>
@@ -142,8 +144,8 @@ export default async function TransporterDeliveriesPage({
                       Bid →
                     </Link>
                   )}
-                  {tab === 'active' && d?.status === 'assigned' && (
-                    <Link href={`/transporter/deliveries/${row.id}`}
+                  {tab === 'active' && d?.status === 'assigned' && d?.id && (
+                    <Link href={`/transporter/deliveries/${d.id}`}
                       style={{ padding: '6px 14px', background: C.green, color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
                       Start →
                     </Link>
