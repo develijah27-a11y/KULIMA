@@ -92,11 +92,28 @@ export function TillClient() {
     });
   }
 
+  // UPC-A (12 digits) is EAN-13 with a leading zero — the same physical
+  // barcode can decode as either depending on scan angle/lighting, so a
+  // code saved via one decode path can otherwise fail to match a scan
+  // that resolves to the other, even though it's the exact same product.
+  function normalizeBarcode(code: string): string {
+    const trimmed = code.trim();
+    return trimmed.length === 13 && trimmed.startsWith('0') ? trimmed.slice(1) : trimmed;
+  }
+
   function lookupAndAdd(code: string) {
-    const match = products.find(p => p.barcode === code || p.sku === code);
+    const normalized = normalizeBarcode(code);
+    const match = products.find(p =>
+      (p.barcode && normalizeBarcode(p.barcode) === normalized) || p.sku === code
+    );
     if (match) {
       addToCart(match);
       setScanError('');
+    } else if (loadingProducts) {
+      // The catalogue hasn't finished loading yet — a real product can
+      // briefly look "not found" if scanned in the first instant after
+      // opening the till, before the fetch resolves.
+      setScanError('Still loading your catalogue — try scanning again in a moment.');
     } else {
       setScanError(`No product found for "${code}"`);
     }

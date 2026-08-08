@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Send, Check, CheckCheck, Palette } from 'lucide-react';
+import { Send, Check, CheckCheck, Palette, Package, ClipboardList, X, Leaf } from 'lucide-react';
+
+const LISTING_CROPS = ['maize','beans','coffee','rice','banana','cassava','tomato','sorghum','groundnuts','cotton'];
+const LISTING_PREFIX = '📦 LISTING · ';
 
 // Chat theme presets — each is just a bubble gradient + accent color, so
 // switching is instant and never touches message data. Persisted per
@@ -17,15 +20,28 @@ const CHAT_THEMES = [
 type ChatTheme = typeof CHAT_THEMES[number];
 const THEME_STORAGE_KEY = 'cropify-group-chat-theme';
 
-// WhatsApp-style wallpaper — a faint repeating leaf/dot doodle rather than a
-// flat color, encoded inline so it needs no external asset request. Kept
-// very low-opacity so it reads as texture, never competes with bubbles.
+// WhatsApp-style wallpaper — a faint repeating agri-themed doodle (leaves,
+// sprouts, seed pods) instead of a flat color, encoded inline so it needs
+// no external asset request. A fixed tint rather than currentColor: this
+// renders as a CSS background-image data URI, which has no DOM context to
+// inherit color from, so currentColor would always resolve to the SVG's
+// own default (black) regardless of light/dark mode. Kept low-opacity so
+// it reads as texture, never competes with bubbles.
 const WALLPAPER_SVG = `data:image/svg+xml,${encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
-  <g fill="currentColor" fill-opacity="0.05">
-    <path d="M20 10c6 0 10 4 10 10s-4 10-10 10-10-4-10-10 4-10 10-10zm0 4c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z"/>
-    <circle cx="60" cy="45" r="3"/>
-    <path d="M55 60c4-4 10-4 14 0s4 10 0 14-10 4-14 0 4-10 0-14z"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <g fill="#4ADE80" fill-opacity="0.07">
+    <path d="M24 14c6 0 10 4 10 10s-4 10-10 10-10-4-10-10 4-10 10-10zm0 4c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z"/>
+    <circle cx="92" cy="20" r="2.5"/>
+    <circle cx="99" cy="26" r="2.5"/>
+    <circle cx="92" cy="32" r="2.5"/>
+    <path d="M118 50c4-4 10-4 14 0s4 10 0 14-10 4-14 0 4-10 0-14z"/>
+    <path d="M20 78c0-10 6-16 16-16 0 10-6 16-16 16zm0 0c0-10-6-16-16-16 0 10 6 16 16 16z"/>
+    <path d="M70 100c5.5 0 10 4.5 10 10s-4.5 10-10 10-10-4.5-10-10 4.5-10 10-10zm0 3.6c-3.5 0-6.4 2.9-6.4 6.4s2.9 6.4 6.4 6.4 6.4-2.9 6.4-6.4-2.9-6.4-6.4-6.4z"/>
+    <path d="M132 96c0-8 5-13 13-13 0 8-5 13-13 13zm0 0c0-8-5-13-13-13 0 8 5 13 13 13z"/>
+    <circle cx="45" cy="135" r="2.5"/>
+    <circle cx="52" cy="141" r="2.5"/>
+    <circle cx="45" cy="147" r="2.5"/>
+    <path d="M110 132c5 0 9 4 9 9s-4 9-9 9-9-4-9-9 4-9 9-9zm0 3.2c-3.2 0-5.8 2.6-5.8 5.8s2.6 5.8 5.8 5.8 5.8-2.6 5.8-5.8-2.6-5.8-5.8-5.8z"/>
   </g>
 </svg>`)}`;
 
@@ -78,8 +94,16 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
   const [error, setError]       = useState<string | null>(null);
   const [theme, setTheme]       = useState<ChatTheme>(CHAT_THEMES[0]);
   const [themePickerOpen, setThemePickerOpen] = useState(false);
+  const [listingOpen, setListingOpen] = useState(false);
+  const [listingCrop, setListingCrop] = useState('');
+  const [listingQty, setListingQty]   = useState('');
+  const [listingNotes, setListingNotes] = useState('');
+  const [listingSending, setListingSending] = useState(false);
+  const [listingError, setListingError] = useState('');
+  const [organizeOpen, setOrganizeOpen] = useState(false);
   const bottomRef               = useRef<HTMLDivElement>(null);
   const inputRef                = useRef<HTMLTextAreaElement>(null);
+  const isAdmin                 = currentUserId === adminId;
 
   useEffect(() => {
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
@@ -186,6 +210,29 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
     }
   };
 
+  const sendListing = async () => {
+    if (!listingCrop) { setListingError('Select a crop'); return; }
+    if (!listingQty || Number(listingQty) <= 0) { setListingError('Enter a valid quantity'); return; }
+    setListingSending(true);
+    setListingError('');
+    try {
+      const res = await fetch('/api/groups/chat-listings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminId, cropType: listingCrop, quantityKg: Number(listingQty), notes: listingNotes || undefined }),
+      });
+      const json = await res.json();
+      if (json.error) { setListingError(json.error); return; }
+      setMessages(prev => (prev.find(m => m.id === json.message.id) ? prev : [...prev, json.message]));
+      setTimeout(scrollToBottom, 60);
+      setListingCrop(''); setListingQty(''); setListingNotes(''); setListingOpen(false);
+    } catch {
+      setListingError('Failed to send listing. Please try again.');
+    } finally {
+      setListingSending(false);
+    }
+  };
+
   // Group messages by calendar date for date separators
   const grouped: Array<{ date: string; msgs: Message[] }> = [];
   for (const msg of messages) {
@@ -237,6 +284,20 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e99' }} />
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-success)' }}>Live</span>
           </div>
+          {isAdmin && (
+            <button
+              onClick={() => setOrganizeOpen(true)}
+              aria-label="Sort listings by crop"
+              title="Sort listings by crop"
+              style={{
+                width: 30, height: 30, borderRadius: 9, border: 'none', cursor: 'pointer',
+                background: 'var(--color-surface-2)', color: theme.accent,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <ClipboardList size={15} />
+            </button>
+          )}
           <button
             onClick={() => setThemePickerOpen(v => !v)}
             aria-label="Change chat theme"
@@ -339,6 +400,7 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
                 const isOwn = msg.sender_id === currentUserId;
                 const name = msg.sender_name ?? 'Member';
                 const avatarBg = avatarColor(name);
+                const isListing = msg.body.startsWith(LISTING_PREFIX);
 
                 return (
                   <div key={msg.id} style={{ display: 'flex', flexDirection: isOwn ? 'row-reverse' : 'row', gap: 8, alignItems: 'flex-end' }}>
@@ -370,28 +432,40 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
                       <div style={{
                         padding: '9px 14px',
                         borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                        background: isOwn ? theme.gradient : 'var(--d-card)',
-                        boxShadow: isOwn
+                        background: isListing ? 'var(--color-harvest-bg)' : (isOwn ? theme.gradient : 'var(--d-card)'),
+                        boxShadow: isListing
+                          ? '0 2px 8px rgba(0,0,0,0.08), 0 0 0 1.5px var(--color-harvest)'
+                          : isOwn
                           ? `0 4px 14px ${theme.shadow}`
                           : '0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px var(--d-border)',
                         opacity: msg.id.startsWith('temp_') ? 0.6 : 1,
                         transition: 'opacity 0.25s',
                       }}>
-                        <p style={{
-                          fontSize: 13, lineHeight: 1.55,
-                          color: isOwn ? '#fff' : 'var(--d-text)',
-                          margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                        }}>
-                          {msg.body}
-                        </p>
+                        {isListing ? (
+                          <p style={{
+                            fontSize: 13, lineHeight: 1.55, fontWeight: 700,
+                            color: 'var(--color-harvest)',
+                            margin: 0, display: 'flex', alignItems: 'center', gap: 6,
+                          }}>
+                            <Leaf size={13} /> {msg.body.slice(LISTING_PREFIX.length)}
+                          </p>
+                        ) : (
+                          <p style={{
+                            fontSize: 13, lineHeight: 1.55,
+                            color: isOwn ? '#fff' : 'var(--d-text)',
+                            margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                          }}>
+                            {msg.body}
+                          </p>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 3, marginTop: 3 }}>
-                          <span style={{ fontSize: 10, color: isOwn ? 'rgba(255,255,255,0.65)' : 'var(--d-muted)' }}>
+                          <span style={{ fontSize: 10, color: isListing ? 'var(--color-harvest)' : isOwn ? 'rgba(255,255,255,0.65)' : 'var(--d-muted)' }}>
                             {msg.id.startsWith('temp_') ? 'Sending…' : shortTime(msg.created_at)}
                           </span>
-                          {isOwn && !msg.id.startsWith('temp_') && (
+                          {isOwn && !isListing && !msg.id.startsWith('temp_') && (
                             <CheckCheck size={13} style={{ color: 'rgba(255,255,255,0.75)' }} />
                           )}
-                          {isOwn && msg.id.startsWith('temp_') && (
+                          {isOwn && !isListing && msg.id.startsWith('temp_') && (
                             <Check size={13} style={{ color: 'rgba(255,255,255,0.5)' }} />
                           )}
                         </div>
@@ -420,6 +494,19 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
         background: 'var(--d-card)',
         display: 'flex', gap: 8, alignItems: 'flex-end',
       }}>
+        <button
+          onClick={() => setListingOpen(true)}
+          aria-label="Send listing"
+          title="Send listing"
+          style={{
+            width: 44, height: 44, flexShrink: 0,
+            borderRadius: 14, border: '1.5px solid var(--d-border)',
+            cursor: 'pointer', background: 'var(--color-surface-2)', color: theme.accent,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <Package size={18} />
+        </button>
         <div style={{ flex: 1, position: 'relative' }}>
           <textarea
             ref={inputRef}
@@ -476,6 +563,156 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
             : <Send size={18} strokeWidth={2.2} />
           }
         </button>
+      </div>
+
+      {listingOpen && (
+        <SendListingModal
+          crop={listingCrop} setCrop={setListingCrop}
+          qty={listingQty} setQty={setListingQty}
+          notes={listingNotes} setNotes={setListingNotes}
+          sending={listingSending} error={listingError}
+          onSend={sendListing}
+          onClose={() => { setListingOpen(false); setListingError(''); }}
+        />
+      )}
+
+      {organizeOpen && (
+        <OrganizePanel onClose={() => setOrganizeOpen(false)} />
+      )}
+    </div>
+  );
+}
+
+function SendListingModal({
+  crop, setCrop, qty, setQty, notes, setNotes, sending, error, onSend, onClose,
+}: {
+  crop: string; setCrop: (v: string) => void;
+  qty: string; setQty: (v: string) => void;
+  notes: string; setNotes: (v: string) => void;
+  sending: boolean; error: string;
+  onSend: () => void; onClose: () => void;
+}) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--d-card)', borderRadius: 16, padding: 20, width: '100%', maxWidth: 380, boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--d-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Package size={16} /> Send a Listing
+          </p>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--d-muted)', display: 'flex' }}><X size={18} /></button>
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--d-muted)', margin: '0 0 14px' }}>
+          Posts to the chat and lands in your group leader's crop-sorted queue for publishing.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <select value={crop} onChange={e => setCrop(e.target.value)}
+            style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--d-border)', fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)' }}>
+            <option value="">Select crop…</option>
+            {LISTING_CROPS.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+          </select>
+          <input
+            type="number" min="0" value={qty} onChange={e => setQty(e.target.value)}
+            placeholder="Quantity (kg)"
+            style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--d-border)', fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+          />
+          <textarea
+            value={notes} onChange={e => setNotes(e.target.value)} rows={2}
+            placeholder="Notes (optional)"
+            style={{ padding: '10px 12px', borderRadius: 10, border: '1px solid var(--d-border)', fontSize: 13, resize: 'vertical', fontFamily: 'inherit', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+          />
+          {error && <p style={{ margin: 0, fontSize: 12, color: 'var(--color-danger)' }}>{error}</p>}
+          <button onClick={onSend} disabled={sending}
+            style={{ padding: '11px', borderRadius: 10, border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: sending ? 0.7 : 1 }}>
+            {sending ? 'Sending…' : 'Send Listing'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface Cluster { cropType: string; totalKg: number; memberCount: number; listings: any[]; }
+
+function OrganizePanel({ onClose }: { onClose: () => void }) {
+  const [clusters, setClusters] = useState<Cluster[] | null>(null);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
+  const [publishing, setPublishing] = useState<string | null>(null);
+  const [priceInput, setPriceInput] = useState<Record<string, string>>({});
+
+  const load = useCallback(async () => {
+    setLoading(true); setError('');
+    try {
+      const res  = await fetch('/api/groups/chat-listings/organize');
+      const json = await res.json();
+      if (json.error) { setError(json.error); return; }
+      setClusters(json.clusters);
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function publish(cropType: string) {
+    const price = priceInput[cropType];
+    if (!price || Number(price) <= 0) { setError('Enter a valid asking price per kg'); return; }
+    setPublishing(cropType); setError('');
+    try {
+      const res  = await fetch('/api/groups/chat-listings/organize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cropType, askingPrice: Number(price) }),
+      });
+      const json = await res.json();
+      if (json.error) { setError(json.error); return; }
+      load();
+    } finally { setPublishing(null); }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--d-card)', borderRadius: 16, padding: 20, width: '100%', maxWidth: 440, maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 12px 40px rgba(0,0,0,0.25)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--d-text)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <ClipboardList size={16} /> Listings by Crop
+          </p>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--d-muted)', display: 'flex' }}><X size={18} /></button>
+        </div>
+        <p style={{ fontSize: 12, color: 'var(--d-muted)', margin: '0 0 14px' }}>
+          Listings members sent in chat, grouped by crop. Publish a crop as one lot when you're ready.
+        </p>
+        {error && <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: '0 0 10px' }}>{error}</p>}
+        {loading ? (
+          <p style={{ fontSize: 13, color: 'var(--d-muted)', textAlign: 'center', padding: '20px 0' }}>Loading…</p>
+        ) : !clusters || clusters.length === 0 ? (
+          <p style={{ fontSize: 13, color: 'var(--d-muted)', textAlign: 'center', padding: '20px 0' }}>No pending listings yet.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {clusters.map(c => (
+              <div key={c.cropType} style={{ border: '1px solid var(--d-border)', borderRadius: 12, padding: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--d-text)', textTransform: 'capitalize' }}>{c.cropType}</p>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--d-muted)' }}>{c.totalKg}kg · {c.memberCount} member{c.memberCount === 1 ? '' : 's'}</p>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="number" min="0"
+                    value={priceInput[c.cropType] ?? ''}
+                    onChange={e => setPriceInput(prev => ({ ...prev, [c.cropType]: e.target.value }))}
+                    placeholder="Price per kg (UGX)"
+                    style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--d-border)', fontSize: 12, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+                  />
+                  <button
+                    disabled={publishing === c.cropType}
+                    onClick={() => publish(c.cropType)}
+                    style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {publishing === c.cropType ? '…' : 'Publish'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
