@@ -60,11 +60,6 @@ export function TillClient() {
   const [scanError, setScanError] = useState('');
   const barcodeRef = useRef<HTMLInputElement>(null);
 
-  // Timestamp of the last character received by the barcode input.
-  // Scanners fire characters < 30 ms apart then send Enter.
-  // Human keystrokes are typically > 100 ms apart.
-  const lastKeyTimeRef = useRef<number>(0);
-
   useEffect(() => {
     fetch('/api/pos/stores').then(r => r.json()).then(json => {
       const list: StoreOption[] = json.stores ?? [];
@@ -98,24 +93,9 @@ export function TillClient() {
     });
   }
 
-  // ── Barcode scan-only handler ──────────────────────────────────────────────
-  // Scanners send all characters in a burst (< 30 ms between each) and finish
-  // with Enter. We allow any key that arrives quickly after the previous one.
-  // Keys that arrive slowly (> 60 ms gap) are manual keyboard input — blocked.
-  // Backspace and Delete are always allowed so staff can clear a bad scan.
-  function handleBarcodeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' || e.key === 'Backspace' || e.key === 'Delete') return;
-    const now = Date.now();
-    const gap = now - lastKeyTimeRef.current;
-    lastKeyTimeRef.current = now;
-    if (gap > 60) {
-      // Manual keystroke — swallow it
-      e.preventDefault();
-    }
-  }
-
-  // Called on form submit (Enter from scanner or from handleBarcodeKeyDown
-  // passing through when gap is small).
+  // Called on form submit — a scanner types the code then sends Enter;
+  // manual entry (Enter key or tapping the field's own submit) works the
+  // same way, since this is now a plain input rather than a scan-only trap.
   function handleBarcodeSubmit(e: React.FormEvent) {
     e.preventDefault();
     const code = barcode.trim();
@@ -229,10 +209,8 @@ export function TillClient() {
                 ref={barcodeRef}
                 value={barcode}
                 onChange={e => setBarcode(e.target.value)}
-                onKeyDown={handleBarcodeKeyDown}
-                placeholder="Point scanner at barcode"
+                placeholder="Scan or enter a barcode"
                 autoComplete="off"
-                inputMode="none"
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: C.text }}
               />
             </div>

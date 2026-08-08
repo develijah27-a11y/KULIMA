@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Leaf, FlaskConical, Wrench, Settings, Package, Store } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/CameraCapture';
 
@@ -75,27 +75,21 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
     fetch('/api/pos/stores').then(r => r.json()).then(json => setStores(json.stores ?? []));
   }, []);
 
-  // ── Barcode scan-only field ────────────────────────────────────────────
-  // Same technique as the till (TillClient.tsx): a hardware/software
-  // scanner fires all characters in a burst (< 60ms apart) then Enter.
-  // Manual typing arrives much slower, so any keystroke with a bigger gap
-  // than that is swallowed. No camera, no permission prompt, no warm-up —
-  // registers a scan instantly, exactly like the till already does.
+  // ── Barcode field ────────────────────────────────────────────────────
+  // A hardware/software scanner types the code as fast keystrokes then
+  // Enter — a plain input handles that instantly with zero setup, same as
+  // manually entering a code when a barcode is damaged/unreadable. (An
+  // earlier version filtered out any keystroke slower than 60ms to force
+  // scanner-only input, but on a touch device with no scanner attached
+  // that also silently ate all manual typing, making the field look
+  // broken — not worth it for an optional field like this.)
   const [barcodeDraft, setBarcodeDraft] = useState('');
-  const lastBarcodeKeyTimeRef = useRef<number>(0);
   function handleBarcodeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Tab') return;
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const code = barcodeDraft.trim();
-      if (code) setModal(m => ({ ...m!, barcode: code }));
-      setBarcodeDraft('');
-      return;
-    }
-    const now = Date.now();
-    const gap = now - lastBarcodeKeyTimeRef.current;
-    lastBarcodeKeyTimeRef.current = now;
-    if (gap > 60) e.preventDefault(); // manual keystroke — swallow it
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const code = barcodeDraft.trim();
+    if (code) setModal(m => ({ ...m!, barcode: code }));
+    setBarcodeDraft('');
   }
 
   const visible = filter === 'all' ? products : products.filter(p => p.category === filter);
@@ -339,7 +333,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                     value={barcodeDraft}
                     onChange={e => setBarcodeDraft(e.target.value)}
                     onKeyDown={handleBarcodeKeyDown}
-                    placeholder="Point scanner here"
+                    placeholder="Scan or enter a barcode"
                     autoComplete="off"
                     style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13, boxSizing: 'border-box' }}
                   />
