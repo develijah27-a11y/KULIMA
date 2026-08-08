@@ -2,7 +2,19 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Send } from 'lucide-react';
+import { Send, Check, CheckCheck } from 'lucide-react';
+
+// WhatsApp-style wallpaper — a faint repeating leaf/dot doodle rather than a
+// flat color, encoded inline so it needs no external asset request. Kept
+// very low-opacity so it reads as texture, never competes with bubbles.
+const WALLPAPER_SVG = `data:image/svg+xml,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <g fill="currentColor" fill-opacity="0.05">
+    <path d="M20 10c6 0 10 4 10 10s-4 10-10 10-10-4-10-10 4-10 10-10zm0 4c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z"/>
+    <circle cx="60" cy="45" r="3"/>
+    <path d="M55 60c4-4 10-4 14 0s4 10 0 14-10 4-14 0 4-10 0-14z"/>
+  </g>
+</svg>`)}`;
 
 interface Message {
   id: string;
@@ -28,12 +40,11 @@ function avatarColor(name: string) {
   return AVATAR_HUES[h];
 }
 
-function timeLabel(iso: string) {
-  const d = new Date(iso);
-  const diffH = (Date.now() - d.getTime()) / 3600000;
-  if (diffH < 24) return d.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true });
-  if (diffH < 48) return `Yesterday · ${d.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
-  return d.toLocaleDateString('en-UG', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+// Time-only, no date prefix — sits inline inside the bubble now, and the
+// date separators already give date context, so repeating "Yesterday ·"
+// on every bubble like the old below-bubble label did would be redundant.
+function shortTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 function dateSeparatorLabel(iso: string) {
@@ -205,8 +216,9 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
         flex: 1, overflowY: 'auto', padding: '16px 14px',
         display: 'flex', flexDirection: 'column', gap: 2,
         background: 'var(--color-bg)',
-        backgroundImage: 'radial-gradient(circle, var(--color-surface-2) 1px, transparent 1px)',
-        backgroundSize: '22px 22px',
+        backgroundImage: `url("${WALLPAPER_SVG}")`,
+        backgroundSize: '80px 80px',
+        color: 'var(--d-text)',
       }}>
 
         {/* Loading skeletons — proper bubble shapes */}
@@ -284,7 +296,10 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
                         </p>
                       )}
 
-                      {/* Bubble */}
+                      {/* Bubble — timestamp (+ sent tick for own messages)
+                          sits inside the bubble's own bottom-right corner,
+                          same as WhatsApp/Telegram, rather than as a
+                          separate line outside it. */}
                       <div style={{
                         padding: '9px 14px',
                         borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
@@ -304,12 +319,18 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
                         }}>
                           {msg.body}
                         </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 3, marginTop: 3 }}>
+                          <span style={{ fontSize: 10, color: isOwn ? 'rgba(255,255,255,0.65)' : 'var(--d-muted)' }}>
+                            {msg.id.startsWith('temp_') ? 'Sending…' : shortTime(msg.created_at)}
+                          </span>
+                          {isOwn && !msg.id.startsWith('temp_') && (
+                            <CheckCheck size={13} style={{ color: 'rgba(255,255,255,0.75)' }} />
+                          )}
+                          {isOwn && msg.id.startsWith('temp_') && (
+                            <Check size={13} style={{ color: 'rgba(255,255,255,0.5)' }} />
+                          )}
+                        </div>
                       </div>
-
-                      {/* Timestamp */}
-                      <p style={{ fontSize: 10, color: 'var(--d-muted)', margin: '3px 5px 0', textAlign: isOwn ? 'right' : 'left' }}>
-                        {msg.id.startsWith('temp_') ? 'Sending…' : timeLabel(msg.created_at)}
-                      </p>
                     </div>
                   </div>
                 );
