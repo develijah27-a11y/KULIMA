@@ -5,6 +5,7 @@ import { calcFare } from '@/lib/delivery-pricing';
 import { rateLimit } from '@/lib/rate-limit';
 import { sendPushToUsers } from '@/lib/push';
 import { logSystemEvent } from '@/lib/system-log';
+import { sendEmail, purchaseReceiptEmail } from '@/lib/email';
 
 const admin = () => createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -180,10 +181,40 @@ export async function POST(req: Request) {
       }).eq('id', orderId);
 
       const { data: order } = await (db.from as any)('orders')
-        .select('farmer_profile_id, crop_type, quantity_kg, pickup_district, dropoff_district, delivery_request_id')
+        .select('farmer_profile_id, crop_type, quantity_kg, unit_price, pickup_district, dropoff_district, delivery_request_id')
         .eq('id', orderId).single();
 
       if (order) {
+        // E-receipt to the buyer — same pattern as supplier-orders'
+        // purchaseReceiptEmail, just not yet wired up for the core farmer
+        // marketplace flow until now. Real app users only (this is an
+        // authenticated buyer paying from their own wallet, never a
+        // walk-in) — best-effort, only actually sends once
+        // RESEND_API_KEY/EMAIL_FROM are configured, same as everywhere
+        // else lib/email.ts is used.
+        if (user.email) {
+          const [{ data: buyerProfile }, { data: farmerProfile }] = await Promise.all([
+            (db.from as any)('profiles').select('full_name').eq('user_id', user.id).single(),
+            (db.from as any)('profiles').select('full_name, business_name').eq('id', order.farmer_profile_id).maybeSingle(),
+          ]);
+          await sendEmail(
+            user.email,
+            'Your Cropify purchase receipt',
+            purchaseReceiptEmail({
+              buyerName:   (buyerProfile as any)?.full_name ?? 'there',
+              dealerName:  (farmerProfile as any)?.business_name || (farmerProfile as any)?.full_name || 'the farmer',
+              productName: order.crop_type,
+              quantity:    Number(order.quantity_kg),
+              unit:        'kg',
+              unitPrice:   Number(order.unit_price),
+              amount:      totalAmount,
+              district:    order.pickup_district ?? null,
+              receiptNo:   `AGN-${orderId.slice(0, 8).toUpperCase()}`,
+              purchasedAt: now,
+            }),
+          ).catch(() => {});
+        }
+
         // Notify seller
         await (db.from as any)('notifications').insert({
           farmer_id: order.farmer_profile_id,
