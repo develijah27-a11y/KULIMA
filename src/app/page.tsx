@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { PLANS } from '@/lib/subscriptions/plans';
 import {
   ArrowRight, Check, Sparkles, TrendingUp, Users, Microscope,
   Leaf, ShoppingCart, Truck, ShieldCheck, Lock, Scale,
-  Smartphone, Wallet, Menu, X, Star, Zap,
+  Smartphone, Wallet, Menu, X, Star, Zap, Store,
 } from 'lucide-react';
 
 /* ─── Design tokens — aligned with globals.css ─── */
@@ -30,7 +31,14 @@ const SKY_SOFT   = '#E6F3FB';
 const PLUM       = '#8B5FBF';
 const PLUM_SOFT  = '#F1EAFA';
 
-const FONT = 'var(--font-poppins), var(--font-inter), system-ui, sans-serif';
+/* ─── "Cargo manifest" type system ───
+   Oswald for headlines (industrial, stamped feel), IBM Plex Sans for body,
+   IBM Plex Mono for anything data-like (prices, ledger entries) — the mono
+   treatment is what makes the price ticker and role cards read as records
+   rather than decoration. */
+const FONT      = 'var(--font-plex-sans), var(--font-inter), system-ui, sans-serif';
+const HEAD_FONT = 'var(--font-oswald), var(--font-poppins), system-ui, sans-serif';
+const MONO_FONT = 'var(--font-plex-mono), var(--font-dm-mono), ui-monospace, monospace';
 
 /* ─── Nav ─────────────────────────────────────────────────────────────────── */
 function Nav() {
@@ -47,7 +55,7 @@ function Nav() {
     ['Features',     '#features'],
     ['How it works', '#how-it-works'],
     ['Trust',        '#trust'],
-    ['Pricing',      '/premium'],
+    ['Pricing',      '#pricing'],
   ];
 
   return (
@@ -142,7 +150,7 @@ function Hero() {
             </div>
 
             {/* Headline */}
-            <h1 className="landing-fade-up" style={{ fontSize: 'clamp(2.6rem,6.2vw,4.2rem)', fontWeight: 900, letterSpacing: '-0.048em', lineHeight: 1.03, margin: '0 0 22px', color: INK, animationDelay: '65ms' }}>
+            <h1 className="landing-fade-up" style={{ fontSize: 'clamp(2.6rem,6.2vw,4.2rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.048em', lineHeight: 1.03, margin: '0 0 22px', color: INK, animationDelay: '65ms' }}>
               Farm smarter.<br />
               <span style={{ color: GREEN }}>Get paid,&nbsp;</span>
               <span style={{ color: GOLD }}>guaranteed.</span>
@@ -219,6 +227,71 @@ function Hero() {
   );
 }
 
+/* ─── Live price ticker ───────────────────────────────────────────────────
+   Scrolling mono-font strip fed by the same /api/market-prices endpoint
+   the app's own dashboards use — real activity proof, not a mockup number.
+   Falls back to a small static set (clearly still crop names, just not
+   "live") if the fetch fails or returns nothing, so the ticker never shows
+   an empty/broken strip. */
+const TICKER_FALLBACK = [
+  { crop: 'Maize', price: 1250 }, { crop: 'Beans', price: 3400 },
+  { crop: 'Coffee', price: 9800 }, { crop: 'Cassava', price: 900 },
+  { crop: 'Rice', price: 4200 }, { crop: 'Groundnuts', price: 5100 },
+];
+
+function PriceTicker() {
+  const [rows, setRows] = useState<{ crop: string; price: number }[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/market-prices')
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(json => {
+        if (cancelled) return;
+        const averages: Record<string, number> = json?.averages ?? {};
+        const entries = Object.entries(averages)
+          .filter(([, v]) => typeof v === 'number' && v > 0)
+          .map(([crop, price]) => ({ crop: crop.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), price }));
+        setRows(entries.length > 0 ? entries : null);
+      })
+      .catch(() => { if (!cancelled) setRows(null); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const live = rows !== null;
+  const data = rows ?? TICKER_FALLBACK;
+  // Duplicate the row once so the CSS marquee can loop seamlessly at -50%.
+  const strip = [...data, ...data];
+
+  return (
+    <div
+      aria-label="District market prices"
+      style={{
+        background: FOREST, borderTop: `1px solid rgba(255,255,255,0.08)`, borderBottom: `1px solid rgba(255,255,255,0.08)`,
+        overflow: 'hidden', position: 'relative', fontFamily: MONO_FONT,
+      }}
+    >
+      <div style={{
+        position: 'absolute', left: 0, top: 0, bottom: 0, zIndex: 2, display: 'flex', alignItems: 'center',
+        gap: 8, padding: '0 14px', background: FOREST, boxShadow: '18px 0 24px -6px rgba(13,43,24,0.9)',
+      }}>
+        <span style={{ width: 6, height: 6, borderRadius: '50%', background: live ? MINT : 'rgba(255,255,255,0.35)', flexShrink: 0, boxShadow: live ? `0 0 6px ${MINT}` : 'none' }} aria-hidden />
+        <span style={{ fontSize: 10.5, fontWeight: 600, color: 'rgba(255,255,255,0.65)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+          {live ? 'Live prices' : 'District prices'}
+        </span>
+      </div>
+      <div className="price-ticker-track" style={{ display: 'flex', width: 'max-content', padding: '10px 0 10px 140px' }}>
+        {strip.map((row, i) => (
+          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '0 22px', whiteSpace: 'nowrap', borderRight: '1px solid rgba(255,255,255,0.10)' }}>
+            <span style={{ fontSize: 12.5, fontWeight: 500, color: 'rgba(255,255,255,0.55)' }}>{row.crop}</span>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: MINT }}>UGX {row.price.toLocaleString()}/kg</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Social proof bar ────────────────────────────────────────────────────── */
 function ProofBar() {
   return (
@@ -271,7 +344,7 @@ function WhyDifferent() {
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 44 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>The difference</p>
-          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>
+          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>
             The old way, versus Cropify.
           </h2>
         </div>
@@ -320,7 +393,7 @@ function Features() {
         {/* Section header */}
         <div style={{ marginBottom: 52 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>What you get</p>
-          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: INK, margin: '0 0 14px', lineHeight: 1.06 }}>
+          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: '0 0 14px', lineHeight: 1.06 }}>
             Everything a Ugandan farmer needs.<br />Nothing they don&rsquo;t.
           </h2>
           <p style={{ fontSize: 15.5, color: INK_MUTE, margin: 0, maxWidth: 500, lineHeight: 1.7 }}>
@@ -357,7 +430,7 @@ function HowItWorks() {
       <div style={{ maxWidth: 820, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 60 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>Simple to start</p>
-          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>
+          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>
             Up and running in minutes.
           </h2>
         </div>
@@ -390,19 +463,36 @@ function HowItWorks() {
 /* ─── Trust section (dark) ────────────────────────────────────────────────── */
 function TrustSection() {
   const items = [
-    { icon: <Lock size={20}/>, title: 'Money held in escrow', body: "When a buyer accepts your price, their payment moves to Cropify's escrow — not to them, not to you. It only reaches your wallet after they confirm the goods arrived in good condition." },
-    { icon: <ShieldCheck size={20}/>, title: 'Every user is verified', body: "Farmers, buyers, and transporters all verify with a national ID before they can trade. You can see the verification badge on every profile before agreeing to a deal." },
-    { icon: <Scale size={20}/>, title: 'Disputes reviewed by a person', body: "If something goes wrong — wrong quantity, damaged goods, no-show — raise a dispute within 48 hours. A real admin reviews the case before any money moves." },
+    { icon: <Lock size={20}/>, title: 'Money held in escrow', body: "When a buyer accepts your price, their payment moves to Cropify's escrow — not to them, not to you. It only reaches your wallet after they confirm the goods arrived in good condition.", stamp: 'Escrow Protected' },
+    { icon: <ShieldCheck size={20}/>, title: 'Every user is verified', body: "Farmers, buyers, and transporters all verify with a national ID before they can trade. You can see the verification badge on every profile before agreeing to a deal.", stamp: 'ID Verified' },
+    { icon: <Scale size={20}/>, title: 'Disputes reviewed by a person', body: "If something goes wrong — wrong quantity, damaged goods, no-show — raise a dispute within 48 hours. A real admin reviews the case before any money moves.", stamp: 'Human Reviewed' },
   ];
 
+  // Ink-stamp seals reveal on scroll rather than on page load — they read
+  // as "stamped just now" the moment this section enters view. A single
+  // observer on the section is enough (all three reveal together); no
+  // JS animation loop, just a class toggle, so reduced-motion users simply
+  // see them appear with no transition (handled in CSS below).
+  const [revealed, setRevealed] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setRevealed(true); obs.disconnect(); }
+    }, { threshold: 0.2 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
-    <section id="trust" style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: FOREST, position: 'relative', overflow: 'hidden', fontFamily: FONT }}>
+    <section id="trust" ref={sectionRef} style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: FOREST, position: 'relative', overflow: 'hidden', fontFamily: FONT }}>
       <div aria-hidden style={{ position: 'absolute', top: '12%', left: '50%', transform: 'translateX(-50%)', width: 700, height: 400, background: `radial-gradient(ellipse at center,rgba(95,224,160,0.09) 0%,transparent 70%)`, pointerEvents: 'none' }} />
 
       <div style={{ maxWidth: 1080, margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: 56 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GOLD, margin: '0 0 12px', opacity: 0.9 }}>Your money is safe here</p>
-          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#fff', margin: '0 0 16px', lineHeight: 1.06 }}>
+          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: '#fff', margin: '0 0 16px', lineHeight: 1.06 }}>
             Real protection. Not a promise.
           </h2>
           <p style={{ fontSize: 15.5, color: 'rgba(255,255,255,0.58)', margin: '0 auto', maxWidth: 540, lineHeight: 1.72 }}>
@@ -411,11 +501,33 @@ function TrustSection() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 }}>
-          {items.map(({ icon, title, body }) => (
-            <div key={title} className="landing-card-hover" style={{ padding: '28px 26px', borderRadius: 20, background: FOREST_2, border: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(95,224,160,0.13)', color: MINT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>{icon}</div>
-              <p style={{ fontSize: 15.5, fontWeight: 800, color: '#fff', margin: '0 0 10px', letterSpacing: '-0.015em', lineHeight: 1.3 }}>{title}</p>
-              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.56)', margin: 0, lineHeight: 1.7 }}>{body}</p>
+          {items.map(({ icon, title, body, stamp }, i) => (
+            <div key={title} className="landing-card-hover" style={{ padding: '28px 26px', borderRadius: 20, background: FOREST_2, border: '1px solid rgba(255,255,255,0.07)', position: 'relative', overflow: 'hidden' }}>
+              {/* Ink-stamp seal — ties the marketing site to the same
+                  trust-through-documentation language as the app's own
+                  delivery receipts. Reveals with a stamped-down motion when
+                  this section scrolls into view; reduced-motion users get
+                  it instantly with no transition. */}
+              <div
+                aria-hidden
+                className="trust-stamp"
+                style={{
+                  position: 'absolute', top: 16, right: -6, zIndex: 1,
+                  width: 84, height: 84, borderRadius: '50%',
+                  border: `1.5px solid ${MINT}`, boxShadow: `inset 0 0 0 3px ${FOREST_2}, inset 0 0 0 4px rgba(95,224,160,0.35)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
+                  transform: revealed ? 'rotate(-9deg) scale(1)' : 'rotate(-9deg) scale(0.5)',
+                  opacity: revealed ? 0.9 : 0,
+                  transition: `opacity 0.4s ease ${i * 120}ms, transform 0.4s cubic-bezier(0.34,1.56,0.64,1) ${i * 120}ms`,
+                }}
+              >
+                <span style={{ fontFamily: HEAD_FONT, fontSize: 9, fontWeight: 700, color: MINT, textTransform: 'uppercase', letterSpacing: '0.04em', lineHeight: 1.25, padding: '0 8px' }}>
+                  {stamp}
+                </span>
+              </div>
+              <div style={{ width: 46, height: 46, borderRadius: 14, background: 'rgba(95,224,160,0.13)', color: MINT, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, position: 'relative', zIndex: 2 }}>{icon}</div>
+              <p style={{ fontSize: 15.5, fontWeight: 800, color: '#fff', margin: '0 0 10px', letterSpacing: '-0.015em', lineHeight: 1.3, position: 'relative', zIndex: 2 }}>{title}</p>
+              <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.56)', margin: 0, lineHeight: 1.7, position: 'relative', zIndex: 2, maxWidth: '82%' }}>{body}</p>
             </div>
           ))}
         </div>
@@ -444,6 +556,11 @@ function RolesSection() {
       tagline: 'More trips. Guaranteed payment.',
       points: ['Matched to delivery jobs near you', 'Paid the moment the buyer confirms delivery', 'Cold-chain and fast-delivery options', 'Build a verified driver profile over time'],
     },
+    {
+      label: 'Agro Dealers', icon: <Store size={22}/>, color: PLUM, bg: PLUM_SOFT,
+      tagline: 'Run your shop and reach every farmer nearby.',
+      points: ['Full point-of-sale — barcode checkout, receipts, staff logins', 'List inputs straight to the marketplace', 'Low-stock and purchase-order alerts', 'Sales, profit, and inventory reports built in'],
+    },
   ];
 
   const r = roles[active];
@@ -453,9 +570,15 @@ function RolesSection() {
       <div style={{ maxWidth: 940, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 44 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>Who it&rsquo;s for</p>
-          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: INK, margin: '0 0 12px', lineHeight: 1.06 }}>One platform for every link in the chain.</h2>
-          <p style={{ fontSize: 14, color: INK_MUTE, margin: 0 }}>Also for input suppliers, cooperatives, and agribusiness — <Link href="/auth/signup" style={{ color: GREEN, fontWeight: 700 }}>pick your role on signup.</Link></p>
+          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: '0 0 12px', lineHeight: 1.06 }}>One platform for every link in the chain.</h2>
+          <p style={{ fontSize: 14, color: INK_MUTE, margin: 0 }}>One account, every role you need — pick any (or all) on signup.</p>
         </div>
+
+        {/* Honest disclosure — rather than an inflated "7 roles" headline
+            stat, say plainly that this is a sample and where the rest are. */}
+        <p style={{ textAlign: 'center', fontSize: 11.5, fontWeight: 700, color: INK_MUTE, letterSpacing: '0.02em', margin: '0 0 16px' }}>
+          4 roles shown · 3 more inside the app (cooperatives, offtakers, crop pathologists) — <Link href="/auth/signup" style={{ color: GREEN, fontWeight: 800 }}>see them all on signup</Link>
+        </p>
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 14, background: PAPER_2, border: `1px solid ${LINE}`, marginBottom: 22 }}>
@@ -471,7 +594,7 @@ function RolesSection() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
             <div style={{ width: 48, height: 48, borderRadius: 14, background: r.bg, color: r.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{r.icon}</div>
             <div>
-              <h3 style={{ fontSize: 19, fontWeight: 900, color: INK, letterSpacing: '-0.025em', margin: 0 }}>{r.label}</h3>
+              <h3 style={{ fontSize: 19, fontWeight: 700, fontFamily: HEAD_FONT, color: INK, letterSpacing: '-0.025em', margin: 0 }}>{r.label}</h3>
               <p style={{ fontSize: 13.5, color: INK_MUTE, margin: '3px 0 0' }}>{r.tagline}</p>
             </div>
           </div>
@@ -515,7 +638,7 @@ function Testimonials() {
           <div style={{ display: 'flex', justifyContent: 'center', gap: 3, marginBottom: 14 }}>
             {[1,2,3,4,5].map(i => <Star key={i} size={18} fill={GOLD} color={GOLD} />)}
           </div>
-          <h2 style={{ fontSize: 'clamp(1.8rem,3.5vw,2.4rem)', fontWeight: 900, letterSpacing: '-0.04em', color: INK, margin: '0 0 10px', lineHeight: 1.08 }}>
+          <h2 style={{ fontSize: 'clamp(1.8rem,3.5vw,2.4rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: '0 0 10px', lineHeight: 1.08 }}>
             From the farmers themselves.
           </h2>
           <p style={{ fontSize: 15, color: INK_MUTE, margin: 0 }}>Real people. Real districts. Real results.</p>
@@ -541,6 +664,75 @@ function Testimonials() {
   );
 }
 
+/* ─── Pricing ─────────────────────────────────────────────────────────────
+   Pulled straight from the same PLANS config the app's own /premium pages
+   and checkout use — one source of truth, so the landing page can never
+   quote a stale price. Farmer Pro is the featured/middle card since
+   farmers are the platform's free-forever core audience — Pro is the
+   first upsell most visitors will actually consider. */
+function Pricing() {
+  const cards = [
+    { plan: PLANS.farmer_pro, role: 'Farmer', featured: true },
+    { plan: PLANS.buyer_pro, role: 'Buyer', featured: false },
+    { plan: PLANS.driver_pro, role: 'Transporter', featured: false },
+    { plan: PLANS.business, role: 'Agro Dealer', featured: false },
+  ];
+
+  return (
+    <section id="pricing" style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: PAPER_2, fontFamily: FONT }}>
+      <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: 44 }}>
+          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>Simple, honest pricing</p>
+          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: '0 0 12px', lineHeight: 1.06 }}>
+            Free to start. Upgrade when it pays for itself.
+          </h2>
+          <p style={{ fontSize: 14, color: INK_MUTE, margin: 0 }}>Every role has a free tier — Pro plans below are entirely optional.</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 16, alignItems: 'stretch' }}>
+          {cards.map(({ plan, role, featured }) => (
+            <div key={plan.id} style={{
+              padding: '26px 22px', borderRadius: 20, background: featured ? FOREST : CARD,
+              border: featured ? `1px solid ${FOREST_2}` : `1px solid ${LINE}`,
+              boxShadow: featured ? '0 20px 50px rgba(13,43,24,0.24)' : '0 2px 10px rgba(15,31,21,0.04)',
+              position: 'relative', display: 'flex', flexDirection: 'column',
+              transform: featured ? 'scale(1.04)' : 'none',
+            }}>
+              {featured && (
+                <span style={{ position: 'absolute', top: -12, left: 22, fontSize: 10.5, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: FOREST, background: MINT, padding: '4px 12px', borderRadius: 999 }}>
+                  Most popular
+                </span>
+              )}
+              <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', color: featured ? 'rgba(255,255,255,0.55)' : INK_MUTE, margin: '4px 0 6px' }}>{role}</p>
+              <p style={{ fontSize: 19, fontWeight: 800, color: featured ? '#fff' : INK, margin: '0 0 14px', letterSpacing: '-0.02em' }}>{plan.label}</p>
+              <p style={{ margin: '0 0 4px', display: 'flex', alignItems: 'baseline', gap: 5, fontFamily: MONO_FONT }}>
+                <span style={{ fontSize: 28, fontWeight: 600, color: featured ? MINT : INK, letterSpacing: '-0.02em' }}>
+                  {plan.priceMonthlyUgx > 0 ? plan.priceMonthlyUgx.toLocaleString() : 'Free'}
+                </span>
+                {plan.priceMonthlyUgx > 0 && <span style={{ fontSize: 12.5, color: featured ? 'rgba(255,255,255,0.5)' : INK_MUTE }}>UGX/mo</span>}
+              </p>
+              <p style={{ fontSize: 12, color: featured ? 'rgba(255,255,255,0.45)' : INK_MUTE, margin: '0 0 22px' }}>
+                or {plan.priceYearlyUgx.toLocaleString()} UGX/yr
+              </p>
+              <div style={{ flex: 1 }} />
+              <Link href="/auth/signup" style={{
+                display: 'block', textAlign: 'center', padding: '11px', borderRadius: 11, textDecoration: 'none',
+                fontWeight: 800, fontSize: 13.5, letterSpacing: '-0.01em',
+                background: featured ? MINT : GREEN_SOFT, color: featured ? FOREST : GREEN_DEEP,
+              }}>
+                Get started
+              </Link>
+            </div>
+          ))}
+        </div>
+        <p style={{ textAlign: 'center', fontSize: 12.5, color: INK_MUTE, marginTop: 28 }}>
+          Groups/cooperatives and Enterprise agro-dealer pricing are quoted separately — <Link href="/premium" style={{ color: GREEN, fontWeight: 700 }}>see the full plan list</Link>.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 /* ─── Final CTA ───────────────────────────────────────────────────────────── */
 function FinalCTA() {
   return (
@@ -552,7 +744,7 @@ function FinalCTA() {
           <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,247,230,0.85)', letterSpacing: '0.06em' }}>Free forever for farmers</span>
         </div>
 
-        <h2 style={{ fontSize: 'clamp(2.2rem,5vw,3.2rem)', fontWeight: 900, letterSpacing: '-0.048em', lineHeight: 1.04, margin: '0 0 20px', color: '#fff' }}>
+        <h2 style={{ fontSize: 'clamp(2.2rem,5vw,3.2rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.048em', lineHeight: 1.04, margin: '0 0 20px', color: '#fff' }}>
           Ready to grow <span style={{ color: MINT }}>smarter?</span>
         </h2>
         <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.58)', margin: '0 0 38px', lineHeight: 1.7, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}>
@@ -588,7 +780,7 @@ function Footer() {
           {/* Product */}
           <div>
             <p style={{ fontSize: 11, fontWeight: 800, color: INK, textTransform: 'uppercase', letterSpacing: '0.10em', margin: '0 0 16px' }}>Product</p>
-            {[['Features','#features'],['How it works','#how-it-works'],['Pricing','/premium'],['For buyers','#roles']].map(([l,h]) => (
+            {[['Features','#features'],['How it works','#how-it-works'],['Pricing','#pricing'],['For buyers','#roles']].map(([l,h]) => (
               <a key={l} href={h} style={{ display: 'block', fontSize: 13, color: INK_MUTE, textDecoration: 'none', marginBottom: 10, fontWeight: 600 }}>{l}</a>
             ))}
           </div>
@@ -729,6 +921,29 @@ export default function Home() {
         @media (max-width: 600px) {
           .feature-wide { grid-column: span 1 !important; flex-direction: column !important; align-items: flex-start !important; gap: 0 !important; }
         }
+        /* Price ticker marquee — the strip array is rendered twice
+           back-to-back in PriceTicker, so translating exactly -50% loops
+           seamlessly with no visible seam or reset jump. */
+        @keyframes priceTickerScroll {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        .price-ticker-track { animation: priceTickerScroll 32s linear infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .price-ticker-track { animation: none; }
+          .trust-stamp { transition: none !important; }
+        }
+        /* On-brand keyboard focus ring — the default browser outline reads
+           as disconnected on pill/rounded-corner buttons at this scale, so
+           this replaces it with a colour and offset that matches the rest
+           of the page rather than removing it. Never hidden on :focus
+           alone — only :focus-visible, so mouse clicks stay outline-free
+           while keyboard/switch navigation always gets a visible ring. */
+        a:focus-visible, button:focus-visible {
+          outline: 2.5px solid ${GREEN};
+          outline-offset: 3px;
+          border-radius: 6px;
+        }
         @media (max-width: 420px) {
           .phone-mockup-slot { width: 210px; height: 426px; }
           .phone-mockup { transform: scale(0.861); transform-origin: top center; }
@@ -754,6 +969,7 @@ export default function Home() {
       `}</style>
       <Nav />
       <Hero />
+      <PriceTicker />
       <ProofBar />
       <StatsBand />
       <Features />
@@ -762,6 +978,7 @@ export default function Home() {
       <TrustSection />
       <RolesSection />
       <Testimonials />
+      <Pricing />
       <FinalCTA />
       <Footer />
     </div>
