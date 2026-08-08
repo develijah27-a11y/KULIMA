@@ -288,3 +288,80 @@ export function deliveryArrivedEmail(opts: {
   </div>
   `;
 }
+
+export function resetPasswordEmail(opts: { resetUrl: string; requestedAt: string }) {
+  const { resetUrl, requestedAt } = opts;
+  const timeLabel = new Date(requestedAt).toLocaleString('en-UG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Kampala' });
+
+  return `
+  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 500px; margin: 0 auto; background: #F4F7F5;">
+    <div style="padding: 28px 4px 4px;">
+      <table style="width: 100%; border-collapse: collapse; background: #ffffff; border-radius: 18px; overflow: hidden; box-shadow: 0 1px 3px rgba(16,24,20,0.06);">
+        <tr>
+          <td style="background: linear-gradient(135deg, #123825 0%, #1F5C3B 55%, #2D8A57 100%); padding: 30px 28px 26px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="vertical-align: middle;">
+                  <div style="display: inline-block; width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.16); text-align: center; line-height: 34px; font-weight: 900; font-size: 16px; color: #fff; font-family: Georgia, serif;">C</div>
+                </td>
+                <td style="vertical-align: middle; padding-left: 10px;">
+                  <p style="margin: 0; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em;">CROPIFY</p>
+                </td>
+              </tr>
+            </table>
+            <p style="color: #fff; font-size: 21px; font-weight: 800; margin: 22px 0 4px; letter-spacing: -0.02em;">Reset your password</p>
+            <p style="color: rgba(255,255,255,0.72); font-size: 13px; margin: 0;">Requested ${timeLabel}, East Africa Time</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding: 26px 28px 4px;">
+            <p style="font-size: 14px; color: #374151; margin: 0 0 20px; line-height: 1.65;">
+              We received a request to reset the password on the Cropify account linked to this email address. Tap the button below to choose a new password — this link is valid for one use and expires in 1 hour.
+            </p>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td align="center">
+                  <a href="${resetUrl}" style="display: inline-block; background: #123825; color: #ffffff; font-size: 14.5px; font-weight: 800; text-decoration: none; padding: 13px 30px; border-radius: 11px; letter-spacing: -0.01em;">
+                    Set a new password
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Trust / anti-phishing block — this is the part that answers
+             "how do I know this is really Cropify and not a scam". -->
+        <tr>
+          <td style="padding: 24px 28px 0;">
+            <div style="background: #F0FAF4; border: 1px solid #D8F0E1; border-radius: 14px; padding: 16px 18px;">
+              <p style="margin: 0 0 8px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #2D8A57;">How to know this is genuinely from us</p>
+              <p style="margin: 0; font-size: 12.5px; color: #374151; line-height: 1.65;">
+                This email always comes from <strong>${process.env.EMAIL_FROM?.match(/<(.+)>/)?.[1] ?? 'no-reply@cropify.app'}</strong>, and the button above always leads to a page on our own <strong>agrinova-ug.vercel.app</strong> domain — check the address bar after tapping it. Cropify will never ask you for your password, PIN, or OTP by email, call, or SMS. If a message asks for those directly, it isn't us.
+              </p>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding: 20px 28px 30px;">
+            <p style="font-size: 12.5px; color: #6B7280; margin: 0; line-height: 1.65;">
+              Didn't request this? No action needed — your password stays unchanged and this link will simply expire. If you're worried someone else is trying to access your account, reach us in-app under Support.
+            </p>
+            <table style="width: 100%; border-collapse: collapse; border-top: 1px solid #EEF2EF; margin-top: 18px; padding-top: 14px;">
+              <tr>
+                <td style="padding-top: 16px; font-size: 11px; color: #9CA3AF;">Cropify · Grown local, moved fast</td>
+                <td style="padding-top: 16px; text-align: right; font-size: 11px; color: #9CA3AF;">agrinova-ug.vercel.app</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      <p style="text-align: center; font-size: 11px; color: #9CA3AF; padding: 16px 20px;">
+        If the button doesn't work, copy and paste this link: <span style="word-break: break-all;">${resetUrl}</span>
+      </p>
+    </div>
+  </div>
+  `;
+}

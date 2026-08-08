@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
 
 export default function ForgotPasswordPage() {
@@ -16,16 +15,20 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError(null);
     try {
-      const supabase = createClient();
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        // Supabase appends its own ?token_hash=...&type=recovery to this URL —
-        // /auth/confirm verifies that token, then forwards to our `next` page.
-        redirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent('/auth/reset-password')}`,
+      // Goes through our own API route (generates the recovery link via the
+      // admin API and emails it through our own sender) rather than calling
+      // supabase.auth.resetPasswordForEmail() directly — see
+      // /api/auth/forgot-password for why. That route always resolves
+      // success regardless of whether the account exists, by design.
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
-      if (resetError) throw resetError;
-      // Always show the same success message regardless of whether the email
-      // exists — confirming/denying an account's existence here would let
-      // anyone enumerate registered emails.
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? 'Something went wrong. Please try again.');
+      }
       setSent(true);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
@@ -37,7 +40,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout
       title="Reset your password"
-      subtitle="We'll email you a link to choose a new one"
+      subtitle="We'll email you a link to set a new password for your account"
       footer={
         <span>
           Remembered it after all?{' '}
@@ -53,7 +56,7 @@ export default function ForgotPasswordPage() {
           style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)', color: '#86efac' }}
           role="status"
         >
-          If an account exists for {email}, we've sent a link to reset the password. Check your inbox.
+          Check your inbox. If there's a Cropify account for {email}, a password reset link is on its way — it can take a minute or two to arrive.
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
