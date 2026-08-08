@@ -109,8 +109,6 @@ export default async function TransporterDeliveriesPage({
             {rows.map((row: any) => {
               const isAssignment = tab === 'assignments';
               const d     = isAssignment ? row.delivery : (tab === 'my_bids' ? row.delivery : row);
-              // Guard: skip rows where the delivery join returned null
-              if (!d) return null;
               const st    = STATUS_CFG[isAssignment ? (row.status === 'accepted' ? 'accepted' : 'open') : (tab === 'my_bids' ? row.status : d?.status)] ?? STATUS_CFG.open;
               const price = isAssignment ? (d?.driver_earnings ?? d?.estimated_fare) : (tab === 'my_bids' ? row.price : d?.agreed_price);
               const typeIcon: JSX.Element = d?.delivery_type === 'cold' ? <Snowflake size={14} style={{ color: '#0EA5E9' }} /> : d?.delivery_type === 'fast' ? <Zap size={14} style={{ color: 'var(--color-harvest)' }} /> : <Truck size={14} style={{ color: 'var(--color-primary)' }} />;
@@ -129,27 +127,11 @@ export default async function TransporterDeliveriesPage({
                     <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
                       {d?.cargo_kg} kg {d?.cargo_type ?? 'cargo'}
                       {d?.pickup_date && ` · ${new Date(d.pickup_date).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}`}
-                      {price && (
-                        <>
-                          {` · `}
-                          <span style={{ fontWeight: 700, color: C.greenMed }}>
-                            UGX {Math.round(price).toLocaleString()}
-                          </span>
-                          {` your earnings`}
-                          {/* Show if driver_earnings is set and differs from estimated_fare,
-                              so driver knows this is their net amount after platform fee */}
-                          {d?.driver_earnings && d?.estimated_fare && d.driver_earnings !== d.estimated_fare && (
-                            <span
-                              title={`Total fare: UGX ${Math.round(d.estimated_fare).toLocaleString()}\nYour earnings: UGX ${Math.round(d.driver_earnings).toLocaleString()}\nPlatform service fee: UGX ${Math.round(d.estimated_fare - d.driver_earnings).toLocaleString()}`}
-                              style={{ marginLeft: 4, fontSize: 10, cursor: 'help', border: '1px solid var(--d-border)', borderRadius: 99, padding: '0 5px', lineHeight: '16px', display: 'inline-block' }}
-                            >?</span>
-                          )}
-                        </>
-                      )}
+                      {price && ` · UGX ${Math.round(price).toLocaleString()} earnings`}
                     </p>
                   </div>
-                  {isAssignment && d?.id && (
-                    <Link href={`/transporter/deliveries/${d.id}`}
+                  {isAssignment && (
+                    <Link href={`/transporter/deliveries/${d?.id}`}
                       style={{ padding: '6px 14px', background: C.green, color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
                       Accept →
                     </Link>
@@ -160,8 +142,8 @@ export default async function TransporterDeliveriesPage({
                       Bid →
                     </Link>
                   )}
-                  {tab === 'active' && d?.status === 'assigned' && d?.id && (
-                    <Link href={`/transporter/deliveries/${d.id}`}
+                  {tab === 'active' && d?.status === 'assigned' && (
+                    <Link href={`/transporter/deliveries/${row.id}`}
                       style={{ padding: '6px 14px', background: C.green, color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
                       Start →
                     </Link>

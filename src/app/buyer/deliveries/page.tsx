@@ -17,7 +17,7 @@ const STATUS_CFG: Record<string, { icon: JSX.Element; label: string; color: stri
   open:       { icon: <Search size={11} />,  label: 'Finding Driver',    color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
   assigned:   { icon: <Car size={11} />,     label: 'Driver Coming',     color: 'var(--color-sky)',     bg: 'var(--color-sky-bg)' },
   in_transit: { icon: <Truck size={11} />,   label: 'On the Way',        color: 'var(--color-primary)', bg: 'var(--color-primary-bg)' },
-  delivered:  { icon: <Package size={11} />, label: 'Arrived — Pay Now', color: 'var(--color-purple)',  bg: 'var(--color-purple-bg)' },
+  delivered:  { icon: <Package size={11} />, label: 'Arrived — Pay Now', color: 'var(--color-purple)', bg: 'var(--color-purple-bg)' },
   cancelled:  { icon: <></>,                 label: 'Cancelled',         color: 'var(--color-danger)',  bg: 'var(--color-danger-bg)' },
 };
 
@@ -32,17 +32,14 @@ export default async function BuyerDeliveriesPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  // Fetch deliveries WITHOUT an embedded FK join on profiles — the FK alias
-  // `delivery_requests_transporter_profile_fkey` may not exist in all
-  // environments and causes a server component crash. We fetch driver
-  // profiles in a separate query and join in memory instead.
   const { data: deliveries } = await (supabase.from as any)('delivery_requests')
     .select(`
       id, pickup_district, pickup_location, dropoff_district, dropoff_location,
       cargo_kg, cargo_type, delivery_type, estimated_fare, distance_km,
       commission_amount, driver_earnings,
       status, payment_status, pickup_date, transporter_id,
-      accepted_at, picked_up_at, delivered_at, created_at
+      accepted_at, picked_up_at, delivered_at, created_at,
+      transporter:profiles!delivery_requests_transporter_profile_fkey(full_name, phone_number, verification_level)
     `)
     .eq('requester_id', user.id)
     .or('requester_role.eq.buyer,requester_role.is.null')
@@ -50,31 +47,22 @@ export default async function BuyerDeliveriesPage() {
     .limit(50);
 
   const rows = deliveries ?? [];
-  const transporterIds = [
-    ...new Set(rows.map((d: any) => d.transporter_id).filter(Boolean)),
-  ] as string[];
 
-  // Driver profiles (separate query, no FK name required)
-  const { data: driverProfiles } = transporterIds.length
-    ? await (supabase.from as any)('profiles')
-        .select('user_id, full_name, phone_number, verification_level')
-        .in('user_id', transporterIds)
-    : { data: [] };
-  const driverByUser = new Map(
-    (driverProfiles ?? []).map((p: any) => [p.user_id, p])
-  );
-
-  // Vehicles (no direct FK to delivery_requests — join in memory)
+  // vehicles has no direct FK to delivery_requests (both reference
+  // auth.users independently), so it can't be embedded in the query above —
+  // fetch separately and join in memory by transporter user_id.
+  const transporterIds = [...new Set(rows.map((d: any) => d.transporter_id).filter(Boolean))];
   const { data: vehicleRows } = transporterIds.length
     ? await (supabase.from as any)('vehicles')
         .select('user_id, vehicle_type, plate_number, make_model, is_cold_capable')
         .in('user_id', transporterIds)
     : { data: [] };
-  const vehicleByUser = new Map(
-    (vehicleRows ?? []).map((v: any) => [v.user_id, v])
-  );
+  const vehicleByUser = new Map((vehicleRows ?? []).map((v: any) => [v.user_id, v]));
 
-  // Driver selfie photos — signed URLs from the private kyc-documents bucket
+  // Selfie photos live in the private kyc-documents bucket, so the raw path
+  // on `verifications` can't be shown directly — mint short-lived signed
+  // URLs server-side, scoped to only the drivers actually assigned to one of
+  // THIS buyer's own deliveries.
   const photoByUser = new Map<string, string>();
   if (transporterIds.length) {
     const service = createServiceRoleClient();
@@ -84,17 +72,13 @@ export default async function BuyerDeliveriesPage() {
       .eq('role', 'transporter')
       .eq('status', 'approved')
       .not('selfie_url', 'is', null);
-    await Promise.all(
-      (verificationRows ?? []).map(async (v: any) => {
-        const { data: signed } = await service.storage
-          .from('kyc-documents')
-          .createSignedUrl(v.selfie_url, 3600);
-        if (signed?.signedUrl) photoByUser.set(v.user_id, signed.signedUrl);
-      })
-    );
+    await Promise.all((verificationRows ?? []).map(async (v: any) => {
+      const { data: signed } = await service.storage.from('kyc-documents').createSignedUrl(v.selfie_url, 3600);
+      if (signed?.signedUrl) photoByUser.set(v.user_id, signed.signedUrl);
+    }));
   }
 
-  const active    = rows.filter((d: any) => ['open', 'assigned', 'in_transit'].includes(d.status));
+  const active    = rows.filter((d: any) => ['open','assigned','in_transit'].includes(d.status));
   const delivered = rows.filter((d: any) => d.status === 'delivered');
   const past      = rows.filter((d: any) => d.status === 'cancelled');
 
@@ -115,9 +99,7 @@ export default async function BuyerDeliveriesPage() {
 
       {rows.length === 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}>
-            <Truck size={48} />
-          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: 'var(--d-muted)' }}><Truck size={48} /></div>
           <p style={{ fontWeight: 800, fontSize: 16, color: C.text, marginBottom: 6 }}>No deliveries yet</p>
           <p style={{ fontSize: 13, color: C.muted, marginBottom: 20 }}>Request a delivery to move goods between districts</p>
           <Link href="/buyer/deliveries/new"
@@ -127,32 +109,21 @@ export default async function BuyerDeliveriesPage() {
         </div>
       )}
 
+      {/* Active & in-transit */}
       {active.length > 0 && (
         <Section title="Active" count={active.length}>
-          {active.map((d: any) => (
-            <DeliveryRow
-              key={d.id} d={d}
-              driver={driverByUser.get(d.transporter_id)}
-              vehicle={vehicleByUser.get(d.transporter_id)}
-              photoUrl={photoByUser.get(d.transporter_id)}
-            />
-          ))}
+          {active.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} photoUrl={photoByUser.get(d.transporter_id)} />)}
         </Section>
       )}
 
+      {/* Arrived — needs payment */}
       {delivered.length > 0 && (
         <Section title="Delivered — Payment Due" count={delivered.length} highlight>
-          {delivered.map((d: any) => (
-            <DeliveryRow
-              key={d.id} d={d} showPay
-              driver={driverByUser.get(d.transporter_id)}
-              vehicle={vehicleByUser.get(d.transporter_id)}
-              photoUrl={photoByUser.get(d.transporter_id)}
-            />
-          ))}
+          {delivered.map((d: any) => <DeliveryRow key={d.id} d={d} vehicle={vehicleByUser.get(d.transporter_id)} photoUrl={photoByUser.get(d.transporter_id)} showPay />)}
         </Section>
       )}
 
+      {/* Past / cancelled */}
       {past.length > 0 && (
         <Section title="Cancelled" count={past.length}>
           {past.map((d: any) => <DeliveryRow key={d.id} d={d} />)}
@@ -162,11 +133,7 @@ export default async function BuyerDeliveriesPage() {
   );
 }
 
-function Section({
-  title, count, highlight, children,
-}: {
-  title: string; count: number; highlight?: boolean; children: React.ReactNode;
-}) {
+function Section({ title, count, highlight, children }: { title: string; count: number; highlight?: boolean; children: React.ReactNode }) {
   return (
     <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
       <div style={{
@@ -184,19 +151,16 @@ function Section({
   );
 }
 
-function DeliveryRow({
-  d, driver, vehicle, photoUrl, showPay,
-}: {
-  d: any; driver?: any; vehicle?: any; photoUrl?: string; showPay?: boolean;
-}) {
+function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any; photoUrl?: string; showPay?: boolean }) {
   const st   = STATUS_CFG[d.status] ?? STATUS_CFG.open;
   const tm   = TYPE_META[d.delivery_type] ?? TYPE_META.standard;
   const paid = d.payment_status === 'paid';
-  const canTrack = ['assigned', 'in_transit'].includes(d.status) && driver;
+  const canTrack = ['assigned', 'in_transit'].includes(d.status) && d.transporter;
 
   return (
     <div style={{ padding: '15px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Route + type */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
           <span style={{ display: 'flex', color: 'var(--d-muted)' }}>{tm.icon}</span>
           <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>
@@ -207,58 +171,31 @@ function DeliveryRow({
           </span>
         </div>
 
+        {/* Details */}
         <p style={{ fontSize: 11, color: C.muted, margin: '0 0 4px' }}>
-          {d.cargo_kg} kg{d.cargo_type ? ` · ${d.cargo_type}` : ''} · {tm.label}
-          {d.distance_km ? ` · ~${d.distance_km} km` : ''}
+          {d.cargo_kg} kg {d.cargo_type ? `· ${d.cargo_type}` : ''} · {tm.label} · ~{d.distance_km} km
         </p>
 
+        {/* Fare */}
         <p style={{ fontSize: 12, fontWeight: 700, color: C.green, margin: '0 0 4px' }}>
-          UGX {Number(d.estimated_fare || 0).toLocaleString()}
-          {/* Payment breakdown: show itemised amounts when available */}
-          {(d.commission_amount > 0 || d.driver_earnings > 0) && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 6 }}>
-              <span style={{ fontSize: 10, fontWeight: 600, color: C.muted }}>total</span>
-              <span
-                title={`Breakdown:\n• Driver earns: UGX ${Number(d.driver_earnings || 0).toLocaleString()}\n• Platform fee: UGX ${Number(d.commission_amount || 0).toLocaleString()}\n\nThe total you pay covers the driver's earnings plus AgriNova's service fee.`}
-                style={{
-                  fontSize: 10, fontWeight: 800, color: C.muted, cursor: 'help',
-                  border: `1px solid ${C.border}`, borderRadius: 99,
-                  padding: '1px 5px', lineHeight: 1.4,
-                }}
-                role="img"
-                aria-label={`Driver earns UGX ${Number(d.driver_earnings || 0).toLocaleString()}, platform fee UGX ${Number(d.commission_amount || 0).toLocaleString()}`}
-              >
-                ?
-              </span>
-            </span>
-          )}
+          UGX {Number(d.estimated_fare).toLocaleString()}
         </p>
-        {/* Itemised breakdown visible on delivered/paid rows */}
-        {(d.commission_amount > 0 || d.driver_earnings > 0) && (
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '0 0 4px' }}>
-            <span style={{ fontSize: 10, color: C.muted }}>
-              🚛 Driver: <strong style={{ color: C.text }}>UGX {Number(d.driver_earnings || 0).toLocaleString()}</strong>
-            </span>
-            <span style={{ fontSize: 10, color: C.muted }}>
-              🏛 Service fee: <strong style={{ color: C.text }}>UGX {Number(d.commission_amount || 0).toLocaleString()}</strong>
-            </span>
-          </div>
-        )}
 
-        {driver && (
+        {/* Driver info */}
+        {d.transporter && (
           <p style={{ fontSize: 11, color: C.muted, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <User size={11} />
-            Driver: {driver.full_name ?? 'Assigned'}
-            {driver.phone_number && (
-              <> · <a href={`tel:${driver.phone_number}`} style={{ color: C.greenMed, fontWeight: 700, textDecoration: 'none' }}>{driver.phone_number}</a></>
+            <User size={11} />Driver: {d.transporter.full_name ?? 'Assigned'}
+            {d.transporter.phone_number && (
+              <> · <a href={`tel:${d.transporter.phone_number}`} style={{ color: C.greenMed, fontWeight: 700, textDecoration: 'none' }}>{d.transporter.phone_number}</a></>
             )}
           </p>
         )}
 
+        {/* Live location — helps the driver find you without a phone call while driving */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <ShareLocationButton
             deliveryId={d.id}
-            active={['assigned', 'in_transit'].includes(d.status) && !!driver}
+            active={['assigned', 'in_transit'].includes(d.status) && !!d.transporter}
             autoStart
             label="location visible to driver"
           />
@@ -266,8 +203,8 @@ function DeliveryRow({
             <TrackDeliveryButton
               delivery={d}
               driver={{
-                name: driver.full_name ?? 'Your driver',
-                phone: driver.phone_number,
+                name: d.transporter.full_name ?? 'Your driver',
+                phone: d.transporter.phone_number,
                 vehicleType: vehicle?.vehicle_type,
                 plateNumber: vehicle?.plate_number,
                 makeModel: vehicle?.make_model,
@@ -279,8 +216,9 @@ function DeliveryRow({
         </div>
       </div>
 
+      {/* Pay button */}
       {showPay && !paid && (
-        <PayDeliveryButton deliveryId={d.id} amount={Number(d.estimated_fare || 0)} />
+        <PayDeliveryButton deliveryId={d.id} amount={Number(d.estimated_fare)} />
       )}
       {paid && (
         <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 8, background: 'var(--color-success-bg)', color: 'var(--color-success)', flexShrink: 0 }}>
