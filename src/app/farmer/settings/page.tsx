@@ -2,6 +2,7 @@
 
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
 import { User, CreditCard, Bell, Leaf, Package, Tractor, CalendarDays, Banknote, ShieldCheck, LogOut } from 'lucide-react';
+import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -89,6 +90,9 @@ export default function FarmerSettingsPage() {
         <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Danger Zone</p>
         <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
           <SignOutInline />
+          <div style={{ borderTop: '1px solid var(--d-border)' }}>
+            <DeleteAccountButton />
+          </div>
         </div>
       </div>
     </div>

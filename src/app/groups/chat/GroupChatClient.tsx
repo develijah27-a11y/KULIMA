@@ -2,7 +2,20 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Send, Check, CheckCheck } from 'lucide-react';
+import { Send, Check, CheckCheck, Palette } from 'lucide-react';
+
+// Chat theme presets — each is just a bubble gradient + accent color, so
+// switching is instant and never touches message data. Persisted per
+// device (localStorage) rather than per-group, matching how a real chat
+// app's theme is a personal display preference, not shared state.
+const CHAT_THEMES = [
+  { id: 'forest', name: 'Forest', gradient: 'linear-gradient(135deg, #1A7A43 0%, #0C3D22 100%)', shadow: 'rgba(12,61,34,0.45)', accent: '#1A7A43' },
+  { id: 'ocean',  name: 'Ocean',  gradient: 'linear-gradient(135deg, #0EA5E9 0%, #075985 100%)', shadow: 'rgba(7,89,133,0.45)',  accent: '#0EA5E9' },
+  { id: 'sunset', name: 'Sunset', gradient: 'linear-gradient(135deg, #F59E0B 0%, #9A3412 100%)', shadow: 'rgba(154,52,18,0.45)', accent: '#F59E0B' },
+  { id: 'plum',   name: 'Plum',   gradient: 'linear-gradient(135deg, #A78BFA 0%, #5B21B6 100%)', shadow: 'rgba(91,33,182,0.45)', accent: '#A78BFA' },
+] as const;
+type ChatTheme = typeof CHAT_THEMES[number];
+const THEME_STORAGE_KEY = 'cropify-group-chat-theme';
 
 // WhatsApp-style wallpaper — a faint repeating leaf/dot doodle rather than a
 // flat color, encoded inline so it needs no external asset request. Kept
@@ -63,8 +76,22 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
   const [sending, setSending]   = useState(false);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
+  const [theme, setTheme]       = useState<ChatTheme>(CHAT_THEMES[0]);
+  const [themePickerOpen, setThemePickerOpen] = useState(false);
   const bottomRef               = useRef<HTMLDivElement>(null);
   const inputRef                = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    const match = CHAT_THEMES.find(t => t.id === saved);
+    if (match) setTheme(match);
+  }, []);
+
+  function pickTheme(t: ChatTheme) {
+    setTheme(t);
+    setThemePickerOpen(false);
+    localStorage.setItem(THEME_STORAGE_KEY, t.id);
+  }
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -205,9 +232,49 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
             </p>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e99' }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-success)' }}>Live</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e99' }} />
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--color-success)' }}>Live</span>
+          </div>
+          <button
+            onClick={() => setThemePickerOpen(v => !v)}
+            aria-label="Change chat theme"
+            style={{
+              width: 30, height: 30, borderRadius: 9, border: 'none', cursor: 'pointer',
+              background: 'var(--color-surface-2)', color: theme.accent,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <Palette size={15} />
+          </button>
+          {themePickerOpen && (
+            <>
+              <div onClick={() => setThemePickerOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 9 }} />
+              <div style={{
+                position: 'absolute', top: 36, right: 0, zIndex: 10,
+                background: 'var(--d-card)', borderRadius: 12, padding: 8,
+                boxShadow: '0 8px 28px rgba(0,0,0,0.18), 0 0 0 1px var(--d-border)',
+                display: 'flex', gap: 8,
+              }}>
+                {CHAT_THEMES.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => pickTheme(t)}
+                    title={t.name}
+                    aria-label={`${t.name} theme`}
+                    style={{
+                      width: 30, height: 30, borderRadius: '50%', cursor: 'pointer',
+                      background: t.gradient,
+                      border: theme.id === t.id ? '2.5px solid var(--d-text)' : '2.5px solid transparent',
+                      boxShadow: `0 2px 6px ${t.shadow}`,
+                      padding: 0,
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -303,11 +370,9 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
                       <div style={{
                         padding: '9px 14px',
                         borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                        background: isOwn
-                          ? 'linear-gradient(135deg, #1A7A43 0%, #0C3D22 100%)'
-                          : 'var(--d-card)',
+                        background: isOwn ? theme.gradient : 'var(--d-card)',
                         boxShadow: isOwn
-                          ? '0 4px 14px rgba(12,61,34,0.45)'
+                          ? `0 4px 14px ${theme.shadow}`
                           : '0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px var(--d-border)',
                         opacity: msg.id.startsWith('temp_') ? 0.6 : 1,
                         transition: 'opacity 0.25s',
@@ -400,11 +465,9 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
             borderRadius: 14, border: 'none',
             cursor: canSend ? 'pointer' : 'not-allowed',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: canSend
-              ? 'linear-gradient(135deg, #1A7A43 0%, #0C3D22 100%)'
-              : 'var(--color-surface-2)',
+            background: canSend ? theme.gradient : 'var(--color-surface-2)',
             color: canSend ? '#fff' : 'var(--d-muted)',
-            boxShadow: canSend ? '0 4px 14px rgba(12,61,34,0.40)' : 'none',
+            boxShadow: canSend ? `0 4px 14px ${theme.shadow}` : 'none',
             transition: 'all 0.18s',
           }}
         >

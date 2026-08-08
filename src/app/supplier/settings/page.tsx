@@ -1,6 +1,7 @@
 'use client';
 
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
+import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
 import { Store, CreditCard, Bell, Package, Zap, ShoppingCart, MapPin, Map, BarChart3, LogOut } from 'lucide-react';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', green: 'var(--color-primary)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
@@ -9,7 +10,7 @@ const SECTIONS = [
   {
     title: 'Account',
     items: [
-      { label: 'Business Profile', desc: 'Update your company name and contact details', icon: <Store size={20} />, href: '/farmer/profile' },
+      { label: 'Business Profile', desc: 'Update your company name and contact details', icon: <Store size={20} />, href: '/supplier/profile' },
       { label: 'Wallet & Earnings', desc: 'Manage your mobile money and Cropify Pay balance', icon: <CreditCard size={20} />, href: '/supplier/wallet' },
       { label: 'Notifications', desc: 'Order alerts and low-stock warnings', icon: <Bell size={20} />, href: '/supplier/notifications' },
     ],
@@ -80,6 +81,9 @@ export default function SupplierSettingsPage() {
         <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Danger Zone</p>
         <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.shadow, overflow: 'hidden' }}>
           <SignOutInline />
+          <div style={{ borderTop: `1px solid ${C.border}` }}>
+            <DeleteAccountButton />
+          </div>
         </div>
       </div>
     </div>
