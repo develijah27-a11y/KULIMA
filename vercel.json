@@ -15,10 +15,6 @@
     {
       "path": "/api/cron/payment-reminders",
       "schedule": "0 5 * * *"
-    },
-    {
-      "path": "/api/deliveries/timeout",
-      "schedule": "0 * * * *"
     }
   ]
 }
