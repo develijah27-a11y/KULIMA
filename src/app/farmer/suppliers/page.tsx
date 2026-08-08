@@ -51,13 +51,22 @@ export default async function FarmerSuppliersPage({
 
   query = query.order('created_at', { ascending: false }).limit(60);
 
-  const [{ data: products }, { data: favRows }] = await Promise.all([
+  const [{ data: products }, { data: favRows }, { data: businesses }] = await Promise.all([
     query,
     (supabase.from as any)('farmer_favourites').select('supplier_id').eq('farmer_id', user.id),
+    // Every registered agro-dealer business, not just ones with current
+    // stock — a farmer choosing who to buy from wants the full roster,
+    // not a list that's silently missing anyone temporarily sold out.
+    (supabase.from as any)('profiles')
+      .select('id, business_name, full_name, location, verification_level, role_verification_levels')
+      .or('role.eq.supplier,roles.cs.{supplier}')
+      .order('business_name', { ascending: true, nullsFirst: false })
+      .limit(40),
   ]);
 
   const favouritedIds = new Set((favRows ?? []).map((f: any) => f.supplier_id));
   const rows = (products ?? []) as any[];
+  const bizRows = (businesses ?? []) as any[];
 
   function filterUrl(changes: Record<string, string>) {
     const params = new URLSearchParams({ q, category, district, ...changes });
@@ -76,6 +85,42 @@ export default async function FarmerSuppliersPage({
           {supplier && <a href="/farmer/suppliers" style={{ marginLeft: 10, color: C.green, fontWeight: 600, textDecoration: 'none' }}>← All suppliers</a>}
         </p>
       </div>
+
+      {/* Registered businesses — pick who to buy from before browsing products */}
+      {!supplier && bizRows.length > 0 && (
+        <div>
+          <p style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+            Registered agro-dealer businesses
+          </p>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+            {bizRows.map((b: any) => (
+              <Link
+                key={b.id}
+                href={`/farmer/suppliers?supplier=${encodeURIComponent(b.id)}`}
+                style={{
+                  flexShrink: 0, width: 168, background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow,
+                  padding: '12px 14px', textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 6,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 9, background: C.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, flexShrink: 0 }}>
+                    {(b.business_name || b.full_name)?.[0]?.toUpperCase() ?? 'S'}
+                  </div>
+                  {(b.role_verification_levels?.supplier ?? b.verification_level) && (
+                    <VerificationBadge level={(b.role_verification_levels?.supplier ?? b.verification_level) as VerificationLevel} size="xs" showLabel={false} />
+                  )}
+                </div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0, lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                  {b.business_name || b.full_name || 'Agro-dealer'}
+                </p>
+                {b.location && (
+                  <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{b.location}</p>
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search + filters */}
       <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>

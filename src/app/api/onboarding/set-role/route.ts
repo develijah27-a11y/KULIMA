@@ -37,8 +37,19 @@ export async function POST(req: Request) {
   // First role in the array is the primary role (determines default dashboard)
   const primaryRole = rawRoles[0];
 
+  // Agro-dealers pick a business name here — it's what farmers see when
+  // browsing registered businesses to buy from, so it's required up front
+  // rather than left to an optional later profile edit.
+  const businessName = typeof body.businessName === 'string' ? body.businessName.trim() : '';
+  if (rawRoles.includes('supplier') && !businessName) {
+    return NextResponse.json({ error: 'Business name is required for input suppliers' }, { status: 400 });
+  }
+
+  const update: Record<string, unknown> = { role: primaryRole, roles: rawRoles };
+  if (businessName) update.business_name = businessName;
+
   const { error } = await (supabase.from as any)('profiles')
-    .update({ role: primaryRole, roles: rawRoles })
+    .update(update)
     .eq('user_id', user.id);
 
   if (error) {

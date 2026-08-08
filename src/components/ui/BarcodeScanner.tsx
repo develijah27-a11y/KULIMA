@@ -28,10 +28,41 @@ export function BarcodeScanner({ onDetected, onClose }: Props) {
       }
       try {
         const { BrowserMultiFormatReader } = await import('@zxing/browser');
+        const { DecodeHintType, BarcodeFormat } = await import('@zxing/library');
         if (cancelled) return;
-        const reader = new BrowserMultiFormatReader();
+
+        // Narrowing to the formats actually printed on retail/farm-input
+        // packaging (vs. every format ZXing supports) means each frame is
+        // decoded against a handful of candidates instead of a dozen+ —
+        // that's most of the "feels slow" gap, not the camera itself.
+        const hints = new Map();
+        hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+          BarcodeFormat.EAN_13, BarcodeFormat.EAN_8,
+          BarcodeFormat.UPC_A, BarcodeFormat.UPC_E,
+          BarcodeFormat.CODE_128, BarcodeFormat.CODE_39,
+          BarcodeFormat.ITF, BarcodeFormat.QR_CODE,
+        ]);
+        // TRY_HARDER trades a little per-frame speed for correctly reading
+        // small/low-resolution barcodes — the ones that were failing
+        // outright before, not just scanning slower.
+        hints.set(DecodeHintType.TRY_HARDER, true);
+
+        const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 80 });
         controls = await reader.decodeFromConstraints(
-          { video: { facingMode: { ideal: 'environment' } }, audio: false },
+          {
+            video: {
+              facingMode: { ideal: 'environment' },
+              // Higher resolution = more pixels across a tiny barcode, which
+              // matters more for small codes than for large ones (large
+              // codes already had enough resolution to decode before).
+              width: { ideal: 1920 }, height: { ideal: 1080 },
+              // Not in the standard TS lib.dom constraint types, but
+              // supported by most Android/Chrome cameras — continuous
+              // autofocus instead of a single fixed focus at stream start.
+              advanced: [{ focusMode: 'continuous' } as unknown as MediaTrackConstraintSet],
+            },
+            audio: false,
+          },
           videoRef.current!,
           (result, err) => {
             if (detectedRef.current) return;

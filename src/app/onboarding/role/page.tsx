@@ -66,6 +66,7 @@ const ROLES: { id: RoleId; icon: React.ReactNode; title: string; desc: string; c
 export default function RoleSelectionPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<RoleId[]>([]);
+  const [businessName, setBusinessName] = useState('');
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
 
@@ -79,15 +80,21 @@ export default function RoleSelectionPage() {
 
   const primaryRole = selected[0];
 
+  const needsBusinessName = selected.includes('supplier');
+
   async function handleConfirm() {
     if (selected.length === 0) return;
+    if (needsBusinessName && !businessName.trim()) {
+      setError('Enter your business name — this is what farmers will see when choosing who to buy from.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
       const res  = await fetch('/api/onboarding/set-role', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roles: selected }),
+        body: JSON.stringify({ roles: selected, businessName: businessName.trim() || undefined }),
       });
       const json = await res.json();
       if (!json.ok) throw new Error(json.error ?? 'Failed to save roles');
@@ -207,6 +214,30 @@ export default function RoleSelectionPage() {
         })}
       </div>
 
+      {/* Business name — required for input suppliers, since this is what
+          farmers see when picking who to buy from. */}
+      {needsBusinessName && (
+        <div style={{ marginTop: 20, maxWidth: 420, width: '100%' }}>
+          <label style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: 'rgba(240,253,244,0.75)', marginBottom: 6 }}>
+            Your business name
+          </label>
+          <input
+            value={businessName}
+            onChange={e => setBusinessName(e.target.value)}
+            placeholder="e.g. Mukono Agro Supplies"
+            style={{
+              width: '100%', padding: '12px 14px', borderRadius: 12,
+              background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+              border: '1.5px solid rgba(255,255,255,0.14)', color: 'var(--color-text-on-dark)', fontSize: 14, outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+          <p style={{ fontSize: 11.5, color: 'rgba(240,253,244,0.50)', marginTop: 6 }}>
+            Shown to farmers browsing registered agro-dealer businesses.
+          </p>
+        </div>
+      )}
+
       {/* Selection summary */}
       {selected.length > 1 && (
         <div
@@ -231,7 +262,7 @@ export default function RoleSelectionPage() {
       {/* Confirm button */}
       <button
         onClick={handleConfirm}
-        disabled={selected.length === 0 || loading}
+        disabled={selected.length === 0 || loading || (needsBusinessName && !businessName.trim())}
         style={{
           marginTop: 28,
           padding: '14px 40px',
@@ -241,7 +272,7 @@ export default function RoleSelectionPage() {
           border: 'none',
           fontWeight: 800,
           fontSize: 16,
-          cursor: selected.length > 0 && !loading ? 'pointer' : 'not-allowed',
+          cursor: selected.length > 0 && !loading && !(needsBusinessName && !businessName.trim()) ? 'pointer' : 'not-allowed',
           letterSpacing: '-0.02em',
           transition: 'all 0.15s',
           boxShadow: selected.length > 0 ? '0 4px 24px rgba(34,197,94,0.40)' : 'none',
