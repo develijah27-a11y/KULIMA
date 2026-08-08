@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins, Inter, DM_Mono } from "next/font/google";
+import { Poppins, Inter, DM_Mono, Oswald, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AuthProvider } from "@/features/auth";
@@ -15,6 +15,14 @@ import { InstallPrompt } from "@/components/shared/InstallPrompt";
 const poppins = Poppins({ subsets: ["latin"], weight: ["300","400","500","600","700"], variable: "--font-poppins", display: "swap" });
 const inter   = Inter({ subsets: ["latin"], weight: ["300","400","500","600","700"], variable: "--font-inter", display: "swap" });
 const dmMono  = DM_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-mono", display: "swap" });
+
+// Landing-page-only type system ("cargo manifest" redesign) — industrial
+// stamped headlines, plain body text, monospace for anything data-like
+// (prices, ledger entries) so the price ticker and role cards read as
+// authentic records rather than decorative UI.
+const oswald    = Oswald({ subsets: ["latin"], weight: ["500","600","700"], variable: "--font-oswald", display: "swap" });
+const plexSans  = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400","500","600"], variable: "--font-plex-sans", display: "swap" });
+const plexMono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400","500","600"], variable: "--font-plex-mono", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Cropify — Smart Farm Management for Uganda",
@@ -96,7 +104,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://api.openweathermap.org" />
       </head>
       <body
-        className={cn("min-h-screen antialiased", poppins.variable, inter.variable, dmMono.variable)}
+        className={cn("min-h-screen antialiased", poppins.variable, inter.variable, dmMono.variable, oswald.variable, plexSans.variable, plexMono.variable)}
         style={{ background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
       >
         {/* Branded splash — bridges the OS's plain icon-on-green-background
@@ -112,11 +120,10 @@ export default function RootLayout({
               </linearGradient>
             </defs>
             <rect width="256" height="256" rx="57" fill="url(#splashBg)" />
-            {/* A "C" ring opening onto a sprouting seed — the initial and
-                the act of growth it stands for, in one mark. */}
-            <path d="M182.07,165.86 A66,66 0 1 1 182.07,90.14" stroke="#F6EFDD" strokeWidth="34" strokeLinecap="round" />
-            <circle cx="187" cy="128" r="16" fill="#FFA726" />
-            <path d="M187,110 Q174,92 187,74 Q200,92 187,110 Z" fill="#F6EFDD" />
+            {/* Rising sun with a leaf sweeping up out of it */}
+            <path d="M62,192 A66,66 0 0 1 194,192 Z" fill="#FFA726" />
+            <path d="M96,182 Q88,104 202,66 Q166,152 96,182 Z" fill="#F6EFDD" />
+            <path d="M110,168 Q140,120 190,80" stroke="#0B4020" strokeWidth="4" strokeLinecap="round" opacity="0.25" />
           </svg>
           <span className="app-splash-word">Cropify</span>
           <span className="app-splash-tagline">Smart Farm Management</span>
