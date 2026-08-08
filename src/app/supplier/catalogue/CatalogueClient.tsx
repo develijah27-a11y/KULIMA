@@ -77,26 +77,13 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
   }, []);
 
   // ── Barcode field ────────────────────────────────────────────────────
-  // A hardware/software scanner types the code as fast keystrokes then
-  // Enter — a plain input handles that instantly with zero setup, same as
-  // manually entering a code when a barcode is damaged/unreadable. (An
-  // earlier version filtered out any keystroke slower than 60ms to force
-  // scanner-only input, but on a touch device with no scanner attached
-  // that also silently ate all manual typing, making the field look
-  // broken — not worth it for an optional field like this.)
-  const [barcodeDraft, setBarcodeDraft] = useState('');
+  // Camera scan only — no manual/hardware-scanner text entry path, so a
+  // barcode saved on a product is always one actually read off the real
+  // item, never typed (and never a typo).
   const [scannerOpen, setScannerOpen] = useState(false);
-  function handleBarcodeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
-    const code = barcodeDraft.trim();
-    if (code) setModal(m => ({ ...m!, barcode: code }));
-    setBarcodeDraft('');
-  }
   function handleCameraDetected(code: string) {
     setScannerOpen(false);
     setModal(m => ({ ...m!, barcode: code }));
-    setBarcodeDraft('');
   }
 
   const visible = filter === 'all' ? products : products.filter(p => p.category === filter);
@@ -335,27 +322,17 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                     </button>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input
-                      type="text"
-                      value={barcodeDraft}
-                      onChange={e => setBarcodeDraft(e.target.value)}
-                      onKeyDown={handleBarcodeKeyDown}
-                      placeholder="Scan with a hardware scanner or type a code"
-                      autoComplete="off"
-                      style={{ flex: 1, minWidth: 0, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13, boxSizing: 'border-box' }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setScannerOpen(true)}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px', borderRadius: 10,
-                        border: 'none', background: C.green, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0,
-                      }}
-                    >
-                      <Camera size={14} /> Scan
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setScannerOpen(true)}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      padding: '11px', borderRadius: 10,
+                      border: 'none', background: C.green, color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+                    }}
+                  >
+                    <Camera size={15} /> Scan with camera
+                  </button>
                 )}
               </div>
 

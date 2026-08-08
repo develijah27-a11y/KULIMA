@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ScanLine, Search, Trash2, Plus, Minus, Loader2, ShoppingCart, Store, Camera, ArrowLeft } from 'lucide-react';
+import { Search, Trash2, Plus, Minus, Loader2, ShoppingCart, Store, Camera, ArrowLeft } from 'lucide-react';
 import { BarcodeScanner } from '@/components/ui/BarcodeScanner';
 
 interface Product {
@@ -49,7 +49,6 @@ export function TillClient() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [stores, setStores] = useState<StoreOption[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState<string>('');
-  const [barcode, setBarcode] = useState('');
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<CartLine[]>([]);
   const [customerName, setCustomerName] = useState('');
@@ -60,7 +59,6 @@ export function TillClient() {
   const [error, setError] = useState('');
   const [scanError, setScanError] = useState('');
   const [scannerOpen, setScannerOpen] = useState(false);
-  const barcodeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch('/api/pos/stores').then(r => r.json()).then(json => {
@@ -69,7 +67,6 @@ export function TillClient() {
       const primary = list.find(s => s.is_primary) ?? list[0];
       if (primary) setSelectedStoreId(primary.id);
     });
-    barcodeRef.current?.focus();
   }, []);
 
   useEffect(() => {
@@ -95,8 +92,6 @@ export function TillClient() {
     });
   }
 
-  // Shared by manual entry, a hardware scanner typing + Enter, and the
-  // camera scanner's onDetected callback — one lookup path for all three.
   function lookupAndAdd(code: string) {
     const match = products.find(p => p.barcode === code || p.sku === code);
     if (match) {
@@ -105,16 +100,6 @@ export function TillClient() {
     } else {
       setScanError(`No product found for "${code}"`);
     }
-  }
-
-  function handleBarcodeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const code = barcode.trim();
-    if (!code) return;
-    lookupAndAdd(code);
-    setBarcode('');
-    // Immediately re-focus the scanner field for the next scan
-    requestAnimationFrame(() => barcodeRef.current?.focus());
   }
 
   function handleCameraDetected(code: string) {
@@ -225,40 +210,30 @@ export function TillClient() {
         {/* Left: scan/search + cart */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
 
-          {/* Barcode scanner input */}
-          <form onSubmit={handleBarcodeSubmit} style={{ background: C.card, borderRadius: 16, boxShadow: C.shadow, padding: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 10 }}>
-              <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                Scan barcode
-              </label>
-              <button
-                type="button"
-                onClick={() => setScannerOpen(true)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999,
-                  border: 'none', background: C.green, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer',
-                }}
-              >
-                <Camera size={13} /> Scan with camera
-              </button>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 14px' }}>
-              <ScanLine size={18} style={{ color: C.green, flexShrink: 0 }} />
-              <input
-                ref={barcodeRef}
-                value={barcode}
-                onChange={e => setBarcode(e.target.value)}
-                placeholder="Scan with a hardware scanner or type a code"
-                autoComplete="off"
-                style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: C.text }}
-              />
-            </div>
+          {/* Barcode scanner — camera only, no manual/hardware-scanner text
+              entry path, so there's exactly one way a barcode gets into a
+              sale and it's always an actual scan of the real item. */}
+          <div style={{ background: C.card, borderRadius: 16, boxShadow: C.shadow, padding: 16 }}>
+            <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 10 }}>
+              Scan barcode
+            </label>
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '13px', borderRadius: 12, border: 'none',
+                background: C.green, color: '#fff', fontSize: 14, fontWeight: 800, cursor: 'pointer',
+              }}
+            >
+              <Camera size={17} /> Scan with camera
+            </button>
             {scanError && (
               <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: '8px 0 0', fontWeight: 600 }}>
                 {scanError}
               </p>
             )}
-          </form>
+          </div>
 
           {/* Name search */}
           <div style={{ background: C.card, borderRadius: 16, boxShadow: C.shadow, padding: 16, position: 'relative' }}>
