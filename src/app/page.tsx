@@ -67,7 +67,7 @@ function Nav() {
           <div style={{ width: 33, height: 33, borderRadius: 10, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Leaf size={15} color="#fff" strokeWidth={2.5} />
           </div>
-          <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: '-0.03em', color: INK }}>AgriNova</span>
+          <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: '-0.03em', color: INK }}>Cropify</span>
         </Link>
 
         {/* Desktop links */}
@@ -258,7 +258,7 @@ function StatsBand() {
   );
 }
 
-/* ─── Why AgriNova (old way vs new way) ──────────────────────────────────── */
+/* ─── Why Cropify (old way vs new way) ──────────────────────────────────── */
 function WhyDifferent() {
   const rows = [
     { old: 'Sell at whatever price shows up at your gate', now: 'See live district prices before you harvest' },
@@ -272,7 +272,7 @@ function WhyDifferent() {
         <div style={{ textAlign: 'center', marginBottom: 44 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>The difference</p>
           <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>
-            The old way, versus AgriNova.
+            The old way, versus Cropify.
           </h2>
         </div>
 
@@ -282,7 +282,7 @@ function WhyDifferent() {
               <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: INK_MUTE, margin: 0 }}>Before</p>
             </div>
             <div style={{ padding: '16px 20px', borderBottom: `1px solid ${LINE}`, background: GREEN_SOFT }}>
-              <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN_DEEP, margin: 0 }}>With AgriNova</p>
+              <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN_DEEP, margin: 0 }}>With Cropify</p>
             </div>
           </div>
           {rows.map(({ old, now }, i) => (
@@ -308,7 +308,7 @@ function WhyDifferent() {
 /* ─── Features bento ─────────────────────────────────────────────────────── */
 function Features() {
   const items = [
-    { icon: <Wallet size={22}/>, title: 'Escrow-protected payments', body: "A buyer's money sits with AgriNova — not them, not you — until you confirm the goods arrived. Every shilling, every time.", color: GREEN, bg: GREEN_SOFT, wide: true },
+    { icon: <Wallet size={22}/>, title: 'Escrow-protected payments', body: "A buyer's money sits with Cropify — not them, not you — until you confirm the goods arrived. Every shilling, every time.", color: GREEN, bg: GREEN_SOFT, wide: true },
     { icon: <TrendingUp size={22}/>, title: 'Live district prices', body: 'Real rates updated daily from markets across Uganda. Know what Kampala is paying before you harvest.', color: GOLD, bg: GOLD_SOFT },
     { icon: <Microscope size={22}/>, title: 'AI Crop Doctor', body: 'Photograph a sick plant. Get a diagnosis and treatment advice in under 30 seconds.', color: PLUM, bg: PLUM_SOFT },
     { icon: <Users size={22}/>, title: 'Farmer groups', body: 'Pool your harvest with neighbouring farmers and sell as one large lot — better prices, less negotiation.', color: SKY, bg: SKY_SOFT },
@@ -390,7 +390,7 @@ function HowItWorks() {
 /* ─── Trust section (dark) ────────────────────────────────────────────────── */
 function TrustSection() {
   const items = [
-    { icon: <Lock size={20}/>, title: 'Money held in escrow', body: "When a buyer accepts your price, their payment moves to AgriNova's escrow — not to them, not to you. It only reaches your wallet after they confirm the goods arrived in good condition." },
+    { icon: <Lock size={20}/>, title: 'Money held in escrow', body: "When a buyer accepts your price, their payment moves to Cropify's escrow — not to them, not to you. It only reaches your wallet after they confirm the goods arrived in good condition." },
     { icon: <ShieldCheck size={20}/>, title: 'Every user is verified', body: "Farmers, buyers, and transporters all verify with a national ID before they can trade. You can see the verification badge on every profile before agreeing to a deal." },
     { icon: <Scale size={20}/>, title: 'Disputes reviewed by a person', body: "If something goes wrong — wrong quantity, damaged goods, no-show — raise a dispute within 48 hours. A real admin reviews the case before any money moves." },
   ];
@@ -406,7 +406,7 @@ function TrustSection() {
             Real protection. Not a promise.
           </h2>
           <p style={{ fontSize: 15.5, color: 'rgba(255,255,255,0.58)', margin: '0 auto', maxWidth: 540, lineHeight: 1.72 }}>
-            We built AgriNova after watching too many Ugandan farmers get cheated — underpaid, ignored after delivery, or paid nothing at all. These rules exist because of that.
+            We built Cropify after watching too many Ugandan farmers get cheated — underpaid, ignored after delivery, or paid nothing at all. These rules exist because of that.
           </p>
         </div>
 
@@ -580,7 +580,7 @@ function Footer() {
               <div style={{ width: 28, height: 28, borderRadius: 8, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Leaf size={13} color="#fff" strokeWidth={2.5} />
               </div>
-              <span style={{ fontSize: 15, fontWeight: 900, color: INK, letterSpacing: '-0.025em' }}>AgriNova</span>
+              <span style={{ fontSize: 15, fontWeight: 900, color: INK, letterSpacing: '-0.025em' }}>Cropify</span>
             </div>
             <p style={{ fontSize: 13, color: INK_MUTE, lineHeight: 1.65, margin: '0 0 14px', maxWidth: 210 }}>Uganda&rsquo;s farm-to-market platform. Free for farmers, always.</p>
           </div>
@@ -612,7 +612,7 @@ function Footer() {
         </div>
 
         <div style={{ borderTop: `1px solid ${LINE}`, paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-          <p style={{ fontSize: 12, color: INK_MUTE, margin: 0 }}>© 2026 AgriNova. All rights reserved.</p>
+          <p style={{ fontSize: 12, color: INK_MUTE, margin: 0 }}>© 2026 Cropify. All rights reserved.</p>
           <p style={{ fontSize: 12, color: INK_MUTE, margin: 0 }}>Built for Ugandan farmers.</p>
         </div>
       </div>

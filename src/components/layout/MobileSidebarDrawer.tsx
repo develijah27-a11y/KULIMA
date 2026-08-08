@@ -26,8 +26,8 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
 
   useEffect(() => {
     const handler = () => setOpen(true);
-    window.addEventListener('agrinova:menu-open', handler);
-    return () => window.removeEventListener('agrinova:menu-open', handler);
+    window.addEventListener('cropify:menu-open', handler);
+    return () => window.removeEventListener('cropify:menu-open', handler);
   }, []);
 
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -65,26 +65,26 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
   const initial = profile?.name?.[0]?.toUpperCase() ?? 'U';
 
   return (
-    <div className="agrinova-drawer-root md:hidden">
+    <div className="cropify-drawer-root md:hidden">
       {/* Backdrop */}
       <div
-        className="agrinova-drawer-backdrop"
+        className="cropify-drawer-backdrop"
         onClick={() => setOpen(false)}
       />
 
       {/* Slide-in drawer */}
-      <aside className="agrinova-drawer-panel">
+      <aside className="cropify-drawer-panel">
 
         {/* ── Header ── */}
-        <div className="agrinova-drawer-header">
+        <div className="cropify-drawer-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="agrinova-drawer-logo-mark">A</div>
-            <span className="agrinova-drawer-logo-text">AgriNova</span>
+            <div className="cropify-drawer-logo-mark">A</div>
+            <span className="cropify-drawer-logo-text">Cropify</span>
           </div>
           <button
             onClick={() => setOpen(false)}
             aria-label="Close menu"
-            className="agrinova-drawer-close"
+            className="cropify-drawer-close"
           >
             <X size={16} />
           </button>
@@ -92,17 +92,17 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
 
         {/* ── Role label / switcher ── */}
         {roleSwitcher ? (
-          <div className="agrinova-drawer-role" style={{ padding: '8px 12px' }}>
+          <div className="cropify-drawer-role" style={{ padding: '8px 12px' }}>
             {roleSwitcher}
           </div>
         ) : profile && (
-          <div className="agrinova-drawer-role">
-            <p className="agrinova-drawer-role-text">{profile.role}</p>
+          <div className="cropify-drawer-role">
+            <p className="cropify-drawer-role-text">{profile.role}</p>
           </div>
         )}
 
         {/* ── Nav ── */}
-        <nav className="agrinova-drawer-nav">
+        <nav className="cropify-drawer-nav">
           {navItems.map(({ href, icon, label, badge, divider, sectionLabel }, idx) => {
             const Icon = ICON_MAP[icon] ?? LayoutDashboard;
             const active = activeSet.has(href);
@@ -111,24 +111,24 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
             return (
               <div key={href}>
                 {divider && (
-                  <div className="agrinova-drawer-section-wrap" style={{ marginTop: idx === 0 ? 0 : undefined }}>
-                    <div className="agrinova-drawer-divider" />
+                  <div className="cropify-drawer-section-wrap" style={{ marginTop: idx === 0 ? 0 : undefined }}>
+                    <div className="cropify-drawer-divider" />
                     {sectionLabel && (
-                      <p className="agrinova-drawer-section-label">{sectionLabel}</p>
+                      <p className="cropify-drawer-section-label">{sectionLabel}</p>
                     )}
                   </div>
                 )}
                 <Link
                   href={href}
                   prefetch
-                  className={`agrinova-drawer-link${active ? ' agrinova-drawer-link--active' : ''}`}
+                  className={`cropify-drawer-link${active ? ' cropify-drawer-link--active' : ''}`}
                 >
                   <span style={{ flexShrink: 0, display: 'flex' }}>
                     <Icon size={17} strokeWidth={active ? 2.5 : 2} />
                   </span>
-                  <span className="agrinova-drawer-link-label">{label}</span>
+                  <span className="cropify-drawer-link-label">{label}</span>
                   {badgeValue !== undefined && badgeValue > 0 && (
-                    <span className="agrinova-drawer-badge">
+                    <span className="cropify-drawer-badge">
                       {badgeValue > 99 ? '99+' : badgeValue}
                     </span>
                   )}
@@ -140,16 +140,16 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
 
         {/* ── Profile footer ── */}
         {profile && (
-          <div className="agrinova-drawer-footer">
-            <div className="agrinova-drawer-avatar">{initial}</div>
+          <div className="cropify-drawer-footer">
+            <div className="cropify-drawer-avatar">{initial}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p className="agrinova-drawer-name">{profile.name}</p>
-              <p className="agrinova-drawer-role-sub">{profile.role}</p>
+              <p className="cropify-drawer-name">{profile.name}</p>
+              <p className="cropify-drawer-role-sub">{profile.role}</p>
             </div>
             <button
               onClick={handleSignOut}
               title="Sign out"
-              className="agrinova-drawer-signout"
+              className="cropify-drawer-signout"
             >
               <LogOut size={15} />
             </button>

@@ -16,7 +16,7 @@ interface CommandPaletteProps {
   items: CommandItem[];
 }
 
-const RECENT_KEY = 'agrinova-cmd-recent';
+const RECENT_KEY = 'cropify-cmd-recent';
 const MAX_RECENT = 5;
 
 function getRecent(): CommandItem[] {

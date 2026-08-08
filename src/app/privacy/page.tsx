@@ -1,20 +1,20 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/legal/LegalPage';
 
-export const metadata: Metadata = { title: 'Privacy Policy — AgriNova' };
+export const metadata: Metadata = { title: 'Privacy Policy — Cropify' };
 
 export default function PrivacyPolicyPage() {
   return (
     <LegalPage title="Privacy Policy" updated="15 July 2026">
       <p>
-        AgriNova ("AgriNova", "we", "us") operates a digital marketplace connecting farmers, buyers,
+        Cropify ("Cropify", "we", "us") operates a digital marketplace connecting farmers, buyers,
         transporters, agricultural input suppliers, crop-disease pathologists, offtakers, and farmer
-        groups across Uganda. This policy explains what personal data we collect through the AgriNova
+        groups across Uganda. This policy explains what personal data we collect through the Cropify
         app and website, why we collect it, who we share it with, and the choices you have. It applies
-        to every AgriNova user regardless of role.
+        to every Cropify user regardless of role.
       </p>
       <p>
-        By creating an AgriNova account you agree to the collection and use of information as described
+        By creating an Cropify account you agree to the collection and use of information as described
         here. If you do not agree, please do not use the app.
       </p>
 
@@ -23,7 +23,7 @@ export default function PrivacyPolicyPage() {
       <ul>
         <li><strong>Account details:</strong> full name, phone number, email address, password, and your selected role(s).</li>
         <li><strong>Profile information:</strong> district/location, bio, farm size and crops, avatar photo.</li>
-        <li><strong>Identity verification (KYC):</strong> depending on the trust tier you apply for — a national ID photo, a selfie, a driving permit, vehicle registration, business registration documents, or professional qualifications (for pathologists). These are stored in a private file store that only you and an AgriNova administrator reviewing your application can access — never a public link.</li>
+        <li><strong>Identity verification (KYC):</strong> depending on the trust tier you apply for — a national ID photo, a selfie, a driving permit, vehicle registration, business registration documents, or professional qualifications (for pathologists). These are stored in a private file store that only you and an Cropify administrator reviewing your application can access — never a public link.</li>
         <li><strong>Marketplace content:</strong> crop listings, prices, offers, orders, delivery requests, reviews, disputes, and messages you send to other users (e.g. farmer-to-buyer or farmer-to-pathologist chat).</li>
         <li><strong>Financial information:</strong> your in-app wallet balance and transaction history, and the mobile money phone number/provider you use to deposit or withdraw. <strong>We do not collect or store your mobile money PIN or card details</strong> — deposits and withdrawals are processed directly by our payment partner, Nylon Pay.</li>
         <li><strong>Photos you submit for crop disease diagnosis</strong>, and any notes describing the issue.</li>
@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
       <p>We do not sell your personal data to anyone.</p>
 
       <h2>3. Who we share information with</h2>
-      <p>We share the minimum data necessary with a small number of service providers that make AgriNova work:</p>
+      <p>We share the minimum data necessary with a small number of service providers that make Cropify work:</p>
       <table>
         <thead><tr><th>Provider</th><th>Purpose</th><th>Data involved</th></tr></thead>
         <tbody>
@@ -63,19 +63,19 @@ export default function PrivacyPolicyPage() {
         Other users of the app see the information relevant to a transaction you're part of — e.g. a
         buyer sees a farmer's listing and, once an order is placed, the farmer's name and phone number;
         an assigned transporter can see pickup/dropoff details. We never expose your identity documents
-        to other users — only to AgriNova administrators reviewing a verification request.
+        to other users — only to Cropify administrators reviewing a verification request.
       </p>
       <p>
         We may also disclose information if required by Ugandan law, to enforce our Terms, or to protect
-        the rights, property, or safety of AgriNova, our users, or the public.
+        the rights, property, or safety of Cropify, our users, or the public.
       </p>
 
       <h2>4. How we protect your data</h2>
       <ul>
         <li>Database access is governed by row-level security — a user can only read or write data they actually own or are a party to, enforced at the database level, not just in the app.</li>
         <li>Identity documents are stored in a private file store, never a public link, and can only be viewed by an administrator via a short-lived (5-minute) access link generated at the moment of review.</li>
-        <li>All traffic between your device and AgriNova is encrypted (HTTPS).</li>
-        <li>Passwords are hashed and never stored or visible in plain text, including to AgriNova staff.</li>
+        <li>All traffic between your device and Cropify is encrypted (HTTPS).</li>
+        <li>Passwords are hashed and never stored or visible in plain text, including to Cropify staff.</li>
       </ul>
       <p>
         No system is 100% secure, but we treat identity documents and financial data as our highest
@@ -100,7 +100,7 @@ export default function PrivacyPolicyPage() {
 
       <h2>7. Children</h2>
       <p>
-        AgriNova is intended for users aged 18 and older, consistent with our escrow and payment
+        Cropify is intended for users aged 18 and older, consistent with our escrow and payment
         features. We do not knowingly collect data from children.
       </p>
 

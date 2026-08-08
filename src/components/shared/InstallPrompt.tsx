@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { X, Download, Share } from 'lucide-react';
 
-const DISMISS_KEY = 'agrinova-install-dismissed-at';
+const DISMISS_KEY = 'cropify-install-dismissed-at';
 const SNOOZE_DAYS = 7;
 
 function isStandalone() {
@@ -24,7 +24,7 @@ function wasRecentlyDismissed() {
   } catch { return false; }
 }
 
-// Prompts any first-time web visitor to install AgriNova as an app — this is
+// Prompts any first-time web visitor to install Cropify as an app — this is
 // a PWA (manifest.json + service worker already registered), but Chrome/Edge
 // only offer the native install banner if a site calls event.prompt() itself
 // after capturing `beforeinstallprompt`; without this component the browser
@@ -77,7 +77,7 @@ export function InstallPrompt() {
   return (
     <div
       role="dialog"
-      aria-label="Install AgriNova"
+      aria-label="Install Cropify"
       style={{
         position: 'fixed', left: 12, right: 12, bottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
         zIndex: 9997, maxWidth: 420, margin: '0 auto',
@@ -94,7 +94,7 @@ export function InstallPrompt() {
       }}>A</div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: 'var(--color-text)' }}>Install AgriNova</p>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: 'var(--color-text)' }}>Install Cropify</p>
         <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
           {showIosHint
             ? <>Tap <Share size={11} style={{ display: 'inline-block', verticalAlign: 'middle', margin: '0 2px' }} /> then "Add to Home Screen" for the full app experience.</>

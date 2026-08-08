@@ -5,7 +5,7 @@ import { Resend } from 'resend';
 // this codebase, so the rest of the app never depends on email actually
 // having been set up.
 const apiKey = process.env.RESEND_API_KEY;
-const from   = process.env.EMAIL_FROM ?? 'AgriNova <onboarding@resend.dev>';
+const from   = process.env.EMAIL_FROM ?? 'Cropify <onboarding@resend.dev>';
 const resend = apiKey ? new Resend(apiKey) : null;
 
 export async function sendEmail(to: string, subject: string, html: string) {
@@ -52,7 +52,7 @@ export function purchaseReceiptEmail(opts: {
                   <div style="display: inline-block; width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.16); text-align: center; line-height: 34px; font-weight: 900; font-size: 16px; color: #fff; font-family: Georgia, serif;">A</div>
                 </td>
                 <td style="vertical-align: middle; padding-left: 10px;">
-                  <p style="margin: 0; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em;">AGRINOVA</p>
+                  <p style="margin: 0; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em;">CROPIFY</p>
                 </td>
                 <td style="text-align: right; vertical-align: middle;">
                   <span style="display: inline-block; padding: 4px 11px; border-radius: 999px; background: rgba(255,255,255,0.16); color: #D7FBE8; font-size: 10px; font-weight: 800; letter-spacing: 0.05em;">RECEIPT</span>
@@ -67,7 +67,7 @@ export function purchaseReceiptEmail(opts: {
         <tr>
           <td style="padding: 24px 28px 4px;">
             <p style="font-size: 14px; color: #374151; margin: 0; line-height: 1.6;">
-              Hi ${buyerName}, thanks for shopping on AgriNova. Here's your receipt for this order.
+              Hi ${buyerName}, thanks for shopping on Cropify. Here's your receipt for this order.
             </p>
           </td>
         </tr>
@@ -97,19 +97,19 @@ export function purchaseReceiptEmail(opts: {
         <tr>
           <td style="padding: 26px 28px 30px;">
             <p style="font-size: 13px; color: #4B5563; margin: 0 0 18px; line-height: 1.6;">
-              Track this order anytime under My Inputs in the app. Thank you for using AgriNova.
+              Track this order anytime under My Inputs in the app. Thank you for using Cropify.
             </p>
             <table style="width: 100%; border-collapse: collapse; border-top: 1px solid #EEF2EF; padding-top: 14px;">
               <tr>
-                <td style="padding-top: 16px; font-size: 11px; color: #9CA3AF;">AgriNova · Grown local, moved fast</td>
-                <td style="padding-top: 16px; text-align: right; font-size: 11px; color: #9CA3AF;">agrinova-ug.vercel.app</td>
+                <td style="padding-top: 16px; font-size: 11px; color: #9CA3AF;">Cropify · Grown local, moved fast</td>
+                <td style="padding-top: 16px; text-align: right; font-size: 11px; color: #9CA3AF;">cropify-ug.vercel.app</td>
               </tr>
             </table>
           </td>
         </tr>
       </table>
       <p style="text-align: center; font-size: 11px; color: #9CA3AF; padding: 16px 20px;">
-        This is an automated receipt for your AgriNova purchase. Receipt ${receiptNo}.
+        This is an automated receipt for your Cropify purchase. Receipt ${receiptNo}.
       </p>
     </div>
   </div>
@@ -177,7 +177,7 @@ export function deliveryArrivedEmail(opts: {
                   <div style="display: inline-block; width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.16); text-align: center; line-height: 34px; font-weight: 900; font-size: 16px; color: #fff; font-family: Georgia, serif;">A</div>
                 </td>
                 <td style="vertical-align: middle; padding-left: 10px;">
-                  <p style="margin: 0; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em;">AGRINOVA</p>
+                  <p style="margin: 0; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em;">CROPIFY</p>
                 </td>
                 <td style="text-align: right; vertical-align: middle;">
                   <span style="display: inline-block; padding: 4px 11px; border-radius: 999px; background: rgba(255,255,255,0.16); color: #D7FBE8; font-size: 10px; font-weight: 800; letter-spacing: 0.05em;">DELIVERED</span>
@@ -193,7 +193,7 @@ export function deliveryArrivedEmail(opts: {
         <tr>
           <td style="padding: 24px 28px 4px;">
             <p style="font-size: 14px; color: #374151; margin: 0; line-height: 1.6;">
-              Hi ${recipientName}, thank you for trusting AgriNova to move your goods. Here's your delivery summary.
+              Hi ${recipientName}, thank you for trusting Cropify to move your goods. Here's your delivery summary.
             </p>
           </td>
         </tr>
@@ -274,15 +274,15 @@ export function deliveryArrivedEmail(opts: {
             </p>
             <table style="width: 100%; border-collapse: collapse; border-top: 1px solid #EEF2EF; padding-top: 14px;">
               <tr>
-                <td style="padding-top: 16px; font-size: 11px; color: #9CA3AF;">AgriNova · Grown local, moved fast</td>
-                <td style="padding-top: 16px; text-align: right; font-size: 11px; color: #9CA3AF;">agrinova-ug.vercel.app</td>
+                <td style="padding-top: 16px; font-size: 11px; color: #9CA3AF;">Cropify · Grown local, moved fast</td>
+                <td style="padding-top: 16px; text-align: right; font-size: 11px; color: #9CA3AF;">cropify-ug.vercel.app</td>
               </tr>
             </table>
           </td>
         </tr>
       </table>
       <p style="text-align: center; font-size: 11px; color: #9CA3AF; padding: 16px 20px;">
-        This is an automated receipt for a completed AgriNova delivery. Receipt ${receiptNo}.
+        This is an automated receipt for a completed Cropify delivery. Receipt ${receiptNo}.
       </p>
     </div>
   </div>

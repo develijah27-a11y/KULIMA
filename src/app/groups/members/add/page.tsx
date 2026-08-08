@@ -66,8 +66,8 @@ export default function AddMemberPage() {
           <div style={{ padding: '16px 20px' }}>
             <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.6 }}>
               {success.linked
-                ? `${fullName} has a registered AgriNova account and has been sent a notification that they joined your group.`
-                : `${fullName} was saved to your member list. Because no matching AgriNova account was found for that phone number, they won't receive notifications or group payouts until they sign up with the same number and are linked.`}
+                ? `${fullName} has a registered Cropify account and has been sent a notification that they joined your group.`
+                : `${fullName} was saved to your member list. Because no matching Cropify account was found for that phone number, they won't receive notifications or group payouts until they sign up with the same number and are linked.`}
             </p>
           </div>
         </div>
@@ -122,7 +122,7 @@ export default function AddMemberPage() {
             style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.text, background: 'var(--d-input-bg)', outline: 'none', boxSizing: 'border-box' }}
           />
           <p style={{ fontSize: 11, color: C.muted, marginTop: 5, lineHeight: 1.5 }}>
-            Phone is how we tell two people with the same name apart. If this member has an AgriNova account, the phone links them automatically — and they get notified immediately.
+            Phone is how we tell two people with the same name apart. If this member has an Cropify account, the phone links them automatically — and they get notified immediately.
           </p>
         </div>
 

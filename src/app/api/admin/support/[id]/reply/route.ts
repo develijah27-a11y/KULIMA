@@ -23,7 +23,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     ticket_id: id,
     sender_type: 'admin',
     sender_id: user.id,
-    sender_name: (profile as any)?.full_name ?? 'AgriNova Support',
+    sender_name: (profile as any)?.full_name ?? 'Cropify Support',
     message: parsed.data.message,
   });
 

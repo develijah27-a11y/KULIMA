@@ -215,7 +215,7 @@ function PlanCard({ plan, cycle }: { plan: Plan; cycle: Cycle }) {
             Saves {fmt(plan.monthlyPrice * 12 - plan.yearlyPrice)} vs monthly
           </p>
         )}
-        <p style={{ fontSize: 12, color: plan.highlighted ? 'rgba(255,255,255,0.7)' : TEXT, margin: '6px 0 0', lineHeight: 1.5 }}>{plan.tagline}</p>
+        <p style={{ fontSize: 12, color: plan.highlighted ? 'rgba(255,255,255,0.7)' : MUTED, margin: '6px 0 0', lineHeight: 1.5 }}>{plan.tagline}</p>
       </div>
 
       {/* Divider */}
@@ -261,7 +261,7 @@ export default function PremiumPage() {
       {/* Nav */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 40,
-        background: 'var(--d-card)',
+        background: 'rgba(var(--d-page-rgb, 248,250,252), 0.9)',
         backdropFilter: 'blur(14px)',
         borderBottom: `1px solid ${BORDER}`,
         padding: '0 clamp(16px,5vw,64px)', height: 60,
@@ -271,7 +271,7 @@ export default function PremiumPage() {
           <div style={{ width: 28, height: 28, borderRadius: 8, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Leaf size={14} color="#fff" strokeWidth={2.5} />
           </div>
-          <span style={{ fontSize: 16, fontWeight: 900, color: TEXT, letterSpacing: '-0.02em' }}>AgriNova</span>
+          <span style={{ fontSize: 16, fontWeight: 900, color: TEXT, letterSpacing: '-0.02em' }}>Cropify</span>
         </Link>
         <div style={{ display: 'flex', gap: 10 }}>
           <Link href="/dashboard" style={{ fontSize: 13, fontWeight: 700, color: MUTED, textDecoration: 'none', padding: '8px 12px' }}>Dashboard</Link>
@@ -283,7 +283,7 @@ export default function PremiumPage() {
       <div style={{ textAlign: 'center', padding: 'clamp(48px,8vh,80px) clamp(16px,5vw,64px) 40px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 99, background: 'var(--color-primary-bg)', marginBottom: 20 }}>
           <Crown size={13} style={{ color: GREEN }} />
-          <span style={{ fontSize: 12, fontWeight: 800, color: GREEN, letterSpacing: '0.06em', textTransform: 'uppercase' }}>AgriNova Premium</span>
+          <span style={{ fontSize: 12, fontWeight: 800, color: GREEN, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Cropify Premium</span>
         </div>
         <h1 style={{ fontSize: 'clamp(2rem,5vw,3.2rem)', fontWeight: 900, letterSpacing: '-0.04em', color: TEXT, margin: '0 0 16px', lineHeight: 1.05 }}>
           Grow faster with the<br />
@@ -354,7 +354,7 @@ export default function PremiumPage() {
 
       {/* Footer */}
       <footer style={{ padding: '20px clamp(16px,5vw,64px)', borderTop: `1px solid ${BORDER}`, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <span style={{ fontSize: 12, color: MUTED }}>© 2026 AgriNova. All rights reserved.</span>
+        <span style={{ fontSize: 12, color: MUTED }}>© 2026 Cropify. All rights reserved.</span>
         <div style={{ display: 'flex', gap: 20 }}>
           {[['Privacy', '/privacy'], ['Terms', '/terms'], ['Contact', '/contact']].map(([l, h]) => (
             <Link key={l} href={h} style={{ fontSize: 12, color: MUTED, textDecoration: 'none' }}>{l}</Link>

@@ -660,7 +660,7 @@ export default async function AdminDashboardPage() {
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
             Platform Command Centre
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: C.muted }}>{dayLabel} · AgriNova Admin</p>
+          <p className="text-sm mt-0.5" style={{ color: C.muted }}>{dayLabel} · Cropify Admin</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ background: 'var(--color-primary)' }} />

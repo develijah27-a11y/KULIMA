@@ -31,7 +31,7 @@ export function LegalPage({ title, updated, children }: Props) {
           <div style={{ width: 30, height: 30, borderRadius: 9, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Leaf size={15} color="#031A08" strokeWidth={2.5} />
           </div>
-          <span style={{ fontSize: 16, fontWeight: 900, letterSpacing: '-0.03em', color: TEXT }}>AgriNova</span>
+          <span style={{ fontSize: 16, fontWeight: 900, letterSpacing: '-0.03em', color: TEXT }}>Cropify</span>
         </Link>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 700, color: MUTED, textDecoration: 'none' }}>
           <ArrowLeft size={14} /> Back to home
@@ -50,7 +50,7 @@ export function LegalPage({ title, updated, children }: Props) {
       </main>
 
       <footer style={{ padding: '22px clamp(18px, 5vw, 64px)', borderTop: `1px solid ${BORDER}`, textAlign: 'center' }}>
-        <p style={{ fontSize: 12, color: MUTED, margin: 0 }}>© 2026 AgriNova. All rights reserved.</p>
+        <p style={{ fontSize: 12, color: MUTED, margin: 0 }}>© 2026 Cropify. All rights reserved.</p>
       </footer>
 
       <style>{`

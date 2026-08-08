@@ -44,7 +44,7 @@ export default async function NewListingPage() {
           Post a Listing
         </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>
-          Your produce will be visible to all verified buyers on AgriNova.
+          Your produce will be visible to all verified buyers on Cropify.
         </p>
       </div>
 

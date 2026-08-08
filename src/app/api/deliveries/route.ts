@@ -244,7 +244,7 @@ export async function PATCH(req: Request) {
         if (authUser?.user?.email) {
           await sendEmail(
             authUser.user.email,
-            'Your AgriNova delivery has arrived',
+            'Your Cropify delivery has arrived',
             deliveryArrivedEmail({
               recipientName:    (requesterProfile as any)?.full_name ?? 'there',
               recipientPhone:   (requesterProfile as any)?.phone_number ?? null,

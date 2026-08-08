@@ -9,8 +9,8 @@ const PROTECTED = [
 ];
 
 // Sessions expire after 12 hours regardless of Supabase's own token lifetime.
-// The agrinova_sess cookie records when the session was first stamped.
-const SESSION_COOKIE = 'agrinova_sess';
+// The cropify_sess cookie records when the session was first stamped.
+const SESSION_COOKIE = 'cropify_sess';
 const SESSION_MAX_MS  = 12 * 60 * 60 * 1000; // 12 hours
 const PROD = process.env.NODE_ENV === 'production';
 

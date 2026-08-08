@@ -46,7 +46,7 @@ export async function GET(req: Request) {
 export async function POST() {
   return NextResponse.json({
     success: false,
-    error: 'Price negotiation is no longer available on AgriNova. Listings are sold at the price set by the farmer — use Buy Now instead.',
+    error: 'Price negotiation is no longer available on Cropify. Listings are sold at the price set by the farmer — use Buy Now instead.',
   }, { status: 410 });
 }
 

@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 // bell in TopBar and the various /*/notifications pages dispatch this event
 // whenever the true unread count changes so the sidebar/mobile-nav badge for
 // that one item can stay in sync without a full page reload.
-export const UNREAD_COUNT_EVENT = 'agrinova:unread-count';
+export const UNREAD_COUNT_EVENT = 'cropify:unread-count';
 
 export function useLiveUnreadBadge(initial: number | undefined) {
   const [count, setCount] = useState(initial ?? 0);

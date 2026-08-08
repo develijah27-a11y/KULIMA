@@ -58,7 +58,7 @@ export default async function FarmerWalletPage() {
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
           My Wallet
         </h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>AgriNova Pay — UGX</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>Cropify Pay — UGX</p>
       </div>
 
       {/* Balance card */}

@@ -10,7 +10,7 @@ const SECTIONS = [
     title: 'Account',
     items: [
       { label: 'Business Profile', desc: 'Update your company name and contact details', icon: <Store size={20} />, href: '/farmer/profile' },
-      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and AgriNova Pay balance', icon: <CreditCard size={20} />, href: '/supplier/wallet' },
+      { label: 'Wallet & Earnings', desc: 'Manage your mobile money and Cropify Pay balance', icon: <CreditCard size={20} />, href: '/supplier/wallet' },
       { label: 'Notifications', desc: 'Order alerts and low-stock warnings', icon: <Bell size={20} />, href: '/supplier/notifications' },
     ],
   },
@@ -44,7 +44,7 @@ function SignOutInline() {
       </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
-        <p style={{ fontSize: 12, color: C.muted }}>Log out of your AgriNova account</p>
+        <p style={{ fontSize: 12, color: C.muted }}>Log out of your Cropify account</p>
       </div>
       <span style={{ color: C.muted, fontSize: 16 }}>›</span>
     </button>

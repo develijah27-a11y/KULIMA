@@ -6,7 +6,7 @@ function ensureConfigured() {
   if (configured) return;
   const publicKey  = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject    = process.env.VAPID_SUBJECT ?? 'mailto:support@agrinova.app';
+  const subject    = process.env.VAPID_SUBJECT ?? 'mailto:support@cropify.app';
   if (!publicKey || !privateKey) return; // push simply no-ops until keys are set
   webpush.setVapidDetails(subject, publicKey, privateKey);
   configured = true;

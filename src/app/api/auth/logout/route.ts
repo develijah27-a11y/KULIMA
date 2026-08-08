@@ -15,10 +15,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Belt-and-suspenders: explicitly expire every sb-* cookie and the
-    // agrinova_sess session-age stamp so the 12-hour clock resets on next login.
+    // cropify_sess session-age stamp so the 12-hour clock resets on next login.
     const PROD = process.env.NODE_ENV === 'production';
     request.cookies.getAll().forEach(({ name }) => {
-      if (name.startsWith('sb-') || name === 'agrinova_sess') {
+      if (name.startsWith('sb-') || name === 'cropify_sess') {
         response.cookies.set(name, '', {
           maxAge: 0,
           path: '/',

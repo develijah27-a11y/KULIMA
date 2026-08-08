@@ -21,7 +21,7 @@ export function showToast(toast: Omit<ToastItem, 'id'>) {
   // OS-level browser notification when the tab is in background
   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
     try {
-      new Notification(`AgriNova — ${toast.title}`, {
+      new Notification(`Cropify — ${toast.title}`, {
         body: toast.body,
         icon: '/icon-192.png',
         tag: item.id,
@@ -106,9 +106,9 @@ export function NotificationToastContainer() {
           </div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
-            {/* AgriNova label */}
+            {/* Cropify label */}
             <p style={{ fontSize: 9, fontWeight: 800, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--color-primary)', margin: '0 0 1px' }}>
-              AgriNova
+              Cropify
             </p>
             <p style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text)', margin: 0, lineHeight: 1.3 }}>
               {t.title}

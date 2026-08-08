@@ -30,7 +30,7 @@ const serwist = new Serwist({
     {
       matcher: ({ request }) => request.headers.get('RSC') === '1',
       handler: new StaleWhileRevalidate({
-        cacheName: 'agrinova-rsc',
+        cacheName: 'cropify-rsc',
         plugins: [new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 300 })],
       }),
     },
@@ -39,7 +39,7 @@ const serwist = new Serwist({
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/weather'),
       handler: new StaleWhileRevalidate({
-        cacheName: 'agrinova-weather',
+        cacheName: 'cropify-weather',
         plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 1800 })],
       }),
     },
@@ -50,7 +50,7 @@ const serwist = new Serwist({
         url.pathname.startsWith('/api/cash-crop-prices')
       ),
       handler: new StaleWhileRevalidate({
-        cacheName: 'agrinova-prices',
+        cacheName: 'cropify-prices',
         plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 300 })],
       }),
     },
@@ -63,7 +63,7 @@ const serwist = new Serwist({
         url.pathname.startsWith('/api/planting')
       ),
       handler: new NetworkFirst({
-        cacheName: 'agrinova-farmer',
+        cacheName: 'cropify-farmer',
         networkTimeoutSeconds: 5,
         plugins: [new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 86400 })],
       }),
@@ -73,14 +73,14 @@ const serwist = new Serwist({
     {
       matcher: ({ request }) => request.destination === 'image',
       handler: new CacheFirst({
-        cacheName: 'agrinova-images',
+        cacheName: 'cropify-images',
         plugins: [new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 2592000 })],
       }),
     },
     {
       matcher: ({ url }) => url.origin === 'https://fonts.googleapis.com',
       handler: new CacheFirst({
-        cacheName: 'agrinova-fonts',
+        cacheName: 'cropify-fonts',
         plugins: [new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 31536000 })],
       }),
     },
@@ -90,7 +90,7 @@ const serwist = new Serwist({
     {
       matcher: ({ request }) => request.mode === 'navigate',
       handler: new NetworkFirst({
-        cacheName: 'agrinova-pages',
+        cacheName: 'cropify-pages',
         networkTimeoutSeconds: 3,
         plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 86400 })],
       }),
@@ -110,7 +110,7 @@ self.addEventListener('push', (event: PushEvent) => {
   let payload: { title?: string; body?: string; url?: string; tag?: string } = {};
   try { payload = event.data.json(); } catch { payload = { body: event.data.text() }; }
 
-  const title = payload.title ?? 'AgriNova';
+  const title = payload.title ?? 'Cropify';
   event.waitUntil(
     self.registration.showNotification(title, {
       body: payload.body ?? '',
@@ -122,7 +122,7 @@ self.addEventListener('push', (event: PushEvent) => {
   );
 });
 
-// Focus an already-open AgriNova tab if one exists and navigate it,
+// Focus an already-open Cropify tab if one exists and navigate it,
 // otherwise open a new one — standard "tap the notification" behavior.
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();

@@ -1,15 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#1E8A46"/>
+      <stop offset="0" stop-color="#22A35C"/>
       <stop offset="1" stop-color="#0B4020"/>
     </linearGradient>
   </defs>
   <rect width="256" height="256" rx="56" fill="url(#bg)"/>
 
-  <!-- A checkmark that opens into a leaf: the short stroke reads as
-       "confirmed" (a receipt, an escrow release); it doesn't stop there,
-       it grows into a leaf blade — growth and guarantee, one line. -->
-  <path d="M66,132 L112,176" stroke="#F6EFDD" stroke-width="30" stroke-linecap="round"/>
-  <path d="M112,176 Q115,87 202,68 Q171,134 112,176 Z" fill="#F6EFDD"/>
+  <!-- Rising sun -->
+  <path d="M62,192 A66,66 0 0 1 194,192 Z" fill="#FFA726"/>
+
+  <!-- Leaf sweeping up out of the sunrise -->
+  <path d="M96,182 Q88,104 202,66 Q166,152 96,182 Z" fill="#F6EFDD"/>
+  <path d="M110,168 Q140,120 190,80" stroke="#0B4020" stroke-width="4" stroke-linecap="round" opacity="0.25"/>
 </svg>

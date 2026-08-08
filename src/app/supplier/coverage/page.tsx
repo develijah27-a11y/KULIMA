@@ -52,7 +52,7 @@ export default async function SupplierCoveragePage() {
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
         <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}` }}>
           <p className="text-sm font-bold" style={{ color: C.text }}>All Uganda Districts</p>
-          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Farmers from these districts are active on AgriNova</p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>Farmers from these districts are active on Cropify</p>
         </div>
         <div style={{ padding: '16px 20px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {DISTRICTS.map(d => (

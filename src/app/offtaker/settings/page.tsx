@@ -44,7 +44,7 @@ function SignOutInline() {
       </span>
       <div style={{ flex: 1 }}>
         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-danger)', marginBottom: 1 }}>Sign Out</p>
-        <p style={{ fontSize: 12, color: C.muted }}>Log out of your AgriNova account</p>
+        <p style={{ fontSize: 12, color: C.muted }}>Log out of your Cropify account</p>
       </div>
       <span style={{ color: C.muted, fontSize: 16 }}>›</span>
     </button>

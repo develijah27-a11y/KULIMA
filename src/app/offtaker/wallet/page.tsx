@@ -39,7 +39,7 @@ export default async function OfftakerWalletPage() {
     <div className="max-w-xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Wallet</h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Contract escrow and payments — AgriNova Pay</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>Contract escrow and payments — Cropify Pay</p>
       </div>
 
       <div style={{ background: 'linear-gradient(135deg, #0C1C35 0%, #1e3a5f 100%)', borderRadius: 20, padding: '24px 24px 20px', color: '#fff' }}>

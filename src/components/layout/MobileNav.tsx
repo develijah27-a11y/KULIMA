@@ -40,7 +40,7 @@ export function MobileNav({ navItems }: { navItems: NavItem[] }) {
   );
 
   const openSidebar = useCallback(() => {
-    window.dispatchEvent(new CustomEvent('agrinova:menu-open'));
+    window.dispatchEvent(new CustomEvent('cropify:menu-open'));
   }, []);
 
   return (

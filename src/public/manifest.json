@@ -1,6 +1,6 @@
 {
-  "name": "AgriNova - Farm Intelligence",
-  "short_name": "AgriNova",
+  "name": "Cropify - Farm Intelligence",
+  "short_name": "Cropify",
   "description": "Weather, market prices, and crop buyers for Uganda farmers",
   "start_url": "/dashboard",
   "display": "standalone",

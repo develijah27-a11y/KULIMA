@@ -113,7 +113,7 @@ const DASHBOARD_ROOTS = [
   '/offtaker/dashboard', '/groups/dashboard',
 ];
 
-const COLLAPSED_KEY = 'agrinova-sidebar-collapsed';
+const COLLAPSED_KEY = 'cropify-sidebar-collapsed';
 
 function getInitialCollapsed(): boolean {
   if (typeof window === 'undefined') return false;
@@ -197,7 +197,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
               whiteSpace: 'nowrap', overflow: 'hidden',
             }}
           >
-            AgriNova
+            Cropify
           </span>
         )}
       </div>

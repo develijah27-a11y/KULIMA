@@ -143,7 +143,7 @@ async function fetchFromWorldBank(
   }
 }
 
-// ── AgriNova's own farmers (real transacted prices) ────────────────────────
+// ── Cropify's own farmers (real transacted prices) ────────────────────────
 // The most locally-relevant price signal isn't a bulletin or a world-market
 // quote — it's what buyers on this platform actually paid Ugandan farmers
 // this week. Aggregates completed orders (real money changed hands, not
@@ -169,9 +169,9 @@ async function insertOwnFarmerPrices(supabase: ReturnType<typeof createServiceRo
     return {
       crop_type,
       price_per_kg: avg,
-      market_name: 'AgriNova Farmers (Actual Sales)',
+      market_name: 'Cropify Farmers (Actual Sales)',
       district: district === 'National' ? null : district,
-      source: 'agrinova-farmers',
+      source: 'cropify-farmers',
       recorded_at: new Date().toISOString(),
     };
   });
@@ -242,8 +242,8 @@ export async function GET(req: Request) {
   }
 
   const ownFarmers = await insertOwnFarmerPrices(supabase);
-  if (ownFarmers.inserted > 0) inserted.push(`agrinova-farmers: ${ownFarmers.inserted} crop/district pairs`);
-  if (ownFarmers.error) errors.push(`agrinova-farmers: ${ownFarmers.error}`);
+  if (ownFarmers.inserted > 0) inserted.push(`cropify-farmers: ${ownFarmers.inserted} crop/district pairs`);
+  if (ownFarmers.error) errors.push(`cropify-farmers: ${ownFarmers.error}`);
 
   return NextResponse.json({
     success: true,

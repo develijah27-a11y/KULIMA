@@ -11,7 +11,7 @@ interface Props {
 
 // Simple PIN stored as a hex digest in localStorage.
 // This is a UX lock, not a cryptographic one — the real auth is the JWT.
-const PIN_KEY = 'agrinova_wpinhash';
+const PIN_KEY = 'cropify_wpinhash';
 
 async function sha256hex(text: string): Promise<string> {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));

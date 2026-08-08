@@ -4,7 +4,7 @@ export type VerificationStatus = 'pending' | 'approved' | 'rejected';
 export const BADGE_CONFIG = {
   none:  { label: 'Not Verified',    color: '#B45309', bg: '#FEF3C7', border: '#F59E0B', description: 'Verify your phone number to get started' },
   grey:  { label: 'Phone Verified',  color: '#6B7280', bg: '#F3F4F6', border: '#E5E7EB', description: 'Phone number confirmed on signup' },
-  green: { label: 'ID Verified',     color: '#059669', bg: '#D1FAE5', border: '#A7F3D0', description: 'National ID verified by AgriNova' },
+  green: { label: 'ID Verified',     color: '#059669', bg: '#D1FAE5', border: '#A7F3D0', description: 'National ID verified by Cropify' },
   blue:  { label: 'KYC Verified',    color: '#0284C7', bg: 'var(--color-sky-bg)', border: '#BFDBFE', description: 'Full identity and business verified' },
   gold:  { label: 'Enterprise',      color: '#D97706', bg: '#FEF3C7', border: '#FDE68A', description: 'Enterprise-grade verification complete' },
 } as const;
@@ -100,7 +100,7 @@ export const LEVEL_DETAILS: Record<'green' | 'blue' | 'gold', LevelDetail> = {
 const ROLE_LEVEL_DETAILS: Partial<Record<string, Record<'green' | 'blue' | 'gold', Omit<LevelDetail, 'time'>>>> = {
   farmer: {
     green: { title: 'Verified Farmer', description: 'Confirm your identity with your National ID.', benefits: ['Green badge on your listings', 'Buyers see you first', 'Higher search ranking'] },
-    blue:  { title: 'Trusted Seller',  description: 'Add a selfie so buyers know the ID is really you.', benefits: ['Escrow-protected sales', 'Eligible for AgriNova loans', 'Access to bulk & export buyers'] },
+    blue:  { title: 'Trusted Seller',  description: 'Add a selfie so buyers know the ID is really you.', benefits: ['Escrow-protected sales', 'Eligible for Cropify loans', 'Access to bulk & export buyers'] },
     gold:  { title: 'Enterprise Farmer', description: 'For cooperatives and large-scale farming operations.', benefits: ['Gold badge', 'Priority payouts', 'Dedicated account manager'] },
   },
   buyer: {

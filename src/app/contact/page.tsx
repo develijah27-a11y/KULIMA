@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { LegalPage } from '@/components/legal/LegalPage';
 import { Mail, Clock, ShieldAlert, HelpCircle } from 'lucide-react';
 
-export const metadata: Metadata = { title: 'Contact & Support — AgriNova' };
+export const metadata: Metadata = { title: 'Contact & Support — Cropify' };
 
 const GREEN = '#4ADE80';
 const CARD  = '#0A1C10';
@@ -35,7 +35,7 @@ export default function ContactPage() {
       <h2>What to include</h2>
       <p>To help us resolve your issue quickly, please include:</p>
       <ul>
-        <li>The phone number or email your AgriNova account is registered with.</li>
+        <li>The phone number or email your Cropify account is registered with.</li>
         <li>Your role (farmer, buyer, transporter, supplier, pathologist, offtaker, or admin).</li>
         <li>If it's about an order, delivery, or payment — the order/delivery ID if you have it (visible on the order/delivery detail screen).</li>
         <li>A short description of what happened, and what you expected to happen instead.</li>
@@ -47,7 +47,7 @@ export default function ContactPage() {
         <p style={{ margin: 0 }}>
           If you believe your account has been compromised, or notice a wallet transaction you didn't
           make, email us immediately with "URGENT — Security" in the subject line. Don't share your
-          password with anyone — AgriNova staff will never ask for it.
+          password with anyone — Cropify staff will never ask for it.
         </p>
       </div>
 

@@ -17,14 +17,14 @@ const inter   = Inter({ subsets: ["latin"], weight: ["300","400","500","600","70
 const dmMono  = DM_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-mono", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "AgriNova — Smart Farm Management for Uganda",
+  title: "Cropify — Smart Farm Management for Uganda",
   description:
     "Real-time weather forecasts, market prices, crop disease detection, and buyer connections — all in one platform for Ugandan smallholder farmers.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "AgriNova",
+    title: "Cropify",
   },
 };
 
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 const themeScript = `
 (function(){
   try {
-    var saved = localStorage.getItem('agrinova-theme');
+    var saved = localStorage.getItem('cropify-theme');
     var sysDark = matchMedia('(prefers-color-scheme: dark)').matches;
     var isDark = saved ? saved === 'dark' : sysDark;
     document.documentElement.classList.toggle('dark', isDark);
@@ -72,14 +72,14 @@ export default function RootLayout({
       <head>
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* ?v=3 cache-busts the AgriNova rebrand icons — these paths aren't
+        {/* ?v=5 cache-busts the Cropify icon redesign — these paths aren't
             content-hashed, and the old files were served with a 1-year
             immutable Cache-Control, so browsers/CDN need a new URL to notice
             the change. Bump this version any time icon.svg's content changes. */}
-        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=3" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=3" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=3" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=3" />
+        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=5" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=5" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=5" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=5" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
@@ -107,17 +107,18 @@ export default function RootLayout({
           <svg className="app-splash-mark" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="splashBg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#1E8A46" />
+                <stop offset="0" stopColor="#22A35C" />
                 <stop offset="1" stopColor="#0B4020" />
               </linearGradient>
             </defs>
             <rect width="256" height="256" rx="57" fill="url(#splashBg)" />
-            {/* Checkmark that opens into a leaf — a confirmation stroke
-                (escrow release) that grows into a leaf blade mid-line. */}
-            <path d="M66,132 L112,176" stroke="#F6EFDD" strokeWidth="30" strokeLinecap="round" />
-            <path d="M112,176 Q115,87 202,68 Q171,134 112,176 Z" fill="#F6EFDD" />
+            {/* A "C" ring opening onto a sprouting seed — the initial and
+                the act of growth it stands for, in one mark. */}
+            <path d="M182.07,165.86 A66,66 0 1 1 182.07,90.14" stroke="#F6EFDD" strokeWidth="34" strokeLinecap="round" />
+            <circle cx="187" cy="128" r="16" fill="#FFA726" />
+            <path d="M187,110 Q174,92 187,74 Q200,92 187,110 Z" fill="#F6EFDD" />
           </svg>
-          <span className="app-splash-word">AgriNova</span>
+          <span className="app-splash-word">Cropify</span>
           <span className="app-splash-tagline">Smart Farm Management</span>
           <div className="app-splash-dots"><span /><span /><span /></div>
         </div>

@@ -57,7 +57,7 @@ async function ensurePushSubscription() {
     // switch, every hard refresh — and re-POSTing an unchanged subscription
     // re-triggers a DB upsert for nothing. Skip it once this exact endpoint
     // is already known-saved for this browser session.
-    const syncedKey = 'agrinova-push-synced';
+    const syncedKey = 'cropify-push-synced';
     if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(syncedKey) === sub.endpoint) return;
     await fetch('/api/push/subscribe', {
       method: 'POST',

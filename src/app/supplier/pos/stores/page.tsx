@@ -23,7 +23,7 @@ export default async function SupplierPosStoresPage() {
         </div>
         <h1 style={{ fontSize: 18, fontWeight: 900, color: 'var(--d-text)', margin: '0 0 8px' }}>Multiple branches need Enterprise</h1>
         <p style={{ fontSize: 13.5, color: 'var(--d-muted)', margin: '0 0 20px', lineHeight: 1.6 }}>
-          Run more than one shop from a single AgriNova account once you're on the Enterprise plan — talk to us to set it up.
+          Run more than one shop from a single Cropify account once you're on the Enterprise plan — talk to us to set it up.
         </p>
         <Link href="/supplier/premium" style={{ display: 'inline-flex', padding: '11px 22px', borderRadius: 11, background: 'var(--color-purple)', color: '#fff', fontWeight: 800, fontSize: 13.5, textDecoration: 'none' }}>
           Contact sales

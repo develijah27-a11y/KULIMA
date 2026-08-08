@@ -176,7 +176,7 @@ function MemberPanel({ group, onClose }: { group: Group; onClose: () => void }) 
             </button>
           </div>
           <p style={{ margin: '6px 0 0', fontSize: 11, color: C.muted }}>
-            The person must already have an AgriNova account with that phone number.
+            The person must already have an Cropify account with that phone number.
           </p>
           {success && <div style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--color-success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Check size={12} />{success}</div>}
           {error  && <p style={{ margin: '8px 0 0', fontSize: 12, color: C.red }}>{error}</p>}

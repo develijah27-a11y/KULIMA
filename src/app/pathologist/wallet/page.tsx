@@ -37,7 +37,7 @@ export default async function PathologistWalletPage() {
     <div className="max-w-xl mx-auto space-y-5">
       <div>
         <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Wallet & Earnings</h1>
-        <p className="text-sm mt-1" style={{ color: C.muted }}>Consultation fees and payouts — AgriNova Pay</p>
+        <p className="text-sm mt-1" style={{ color: C.muted }}>Consultation fees and payouts — Cropify Pay</p>
       </div>
 
       <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 20, padding: '24px 24px 20px', color: '#fff' }}>
