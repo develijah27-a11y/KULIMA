@@ -1305,6 +1305,24 @@ input.auth-input:-webkit-autofill:active {
 }
 .landing-badge-float { animation: landingBadgeFloat 4.2s ease-in-out infinite; }
 
+/* `animation` is a shorthand — combining .landing-fade-up with .landing-float
+   or .landing-badge-float on the same element let whichever class comes
+   later in the stylesheet completely overwrite the other's `animation`
+   declaration (not layer with it), silently killing the fade-up's
+   opacity 0→1 transition. The element kept .landing-fade-up's base
+   `opacity: 0` forever with nothing left to animate it back — a
+   permanently invisible hero phone mockup and escrow badge. These
+   higher-specificity compound rules combine both animations explicitly
+   instead of relying on cascade order between two same-specificity classes. */
+.landing-fade-up.landing-float {
+  animation: landingFadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+             landingFloat 5s ease-in-out infinite;
+}
+.landing-fade-up.landing-badge-float {
+  animation: landingFadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+             landingBadgeFloat 4.2s ease-in-out infinite;
+}
+
 .landing-card-hover { transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s ease, border-color 0.22s ease; }
 .landing-card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(15,31,21,0.10); }
 
