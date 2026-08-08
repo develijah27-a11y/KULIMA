@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ScanLine, Search, Trash2, Plus, Minus, Loader2, ShoppingCart, Store } from 'lucide-react';
+import { ScanLine, Search, Trash2, Plus, Minus, Loader2, ShoppingCart, Store, Camera, ArrowLeft } from 'lucide-react';
+import { BarcodeScanner } from '@/components/ui/BarcodeScanner';
 
 interface Product {
   id: string;
@@ -58,6 +59,7 @@ export function TillClient() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [scanError, setScanError] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
   const barcodeRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -93,13 +95,9 @@ export function TillClient() {
     });
   }
 
-  // Called on form submit — a scanner types the code then sends Enter;
-  // manual entry (Enter key or tapping the field's own submit) works the
-  // same way, since this is now a plain input rather than a scan-only trap.
-  function handleBarcodeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const code = barcode.trim();
-    if (!code) return;
+  // Shared by manual entry, a hardware scanner typing + Enter, and the
+  // camera scanner's onDetected callback — one lookup path for all three.
+  function lookupAndAdd(code: string) {
     const match = products.find(p => p.barcode === code || p.sku === code);
     if (match) {
       addToCart(match);
@@ -107,9 +105,21 @@ export function TillClient() {
     } else {
       setScanError(`No product found for "${code}"`);
     }
+  }
+
+  function handleBarcodeSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const code = barcode.trim();
+    if (!code) return;
+    lookupAndAdd(code);
     setBarcode('');
     // Immediately re-focus the scanner field for the next scan
     requestAnimationFrame(() => barcodeRef.current?.focus());
+  }
+
+  function handleCameraDetected(code: string) {
+    setScannerOpen(false);
+    lookupAndAdd(code);
   }
 
   function updateQty(productId: string | null, delta: number) {
@@ -172,12 +182,26 @@ export function TillClient() {
           .pos-checkout-panel { position: static !important; }
         }
       `}</style>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div>
-          <h1 style={{ fontSize: 20, fontWeight: 900, color: C.text, letterSpacing: '-0.02em', margin: 0 }}>Point of Sale</h1>
-          <p style={{ fontSize: 12.5, color: C.muted, margin: '4px 0 0' }}>Scan a barcode or search for a product to add to the sale.</p>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div style={{ marginBottom: 18 }}>
+        <Link
+          href="/supplier/dashboard"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            fontSize: 12.5, fontWeight: 700, color: C.muted, textDecoration: 'none',
+            padding: '7px 12px 7px 8px', borderRadius: 999, border: `1.5px solid ${C.border}`,
+            background: C.card, boxShadow: C.shadow, marginBottom: 14,
+            transition: 'color 120ms ease, border-color 120ms ease',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = C.green; e.currentTarget.style.borderColor = C.green; }}
+          onMouseLeave={e => { e.currentTarget.style.color = C.muted; e.currentTarget.style.borderColor = C.border; }}
+        >
+          <ArrowLeft size={14} /> Back to dashboard
+        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, letterSpacing: '-0.02em', margin: 0 }}>Point of Sale</h1>
+            <p style={{ fontSize: 12.5, color: C.muted, margin: '4px 0 0' }}>Scan a barcode or search for a product to add to the sale.</p>
+          </div>
           {stores.length > 1 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 10px', borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.card }}>
               <Store size={14} style={{ color: C.green }} />
@@ -190,9 +214,12 @@ export function TillClient() {
               </select>
             </div>
           )}
-          <Link href="/supplier/dashboard" style={{ fontSize: 13, fontWeight: 700, color: C.muted, textDecoration: 'none' }}>Back to dashboard</Link>
         </div>
       </div>
+
+      {scannerOpen && (
+        <BarcodeScanner onDetected={handleCameraDetected} onClose={() => setScannerOpen(false)} />
+      )}
 
       <div className="pos-till-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.3fr) minmax(0,1fr)', gap: 20 }}>
         {/* Left: scan/search + cart */}
@@ -200,16 +227,28 @@ export function TillClient() {
 
           {/* Barcode scanner input */}
           <form onSubmit={handleBarcodeSubmit} style={{ background: C.card, borderRadius: 16, boxShadow: C.shadow, padding: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 8 }}>
-              Scan barcode
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, gap: 10 }}>
+              <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                Scan barcode
+              </label>
+              <button
+                type="button"
+                onClick={() => setScannerOpen(true)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999,
+                  border: 'none', background: C.green, color: '#fff', fontSize: 12, fontWeight: 800, cursor: 'pointer',
+                }}
+              >
+                <Camera size={13} /> Scan with camera
+              </button>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 14px' }}>
               <ScanLine size={18} style={{ color: C.green, flexShrink: 0 }} />
               <input
                 ref={barcodeRef}
                 value={barcode}
                 onChange={e => setBarcode(e.target.value)}
-                placeholder="Scan or enter a barcode"
+                placeholder="Scan with a hardware scanner or type a code"
                 autoComplete="off"
                 style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: C.text }}
               />

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { PLANS } from '@/lib/subscriptions/plans';
+import { AppIcon } from '@/components/ui/AppIcon';
 import {
   ArrowRight, Check, Sparkles, TrendingUp, Users, Microscope,
   Leaf, ShoppingCart, Truck, ShieldCheck, Lock, Scale,
@@ -72,9 +73,7 @@ function Nav() {
       }}>
         {/* Logo */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', flexShrink: 0 }}>
-          <div style={{ width: 33, height: 33, borderRadius: 10, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Leaf size={15} color="#fff" strokeWidth={2.5} />
-          </div>
+          <AppIcon size={33} rounded={10} />
           <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: '-0.03em', color: INK }}>Cropify</span>
         </Link>
 
@@ -740,9 +739,7 @@ function Footer() {
           {/* Brand */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: GREEN, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Leaf size={13} color="#fff" strokeWidth={2.5} />
-              </div>
+              <AppIcon size={28} rounded={8} />
               <span style={{ fontSize: 15, fontWeight: 900, color: INK, letterSpacing: '-0.025em' }}>Cropify</span>
             </div>
             <p style={{ fontSize: 13, color: INK_MUTE, lineHeight: 1.65, margin: '0 0 14px', maxWidth: 210 }}>Uganda&rsquo;s farm-to-market platform. Free for farmers, always.</p>

@@ -87,7 +87,7 @@ export default async function GroupMembersPage() {
                           background: m.farmer_id ? 'var(--color-success-bg)' : 'var(--color-surface-2)',
                           color: m.farmer_id ? 'var(--color-success)' : C.muted,
                         }}>
-                          {m.farmer_id ? 'On AgriNova' : 'Not on app'}
+                          {m.farmer_id ? 'On Cropify' : 'Not on app'}
                         </span>
                       </div>
                       <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{m.district} · Joined {new Date(m.joined_at ?? Date.now()).toLocaleDateString('en-UG', { month: 'short', year: 'numeric' })}</p>

@@ -7,6 +7,7 @@ import { X, LogOut, LayoutDashboard } from 'lucide-react';
 import { ICON_MAP } from './Sidebar';
 import type { NavItem } from './Sidebar';
 import { useLiveUnreadBadge } from './useLiveUnreadBadge';
+import { AppIcon } from '@/components/ui/AppIcon';
 
 interface Props {
   navItems: NavItem[];
@@ -78,7 +79,7 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
         {/* ── Header ── */}
         <div className="cropify-drawer-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div className="cropify-drawer-logo-mark">A</div>
+            <AppIcon size={28} rounded={8} />
             <span className="cropify-drawer-logo-text">Cropify</span>
           </div>
           <button

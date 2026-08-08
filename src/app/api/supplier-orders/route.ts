@@ -130,7 +130,7 @@ export async function POST(req: Request) {
   if (user.email) {
     await sendEmail(
       user.email,
-      'Your AgriNova purchase receipt',
+      'Your Cropify purchase receipt',
       purchaseReceiptEmail({
         buyerName:   (profile as any).full_name ?? 'there',
         dealerName:  (supplierProfile as any)?.business_name || (supplierProfile as any)?.full_name || 'Agro Dealer',
@@ -259,7 +259,7 @@ export async function PATCH(req: Request) {
         ]);
         await sendEmail(
           user.email,
-          'Your AgriNova purchase receipt',
+          'Your Cropify purchase receipt',
           purchaseReceiptEmail({
             buyerName:   (buyerProfile as any)?.full_name ?? 'there',
             dealerName:  (dealerProfile as any)?.business_name || (dealerProfile as any)?.full_name || 'Agro Dealer',

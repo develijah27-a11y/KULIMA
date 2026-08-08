@@ -112,7 +112,7 @@ function SignInContent() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Sign in to your AgriNova account"
+      subtitle="Sign in to your Cropify account"
       footer={
         <span>
           Don&apos;t have an account?{' '}

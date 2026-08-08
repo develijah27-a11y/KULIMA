@@ -101,7 +101,7 @@ export async function POST(req: Request) {
     const payout = await nylonpay.makePayout({
       amount,
       currency: 'UGX',
-      description: 'AgriNova Pay withdrawal',
+      description: 'Cropify Pay withdrawal',
       customer: { name: user.email ?? 'Kulima user', phoneNumber: normalizedPhone },
       destination: { accountHolderName: user.email ?? 'Kulima user', accountNumber: normalizedPhone },
     });

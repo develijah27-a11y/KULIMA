@@ -1,8 +1,9 @@
 ﻿'use client';
 
 import { useEffect, useState } from 'react';
-import { Leaf, FlaskConical, Wrench, Settings, Package, Store } from 'lucide-react';
+import { Leaf, FlaskConical, Wrench, Settings, Package, Store, Camera } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/CameraCapture';
+import { BarcodeScanner } from '@/components/ui/BarcodeScanner';
 
 function getCatIcon(category: string, size = 22) {
   const cat = category?.toLowerCase();
@@ -84,11 +85,17 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
   // that also silently ate all manual typing, making the field look
   // broken — not worth it for an optional field like this.)
   const [barcodeDraft, setBarcodeDraft] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
   function handleBarcodeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== 'Enter') return;
     e.preventDefault();
     const code = barcodeDraft.trim();
     if (code) setModal(m => ({ ...m!, barcode: code }));
+    setBarcodeDraft('');
+  }
+  function handleCameraDetected(code: string) {
+    setScannerOpen(false);
+    setModal(m => ({ ...m!, barcode: code }));
     setBarcodeDraft('');
   }
 
@@ -328,17 +335,33 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                     </button>
                   </div>
                 ) : (
-                  <input
-                    type="text"
-                    value={barcodeDraft}
-                    onChange={e => setBarcodeDraft(e.target.value)}
-                    onKeyDown={handleBarcodeKeyDown}
-                    placeholder="Scan or enter a barcode"
-                    autoComplete="off"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13, boxSizing: 'border-box' }}
-                  />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text"
+                      value={barcodeDraft}
+                      onChange={e => setBarcodeDraft(e.target.value)}
+                      onKeyDown={handleBarcodeKeyDown}
+                      placeholder="Scan with a hardware scanner or type a code"
+                      autoComplete="off"
+                      style={{ flex: 1, minWidth: 0, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13, boxSizing: 'border-box' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setScannerOpen(true)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6, padding: '0 14px', borderRadius: 10,
+                        border: 'none', background: C.green, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', flexShrink: 0,
+                      }}
+                    >
+                      <Camera size={14} /> Scan
+                    </button>
+                  </div>
                 )}
               </div>
+
+              {scannerOpen && (
+                <BarcodeScanner onDetected={handleCameraDetected} onClose={() => setScannerOpen(false)} />
+              )}
 
               {stores.length > 1 && (
                 <div>

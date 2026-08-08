@@ -128,11 +128,11 @@ export function AuthForm({ mode }: AuthFormProps) {
         // set-session failed — log it but don't block navigation.
         // The browser-written cookies from signInWithPassword are still
         // present and the middleware will read them on the next request.
-        console.warn('[AgriNova] set-session returned', res.status, '— navigating with browser cookies');
+        console.warn('[Cropify] set-session returned', res.status, '— navigating with browser cookies');
       }
     } catch (err) {
       // Network error — same fallback: browser cookies are present.
-      console.warn('[AgriNova] set-session fetch failed:', err);
+      console.warn('[Cropify] set-session fetch failed:', err);
     }
 
     // Fire verification nudge in the background — don't block navigation.
@@ -238,7 +238,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       const lower = msg.toLowerCase();
 
       if (err instanceof TypeError || lower.includes('failed to fetch') || lower.includes('networkerror')) {
-        console.error('[AgriNova Auth] Connection error:', err);
+        console.error('[Cropify Auth] Connection error:', err);
         setError('No connection — please check your internet and try again.');
       } else if (lower.includes('invalid login credentials') || lower.includes('invalid credentials')) {
         setError('Wrong email or password. Please check and try again.');
@@ -254,7 +254,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       } else if (lower.includes('invalid email') || lower.includes('unable to validate email')) {
         setError("That email address doesn't look right. Please check it.");
       } else {
-        console.error('[AgriNova Auth] Unexpected error:', mode, err);
+        console.error('[Cropify Auth] Unexpected error:', mode, err);
         setError(msg);
       }
 
@@ -593,7 +593,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       {mode === 'signup' && (
         <p style={{ fontSize: 11.5, color: 'rgba(240,253,244,0.45)', textAlign: 'center', marginTop: 8, lineHeight: 1.5 }}>
-          By creating an account, you agree to AgriNova&rsquo;s{' '}
+          By creating an account, you agree to Cropify&rsquo;s{' '}
           <Link href="/terms" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>Terms &amp; Conditions</Link>
           {' '}and{' '}
           <Link href="/privacy" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>Privacy Policy</Link>.

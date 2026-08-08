@@ -25,7 +25,7 @@ export async function GET(req: Request) {
 }
 
 // Adding a member here does double duty:
-//  - If the phone number matches a real registered AgriNova account, they're
+//  - If the phone number matches a real registered Cropify account, they're
 //    linked as a genuine group member (farmer_group_members) — enforcing
 //    same-district (a farmer may belong to more than one group, as long as
 //    each is local to them) — and get notified.
@@ -92,7 +92,7 @@ export async function POST(req: Request) {
             role: 'farmer',
             type: 'group',
             title: 'You have been added to a group',
-            body: `${adminName} added you to "${groupName}" on AgriNova. Open the app to see your group members and activities.`,
+            body: `${adminName} added you to "${groupName}" on Cropify. Open the app to see your group members and activities.`,
             url: '/farmer/groups',
           });
         }

@@ -15,6 +15,7 @@ import {
   ChevronLeft, ChevronRight, Activity, Headphones, Crown,
 } from 'lucide-react';
 import { useLiveUnreadBadge } from './useLiveUnreadBadge';
+import { AppIcon } from '@/components/ui/AppIcon';
 
 type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string; style?: React.CSSProperties }>;
 
@@ -178,17 +179,7 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
           justifyContent: collapsed ? 'center' : 'flex-start',
         }}
       >
-        <div
-          style={{
-            width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-            background: 'rgba(255,255,255,0.16)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 13, fontWeight: 900, color: 'var(--color-sidebar-text)',
-            fontFamily: 'var(--font-display)',
-          }}
-        >
-          A
-        </div>
+        <AppIcon size={28} rounded={8} />
         {!collapsed && (
           <span
             style={{

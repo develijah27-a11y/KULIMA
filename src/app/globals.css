@@ -9,25 +9,25 @@
 /* ─── Light mode ─── */
 :root {
   /* ── Page backgrounds ── */
-  --color-bg:            #F8FAFC;   /* AgriNova background light */
+  --color-bg:            #F8FAFC;   /* Cropify background light */
   --color-surface:       #FFFFFF;   /* pure white cards */
   --color-surface-2:     #EAF6EE;   /* faint green tint for hover / alt rows */
   --color-surface-3:     #DEF0E3;   /* slightly deeper for secondary surfaces */
 
-  /* ── Primary — AgriNova Green ──
+  /* ── Primary — Cropify Green ──
      Used for: primary buttons, active nav, checkmarks, positive trends */
-  --color-primary:       #166B3A;   /* AgriNova Primary Green */
-  --color-primary-hover: #2FA34F;   /* AgriNova Secondary Green */
-  --color-primary-muted: #7CC576;   /* AgriNova Fresh Green */
+  --color-primary:       #166B3A;   /* Cropify Primary Green */
+  --color-primary-hover: #2FA34F;   /* Cropify Secondary Green */
+  --color-primary-muted: #7CC576;   /* Cropify Fresh Green */
   --color-primary-bg:    #EAF6EE;
   --color-primary-dark:  #0F4C2A;
 
   /* ── Harvest — Orange ──
      Used for: prices, money, wallet, earnings, crop yields */
-  --color-harvest:       #FFA726;   /* AgriNova Harvest Orange */
+  --color-harvest:       #FFA726;   /* Cropify Harvest Orange */
   --color-harvest-hover: #FB8C00;
   --color-harvest-muted: #FFCC80;
-  --color-harvest-bg:    #FFF7E6;   /* AgriNova Warm Cream */
+  --color-harvest-bg:    #FFF7E6;   /* Cropify Warm Cream */
 
   /* ── Sky — Blue ──
      Used for: weather, water, rain, forecast, logistics */
@@ -70,7 +70,7 @@
 
   /* ── Text ── */
   --color-text:          #111827;   /* near-black for maximum legibility */
-  --color-text-muted:    #64748B;   /* AgriNova Slate Gray */
+  --color-text-muted:    #64748B;   /* Cropify Slate Gray */
   --color-text-hint:     #9CA3AF;   /* light gray for placeholders */
   --color-text-on-dark:  #F9FAFB;   /* white text on dark backgrounds */
 
@@ -80,22 +80,22 @@
   --color-border-strong: rgba(0, 0, 0, 0.18);
 
   /* ── Semantic: Success (green) ── */
-  --color-success:       #22C55E;   /* AgriNova Success */
+  --color-success:       #22C55E;   /* Cropify Success */
   --color-success-bg:    #DCFCE7;
   --color-success-border:#BBF7D0;
 
   /* ── Semantic: Warning (amber) ── */
-  --color-warning:       #F59E0B;   /* AgriNova Warning */
+  --color-warning:       #F59E0B;   /* Cropify Warning */
   --color-warning-bg:    #FEF3C7;
   --color-warning-border:#FDE68A;
 
   /* ── Semantic: Danger / Disease (red) ── */
-  --color-danger:        #EF4444;   /* AgriNova Error */
+  --color-danger:        #EF4444;   /* Cropify Error */
   --color-danger-bg:     #FEF2F2;
   --color-danger-border: #FECACA;
 
   /* ── Semantic: Info / Weather (blue) ── */
-  --color-info:          #3B82F6;   /* AgriNova Info */
+  --color-info:          #3B82F6;   /* Cropify Info */
   --color-info-bg:       #EFF6FF;
   --color-info-border:   #BFDBFE;
 
@@ -151,21 +151,21 @@
 }
 
 /* ─── Dark mode ───
-   Slate base (AgriNova Background Dark #0F172A) — not a green wash;
+   Slate base (Cropify Background Dark #0F172A) — not a green wash;
    green stays an accent only, designed for dark surfaces, not inverted. */
 .dark {
-  --color-bg:            #0F172A;   /* AgriNova background dark */
+  --color-bg:            #0F172A;   /* Cropify background dark */
   --color-surface:       #1E293B;
   --color-surface-2:     #263449;
   --color-surface-3:     #2F3F5C;
 
-  --color-primary:       #7CC576;   /* AgriNova Fresh Green — brighter for dark-surface legibility */
-  --color-primary-hover: #2FA34F;   /* AgriNova Secondary Green */
+  --color-primary:       #7CC576;   /* Cropify Fresh Green — brighter for dark-surface legibility */
+  --color-primary-hover: #2FA34F;   /* Cropify Secondary Green */
   --color-primary-muted: #1F5C34;
   --color-primary-bg:    #0F2B1C;
   --color-primary-dark:  #BBF7D0;
 
-  --color-harvest:       #FFA726;   /* AgriNova Harvest Orange — already legible on dark */
+  --color-harvest:       #FFA726;   /* Cropify Harvest Orange — already legible on dark */
   --color-harvest-hover: #FFB74D;
   --color-harvest-muted: #FB8C00;
   --color-harvest-bg:    #2A1B05;
@@ -857,7 +857,7 @@ input.auth-input:-webkit-autofill:active {
    ═══════════════════════════════════════════════════════════════════ */
 
 /* Root overlay container */
-.agrinova-drawer-root {
+.cropify-drawer-root {
   position: fixed;
   inset: 0;
   z-index: 70;
@@ -865,7 +865,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Semi-transparent backdrop with blur */
-.agrinova-drawer-backdrop {
+.cropify-drawer-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.58);
@@ -875,7 +875,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* The panel itself */
-.agrinova-drawer-panel {
+.cropify-drawer-panel {
   position: relative;
   z-index: 1;
   /* Fluid width: 85vw on tiny screens, capped at 288px on normal phones */
@@ -902,7 +902,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Header row */
-.agrinova-drawer-header {
+.cropify-drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -914,7 +914,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Logo mark (the "A" square) */
-.agrinova-drawer-logo-mark {
+.cropify-drawer-logo-mark {
   width: clamp(24px, 6.5vw, 30px);
   height: clamp(24px, 6.5vw, 30px);
   border-radius: clamp(6px, 1.8vw, 9px);
@@ -930,8 +930,8 @@ input.auth-input:-webkit-autofill:active {
   flex-shrink: 0;
 }
 
-/* "AgriNova" wordmark */
-.agrinova-drawer-logo-text {
+/* "Cropify" wordmark */
+.cropify-drawer-logo-text {
   font-size: clamp(14px, 4.2vw, 17px);
   font-weight: 800;
   color: #F0FDF4;
@@ -940,7 +940,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Close button */
-.agrinova-drawer-close {
+.cropify-drawer-close {
   width: clamp(30px, 8vw, 34px);
   height: clamp(30px, 8vw, 34px);
   border-radius: 8px;
@@ -956,18 +956,18 @@ input.auth-input:-webkit-autofill:active {
   min-height: unset; /* override global button min-height */
   min-width: unset;
 }
-.agrinova-drawer-close:active {
+.cropify-drawer-close:active {
   background: rgba(255, 255, 255, 0.18);
   transform: scale(0.92);
 }
 
 /* Role sub-label row */
-.agrinova-drawer-role {
+.cropify-drawer-role {
   padding: clamp(5px, 1.4vh, 8px) clamp(12px, 4vw, 18px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
 }
-.agrinova-drawer-role-text {
+.cropify-drawer-role-text {
   font-size: clamp(9px, 2.4vw, 10px);
   font-weight: 800;
   color: rgba(240, 253, 244, 0.50);
@@ -977,7 +977,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Nav scroll area */
-.agrinova-drawer-nav {
+.cropify-drawer-nav {
   flex: 1;
   padding: clamp(8px, 2vh, 12px) clamp(8px, 2.5vw, 12px);
   overflow-y: auto;
@@ -985,16 +985,16 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Section divider + label */
-.agrinova-drawer-section-wrap {
+.cropify-drawer-section-wrap {
   margin-top: clamp(10px, 2.5vh, 16px);
   margin-bottom: clamp(4px, 1vh, 6px);
 }
-.agrinova-drawer-divider {
+.cropify-drawer-divider {
   height: 1px;
   background: rgba(255, 255, 255, 0.09);
   margin-bottom: clamp(5px, 1.2vh, 7px);
 }
-.agrinova-drawer-section-label {
+.cropify-drawer-section-label {
   font-size: clamp(8px, 2.1vw, 9px);
   font-weight: 800;
   color: rgba(240, 253, 244, 0.38);
@@ -1005,7 +1005,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Nav link row */
-.agrinova-drawer-link {
+.cropify-drawer-link {
   display: flex;
   align-items: center;
   gap: clamp(9px, 2.8vw, 13px);
@@ -1022,20 +1022,20 @@ input.auth-input:-webkit-autofill:active {
   transition: background 90ms ease, color 90ms ease;
   position: relative;
 }
-.agrinova-drawer-link--active {
+.cropify-drawer-link--active {
   background: rgba(124, 197, 118, 0.20);
   color: #F0FDF4;
   border-left-color: #4ADE80;
   /* Subtle green glow on active item — visible even on poor panels */
   box-shadow: inset 0 0 0 1px rgba(124, 197, 118, 0.12);
 }
-.agrinova-drawer-link:active {
+.cropify-drawer-link:active {
   background: rgba(255, 255, 255, 0.10);
   transform: scale(0.98) translateZ(0);
 }
 
 /* Link label */
-.agrinova-drawer-link-label {
+.cropify-drawer-link-label {
   font-size: clamp(13px, 3.7vw, 14.5px);
   font-weight: 700;
   flex: 1;
@@ -1049,7 +1049,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Notification badge inside drawer */
-.agrinova-drawer-badge {
+.cropify-drawer-badge {
   font-size: clamp(9px, 2.3vw, 10px);
   font-weight: 800;
   padding: clamp(2px, 0.5vh, 3px) clamp(5px, 1.5vw, 8px);
@@ -1062,7 +1062,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Profile footer */
-.agrinova-drawer-footer {
+.cropify-drawer-footer {
   padding: clamp(10px, 2.2vh, 15px) clamp(12px, 4vw, 18px);
   border-top: 1px solid rgba(255, 255, 255, 0.10);
   display: flex;
@@ -1074,7 +1074,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Avatar circle */
-.agrinova-drawer-avatar {
+.cropify-drawer-avatar {
   width: clamp(32px, 8.5vw, 38px);
   height: clamp(32px, 8.5vw, 38px);
   border-radius: clamp(8px, 2.2vw, 11px);
@@ -1090,7 +1090,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Name */
-.agrinova-drawer-name {
+.cropify-drawer-name {
   font-size: clamp(12px, 3.4vw, 13.5px);
   font-weight: 700;
   color: rgba(240, 253, 244, 0.92);
@@ -1102,7 +1102,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Role sub-text in footer */
-.agrinova-drawer-role-sub {
+.cropify-drawer-role-sub {
   font-size: clamp(10px, 2.6vw, 11px);
   font-weight: 600;
   color: rgba(240, 253, 244, 0.45);
@@ -1111,7 +1111,7 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Sign-out button */
-.agrinova-drawer-signout {
+.cropify-drawer-signout {
   width: clamp(30px, 8vw, 36px);
   height: clamp(30px, 8vw, 36px);
   border-radius: clamp(7px, 2vw, 9px);
@@ -1127,7 +1127,7 @@ input.auth-input:-webkit-autofill:active {
   min-height: unset;
   min-width: unset;
 }
-.agrinova-drawer-signout:active {
+.cropify-drawer-signout:active {
   background: rgba(239, 68, 68, 0.20);
   color: #FCA5A5;
 }

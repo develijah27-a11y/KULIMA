@@ -113,7 +113,7 @@ export default function RoleSelectionPage() {
           className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-5 text-xs font-bold tracking-widest uppercase"
           style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.10)', color: 'var(--color-primary)' }}
         >
-          <Globe size={12} /> Welcome to AgriNova
+          <Globe size={12} /> Welcome to Cropify
         </div>
         <h1
           className="font-black mb-3"

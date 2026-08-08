@@ -139,7 +139,7 @@ export default async function TransporterPremiumPage() {
       </div>
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        {['Cancel any time — no lock-in', 'Paid via your AgriNova wallet', '100% secure — no card needed'].map(t => (
+        {['Cancel any time — no lock-in', 'Paid via your Cropify wallet', '100% secure — no card needed'].map(t => (
           <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.muted, fontWeight: 600 }}>
             <Shield size={13} style={{ color: C.green, flexShrink: 0 }} /> {t}
           </div>
