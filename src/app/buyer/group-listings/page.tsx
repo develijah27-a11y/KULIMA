@@ -28,7 +28,7 @@ export default async function GroupListingsPage({
   const district = sp.district ?? '';
 
   let query = (supabase.from as any)('group_listings')
-    .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, status, created_at, group_name')
+    .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, image_url, status, created_at, group_name')
     .eq('status', 'active')
     .order('crop_type', { ascending: true })
     .order('created_at', { ascending: false })
@@ -160,8 +160,12 @@ export default async function GroupListingsPage({
                 {/* Card header */}
                 <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${C.border}` }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-                    <div style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Leaf size={22} style={{ color: getCropColor(l.crop_type) }} />
+                    <div style={{
+                      width: 46, height: 46, borderRadius: 14, flexShrink: 0,
+                      background: l.image_url ? `center/cover url(${l.image_url})` : 'var(--color-primary-bg)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {!l.image_url && <Leaf size={22} style={{ color: getCropColor(l.crop_type) }} />}
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>

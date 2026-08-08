@@ -3,6 +3,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { CameraCapture } from '@/components/ui/CameraCapture';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -121,6 +122,7 @@ export default function CreateGroupListingPage() {
   const [priceTouched, setPriceTouched] = useState(false);
   const [district, setDistrict] = useState('');
   const [notes, setNotes] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -180,6 +182,7 @@ export default function CreateGroupListingPage() {
           asking_price: Number(askingPrice),
           district,
           notes: notes || null,
+          image_url: imageUrl || null,
           member_count: contribArray.length,
           contributions: contribArray,
         }),
@@ -222,6 +225,13 @@ export default function CreateGroupListingPage() {
               {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
+        </div>
+
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
+            Photo of the produce <span style={{ fontWeight: 400, color: C.muted }}>(recommended — buyers trust listings with a real photo)</span>
+          </label>
+          <CameraCapture onCaptured={setImageUrl} onCancel={() => {}} label="Take a photo of the produce" />
         </div>
 
         <div>

@@ -16,7 +16,7 @@ export default async function GroupListingsPage() {
   if (!user) redirect('/auth/signin');
 
   const { data: listings } = await (supabase.from as any)('group_listings')
-    .select('id, crop_type, total_quantity_kg, asking_price, district, status, created_at, member_count, notes')
+    .select('id, crop_type, total_quantity_kg, asking_price, district, status, created_at, member_count, notes, image_url')
     .eq('admin_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50);
@@ -54,8 +54,12 @@ export default async function GroupListingsPage() {
               <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
                 {active.map((l: any, i: number) => (
                   <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px', borderBottom: i < active.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                    <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Leaf size={20} style={{ color: getCropColor(l.crop_type) }} />
+                    <div style={{
+                      width: 42, height: 42, borderRadius: 12, flexShrink: 0,
+                      background: l.image_url ? `center/cover url(${l.image_url})` : 'var(--color-primary-bg)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      {!l.image_url && <Leaf size={20} style={{ color: getCropColor(l.crop_type) }} />}
                     </div>
                     <div style={{ flex: 1 }}>
                       <p style={{ fontSize: 14, fontWeight: 700, color: C.text, margin: '0 0 2px', textTransform: 'capitalize' }}>{l.crop_type}</p>

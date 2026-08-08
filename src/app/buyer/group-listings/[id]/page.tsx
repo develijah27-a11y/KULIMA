@@ -24,7 +24,7 @@ export default async function GroupListingDetailPage({
 
   const [listingRes, pricesRes, existingOrderRes] = await Promise.all([
     (supabase.from as any)('group_listings')
-      .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, status, created_at, group_name')
+      .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, image_url, status, created_at, group_name')
       .eq('id', id)
       .single(),
     supabase.from('market_prices').select('crop_type, price_per_kg').order('recorded_at', { ascending: false }).limit(50),
@@ -55,11 +55,18 @@ export default async function GroupListingDetailPage({
 
       {/* Hero card */}
       <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, overflow: 'hidden' }}>
+        {listing.image_url && (
+          <div style={{ height: 180, backgroundImage: `url(${listing.image_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+        )}
         {/* Header */}
         <div style={{ padding: '22px 24px 18px', background: 'var(--color-primary-bg)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 16, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.08)', color: cropColor }}>
-              <Leaf size={28} />
+            <div style={{
+              width: 56, height: 56, borderRadius: 16, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+              background: listing.image_url ? `center/cover url(${listing.image_url})` : '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: cropColor,
+            }}>
+              {!listing.image_url && <Leaf size={28} />}
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

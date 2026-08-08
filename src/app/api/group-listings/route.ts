@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { crop_type, total_quantity_kg, asking_price, district, notes, member_count, contributions } = body;
+  const { crop_type, total_quantity_kg, asking_price, district, notes, image_url, member_count, contributions } = body;
 
   if (!crop_type || !total_quantity_kg || !asking_price || !district) {
     return NextResponse.json({ error: 'crop_type, total_quantity_kg, asking_price, and district are required' }, { status: 400 });
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
     asking_price:      +asking_price,
     district,
     notes:             notes ?? null,
+    image_url:         image_url ?? null,
     member_count:      member_count ?? 1,
     status:            'active',
     group_name:        myGroup?.name ?? null,
@@ -76,7 +77,7 @@ export async function GET(req: Request) {
   // Single listing detail
   if (id) {
     const { data, error } = await (supabase.from as any)('group_listings')
-      .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, status, created_at')
+      .select('id, admin_id, crop_type, total_quantity_kg, asking_price, district, member_count, notes, image_url, status, created_at')
       .eq('id', id)
       .eq('status', 'active')
       .single();
