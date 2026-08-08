@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
   if (!ready) {
     return (
       <AuthLayout title="Set a new password">
-        <div style={{ textAlign: 'center', padding: '32px 0', color: 'rgba(240,253,244,0.55)', fontSize: 14 }}>
+        <div style={{ textAlign: 'center', padding: '32px 0', color: 'rgba(240,253,244,0.75)', fontSize: 14 }}>
           Verifying your reset link…
         </div>
       </AuthLayout>

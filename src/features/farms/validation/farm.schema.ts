@@ -61,26 +61,42 @@ const limitSchema = z
   .optional()
   .default(20);
 
+// district/crop_types/description/boundary use the same snake_case as the
+// `farms` table columns (Database['public']['Tables']['farms']) rather than
+// camelCase like the fields above — this schema previously only declared
+// name/location/sizeHectares/farmType, so Zod's default "strip unknown
+// keys" behavior silently discarded every one of these fields from every
+// farm ever created or edited through this form: crop types, notes, and
+// the entire GPS-walked boundary never reached the database at all.
+const districtSchema = z.string().max(100).trim().optional();
+const cropTypesSchema = z.array(z.string()).optional();
+const descriptionSchema = z.string().max(2000).optional();
+const boundarySchema = z.any().optional(); // GeoJSON Polygon — validated by PostGIS/jsonb column, not here
+
 export const createFarmSchema = z.object({
   name: farmNameSchema,
   location: locationSchema,
+  district: districtSchema,
   sizeHectares: sizeHectaresSchema,
   farmType: farmTypeSchema,
+  cropTypes: cropTypesSchema,
+  description: descriptionSchema,
+  boundary: boundarySchema,
 });
 
 export const updateFarmSchema = z
   .object({
     name: farmNameSchema.optional(),
     location: locationSchema.optional(),
+    district: districtSchema,
     sizeHectares: sizeHectaresSchema,
     farmType: farmTypeSchema,
+    cropTypes: cropTypesSchema,
+    description: descriptionSchema,
+    boundary: boundarySchema,
   })
   .refine(
-    (data) =>
-      data.name !== undefined ||
-      data.location !== undefined ||
-      data.sizeHectares !== undefined ||
-      data.farmType !== undefined,
+    (data) => Object.values(data).some((v) => v !== undefined),
     { message: 'At least one field must be provided for update' }
   );
 

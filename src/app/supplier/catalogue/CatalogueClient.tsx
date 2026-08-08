@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Leaf, FlaskConical, Wrench, Settings, Package, Store } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/CameraCapture';
+import { BarcodeScanner } from '@/components/ui/BarcodeScanner';
 
 function getCatIcon(category: string, size = 22) {
   const cat = category?.toLowerCase();
@@ -286,7 +287,6 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                 { label: 'Low Stock Alert Below (optional, default 5)', key: 'low_stock_threshold', type: 'number', placeholder: '5' },
                 { label: 'District (optional)', key: 'district', type: 'text', placeholder: 'e.g. Kampala' },
                 { label: 'SKU (optional)', key: 'sku', type: 'text', placeholder: 'e.g. SEED-MAIZE-01' },
-                { label: 'Barcode (optional — scanned at POS checkout)', key: 'barcode', type: 'text', placeholder: 'Scan or type a barcode' },
                 { label: 'Cost Price (optional — what you paid, for profit reports)', key: 'cost_price_ugx', type: 'number', placeholder: '0' },
               ] as const).map(({ label, key, type, placeholder }) => (
                 <div key={key}>
@@ -300,6 +300,21 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                   />
                 </div>
               ))}
+
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: C.muted, display: 'block', marginBottom: 5 }}>Barcode (optional — scanned at POS checkout)</label>
+                {modal.barcode ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)' }}>
+                    <span style={{ fontSize: 13, color: 'var(--d-input-text)', fontFamily: 'monospace' }}>{modal.barcode}</span>
+                    <button type="button" onClick={() => setModal(m => ({ ...m!, barcode: '' }))}
+                      style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                      Clear
+                    </button>
+                  </div>
+                ) : (
+                  <BarcodeScanner onScanned={(code) => setModal(m => ({ ...m!, barcode: code }))} />
+                )}
+              </div>
 
               {stores.length > 1 && (
                 <div>

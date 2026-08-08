@@ -31,12 +31,21 @@ export async function PATCH(req: Request) {
 
   // With an id: mark just that notification read (scoped to the caller via
   // user_id, so one user can't mark another's notification read). Without
-  // one: mark everything unread as read, same as before.
+  // one: mark everything unread as read *for the active role only* — the
+  // client already sends { role: currentRole } (see NotificationBell's
+  // markAllRead), but it was being silently dropped here, so opening one
+  // dashboard's bell and hitting "mark all read" was clearing every other
+  // role's unread notifications too.
   let id: string | undefined;
-  try { ({ id } = await req.json()); } catch { /* no body — mark-all path */ }
+  let role: string | undefined;
+  try { ({ id, role } = await req.json()); } catch { /* no body — mark-all path */ }
 
   const query = supabase.from('notifications').update({ read: true }).eq('user_id', user.id);
-  await (id ? query.eq('id', id) : query.eq('read', false));
+  if (id) {
+    await query.eq('id', id);
+  } else {
+    await (role ? query.eq('read', false).or(`role.eq.${role},role.is.null`) : query.eq('read', false));
+  }
 
   return NextResponse.json({ success: true });
 }

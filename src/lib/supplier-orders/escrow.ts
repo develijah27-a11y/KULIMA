@@ -89,10 +89,14 @@ export async function refundEscrowForSupplierOrder(db: AdminClient, supplierOrde
   if (!escrow) return { ok: true, skipped: true };
 
   const { data: buyerWallet } = await (db.from as any)('wallets')
-    .select('id').eq('user_id', escrow.buyer_user_id).single();
+    .select('id, is_frozen').eq('user_id', escrow.buyer_user_id).single();
   if (!buyerWallet) {
     await (db.from as any)('escrow_accounts').update({ status: 'funded' }).eq('id', escrow.id);
     return { ok: false, error: 'Buyer wallet not found' };
+  }
+  if (buyerWallet.is_frozen) {
+    await (db.from as any)('escrow_accounts').update({ status: 'funded' }).eq('id', escrow.id);
+    return { ok: false, error: "Buyer's wallet is frozen. Contact support." };
   }
 
   const refundAmount = Number(escrow.amount);

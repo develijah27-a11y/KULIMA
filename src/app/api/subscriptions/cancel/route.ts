@@ -30,7 +30,7 @@ export async function POST(req: Request) {
     .eq('id', subscriptionId);
 
   await notifyUser(admin, {
-    userId: user.id, type: 'system',
+    userId: user.id, type: 'system', role: subscription.role,
     title: 'Subscription cancelled',
     body: `Your ${subscription.plan} plan will remain active until the end of your current billing period, then won't renew.`,
     data: { subscription_id: subscriptionId },

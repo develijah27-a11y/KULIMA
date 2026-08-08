@@ -251,11 +251,19 @@ export async function refundEscrowForOrder(db: AdminClient, orderId: string, can
   if (!escrow) return { ok: true, skipped: true };
 
   const { data: buyerWallet } = await (db.from as any)('wallets')
-    .select('id').eq('user_id', escrow.buyer_user_id).single();
+    .select('id, is_frozen').eq('user_id', escrow.buyer_user_id).single();
   if (!buyerWallet) {
     await (db.from as any)('escrow_accounts')
       .update({ status: cancelledStatus === 'disputed' ? 'disputed' : 'funded' }).eq('id', escrow.id);
     return { ok: false, error: 'Buyer wallet not found' };
+  }
+  if (buyerWallet.is_frozen) {
+    // Escrow was already claimed above — revert it so the refund can be
+    // retried once the wallet is unfrozen, instead of crediting a frozen
+    // wallet or silently losing the claim.
+    await (db.from as any)('escrow_accounts')
+      .update({ status: cancelledStatus === 'disputed' ? 'disputed' : 'funded' }).eq('id', escrow.id);
+    return { ok: false, error: "Buyer's wallet is frozen. Contact support." };
   }
 
   const now = new Date().toISOString();

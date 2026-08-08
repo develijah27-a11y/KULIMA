@@ -46,11 +46,14 @@ export async function POST(req: Request) {
 
   // Fetch requester's wallet
   const { data: requesterWallet } = await (admin.from as any)('wallets')
-    .select('id, balance')
+    .select('id, balance, is_frozen')
     .eq('user_id', user.id)
     .single();
 
   if (!requesterWallet) return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
+  if (requesterWallet.is_frozen) {
+    return NextResponse.json({ error: 'This wallet has been frozen. Contact support.' }, { status: 403 });
+  }
   if (Number(requesterWallet.balance) < totalFare) {
     return NextResponse.json({
       error: `Insufficient balance. Need UGX ${totalFare.toLocaleString()}, you have UGX ${Number(requesterWallet.balance).toLocaleString()}`,
@@ -59,11 +62,14 @@ export async function POST(req: Request) {
 
   // Fetch driver's wallet
   const { data: driverWallet } = await (admin.from as any)('wallets')
-    .select('id, balance')
+    .select('id, balance, is_frozen')
     .eq('user_id', delivery.transporter_id)
     .single();
 
   if (!driverWallet) return NextResponse.json({ error: 'Driver wallet not found' }, { status: 404 });
+  if (driverWallet.is_frozen) {
+    return NextResponse.json({ error: "This driver's wallet has been frozen. Contact support." }, { status: 403 });
+  }
 
   const now = new Date().toISOString();
 

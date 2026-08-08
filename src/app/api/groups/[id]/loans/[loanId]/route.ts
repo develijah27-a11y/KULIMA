@@ -45,8 +45,11 @@ export async function PATCH(req: Request, { params }: Ctx) {
         return NextResponse.json({ error: `Group wallet only has UGX ${Math.round(group.wallet_balance).toLocaleString()} — not enough to disburse UGX ${Math.round(loan.amount).toLocaleString()}` }, { status: 400 });
       }
       const { data: borrowerProfile } = await admin.from('profiles').select('user_id').eq('id', loan.borrower_id).single();
-      const { data: borrowerWallet } = await (admin.from as any)('wallets').select('id, balance').eq('user_id', (borrowerProfile as any)?.user_id).single();
+      const { data: borrowerWallet } = await (admin.from as any)('wallets').select('id, balance, is_frozen').eq('user_id', (borrowerProfile as any)?.user_id).single();
       if (!borrowerWallet) return NextResponse.json({ error: 'Borrower has no wallet to disburse to' }, { status: 400 });
+      if (borrowerWallet.is_frozen) {
+        return NextResponse.json({ error: "The borrower's wallet has been frozen. Contact support." }, { status: 403 });
+      }
 
       const now = new Date().toISOString();
       await Promise.all([
@@ -89,9 +92,12 @@ export async function PATCH(req: Request, { params }: Ctx) {
       return NextResponse.json({ error: 'Enter a valid repayment amount' }, { status: 400 });
     }
 
-    const { data: borrowerWallet } = await (admin.from as any)('wallets').select('id, balance').eq('user_id', user.id).single();
+    const { data: borrowerWallet } = await (admin.from as any)('wallets').select('id, balance, is_frozen').eq('user_id', user.id).single();
     if (!borrowerWallet || Number(borrowerWallet.balance) < +repayAmount) {
       return NextResponse.json({ error: 'Insufficient wallet balance for this repayment' }, { status: 400 });
+    }
+    if (borrowerWallet.is_frozen) {
+      return NextResponse.json({ error: 'This wallet has been frozen. Contact support.' }, { status: 403 });
     }
 
     const remaining = Number(loan.amount) - Number(loan.repaid_amount);

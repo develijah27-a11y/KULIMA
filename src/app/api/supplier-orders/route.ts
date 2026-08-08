@@ -38,6 +38,14 @@ export async function POST(req: Request) {
   const { data: supplierProfile } = await (supabase.from as any)('profiles').select('user_id, full_name, business_name').eq('id', product.supplier_id).single();
   if (!supplierProfile?.user_id) return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
 
+  // Block the purchase up front if the buyer's own wallet is frozen — the
+  // escrow-fund RPC below would otherwise happily debit a frozen wallet.
+  const { data: buyerWalletCheck } = await (supabase.from as any)('wallets')
+    .select('is_frozen').eq('user_id', user.id).single();
+  if (buyerWalletCheck?.is_frozen) {
+    return NextResponse.json({ error: 'This wallet has been frozen. Contact support.' }, { status: 403 });
+  }
+
   // Charge the live flash price when a deal is actually active — computed
   // fresh from the DB (never trusted from the client, which doesn't send a
   // price at all), so a flash deal that just expired can't still be
@@ -209,6 +217,11 @@ export async function PATCH(req: Request) {
           .select('user_id').eq('id', (buyerOwned as any).supplier_id).single();
         if (!dealerProfileForPay?.user_id) {
           return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
+        }
+        const { data: buyerWalletCheck } = await (supabase.from as any)('wallets')
+          .select('is_frozen').eq('user_id', user.id).single();
+        if (buyerWalletCheck?.is_frozen) {
+          return NextResponse.json({ error: 'This wallet has been frozen. Contact support.' }, { status: 403 });
         }
         const { data: claimedId, error: escrowErr } = await (admin as any).rpc('claim_escrow_fund_supplier_order', {
           p_supplier_order_id: id,

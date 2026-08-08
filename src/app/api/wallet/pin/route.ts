@@ -31,8 +31,14 @@ export async function POST(req: Request) {
 
   const admin = createServiceRoleClient();
   const { data: wallet, error: fetchErr } = await (admin.from as any)('wallets')
-    .select('id, pin_hash').eq('user_id', user.id).single();
+    .select('id, pin_hash, is_frozen').eq('user_id', user.id).single();
   if (fetchErr || !wallet) return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
+  // A fresh/changed PIN re-enables withdraw and transfer, so block it the
+  // same as those actions rather than letting a frozen wallet route around
+  // the freeze via a PIN reset.
+  if (wallet.is_frozen) {
+    return NextResponse.json({ error: 'This wallet has been frozen. Contact support.' }, { status: 403 });
+  }
 
   if (wallet.pin_hash) {
     if (!currentPin || !verifyPin(currentPin, wallet.pin_hash)) {

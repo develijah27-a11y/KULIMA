@@ -28,7 +28,7 @@ export default async function TransporterPremiumPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role, subscription_tier, role_subscription_tiers')
+    .select('full_name, role, roles, subscription_tier, role_subscription_tiers')
     .eq('user_id', user.id)
     .single();
 

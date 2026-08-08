@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getPosActor, hasPermission } from '@/lib/pos/getPosActor';
+import { getEffectiveTier } from '@/lib/subscriptions/getEffectiveTier';
 
 interface CheckoutItem {
   productId: string | null;
@@ -48,8 +49,17 @@ export async function POST(req: Request) {
   // regardless of who rang up the sale — resolve the owner's auth uid
   // (not their profiles.id, which is what PosActor.ownerId holds) for the
   // RPC's p_supplier_user_id parameter.
-  const { data: ownerProfile } = await (admin.from as any)('profiles').select('user_id').eq('id', actor.ownerId).single();
+  const { data: ownerProfile } = await (admin.from as any)('profiles')
+    .select('user_id, role, roles, subscription_tier, role_subscription_tiers').eq('id', actor.ownerId).single();
   if (!ownerProfile?.user_id) return NextResponse.json({ error: 'Store owner not found' }, { status: 500 });
+
+  // Staff always sell against the owner's plan (there's no separate staff
+  // subscription), so this also gates POS access for any staff account
+  // whose owner has since downgraded or let their plan lapse.
+  const ownerTier = getEffectiveTier(ownerProfile as any, 'supplier');
+  if (ownerTier !== 'business' && ownerTier !== 'enterprise') {
+    return NextResponse.json({ error: 'POS checkout requires an active Business or Enterprise plan' }, { status: 402 });
+  }
 
   // Staff are pinned to their assigned store — they can't switch branches
   // from the client even if the request tries to. The owner can pick any

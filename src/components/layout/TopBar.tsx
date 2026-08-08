@@ -224,7 +224,7 @@ export function TopBar({
           </div>
         )}
 
-        <NotificationBell initialUnreadCount={unreadCount} />
+        <NotificationBell initialUnreadCount={unreadCount} currentRole={currentRole} />
       </div>
     </header>
 
