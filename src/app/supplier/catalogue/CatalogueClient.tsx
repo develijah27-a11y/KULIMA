@@ -1,9 +1,8 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Leaf, FlaskConical, Wrench, Settings, Package, Store } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/CameraCapture';
-import { BarcodeScanner } from '@/components/ui/BarcodeScanner';
 
 function getCatIcon(category: string, size = 22) {
   const cat = category?.toLowerCase();
@@ -75,6 +74,29 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
   useEffect(() => {
     fetch('/api/pos/stores').then(r => r.json()).then(json => setStores(json.stores ?? []));
   }, []);
+
+  // ── Barcode scan-only field ────────────────────────────────────────────
+  // Same technique as the till (TillClient.tsx): a hardware/software
+  // scanner fires all characters in a burst (< 60ms apart) then Enter.
+  // Manual typing arrives much slower, so any keystroke with a bigger gap
+  // than that is swallowed. No camera, no permission prompt, no warm-up —
+  // registers a scan instantly, exactly like the till already does.
+  const [barcodeDraft, setBarcodeDraft] = useState('');
+  const lastBarcodeKeyTimeRef = useRef<number>(0);
+  function handleBarcodeKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Backspace' || e.key === 'Delete' || e.key === 'Tab') return;
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const code = barcodeDraft.trim();
+      if (code) setModal(m => ({ ...m!, barcode: code }));
+      setBarcodeDraft('');
+      return;
+    }
+    const now = Date.now();
+    const gap = now - lastBarcodeKeyTimeRef.current;
+    lastBarcodeKeyTimeRef.current = now;
+    if (gap > 60) e.preventDefault(); // manual keystroke — swallow it
+  }
 
   const visible = filter === 'all' ? products : products.filter(p => p.category === filter);
   const isEdit  = !!(modal as any)?.id;
@@ -312,7 +334,15 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                     </button>
                   </div>
                 ) : (
-                  <BarcodeScanner onScanned={(code) => setModal(m => ({ ...m!, barcode: code }))} />
+                  <input
+                    type="text"
+                    value={barcodeDraft}
+                    onChange={e => setBarcodeDraft(e.target.value)}
+                    onKeyDown={handleBarcodeKeyDown}
+                    placeholder="Point scanner here"
+                    autoComplete="off"
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--d-border)', background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 13, boxSizing: 'border-box' }}
+                  />
                 )}
               </div>
 

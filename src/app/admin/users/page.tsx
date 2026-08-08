@@ -147,13 +147,18 @@ export default async function AdminUsersPage({
           <div className="divide-y" style={{ borderColor: C.border }}>
             {rows.map((u: any) => {
               const cfg = ROLE_CFG[u.role] ?? ROLE_CFG.farmer;
+              // profiles.verification_level is a DB-level enum constrained to
+              // grey/green/blue/gold (see 20260608000000_verification_trust.sql)
+              // — not the none/basic/standard/premium labels this table used
+              // to display. Falling back to 'grey' (the column's own DB
+              // default) rather than trusting an unexpected value here.
               const VER_CFG: Record<string, { label: string; color: string }> = {
-                none:     { label: 'Unverified', color: C.muted },
-                basic:    { label: 'Basic',      color: 'var(--color-harvest)' },
-                standard: { label: 'Standard',   color: 'var(--color-sky)' },
-                premium:  { label: 'Premium',    color: 'var(--color-success)' },
+                grey:  { label: 'Unverified', color: C.muted },
+                green: { label: 'Basic',      color: 'var(--color-harvest)' },
+                blue:  { label: 'Standard',   color: 'var(--color-sky)' },
+                gold:  { label: 'Premium',    color: 'var(--color-success)' },
               };
-              const ver = VER_CFG[u.verification_level ?? 'none'];
+              const ver = VER_CFG[u.verification_level as string] ?? VER_CFG.grey;
 
               return (
                 <div key={u.id} className="px-5 py-3.5 flex items-center gap-4">

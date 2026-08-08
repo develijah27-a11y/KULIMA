@@ -71,7 +71,7 @@ function Nav() {
         </Link>
 
         {/* Desktop links */}
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: 4 }} className="hidden md:flex">
+        <div style={{ flex: 1, justifyContent: 'center', gap: 4 }} className="nav-desktop-only">
           {links.map(([l, h]) => (
             <a key={l} href={h} style={{ fontSize: 13.5, fontWeight: 600, color: INK_MUTE, textDecoration: 'none', padding: '8px 14px', borderRadius: 8, transition: 'color 0.15s' }}
               onMouseEnter={e => (e.currentTarget.style.color = INK)}
@@ -80,7 +80,7 @@ function Nav() {
         </div>
 
         {/* Desktop CTAs */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} className="hidden md:flex">
+        <div style={{ alignItems: 'center', gap: 8 }} className="nav-desktop-only">
           <Link href="/auth/signin" style={{ fontSize: 13.5, fontWeight: 700, color: INK_MID, textDecoration: 'none', padding: '9px 16px' }}>Sign in</Link>
           <Link href="/auth/signup" style={{ fontSize: 13.5, fontWeight: 800, color: '#fff', textDecoration: 'none', padding: '10px 22px', borderRadius: 11, background: GREEN, boxShadow: '0 4px 14px rgba(21,122,61,0.30)' }}>
             Create free account
@@ -88,14 +88,14 @@ function Nav() {
         </div>
 
         {/* Mobile menu btn */}
-        <button onClick={() => setMenuOpen(v => !v)} className="md:hidden" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: INK, padding: 6, display: 'flex', minHeight: 'unset', minWidth: 'unset' }}>
+        <button onClick={() => setMenuOpen(v => !v)} className="nav-mobile-only" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: INK, padding: 6, minHeight: 'unset', minWidth: 'unset' }}>
           {menuOpen ? <X size={22}/> : <Menu size={22}/>}
         </button>
       </nav>
 
       {/* Mobile overlay menu */}
       {menuOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 99, background: PAPER, paddingTop: 64, display: 'flex', flexDirection: 'column', fontFamily: FONT }} className="md:hidden">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99, background: PAPER, paddingTop: 64, flexDirection: 'column', fontFamily: FONT }} className="nav-mobile-only">
           <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 2 }}>
             {links.map(([l, h]) => (
               <a key={l} href={h} onClick={() => setMenuOpen(false)} style={{ fontSize: 18, fontWeight: 700, color: INK, textDecoration: 'none', padding: '15px 0', borderBottom: `1px solid ${LINE}` }}>{l}</a>
@@ -330,7 +330,7 @@ function Features() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(275px,1fr))', gap: 16, gridAutoFlow: 'dense' }}>
           {items.map(({ icon, title, body, color, bg, wide }) => (
-            <div key={title} className="landing-card-hover feature-wide" style={{ padding: '26px 24px', borderRadius: 20, background: CARD, border: `1px solid ${LINE}`, gridColumn: wide ? 'span 2' : 'span 1', boxShadow: '0 2px 10px rgba(15,31,21,0.04)', display: 'flex', flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: wide ? 20 : 0 }}>
+            <div key={title} className={`landing-card-hover${wide ? ' feature-wide' : ''}`} style={{ padding: '26px 24px', borderRadius: 20, background: CARD, border: `1px solid ${LINE}`, gridColumn: wide ? 'span 2' : 'span 1', boxShadow: '0 2px 10px rgba(15,31,21,0.04)', display: 'flex', flexDirection: wide ? 'row' : 'column', alignItems: wide ? 'center' : 'flex-start', gap: wide ? 20 : 0 }}>
               <div style={{ width: 50, height: 50, borderRadius: 14, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: wide ? 0 : 18, flexShrink: 0 }}>{icon}</div>
               <div>
                 <p style={{ fontSize: wide ? 18 : 15.5, fontWeight: 800, color: INK, margin: '0 0 8px', letterSpacing: '-0.02em' }}>{title}</p>
@@ -709,7 +709,26 @@ export default function Home() {
           phone viewports (~320px CSS width). The slot around it reserves
           the already-scaled footprint so nothing collapses or leaves a gap. */}
       <style>{`
-        /* ── Phone mockup scaling ── */
+        /* Desktop nav / mobile menu-button visibility toggle, written as
+           plain CSS rather than Tailwind's hidden/md: utilities — those
+           utilities were unreliably resolving in this build (computed
+           style stayed display:flex below the md breakpoint), which left
+           the full desktop nav overlapping the mobile hamburger button and
+           overflowing the viewport on real phones. Explicit rules here are
+           easy to verify and don't depend on utility-class generation. */
+        .nav-desktop-only { display: none; }
+        .nav-mobile-only { display: flex; }
+        @media (min-width: 768px) {
+          .nav-desktop-only { display: flex; }
+          .nav-mobile-only { display: none; }
+        }
+        /* The "wide" (span 2) feature card doesn't fit two 275px grid
+           tracks plus gap on narrow phones — CSS Grid doesn't auto-shrink
+           an explicit span, so it was overflowing the viewport instead of
+           collapsing to one column. */
+        @media (max-width: 600px) {
+          .feature-wide { grid-column: span 1 !important; flex-direction: column !important; align-items: flex-start !important; gap: 0 !important; }
+        }
         @media (max-width: 420px) {
           .phone-mockup-slot { width: 210px; height: 426px; }
           .phone-mockup { transform: scale(0.861); transform-origin: top center; }
@@ -718,35 +737,19 @@ export default function Home() {
           .phone-mockup-slot { width: 184px; height: 373px; }
           .phone-mockup { transform: scale(0.754); transform-origin: top center; }
         }
-        /* Escrow badge tucked inside mockup footprint on narrow phones */
+        /* The floating escrow badge overlaps the phone's left edge by
+           design (34px) — on narrow phones that would push it past the
+           viewport edge and force horizontal scroll, so it tucks fully
+           inside the mockup's footprint below 480px instead of hiding
+           outright (still communicates the same trust signal). */
         @media (max-width: 480px) {
           .hero-escrow-badge { left: 4px !important; bottom: 40px !important; }
         }
-        /* Stack hero columns on small screens and center the phone */
-        @media (max-width: 640px) {
-          .phone-mockup-slot { margin: 0 auto; }
-        }
-        /* Why-different: stack columns below 560px */
+        /* Two full-sentence columns get too tight below ~560px — stack
+           "before" over "with Cropify" per row instead of side-by-side. */
         @media (max-width: 560px) {
           .why-different-row { grid-template-columns: 1fr !important; }
           .why-different-row > div:first-child { border-right: none !important; }
-        }
-        /* Features: remove span-2 on narrow screens so wide card
-           doesn't overflow the grid container */
-        @media (max-width: 620px) {
-          .feature-wide { grid-column: span 1 !important; flex-direction: column !important; }
-        }
-        /* Footer grid: single column on very small screens */
-        @media (max-width: 400px) {
-          .landing-footer-grid { grid-template-columns: 1fr 1fr !important; }
-        }
-        /* Roles tabs: prevent overflow on very narrow viewports */
-        @media (max-width: 360px) {
-          .roles-tabs button { font-size: 10px !important; padding: 9px 4px !important; }
-        }
-        /* Nav: prevent logo text overflow on tiny screens */
-        @media (max-width: 300px) {
-          .nav-logo-text { display: none; }
         }
       `}</style>
       <Nav />
