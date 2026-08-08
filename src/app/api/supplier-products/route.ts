@@ -108,6 +108,15 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error('[/api/supplier-products POST]', error);
+    // idx_supplier_products_store_barcode (UNIQUE store_id+barcode) means
+    // this exact barcode was already saved on another product in this
+    // store — the generic 500 this used to return gave zero indication of
+    // that, so a re-scan just silently failed to save with no clue why
+    // (and then correctly reported "no product found" at checkout, since
+    // the product genuinely never made it into the database).
+    if (error.code === '23505') {
+      return NextResponse.json({ error: 'This barcode is already saved on another product in this store. Edit that product instead, or scan a different item.' }, { status: 409 });
+    }
     return NextResponse.json({ error: 'Failed to create product. Please try again.' }, { status: 500 });
   }
   return NextResponse.json({ data }, { status: 201 });
@@ -138,6 +147,9 @@ export async function PATCH(req: Request) {
 
   if (error) {
     console.error('[/api/supplier-products PATCH]', error);
+    if (error.code === '23505') {
+      return NextResponse.json({ error: 'This barcode is already saved on another product in this store.' }, { status: 409 });
+    }
     return NextResponse.json({ error: 'Failed to update product. Please try again.' }, { status: 500 });
   }
   return NextResponse.json({ success: true });

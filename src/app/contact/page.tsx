@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/legal/LegalPage';
-import { Mail, Clock, ShieldAlert, HelpCircle } from 'lucide-react';
+import { Mail, Clock, ShieldAlert, HelpCircle, MessageCircle, Phone } from 'lucide-react';
 
 export const metadata: Metadata = { title: 'Contact & Support — Cropify' };
 
@@ -10,6 +10,8 @@ const BORDER = 'rgba(74,222,128,0.10)';
 const MUTED = 'rgba(240,253,244,0.62)';
 
 const SUPPORT_EMAIL = 'kimulidaudi5@gmail.com';
+const WHATSAPP_NUMBER = '0758984224';
+const CALL_NUMBER = '0786857587';
 
 export default function ContactPage() {
   return (
@@ -21,6 +23,16 @@ export default function ContactPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, margin: '24px 0 32px' }}>
         <ContactCard
+          icon={<MessageCircle size={20} />}
+          title="WhatsApp"
+          body={<a href={`https://wa.me/256${WHATSAPP_NUMBER.slice(1)}`} target="_blank" rel="noopener noreferrer">{WHATSAPP_NUMBER}</a>}
+        />
+        <ContactCard
+          icon={<Phone size={20} />}
+          title="Call us"
+          body={<a href={`tel:+256${CALL_NUMBER.slice(1)}`}>{CALL_NUMBER}</a>}
+        />
+        <ContactCard
           icon={<Mail size={20} />}
           title="Email support"
           body={<a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>}
@@ -28,7 +40,7 @@ export default function ContactPage() {
         <ContactCard
           icon={<Clock size={20} />}
           title="Response time"
-          body="We aim to reply within 1–2 business days, faster for payment and account-security issues."
+          body="WhatsApp/calls answered fastest during business hours; email within 1–2 business days."
         />
       </div>
 
