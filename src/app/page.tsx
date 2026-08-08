@@ -122,7 +122,7 @@ function Nav() {
 /* ─── Hero ───────────────────────────────────────────────────────────────── */
 function Hero() {
   return (
-    <section style={{ background: PAPER, padding: 'clamp(96px,14vh,128px) clamp(16px,5vw,60px) clamp(56px,8vh,80px)', position: 'relative', overflow: 'hidden', fontFamily: FONT }}>
+    <section style={{ background: PAPER, padding: 'clamp(84px,12vh,108px) clamp(16px,5vw,60px) clamp(40px,6vh,56px)', position: 'relative', overflow: 'hidden', fontFamily: FONT }}>
       {/* Fine dot-grid texture — the kind of quiet detail that reads as
           "designed," not just "styled." Faded via a radial mask so it
           never competes with the copy. */}
@@ -158,7 +158,7 @@ function Hero() {
 
             {/* Body */}
             <p className="landing-fade-up" style={{ fontSize: 'clamp(15px,1.8vw,17.5px)', color: INK_MUTE, fontWeight: 400, lineHeight: 1.72, margin: '0 0 34px', maxWidth: 480, animationDelay: '140ms' }}>
-              Connect directly with buyers, diagnose crop disease in seconds, and receive every shilling — held safely in escrow until you confirm delivery.
+              Sell direct. Diagnose crops instantly. Get paid in full, every time.
             </p>
 
             {/* CTAs */}
@@ -306,43 +306,17 @@ function ProofBar() {
   );
 }
 
-/* ─── Stats band ──────────────────────────────────────────────────────────── */
-function StatsBand() {
-  const stats = [
-    { icon: <Users size={18}/>, value: '30+', label: 'Districts covered', color: GREEN, bg: GREEN_SOFT },
-    { icon: <Wallet size={18}/>, value: '0%', label: 'Fee to list your harvest', color: GOLD, bg: GOLD_SOFT },
-    { icon: <Lock size={18}/>, value: '100%', label: 'Payments escrow-protected', color: SKY, bg: SKY_SOFT },
-    { icon: <Microscope size={18}/>, value: '<30s', label: 'AI crop disease diagnosis', color: PLUM, bg: PLUM_SOFT },
-  ];
-  return (
-    <section style={{ padding: 'clamp(48px,7vh,64px) clamp(16px,5vw,60px)', background: PAPER, fontFamily: FONT }}>
-      <div style={{ maxWidth: 1180, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 }}>
-        {stats.map(({ icon, value, label, color, bg }) => (
-          <div key={label} className="landing-card-hover" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px', borderRadius: 18, background: CARD, border: `1px solid ${LINE}` }}>
-            <div style={{ width: 42, height: 42, borderRadius: 13, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
-            <div>
-              <p style={{ fontSize: 21, fontWeight: 900, color: INK, margin: 0, letterSpacing: '-0.035em' }}>{value}</p>
-              <p style={{ fontSize: 11.5, color: INK_MUTE, margin: '2px 0 0', fontWeight: 700 }}>{label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 /* ─── Why Cropify (old way vs new way) ──────────────────────────────────── */
 function WhyDifferent() {
   const rows = [
-    { old: 'Sell at whatever price shows up at your gate', now: 'See live district prices before you harvest' },
-    { old: 'Trust a stranger to pay after you hand over the goods', now: 'Payment sits in escrow until you confirm delivery' },
-    { old: 'Wait days for a diagnosis on a sick crop', now: 'AI diagnosis with treatment advice in under 30 seconds' },
-    { old: 'No record if a buyer or transporter disappears', now: 'Every user verified, every deal has a paper trail' },
+    { old: 'Whatever price shows up at your gate', now: 'Live district prices before you harvest' },
+    { old: 'Trust a stranger to pay you back', now: 'Payment held in escrow, always' },
+    { old: 'Days to diagnose a sick crop', now: 'AI diagnosis in 30 seconds' },
   ];
   return (
-    <section style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: PAPER, fontFamily: FONT }}>
+    <section style={{ padding: 'clamp(56px,8vh,80px) clamp(16px,5vw,60px)', background: PAPER, fontFamily: FONT }}>
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 44 }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>The difference</p>
           <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>
             The old way, versus Cropify.
@@ -381,24 +355,21 @@ function WhyDifferent() {
 /* ─── Features bento ─────────────────────────────────────────────────────── */
 function Features() {
   const items = [
-    { icon: <Wallet size={22}/>, title: 'Escrow-protected payments', body: "A buyer's money sits with Cropify — not them, not you — until you confirm the goods arrived. Every shilling, every time.", color: GREEN, bg: GREEN_SOFT, wide: true },
-    { icon: <TrendingUp size={22}/>, title: 'Live district prices', body: 'Real rates updated daily from markets across Uganda. Know what Kampala is paying before you harvest.', color: GOLD, bg: GOLD_SOFT },
-    { icon: <Microscope size={22}/>, title: 'AI Crop Doctor', body: 'Photograph a sick plant. Get a diagnosis and treatment advice in under 30 seconds.', color: PLUM, bg: PLUM_SOFT },
-    { icon: <Users size={22}/>, title: 'Farmer groups', body: 'Pool your harvest with neighbouring farmers and sell as one large lot — better prices, less negotiation.', color: SKY, bg: SKY_SOFT },
+    { icon: <Wallet size={22}/>, title: 'Escrow-protected payments', body: 'Every shilling held safe until you confirm delivery.', color: GREEN, bg: GREEN_SOFT, wide: true },
+    { icon: <TrendingUp size={22}/>, title: 'Live district prices', body: 'Know today’s rate before you harvest.', color: GOLD, bg: GOLD_SOFT },
+    { icon: <Microscope size={22}/>, title: 'AI Crop Doctor', body: 'Photo in, diagnosis in 30 seconds.', color: PLUM, bg: PLUM_SOFT },
+    { icon: <Users size={22}/>, title: 'Farmer groups', body: 'Pool harvests, sell as one big lot.', color: SKY, bg: SKY_SOFT },
   ];
 
   return (
-    <section id="features" style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: PAPER, fontFamily: FONT }}>
+    <section id="features" style={{ padding: 'clamp(56px,8vh,80px) clamp(16px,5vw,60px)', background: PAPER, fontFamily: FONT }}>
       <div style={{ maxWidth: 1180, margin: '0 auto' }}>
         {/* Section header */}
-        <div style={{ marginBottom: 52 }}>
+        <div style={{ marginBottom: 40 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>What you get</p>
-          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: '0 0 14px', lineHeight: 1.06 }}>
-            Everything a Ugandan farmer needs.<br />Nothing they don&rsquo;t.
+          <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>
+            Everything you need. Nothing you don&rsquo;t.
           </h2>
-          <p style={{ fontSize: 15.5, color: INK_MUTE, margin: 0, maxWidth: 500, lineHeight: 1.7 }}>
-            Offline-tolerant, mobile-first, in the units and languages your market actually uses.
-          </p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(275px,1fr))', gap: 16, gridAutoFlow: 'dense' }}>
@@ -420,15 +391,15 @@ function Features() {
 /* ─── How it works ───────────────────────────────────────────────────────── */
 function HowItWorks() {
   const steps = [
-    { n: '01', title: 'Create your free account', body: 'Sign up in under 2 minutes. Pick your role — farmer, buyer, transporter, or supplier. You can hold multiple roles on the same account.' },
-    { n: '02', title: 'Complete your profile', body: 'Add your district, crop, and phone number. Upload your national ID to earn a verification badge and unlock higher order limits.' },
-    { n: '03', title: 'Start trading', body: 'List your harvest, make offers, book deliveries. Every payment moves through escrow — your money only releases when both sides are satisfied.' },
+    { n: '01', title: 'Create your account', body: 'Free, in under 2 minutes.' },
+    { n: '02', title: 'Verify your profile', body: 'National ID, unlocks higher limits.' },
+    { n: '03', title: 'Start trading', body: 'Every payment protected by escrow.' },
   ];
 
   return (
-    <section id="how-it-works" style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: PAPER_2, fontFamily: FONT }}>
+    <section id="how-it-works" style={{ padding: 'clamp(56px,8vh,80px) clamp(16px,5vw,60px)', background: PAPER_2, fontFamily: FONT }}>
       <div style={{ maxWidth: 820, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 60 }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>Simple to start</p>
           <h2 style={{ fontSize: 'clamp(2rem,4vw,2.8rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.04em', color: INK, margin: 0, lineHeight: 1.06 }}>
             Up and running in minutes.
@@ -463,9 +434,9 @@ function HowItWorks() {
 /* ─── Trust section (dark) ────────────────────────────────────────────────── */
 function TrustSection() {
   const items = [
-    { icon: <Lock size={20}/>, title: 'Money held in escrow', body: "When a buyer accepts your price, their payment moves to Cropify's escrow — not to them, not to you. It only reaches your wallet after they confirm the goods arrived in good condition.", stamp: 'Escrow Protected' },
-    { icon: <ShieldCheck size={20}/>, title: 'Every user is verified', body: "Farmers, buyers, and transporters all verify with a national ID before they can trade. You can see the verification badge on every profile before agreeing to a deal.", stamp: 'ID Verified' },
-    { icon: <Scale size={20}/>, title: 'Disputes reviewed by a person', body: "If something goes wrong — wrong quantity, damaged goods, no-show — raise a dispute within 48 hours. A real admin reviews the case before any money moves.", stamp: 'Human Reviewed' },
+    { icon: <Lock size={20}/>, title: 'Money held in escrow', body: 'Released only after you confirm delivery.', stamp: 'Escrow Protected' },
+    { icon: <ShieldCheck size={20}/>, title: 'Every user is verified', body: 'National ID required before anyone can trade.', stamp: 'ID Verified' },
+    { icon: <Scale size={20}/>, title: 'Disputes reviewed by a person', body: 'A real admin, not a bot, decides.', stamp: 'Human Reviewed' },
   ];
 
   // Ink-stamp seals reveal on scroll rather than on page load — they read
@@ -486,7 +457,7 @@ function TrustSection() {
   }, []);
 
   return (
-    <section id="trust" ref={sectionRef} style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: FOREST, position: 'relative', overflow: 'hidden', fontFamily: FONT }}>
+    <section id="trust" ref={sectionRef} style={{ padding: 'clamp(48px,7vh,64px) clamp(16px,5vw,60px)', background: FOREST, position: 'relative', overflow: 'hidden', fontFamily: FONT }}>
       <div aria-hidden style={{ position: 'absolute', top: '12%', left: '50%', transform: 'translateX(-50%)', width: 700, height: 400, background: `radial-gradient(ellipse at center,rgba(95,224,160,0.09) 0%,transparent 70%)`, pointerEvents: 'none' }} />
 
       <div style={{ maxWidth: 1080, margin: '0 auto', position: 'relative', zIndex: 1 }}>
@@ -496,7 +467,7 @@ function TrustSection() {
             Real protection. Not a promise.
           </h2>
           <p style={{ fontSize: 15.5, color: 'rgba(255,255,255,0.58)', margin: '0 auto', maxWidth: 540, lineHeight: 1.72 }}>
-            We built Cropify after watching too many Ugandan farmers get cheated — underpaid, ignored after delivery, or paid nothing at all. These rules exist because of that.
+            Built after watching too many farmers get cheated. Never again.
           </p>
         </div>
 
@@ -542,31 +513,31 @@ function RolesSection() {
 
   const roles = [
     {
-      label: 'Farmers', icon: <Leaf size={22}/>, color: GREEN, bg: GREEN_SOFT,
+      label: 'Farmers', tab: 'Farmers', icon: <Leaf size={22}/>, color: GREEN, bg: GREEN_SOFT,
       tagline: 'Sell direct. Get paid safely.',
-      points: ['Live prices before you harvest', 'Sell to verified buyers across Uganda', 'AI disease diagnosis in 30 seconds', 'Cash out to MTN or Airtel Mobile Money'],
+      points: ['Live district prices', 'Verified buyers only', 'AI diagnosis in 30s', 'Cash out to Mobile Money'],
     },
     {
-      label: 'Buyers', icon: <ShoppingCart size={22}/>, color: GOLD, bg: GOLD_SOFT,
-      tagline: 'Source fresh produce directly from farms.',
-      points: ['Browse verified farmer listings by district', 'Money held in escrow until you confirm delivery', 'Full tracking from farm to your gate', 'Dispute protection within 48 hours'],
+      label: 'Buyers', tab: 'Buyers', icon: <ShoppingCart size={22}/>, color: GOLD, bg: GOLD_SOFT,
+      tagline: 'Source produce direct from farms.',
+      points: ['Verified farmer listings', 'Escrow until delivery', 'Farm-to-gate tracking', '48-hour dispute cover'],
     },
     {
-      label: 'Transporters', icon: <Truck size={22}/>, color: SKY, bg: SKY_SOFT,
+      label: 'Transporters', tab: 'Drivers', icon: <Truck size={22}/>, color: SKY, bg: SKY_SOFT,
       tagline: 'More trips. Guaranteed payment.',
-      points: ['Matched to delivery jobs near you', 'Paid the moment the buyer confirms delivery', 'Cold-chain and fast-delivery options', 'Build a verified driver profile over time'],
+      points: ['Jobs matched near you', 'Paid on confirmation', 'Cold-chain options', 'Build a driver profile'],
     },
     {
-      label: 'Agro Dealers', icon: <Store size={22}/>, color: PLUM, bg: PLUM_SOFT,
-      tagline: 'Run your shop and reach every farmer nearby.',
-      points: ['Full point-of-sale — barcode checkout, receipts, staff logins', 'List inputs straight to the marketplace', 'Low-stock and purchase-order alerts', 'Sales, profit, and inventory reports built in'],
+      label: 'Agro Dealers', tab: 'Dealers', icon: <Store size={22}/>, color: PLUM, bg: PLUM_SOFT,
+      tagline: 'Run your shop, reach every farmer.',
+      points: ['Full POS checkout', 'List on the marketplace', 'Low-stock alerts', 'Sales & profit reports'],
     },
   ];
 
   const r = roles[active];
 
   return (
-    <section id="roles" style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: PAPER, fontFamily: FONT }}>
+    <section id="roles" style={{ padding: 'clamp(48px,7vh,64px) clamp(16px,5vw,60px)', background: PAPER, fontFamily: FONT }}>
       <div style={{ maxWidth: 940, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 44 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>Who it&rsquo;s for</p>
@@ -583,8 +554,8 @@ function RolesSection() {
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, padding: 4, borderRadius: 14, background: PAPER_2, border: `1px solid ${LINE}`, marginBottom: 22 }}>
           {roles.map((role, i) => (
-            <button key={role.label} onClick={() => setActive(i)} style={{ flex: 1, minWidth: 0, padding: 'clamp(10px,2vw,12px) 6px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: FONT, fontWeight: 800, fontSize: 'clamp(11px,2.5vw,14px)', lineHeight: 1.2, whiteSpace: 'normal', wordBreak: 'break-word', transition: 'all 0.18s ease', background: active === i ? CARD : 'transparent', color: active === i ? role.color : INK_MUTE, boxShadow: active === i ? '0 2px 8px rgba(15,31,21,0.08)' : 'none' }}>
-              {role.label}
+            <button key={role.label} onClick={() => setActive(i)} style={{ flex: 1, minWidth: 0, padding: 'clamp(9px,2vw,12px) 4px', borderRadius: 10, border: 'none', cursor: 'pointer', fontFamily: FONT, fontWeight: 800, fontSize: 'clamp(11px,2.4vw,14px)', lineHeight: 1.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', transition: 'all 0.18s ease', background: active === i ? CARD : 'transparent', color: active === i ? role.color : INK_MUTE, boxShadow: active === i ? '0 2px 8px rgba(15,31,21,0.08)' : 'none' }}>
+              {role.tab}
             </button>
           ))}
         </div>
@@ -626,15 +597,15 @@ function RolesSection() {
 /* ─── Testimonials ────────────────────────────────────────────────────────── */
 function Testimonials() {
   const quotes = [
-    { quote: "I used to sell at whatever price the trader offered at my gate. Now I can see what Kampala buyers are paying and negotiate from that number.", name: 'Auma Florence', role: 'Maize farmer, Soroti', initials: 'AF', color: GREEN, bg: GREEN_SOFT },
-    { quote: "The escrow means I can buy from farmers I have never met without worrying about paying for goods that never show up.", name: 'Ssemakula James', role: 'Produce buyer, Kampala', initials: 'SJ', color: GOLD, bg: GOLD_SOFT },
-    { quote: "I get delivery requests straight to my phone now instead of waiting at the stage hoping someone needs a truck.", name: 'Opio Patrick', role: 'Transporter, Gulu', initials: 'OP', color: SKY, bg: SKY_SOFT },
+    { quote: "Now I see what Kampala buyers are paying and negotiate from that.", name: 'Auma Florence', role: 'Maize farmer, Soroti', initials: 'AF', color: GREEN, bg: GREEN_SOFT },
+    { quote: "I buy from farmers I've never met, without worrying about a no-show.", name: 'Ssemakula James', role: 'Produce buyer, Kampala', initials: 'SJ', color: GOLD, bg: GOLD_SOFT },
+    { quote: "Delivery requests come straight to my phone now — no more waiting at the stage.", name: 'Opio Patrick', role: 'Transporter, Gulu', initials: 'OP', color: SKY, bg: SKY_SOFT },
   ];
 
   return (
-    <section style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: PAPER_2, fontFamily: FONT }}>
+    <section style={{ padding: 'clamp(40px,6vh,56px) clamp(16px,5vw,60px)', background: PAPER_2, fontFamily: FONT }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+        <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 3, marginBottom: 14 }}>
             {[1,2,3,4,5].map(i => <Star key={i} size={18} fill={GOLD} color={GOLD} />)}
           </div>
@@ -679,7 +650,7 @@ function Pricing() {
   ];
 
   return (
-    <section id="pricing" style={{ padding: 'clamp(72px,10vh,100px) clamp(16px,5vw,60px)', background: PAPER_2, fontFamily: FONT }}>
+    <section id="pricing" style={{ padding: 'clamp(48px,7vh,64px) clamp(16px,5vw,60px)', background: PAPER_2, fontFamily: FONT }}>
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 44 }}>
           <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: GREEN, margin: '0 0 12px' }}>Simple, honest pricing</p>
@@ -736,7 +707,7 @@ function Pricing() {
 /* ─── Final CTA ───────────────────────────────────────────────────────────── */
 function FinalCTA() {
   return (
-    <section style={{ padding: 'clamp(80px,12vh,120px) clamp(16px,5vw,60px)', background: FOREST, position: 'relative', overflow: 'hidden', textAlign: 'center', fontFamily: FONT }}>
+    <section style={{ padding: 'clamp(56px,8vh,80px) clamp(16px,5vw,60px)', background: FOREST, position: 'relative', overflow: 'hidden', textAlign: 'center', fontFamily: FONT }}>
       <div aria-hidden style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse 70% 55% at 50% 50%,rgba(231,167,61,0.13) 0%,transparent 70%)`, pointerEvents: 'none' }} />
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 600, margin: '0 auto' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', marginBottom: 24 }}>
@@ -747,8 +718,8 @@ function FinalCTA() {
         <h2 style={{ fontSize: 'clamp(2.2rem,5vw,3.2rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.048em', lineHeight: 1.04, margin: '0 0 20px', color: '#fff' }}>
           Ready to grow <span style={{ color: MINT }}>smarter?</span>
         </h2>
-        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.58)', margin: '0 0 38px', lineHeight: 1.7, maxWidth: 520, marginLeft: 'auto', marginRight: 'auto' }}>
-          Join Ugandan farmers, buyers, and transporters already selling better, earning more, and getting paid safely — every shilling.
+        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.58)', margin: '0 0 30px', lineHeight: 1.6, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>
+          Join farmers, buyers, and transporters getting paid safely, every time.
         </p>
 
         <Link href="/auth/signup" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '16px 34px', borderRadius: 16, background: '#fff', color: GREEN_DEEP, fontWeight: 900, fontSize: 16.5, textDecoration: 'none', boxShadow: '0 16px 40px rgba(0,0,0,0.28)', letterSpacing: '-0.02em' }}>
@@ -971,7 +942,6 @@ export default function Home() {
       <Hero />
       <PriceTicker />
       <ProofBar />
-      <StatsBand />
       <Features />
       <WhyDifferent />
       <HowItWorks />
