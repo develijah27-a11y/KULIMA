@@ -7,14 +7,15 @@ const C = {
   cardShadow: 'var(--d-shadow-card)', red: 'var(--color-danger)', greenMed: 'var(--color-primary-hover)',
 };
 
-export default async function CaseDetailPage({ params }: { params: { id: string } }) {
+export default async function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
   const { data: c } = await (supabase.from as any)('disease_reports')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (!c) notFound();
@@ -24,7 +25,7 @@ export default async function CaseDetailPage({ params }: { params: { id: string 
       <div className="flex items-center gap-3">
         <Link href="/pathologist/case-queue" style={{ fontSize: 13, color: C.muted, textDecoration: 'none' }}>← Back to Queue</Link>
         <span style={{ color: C.muted }}>·</span>
-        <p style={{ fontSize: 13, color: C.muted, textTransform: 'capitalize' }}>Case #{params.id.slice(0, 8)}</p>
+        <p style={{ fontSize: 13, color: C.muted, textTransform: 'capitalize' }}>Case #{id.slice(0, 8)}</p>
       </div>
 
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px' }}>

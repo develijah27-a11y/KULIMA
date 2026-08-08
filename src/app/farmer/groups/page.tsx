@@ -1,4 +1,6 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { MessageCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { GroupsClient } from './GroupsClient';
 
@@ -13,6 +15,14 @@ export default async function FarmerGroupsPage() {
     .single();
 
   if (!profile) redirect('/auth/signin');
+
+  // group_members is a separate roster (a "groups"-role leader adding
+  // members by phone) from farmer_group_members below — a farmer can be in
+  // one without the other, so this link only shows when it's actually usable.
+  const { count: chatRoomCount } = await (supabase.from as any)('group_members')
+    .select('id', { count: 'exact', head: true })
+    .eq('farmer_id', (profile as any).id)
+    .eq('status', 'active');
 
   const [membershipsRes, allGroupsRes] = await Promise.all([
     // Groups this farmer belongs to
@@ -55,10 +65,26 @@ export default async function FarmerGroupsPage() {
   }));
 
   return (
-    <GroupsClient
-      myGroups={myGroups}
-      allGroups={allWithCounts}
-      profileId={profile.id}
-    />
+    <div className="max-w-2xl mx-auto">
+      {(chatRoomCount ?? 0) > 0 && (
+        <Link
+          href="/farmer/groups/chat"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none',
+            padding: '12px 16px', borderRadius: 12, marginBottom: 16,
+            background: 'var(--color-primary-bg)', color: 'var(--color-primary)',
+          }}
+        >
+          <MessageCircle size={18} />
+          <span style={{ fontSize: 13, fontWeight: 700 }}>Open your group chat</span>
+          <span style={{ marginLeft: 'auto', fontSize: 13 }}>→</span>
+        </Link>
+      )}
+      <GroupsClient
+        myGroups={myGroups}
+        allGroups={allWithCounts}
+        profileId={profile.id}
+      />
+    </div>
   );
 }
