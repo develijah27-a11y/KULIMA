@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { VerifyWizard } from './VerifyWizard';
+import { PhoneVerifyStep } from './PhoneVerifyStep';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { TrustScore } from '@/components/trust/TrustScore';
 import { BADGE_CONFIG, type VerificationLevel } from '@/lib/trust';
@@ -39,7 +40,7 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
   if (!user) redirect('/auth/signin');
 
   const { data: profile } = await (supabase.from as any)('profiles')
-    .select('id, role, verification_level, role_verification_levels, trust_score, reliability_score, completed_deals')
+    .select('id, role, verification_level, role_verification_levels, trust_score, reliability_score, completed_deals, phone_number, phone_verified')
     .eq('user_id', user.id)
     .single();
 
@@ -82,6 +83,8 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
   const deals        = (profile as any)?.completed_deals ?? 0;
   const currentIdx   = LEVELS.indexOf(currentLevel);
   const header       = ROLE_HEADER[role] ?? DEFAULT_HEADER;
+  const phoneVerified = (profile as any)?.phone_verified ?? false;
+  const phoneNumber   = (profile as any)?.phone_number ?? null;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -182,6 +185,11 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
           </div>
         </div>
       </div>
+
+      {/* Phone step — a prerequisite shown ahead of the document wizard
+          rather than gating it outright, so someone who's already mid-KYC
+          isn't blocked by a feature that didn't exist until now. */}
+      {!phoneVerified && <PhoneVerifyStep initialPhone={phoneNumber} />}
 
       {/* Wizard */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '24px' }}>
