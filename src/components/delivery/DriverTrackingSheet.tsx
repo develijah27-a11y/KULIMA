@@ -78,9 +78,17 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
     setEtaMin(Math.max(1, Math.round((km / 22) * 60)));
   }
 
+  // Staged messaging (matches the ride-hailing pattern this was modeled
+  // on): "looking for/waiting on a live position" before the first fix
+  // arrives, then a concrete "near you, on the way" + ETA once it does —
+  // never a bare number with no framing.
   const headline = otherParty.role === 'driver'
-    ? (etaMin != null ? `Your driver arrives in ${etaMin} min` : 'Waiting for driver location…')
-    : (etaMin != null ? `You'll reach pickup in ${etaMin} min` : 'Waiting for your location…');
+    ? (etaMin != null
+        ? (etaMin <= 3 ? `${otherParty.name} is near you — arriving any moment` : `${otherParty.name} is on the way — arrives in ${etaMin} min`)
+        : `Looking for ${otherParty.name}'s location…`)
+    : (etaMin != null
+        ? (etaMin <= 3 ? "You're almost at pickup" : `You'll reach pickup in ${etaMin} min`)
+        : 'Waiting for your location…');
 
   return (
     <BottomSheet open={open} onClose={onClose}>
