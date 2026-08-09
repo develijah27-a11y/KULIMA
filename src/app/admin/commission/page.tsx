@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useTransition } from 'react';
-import { CheckCircle2, X } from 'lucide-react';
+import { CheckCircle2, X, TrendingUp, DollarSign, BarChart3, Calendar } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)', green: 'var(--color-primary)', greenBg: 'var(--color-primary-bg)',
   amber: 'var(--color-harvest)', amberBg: 'var(--color-harvest-bg)',
+  blue: 'var(--color-sky)', blueBg: 'var(--color-sky-bg)',
 };
 
 function Toast({ msg, ok }: { msg: string; ok: boolean }) {
@@ -16,9 +17,58 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
       zIndex: 1000, minWidth: 260, background: ok ? '#065F46' : '#991B1B',
       color: '#fff', borderRadius: 14, padding: '14px 20px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
     }}>
-      <p style={{ margin: 0, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>{ok ? <CheckCircle2 size={16} /> : <X size={16} />}{msg}</p>
+      <p style={{ margin: 0, fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+        {ok ? <CheckCircle2 size={16} /> : <X size={16} />}{msg}
+      </p>
     </div>
   );
+}
+
+// ── Pure-CSS bar chart ─────────────────────────────────────────────────────────
+function BarChart({
+  data, color = C.green, valueLabel = 'UGX',
+}: {
+  data: { label: string; value: number }[];
+  color?: string;
+  valueLabel?: string;
+}) {
+  const max = Math.max(...data.map(d => d.value), 1);
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 120, padding: '0 4px' }}>
+      {data.map(({ label, value }) => {
+        const pct = (value / max) * 100;
+        return (
+          <div key={label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 9, color: C.muted, fontWeight: 700, whiteSpace: 'nowrap' }}>
+              {value >= 1_000_000 ? `${(value / 1_000_000).toFixed(1)}M`
+                : value >= 1000 ? `${Math.round(value / 1000)}K`
+                : value > 0 ? String(value) : ''}
+            </span>
+            <div
+              style={{
+                width: '100%', background: color, borderRadius: '4px 4px 0 0',
+                height: `${Math.max(pct, value > 0 ? 4 : 0)}%`,
+                minHeight: value > 0 ? 4 : 0,
+                transition: 'height 0.5s ease',
+                opacity: 0.85,
+              }}
+              title={`${valueLabel} ${value.toLocaleString()}`}
+            />
+            <span style={{ fontSize: 9, color: C.muted, fontWeight: 600, whiteSpace: 'nowrap' }}>{label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+type Period = 'today' | '7d' | '30d' | '12m';
+
+interface EarningsData {
+  totalCommission: number;
+  totalTransactions: number;
+  avgFeePerTx: number;
+  chart: { label: string; value: number }[];
 }
 
 interface PlatformWallet { balance: number; account_number: string; owner_name: string | null; }
@@ -35,6 +85,11 @@ export default function AdminCommissionPage() {
   const [toast, setToast]   = useState<{ msg: string; ok: boolean } | null>(null);
   const [pending, start]    = useTransition();
   const [walletPending, startWallet] = useTransition();
+
+  // Earnings report state
+  const [period, setPeriod]       = useState<Period>('7d');
+  const [earnings, setEarnings]   = useState<EarningsData | null>(null);
+  const [earningsLoading, setEarningsLoading] = useState(false);
 
   function showToast(msg: string, ok: boolean) {
     setToast({ msg, ok });
@@ -56,7 +111,21 @@ export default function AdminCommissionPage() {
       });
   }
 
-  useEffect(() => { refresh().finally(() => setLoading(false)); }, []);
+  function fetchEarnings(p: Period) {
+    setEarningsLoading(true);
+    fetch(`/api/admin/commission/earnings?period=${p}`)
+      .then(r => r.json())
+      .then(json => setEarnings(json.data ?? null))
+      .catch(() => {})
+      .finally(() => setEarningsLoading(false));
+  }
+
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+    fetchEarnings('7d');
+  }, []);
+
+  useEffect(() => { fetchEarnings(period); }, [period]);
 
   function handleSave() {
     start(async () => {
@@ -85,9 +154,7 @@ export default function AdminCommissionPage() {
     });
   }
 
-  // Example calculation preview
   const examples = [50000, 200000, 500000, 1000000, 5000000];
-
   function calcFee(amount: number) {
     let fee = Math.round(amount * rate / 100);
     if (fee < minFee) fee = minFee;
@@ -95,15 +162,91 @@ export default function AdminCommissionPage() {
     return fee;
   }
 
+  const PERIODS: { key: Period; label: string }[] = [
+    { key: 'today', label: 'Today' },
+    { key: '7d',    label: '7 days' },
+    { key: '30d',   label: '30 days' },
+    { key: '12m',   label: '12 months' },
+  ];
+
   return (
-    <div className="max-w-xl mx-auto space-y-5">
+    <div className="max-w-2xl mx-auto space-y-5">
       {toast && <Toast msg={toast.msg} ok={toast.ok} />}
 
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, margin: 0, letterSpacing: '-0.03em' }}>Commission Settings</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, margin: 0, letterSpacing: '-0.03em' }}>Commission</h1>
         <p style={{ fontSize: 13, color: C.muted, margin: '4px 0 0' }}>
-          Platform fee deducted from escrow at payment release. Changes apply to future transactions immediately.
+          Earnings reports and platform fee configuration.
         </p>
+      </div>
+
+      {/* ── Earnings overview KPIs ── */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          {
+            label: 'Total Collected',
+            value: earnings ? `UGX ${earnings.totalCommission >= 1_000_000 ? (earnings.totalCommission / 1_000_000).toFixed(1) + 'M' : Math.round(earnings.totalCommission / 1000) + 'K'}` : '—',
+            icon: <DollarSign size={15} />, color: C.green,
+          },
+          {
+            label: 'Transactions',
+            value: earnings ? earnings.totalTransactions.toLocaleString() : '—',
+            icon: <BarChart3 size={15} />, color: C.blue,
+          },
+          {
+            label: 'Avg Fee',
+            value: earnings ? `UGX ${Math.round(earnings.avgFeePerTx).toLocaleString()}` : '—',
+            icon: <TrendingUp size={15} />, color: C.amber,
+          },
+        ].map(({ label, value, icon, color }) => (
+          <div key={label} style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '16px 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>{label}</p>
+              <span style={{ color }}>{icon}</span>
+            </div>
+            <p style={{ fontSize: 18, fontWeight: 900, color, margin: 0, letterSpacing: '-0.02em' }}>{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Earnings chart ── */}
+      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, overflow: 'hidden' }}>
+        <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Calendar size={14} style={{ color: C.green }} />
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: 0 }}>Commission Earned</p>
+          </div>
+          {/* Period selector */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {PERIODS.map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setPeriod(key)}
+                style={{
+                  padding: '4px 10px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 700,
+                  background: period === key ? C.green : 'var(--color-surface-2)',
+                  color: period === key ? '#fff' : C.muted,
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding: '20px 16px 12px' }}>
+          {earningsLoading ? (
+            <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <p style={{ fontSize: 12, color: C.muted }}>Loading…</p>
+            </div>
+          ) : earnings?.chart && earnings.chart.length > 0 ? (
+            <BarChart data={earnings.chart} color={C.green} />
+          ) : (
+            <div style={{ height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
+              <BarChart3 size={28} style={{ color: C.muted }} />
+              <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>No commission data for this period</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -126,7 +269,7 @@ export default function AdminCommissionPage() {
               </>
             ) : (
               <p style={{ fontSize: 13, opacity: 0.85, margin: '0 0 4px' }}>
-                No platform wallet configured yet — commission fees are being logged but not credited anywhere. Pick an admin account below.
+                No platform wallet configured yet — pick an admin account below.
               </p>
             )}
             <div style={{ marginTop: 14 }}>
@@ -137,10 +280,7 @@ export default function AdminCommissionPage() {
                 value={walletUserId ?? ''}
                 disabled={walletPending}
                 onChange={e => handleWalletChange(e.target.value)}
-                style={{
-                  width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.25)',
-                  background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 13, fontWeight: 600,
-                }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.12)', color: '#fff', fontSize: 13, fontWeight: 600 }}
               >
                 <option value="" style={{ color: '#111' }}>Not configured</option>
                 {admins.map(a => (
@@ -150,94 +290,39 @@ export default function AdminCommissionPage() {
             </div>
           </div>
 
+          {/* Rate config */}
           <div style={{ background: C.cardBg, borderRadius: 18, boxShadow: C.cardShadow, padding: 24 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 20px' }}>Rate Configuration</p>
 
-            {/* Rate */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
-                Commission Rate (%)
-              </label>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>Commission Rate (%)</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <input
-                  type="range"
-                  min={0.5} max={10} step={0.1}
-                  value={rate}
-                  onChange={e => setRate(Number(e.target.value))}
-                  style={{ flex: 1, accentColor: 'var(--color-primary)', cursor: 'pointer' }}
-                />
+                <input type="range" min={0.5} max={10} step={0.1} value={rate} onChange={e => setRate(Number(e.target.value))} style={{ flex: 1, accentColor: 'var(--color-primary)', cursor: 'pointer' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <input
-                    type="number"
-                    value={rate}
-                    onChange={e => setRate(Math.max(0.1, Math.min(20, Number(e.target.value))))}
-                    step={0.1} min={0.1} max={20}
-                    style={{
-                      width: 72, padding: '8px 10px', borderRadius: 8,
-                      border: `1.5px solid ${C.border}`, fontSize: 15, fontWeight: 800,
-                      color: C.text, background: 'var(--d-input-bg)', textAlign: 'center',
-                    }}
-                  />
+                  <input type="number" value={rate} onChange={e => setRate(Math.max(0.1, Math.min(20, Number(e.target.value))))} step={0.1} min={0.1} max={20} style={{ width: 72, padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 15, fontWeight: 800, color: C.text, background: 'var(--d-input-bg)', textAlign: 'center' }} />
                   <span style={{ fontSize: 14, fontWeight: 700, color: C.muted }}>%</span>
                 </div>
               </div>
-              <p style={{ fontSize: 11, color: C.muted, margin: '6px 0 0' }}>
-                Current: {rate}% of each transaction amount
-              </p>
+              <p style={{ fontSize: 11, color: C.muted, margin: '6px 0 0' }}>Current: {rate}% of each transaction amount</p>
             </div>
 
-            {/* Min fee */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
-                Minimum Fee (UGX)
-              </label>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>Minimum Fee (UGX)</label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: C.muted, fontWeight: 600 }}>UGX</span>
-                <input
-                  type="number"
-                  value={minFee}
-                  onChange={e => setMinFee(Math.max(0, Number(e.target.value)))}
-                  min={0} step={100}
-                  style={{
-                    width: '100%', padding: '11px 12px 11px 46px', borderRadius: 10,
-                    border: `1.5px solid ${C.border}`, fontSize: 14, fontWeight: 700,
-                    color: C.text, background: 'var(--d-input-bg)', boxSizing: 'border-box',
-                  }}
-                />
+                <input type="number" value={minFee} onChange={e => setMinFee(Math.max(0, Number(e.target.value)))} min={0} step={100} style={{ width: '100%', padding: '11px 12px 11px 46px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 14, fontWeight: 700, color: C.text, background: 'var(--d-input-bg)', boxSizing: 'border-box' }} />
               </div>
-              <p style={{ fontSize: 11, color: C.muted, margin: '4px 0 0' }}>Applied when calculated fee is below this amount</p>
             </div>
 
-            {/* Max fee */}
             <div style={{ marginBottom: 24 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
-                Maximum Fee (UGX) — 0 means no cap
-              </label>
+              <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>Maximum Fee (UGX) — 0 means no cap</label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: C.muted, fontWeight: 600 }}>UGX</span>
-                <input
-                  type="number"
-                  value={maxFee}
-                  onChange={e => setMaxFee(Math.max(0, Number(e.target.value)))}
-                  min={0} step={1000}
-                  style={{
-                    width: '100%', padding: '11px 12px 11px 46px', borderRadius: 10,
-                    border: `1.5px solid ${C.border}`, fontSize: 14, fontWeight: 700,
-                    color: C.text, background: 'var(--d-input-bg)', boxSizing: 'border-box',
-                  }}
-                />
+                <input type="number" value={maxFee} onChange={e => setMaxFee(Math.max(0, Number(e.target.value)))} min={0} step={1000} style={{ width: '100%', padding: '11px 12px 11px 46px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 14, fontWeight: 700, color: C.text, background: 'var(--d-input-bg)', boxSizing: 'border-box' }} />
               </div>
             </div>
 
-            <button
-              onClick={handleSave}
-              disabled={pending}
-              style={{
-                width: '100%', padding: '14px', borderRadius: 12, border: 'none',
-                background: pending ? C.greenBg : C.green, color: pending ? C.green : '#fff',
-                fontSize: 15, fontWeight: 800, cursor: pending ? 'wait' : 'pointer',
-              }}
-            >
+            <button onClick={handleSave} disabled={pending} style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: pending ? C.greenBg : C.green, color: pending ? C.green : '#fff', fontSize: 15, fontWeight: 800, cursor: pending ? 'wait' : 'pointer' }}>
               {pending ? '⏳ Saving…' : 'Save Commission Settings'}
             </button>
           </div>
@@ -259,18 +344,11 @@ export default function AdminCommissionPage() {
               <tbody>
                 {examples.map(amt => {
                   const fee = calcFee(amt);
-                  const net = amt - fee;
                   return (
                     <tr key={amt} style={{ borderTop: `1px solid ${C.border}` }}>
-                      <td style={{ padding: '12px 20px', fontSize: 13, color: C.text, fontWeight: 600 }}>
-                        UGX {amt.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '12px 20px', fontSize: 13, color: C.amber, fontWeight: 600, textAlign: 'right' }}>
-                        UGX {fee.toLocaleString()}
-                      </td>
-                      <td style={{ padding: '12px 20px', fontSize: 13, fontWeight: 800, color: C.green, textAlign: 'right' }}>
-                        UGX {net.toLocaleString()}
-                      </td>
+                      <td style={{ padding: '12px 20px', fontSize: 13, color: C.text, fontWeight: 600 }}>UGX {amt.toLocaleString()}</td>
+                      <td style={{ padding: '12px 20px', fontSize: 13, color: C.amber, fontWeight: 600, textAlign: 'right' }}>UGX {fee.toLocaleString()}</td>
+                      <td style={{ padding: '12px 20px', fontSize: 13, fontWeight: 800, color: C.green, textAlign: 'right' }}>UGX {(amt - fee).toLocaleString()}</td>
                     </tr>
                   );
                 })}
@@ -278,13 +356,12 @@ export default function AdminCommissionPage() {
             </table>
           </div>
 
-          {/* Info */}
           <div style={{ background: C.greenBg, borderRadius: 14, padding: '14px 18px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <span style={{ fontSize: 18, flexShrink: 0 }}>ℹ️</span>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: '#065F46', margin: 0 }}>How commission works</p>
               <p style={{ fontSize: 12, color: '#065F46', margin: '4px 0 0', opacity: 0.85, lineHeight: 1.5 }}>
-                When a buyer confirms receipt, the escrow is released. The platform fee is deducted from the gross amount, and the net is transferred to the seller's wallet. All fee deductions are logged as separate transactions for full audit visibility.
+                When a buyer confirms receipt, the escrow is released. The platform fee is deducted and the net transferred to the seller&apos;s wallet. All deductions are logged for full audit visibility.
               </p>
             </div>
           </div>
