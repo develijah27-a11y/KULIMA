@@ -66,7 +66,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Could not send code. Please try again.' }, { status: 500 });
   }
 
-  await sendSms(toE164(local), `Your Cropify verification code is ${code}. It expires in 10 minutes. Never share this code with anyone.`);
+  const smsResult = await sendSms(toE164(local), `Your Cropify verification code is ${code}. It expires in 10 minutes. Never share this code with anyone.`);
+
+  // A code that's stored but never actually sent reads to the user as
+  // "the app is broken" rather than "wait for the code" — surface real
+  // delivery failures instead of always claiming success. `skipped` (SMS
+  // not configured in this environment) still returns success since that's
+  // an expected no-op, not a user-facing failure.
+  if (smsResult.error) {
+    return NextResponse.json({ error: 'Could not send the code by SMS right now. Please try again shortly.' }, { status: 502 });
+  }
 
   return NextResponse.json({ success: true });
 }

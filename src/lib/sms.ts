@@ -2,19 +2,20 @@
 // same degrade pattern as lib/email.ts, so the rest of the app never
 // depends on SMS actually having been wired up.
 //
-// Provider: UgSMS (https://ugsms.com), base URL https://ugsms.com/v1.
-// POST /sms/send takes { numbers, message_body } — numbers is a
-// comma-separated list, no leading '+' (Uganda local 0XXXXXXXXX or
-// 256XXXXXXXXX both accepted per their docs). Auth: UgSMS supports both
-// username/password and an API key as "the preferred alternative... for
-// better rotation and scoping" (their integration docs), but the exact
-// header/param name for key-based auth isn't published anywhere public —
-// sent as a Bearer token (the standard convention for a prefixed key like
-// this one) AND as an `api_key` form field, so it works either way the
-// provider actually expects it. If sends still fail, check the logged
-// response body (UgSMS returns a JSON error) rather than guessing again.
+// Provider: UgSMS (https://ugsms.com). There are two send endpoints and
+// they are NOT interchangeable:
+//   - v1 (/v1/sms/send) authenticates with a `username`+`password` pair —
+//     confirmed directly against their API: sending an API key as a Bearer
+//     token or `api_key` field there gets "Credentials are required...
+//     Provide username and password", even though the key is valid.
+//   - v2 (/api/v2/sms/send) authenticates with an API key via the
+//     `X-API-Key` header — this is the one that actually matches the
+//     UGSMS_API_KEY this app was given, confirmed working directly against
+//     their API (reached "Insufficient balance", not an auth error).
+// If sends still fail, check the logged response body — UgSMS returns a
+// specific JSON error for every failure mode (bad number, no balance, etc).
 const apiKey = process.env.UGSMS_API_KEY;
-const BASE_URL = 'https://ugsms.com/v1/sms/send';
+const BASE_URL = 'https://ugsms.com/api/v2/sms/send';
 
 function toLocalUg(raw: string): string {
   const digits = raw.replace(/\s+/g, '');
@@ -29,19 +30,17 @@ export async function sendSms(to: string, message: string) {
     return { skipped: true as const };
   }
   try {
-    const body = new URLSearchParams({
-      numbers: toLocalUg(to),
-      message_body: message,
-      api_key: apiKey,
-    });
     const res = await fetch(BASE_URL, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-API-Key': apiKey,
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body,
+      body: JSON.stringify({
+        numbers: toLocalUg(to),
+        message_body: message,
+      }),
     });
     const text = await res.text();
     if (!res.ok) {
