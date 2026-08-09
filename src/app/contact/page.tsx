@@ -9,7 +9,7 @@ const CARD  = '#0A1C10';
 const BORDER = 'rgba(74,222,128,0.10)';
 const MUTED = 'rgba(240,253,244,0.62)';
 
-const SUPPORT_EMAIL = 'kimulidaudi5@gmail.com';
+const SUPPORT_EMAIL = 'kwagalaelijahhannington@gmail.com';
 const WHATSAPP_NUMBER = '0758984224';
 const CALL_NUMBER = '0786857587';
 
