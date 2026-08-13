@@ -38,6 +38,7 @@ const FARMER_NAV = [
   { href: '/farmer/notifications',icon: 'notifications',label: 'Notifications' },
   { href: '/farmer/account',     icon: 'verify',       label: 'My Account' },
   { href: '/farmer/premium',     icon: 'premium',      label: 'Farmer Pro' },
+  { href: '/farmer/assistant',   icon: 'assistant',    label: 'Copilot' },
   { href: '/farmer/support',     icon: 'support',      label: 'Support' },
   { href: '/farmer/settings',    icon: 'settings',     label: 'Settings' },
 ];

@@ -28,6 +28,7 @@ const BUYER_NAV = [
   { href: '/buyer/notifications',icon: 'notifications',label: 'Notifications' },
   { href: '/buyer/account',      icon: 'verify',       label: 'My Account' },
   { href: '/buyer/premium',      icon: 'premium',      label: 'Buyer Pro' },
+  { href: '/buyer/assistant',    icon: 'assistant',    label: 'Copilot' },
   { href: '/buyer/support',      icon: 'support',      label: 'Support' },
   { href: '/buyer/settings',     icon: 'settings',     label: 'Settings' },
 ];

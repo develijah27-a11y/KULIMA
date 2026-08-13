@@ -12,7 +12,7 @@ import {
   CheckSquare, AlertTriangle, GitMerge, Star, PieChart, Shield,
   AlertOctagon, MessageCircle, Receipt, UserPlus, CalendarDays, HardHat,
   Map, Users2, Truck, CheckCircle2, DollarSign, LineChart, LogOut, Bookmark,
-  ChevronLeft, ChevronRight, Activity, Headphones, Crown,
+  ChevronLeft, ChevronRight, Activity, Headphones, Crown, Sparkles,
 } from 'lucide-react';
 import { useLiveUnreadBadge } from './useLiveUnreadBadge';
 import { AppIcon } from '@/components/ui/AppIcon';
@@ -91,6 +91,7 @@ export const ICON_MAP: Record<string, IconComponent> = {
   'system-logs':    Activity,
   support:          Headphones,
   premium:          Crown,
+  assistant:        Sparkles,
 };
 
 export interface NavItem {
