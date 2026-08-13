@@ -41,11 +41,12 @@ export default function TermsPage() {
       <h2>3. Verification (KYC)</h2>
       <p>
         Cropify offers optional trust tiers (green, blue, gold) that require identity documents —
-        national ID, a selfie, and, depending on your role, a driving permit, vehicle registration,
-        business registration, or professional qualifications. Higher tiers unlock higher transaction
-        limits and eligibility for financing. Submitting false or someone else's documents is a serious
-        violation of these Terms and may result in immediate suspension and, where money was obtained
-        fraudulently, referral to law enforcement.
+        national ID and a selfie for everyone, plus, depending on your role: business registration
+        (buyers, suppliers), or a driving permit, vehicle logbook, insurance certificate, and a photo
+        of the vehicle (transporters), or professional qualifications (pathologists). Higher tiers
+        unlock higher transaction limits and eligibility for financing. Submitting false or someone
+        else's documents is a serious violation of these Terms and may result in immediate suspension
+        and, where money was obtained fraudulently, referral to law enforcement.
       </p>
 
       <h2>4. Listings, offers &amp; orders</h2>
