@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Truck, Zap, Snowflake, MapPin, Clock, CheckCircle2, Megaphone, AlertTriangle } from 'lucide-react';
 import type { DeliveryType, FareBreakdown } from '@/lib/delivery-pricing';
 import { FareConfirmSheet } from '@/components/delivery/FareConfirmSheet';
+import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -157,6 +158,11 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
 
   return (
     <form onSubmit={openConfirm} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+      <div>
+        <p style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>Drivers Near You</p>
+        <NearbyDriversMap userDistrict={pickupDistrict || userDistrict} height={280} />
+      </div>
 
       {prefilledOffer && (
         <div style={{ padding: '11px 14px', background: 'var(--color-primary-bg)', borderRadius: 10, border: '1px solid var(--color-primary-muted)' }}>

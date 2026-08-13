@@ -10,6 +10,7 @@ import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { DashboardFab } from '@/components/layout/DashboardFab';
 import { logSystemEvent } from '@/lib/system-log';
+import { DriverPresenceBroadcaster } from '@/components/transporter/DriverPresenceBroadcaster';
 
 const TRANSPORTER_NAV = [
   { href: '/transporter/dashboard',  icon: 'dashboard',    label: 'Dashboard' },
@@ -40,9 +41,10 @@ export default async function TransporterLayout({ children }: { children: React.
   let location = '';
   let roles: string[] = [];
 
-  const [profileRes, unreadRes] = await Promise.all([
+  const [profileRes, unreadRes, vehicleRes] = await Promise.all([
     supabase.from('profiles').select('id, full_name, location, role, roles').eq('user_id', user.id).single(),
     supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false).or('role.eq.transporter,role.is.null'),
+    (supabase.from as any)('vehicles').select('is_available').eq('user_id', user.id).maybeSingle(),
   ]);
 
   if (profileRes.data) {
@@ -86,6 +88,7 @@ export default async function TransporterLayout({ children }: { children: React.
         <Truck size={21} strokeWidth={2.5} color="#fff" />
       </DashboardFab>
       <NavCommandPalette items={navWithBadge} />
+      <DriverPresenceBroadcaster isAvailable={(vehicleRes.data as any)?.is_available ?? false} />
     </div>
   );
 }
