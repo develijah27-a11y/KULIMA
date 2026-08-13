@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { sendPushToUsers } from '@/lib/push';
+import { generatePlantingAlerts } from '@/lib/planting-calendar';
 
 // Vercel cron — every 6 hours
 export async function GET(req: Request) {
@@ -162,11 +163,49 @@ export async function GET(req: Request) {
     await sendPushToUsers([userId], { title, body, url: '/supplier/catalogue' });
   }
 
+  // 5. Planting-season alerts. lib/planting-calendar.ts computes real
+  // plant/weed/harvest windows per crop, but until now it was only ever
+  // rendered passively on /farmer/weather and /farmer/planting — nothing
+  // pushed it to a farmer who doesn't happen to open those pages the day
+  // a window opens. Only farmers with a primary_crop set get these (an
+  // unset crop means generatePlantingAlerts would return every tracked
+  // crop, which would be noisy spam rather than a useful nudge).
+  const { data: cropFarmers } = await (supabase.from as any)('profiles')
+    .select('user_id, primary_crop')
+    .eq('role', 'farmer')
+    .not('primary_crop', 'is', null);
+
+  const now = new Date();
+  const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+  let plantingAlertsSent = 0;
+
+  for (const farmer of (cropFarmers ?? []) as any[]) {
+    const alerts = generatePlantingAlerts(now.getMonth(), now.getDate(), [farmer.primary_crop]);
+    // Only the actionable, time-sensitive ones — not the low-urgency
+    // "21 days out" heads-up, which would otherwise refire every 6 hours.
+    const actionable = alerts.filter((a) =>
+      a.type === 'plant_now' || a.type === 'weed_now' || a.type === 'harvest_now' || a.type === 'plant_soon'
+    );
+
+    for (const alert of actionable) {
+      const { data: already } = await (supabase.from as any)('notifications')
+        .select('id').eq('user_id', farmer.user_id).eq('title', alert.title).gte('created_at', twoWeeksAgo).maybeSingle();
+      if (already) continue;
+
+      await (supabase.from as any)('notifications').insert({
+        user_id: farmer.user_id, role: 'farmer', type: 'planting', title: alert.title, body: alert.message, read: false,
+      });
+      await sendPushToUsers([farmer.user_id], { title: alert.title, body: alert.message, url: '/farmer/planting' });
+      plantingAlertsSent++;
+    }
+  }
+
   return NextResponse.json({
     success: true,
     expiredFlashDeals: (expiredFlashDeals ?? []).length,
     priceChanges: priceChanges.length,
     lowInventory: (lowInventory ?? []).length,
     lowProducts: (lowProducts ?? []).length,
+    plantingAlertsSent,
   });
 }

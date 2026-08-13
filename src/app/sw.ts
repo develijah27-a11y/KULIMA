@@ -36,10 +36,18 @@ const serwist = new Serwist({
     },
 
     // ── API data ──────────────────────────────────────────────────────────────
+    // NetworkFirst, not StaleWhileRevalidate: farmers use this to decide
+    // whether to plant/spray/spray today, so a fresh network read (even a
+    // few seconds slower) beats instantly showing a cached reading that
+    // could be hours old. Falls back to cache only if the network is
+    // unreachable. Cache bucket renamed (v2) to drop whatever any
+    // already-installed device cached under the old always-serve-cached-
+    // first strategy.
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/weather'),
-      handler: new StaleWhileRevalidate({
-        cacheName: 'cropify-weather',
+      handler: new NetworkFirst({
+        cacheName: 'cropify-weather-v2',
+        networkTimeoutSeconds: 5,
         plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 1800 })],
       }),
     },
