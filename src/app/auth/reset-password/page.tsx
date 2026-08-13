@@ -39,7 +39,12 @@ export default function ResetPasswordPage() {
       const supabase = createClient();
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      router.push('/dashboard');
+      // Sign out and send the user to sign in fresh with the new password,
+      // rather than dropping them straight into the dashboard still on the
+      // session /auth/confirm created from the recovery link — a password
+      // reset should end with an explicit login, not a silent auto-login.
+      await supabase.auth.signOut();
+      router.push('/auth/signin?reason=password_reset');
       router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');

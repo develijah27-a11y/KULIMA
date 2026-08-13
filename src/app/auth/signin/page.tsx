@@ -6,7 +6,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { AuthForm } from '@/features/auth/components/AuthForm';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
 import { createClient } from '@/lib/supabase/client';
-import { ShieldCheck, AlertCircle } from 'lucide-react';
+import { ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 const supabase = createClient();
 
@@ -141,6 +141,19 @@ function SignInContent() {
           <span>
             For your security, sessions expire after 12 hours. Please sign in again to continue.
           </span>
+        </div>
+      )}
+
+      {/* Password just reset — confirm and prompt a fresh sign-in with it */}
+      {reason === 'password_reset' && (
+        <div
+          className="rounded-xl px-4 py-3 text-sm mb-4 flex items-start gap-3"
+          style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)', color: '#86efac' }}
+          role="status"
+          aria-live="polite"
+        >
+          <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>Password updated. Sign in with your new password.</span>
         </div>
       )}
 

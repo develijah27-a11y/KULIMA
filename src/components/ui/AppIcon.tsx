@@ -17,17 +17,31 @@ export function AppIcon({ size = 28, rounded = 0 }: { size?: number; rounded?: n
       style={{ borderRadius: rounded, flexShrink: 0, display: 'block' }}
       aria-label="Cropify"
     >
-      <path d="M74,176 Q128,158 182,176 L182,190 Q128,174 74,190 Z" fill="#8BC34A" />
-      <circle cx="128" cy="132" r="15" fill="#FFB300" />
-      <g stroke="#FFB300" strokeWidth="5" strokeLinecap="round">
-        <path d="M128,100 L128,110" />
-        <path d="M101,113 L109,119" />
-        <path d="M155,113 L147,119" />
-        <path d="M96,140 L106,138" />
-        <path d="M160,140 L150,138" />
+      <defs>
+        <linearGradient id="appIconRingGrad" x1="195" y1="71" x2="195" y2="185" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#0A5C36" />
+          <stop offset="1" stopColor="#34A853" />
+        </linearGradient>
+        <linearGradient id="appIconLeafGrad" x1="198" y1="178" x2="238" y2="222" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="#0A5C36" />
+          <stop offset="1" stopColor="#8BC34A" />
+        </linearGradient>
+      </defs>
+      <path d="M195.4,184.6 A88,88 0 1 1 195.4,71.4" stroke="url(#appIconRingGrad)" strokeWidth="46" strokeLinecap="round" />
+      <path d="M198,178 Q198.8,217.5 238,222 Q237.2,182.5 198,178 Z" fill="url(#appIconLeafGrad)" />
+      <path d="M198,178 L238,222" stroke="#0A5C36" strokeWidth="2" strokeLinecap="round" opacity={0.5} />
+      <g stroke="#FFB300" strokeWidth="7" strokeLinecap="round">
+        <path d="M132,112 L148,112" />
+        <path d="M125,129 L136.3,140.3" />
+        <path d="M108,136 L108,152" />
+        <path d="M91,129 L79.7,140.3" />
+        <path d="M84,112 L68,112" />
+        <path d="M91,95 L79.7,83.7" />
+        <path d="M108,88 L108,72" />
+        <path d="M125,95 L136.3,83.7" />
       </g>
-      <path d="M180.8,165.6 A64,64 0 1 1 180.8,90.4" stroke="#34A853" strokeWidth="32" strokeLinecap="round" />
-      <path d="M180.8,90.4 Q168,66 198,52 Q194,82 180.8,90.4 Z" fill="#0A5C36" />
+      <circle cx="108" cy="112" r="19" fill="#FFB300" />
+      <path d="M50,178 Q92,148 130,166 Q152,153 176,166 L176,196 L50,196 Z" fill="#8BC34A" />
     </svg>
   );
 }

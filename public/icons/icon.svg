@@ -1,25 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <!-- Final Cropify mark: a "C" formed by a leaf, wrapping a rising sun
-       over a field — recreated as clean vector from the approved brand
-       reference (palette: 0A5C36 / 34A853 / 8BC34A / FFB300). -->
+  <!-- Cropify mark, matched to the approved brand reference: a thick green
+       "C" ring wrapping a rising sun over gentle field mounds, with a large
+       leaf overlapping the ring's lower terminus. Palette: 0A5C36 / 34A853 /
+       8BC34A / FFB300 (approved swatches). -->
   <rect width="256" height="256" rx="56" fill="#FFFFFF"/>
 
-  <!-- Field mounds -->
-  <path d="M74,176 Q128,158 182,176 L182,190 Q128,174 74,190 Z" fill="#8BC34A"/>
+  <defs>
+    <linearGradient id="ringGrad" x1="195" y1="71" x2="195" y2="185" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A5C36"/>
+      <stop offset="1" stop-color="#34A853"/>
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="198" y1="178" x2="238" y2="222" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A5C36"/>
+      <stop offset="1" stop-color="#8BC34A"/>
+    </linearGradient>
+  </defs>
 
-  <!-- Sun -->
-  <circle cx="128" cy="132" r="15" fill="#FFB300"/>
-  <g stroke="#FFB300" stroke-width="5" stroke-linecap="round">
-    <path d="M128,100 L128,110"/>
-    <path d="M101,113 L109,119"/>
-    <path d="M155,113 L147,119"/>
-    <path d="M96,140 L106,138"/>
-    <path d="M160,140 L150,138"/>
+  <!-- "C" ring -->
+  <path d="M195.4,184.6 A88,88 0 1 1 195.4,71.4" stroke="url(#ringGrad)" stroke-width="46" stroke-linecap="round"/>
+
+  <!-- Leaf overlapping the ring's lower terminus -->
+  <path d="M198,178 Q198.8,217.5 238,222 Q237.2,182.5 198,178 Z" fill="url(#leafGrad)"/>
+  <path d="M198,178 L238,222" stroke="#0A5C36" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Sunburst -->
+  <g stroke="#FFB300" stroke-width="7" stroke-linecap="round">
+    <path d="M132,112 L148,112"/>
+    <path d="M125,129 L136.3,140.3"/>
+    <path d="M108,136 L108,152"/>
+    <path d="M91,129 L79.7,140.3"/>
+    <path d="M84,112 L68,112"/>
+    <path d="M91,95 L79.7,83.7"/>
+    <path d="M108,88 L108,72"/>
+    <path d="M125,95 L136.3,83.7"/>
   </g>
+  <circle cx="108" cy="112" r="19" fill="#FFB300"/>
 
-  <!-- "C" ring (the leaf) -->
-  <path d="M180.8,165.6 A64,64 0 1 1 180.8,90.4" stroke="#34A853" stroke-width="32" stroke-linecap="round"/>
-
-  <!-- Leaf tip flourish at the ring's upper terminus -->
-  <path d="M180.8,90.4 Q168,66 198,52 Q194,82 180.8,90.4 Z" fill="#0A5C36"/>
+  <!-- Field mounds (drawn last so they form the horizon over the sun's lower rays) -->
+  <path d="M50,178 Q92,148 130,166 Q152,153 176,166 L176,196 L50,196 Z" fill="#8BC34A"/>
 </svg>

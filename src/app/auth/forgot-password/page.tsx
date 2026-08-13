@@ -84,7 +84,7 @@ export default function ForgotPasswordPage() {
           )}
 
           <button type="submit" disabled={loading} className="auth-btn" style={{ marginTop: 8 }}>
-            {loading ? 'Sending…' : 'Send reset link'}
+            {loading ? 'Sending…' : 'Send reset email'}
           </button>
         </form>
       )}
