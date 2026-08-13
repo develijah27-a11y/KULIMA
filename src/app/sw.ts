@@ -115,7 +115,12 @@ self.addEventListener('push', (event: PushEvent) => {
     self.registration.showNotification(title, {
       body: payload.body ?? '',
       icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      // Android re-tints and masks `badge` to a flat monochrome silhouette
+      // for the status bar — feeding it the full-color app icon (like this
+      // used to) makes the OS's masking turn it into an illegible smudge.
+      // A dedicated single-shape icon is required, separate from `icon`
+      // (which still shows full color in the notification tray itself).
+      badge: '/icons/notification-badge-96.png',
       tag: payload.tag,
       data: { url: payload.url ?? '/dashboard' },
     }),

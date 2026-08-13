@@ -184,7 +184,7 @@ export function PaymentTimeoutSheet({
         </button>
 
         <p style={{ fontSize: 11, color: 'var(--d-muted)', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
-          Paid via your AgriNova wallet · Driver starts moving after confirmation
+          Paid via your Cropify wallet · Driver starts moving after confirmation
         </p>
       </div>
     </div>

@@ -75,7 +75,7 @@ export async function POST(req: Request) {
       amount,
       currency: 'UGX',
       description: `Wallet deposit via ${provider.toUpperCase()}`,
-      customer: { name: user.email ?? 'Kulima user', phoneNumber: normalizedPhone },
+      customer: { name: user.email ?? 'Cropify user', phoneNumber: normalizedPhone },
       method: 'mobileMoney',
     });
 

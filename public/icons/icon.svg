@@ -1,16 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#22A35C"/>
-      <stop offset="1" stop-color="#0B4020"/>
-    </linearGradient>
-  </defs>
-  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+  <!-- Final Cropify mark: a "C" formed by a leaf, wrapping a rising sun
+       over a field — recreated as clean vector from the approved brand
+       reference (palette: 0A5C36 / 34A853 / 8BC34A / FFB300). -->
+  <rect width="256" height="256" rx="56" fill="#FFFFFF"/>
 
-  <!-- Rising sun -->
-  <path d="M62,192 A66,66 0 0 1 194,192 Z" fill="#FFA726"/>
+  <!-- Field mounds -->
+  <path d="M74,176 Q128,158 182,176 L182,190 Q128,174 74,190 Z" fill="#8BC34A"/>
 
-  <!-- Leaf sweeping up out of the sunrise -->
-  <path d="M96,182 Q88,104 202,66 Q166,152 96,182 Z" fill="#F6EFDD"/>
-  <path d="M110,168 Q140,120 190,80" stroke="#0B4020" stroke-width="4" stroke-linecap="round" opacity="0.25"/>
+  <!-- Sun -->
+  <circle cx="128" cy="132" r="15" fill="#FFB300"/>
+  <g stroke="#FFB300" stroke-width="5" stroke-linecap="round">
+    <path d="M128,100 L128,110"/>
+    <path d="M101,113 L109,119"/>
+    <path d="M155,113 L147,119"/>
+    <path d="M96,140 L106,138"/>
+    <path d="M160,140 L150,138"/>
+  </g>
+
+  <!-- "C" ring (the leaf) -->
+  <path d="M180.8,165.6 A64,64 0 1 1 180.8,90.4" stroke="#34A853" stroke-width="32" stroke-linecap="round"/>
+
+  <!-- Leaf tip flourish at the ring's upper terminus -->
+  <path d="M180.8,90.4 Q168,66 198,52 Q194,82 180.8,90.4 Z" fill="#0A5C36"/>
 </svg>

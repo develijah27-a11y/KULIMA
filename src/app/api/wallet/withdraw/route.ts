@@ -102,8 +102,8 @@ export async function POST(req: Request) {
       amount,
       currency: 'UGX',
       description: 'Cropify Pay withdrawal',
-      customer: { name: user.email ?? 'Kulima user', phoneNumber: normalizedPhone },
-      destination: { accountHolderName: user.email ?? 'Kulima user', accountNumber: normalizedPhone },
+      customer: { name: user.email ?? 'Cropify user', phoneNumber: normalizedPhone },
+      destination: { accountHolderName: user.email ?? 'Cropify user', accountNumber: normalizedPhone },
     });
 
     // Nylon Pay auto-generates the reference — store it, and leave the final

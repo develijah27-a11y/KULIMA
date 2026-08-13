@@ -24,15 +24,37 @@ const oswald    = Oswald({ subsets: ["latin"], weight: ["500","600","700"], vari
 const plexSans  = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400","500","600"], variable: "--font-plex-sans", display: "swap" });
 const plexMono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400","500","600"], variable: "--font-plex-mono", display: "swap" });
 
+const SITE_URL = "https://cropify-ug.vercel.app";
+const SITE_TITLE = "Cropify — Smart Farm Management for Uganda";
+const SITE_DESCRIPTION =
+  "Real-time weather forecasts, market prices, crop disease detection, and buyer connections — all in one platform for Ugandan smallholder farmers.";
+
 export const metadata: Metadata = {
-  title: "Cropify — Smart Farm Management for Uganda",
-  description:
-    "Real-time weather forecasts, market prices, crop disease detection, and buyer connections — all in one platform for Ugandan smallholder farmers.",
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
   manifest: "/manifest.json",
+  metadataBase: new URL(SITE_URL),
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Cropify",
+  },
+  // Explicit OG/Twitter cards so search results and shared links show the
+  // Cropify logo — without these, some crawlers/platforms fall back to a
+  // blank or generic preview instead of our branding.
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "Cropify",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Cropify — Grow Smart. Farm Better." }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/og-image.png"],
   },
 };
 
@@ -80,14 +102,15 @@ export default function RootLayout({
       <head>
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* ?v=5 cache-busts the Cropify icon redesign — these paths aren't
-            content-hashed, and the old files were served with a 1-year
-            immutable Cache-Control, so browsers/CDN need a new URL to notice
-            the change. Bump this version any time icon.svg's content changes. */}
-        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=5" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=5" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=5" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=5" />
+        {/* ?v=6 cache-busts the final approved Cropify logo — these paths
+            aren't content-hashed, and the old files were served with a
+            1-year immutable Cache-Control, so browsers/CDN need a new URL
+            to notice the change. Bump this version any time icon.svg's
+            content changes. */}
+        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=6" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=6" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=6" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=6" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
@@ -113,17 +136,19 @@ export default function RootLayout({
             when to dismiss it. */}
         <div id="app-splash" className="app-splash" aria-hidden="true">
           <svg className="app-splash-mark" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="splashBg" x1="0" y1="0" x2="256" y2="256" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#22A35C" />
-                <stop offset="1" stopColor="#0B4020" />
-              </linearGradient>
-            </defs>
-            <rect width="256" height="256" rx="57" fill="url(#splashBg)" />
-            {/* Rising sun with a leaf sweeping up out of it */}
-            <path d="M62,192 A66,66 0 0 1 194,192 Z" fill="#FFA726" />
-            <path d="M96,182 Q88,104 202,66 Q166,152 96,182 Z" fill="#F6EFDD" />
-            <path d="M110,168 Q140,120 190,80" stroke="#0B4020" strokeWidth="4" strokeLinecap="round" opacity="0.25" />
+            <rect width="256" height="256" rx="57" fill="#FFFFFF" />
+            {/* "C" formed by a leaf wrapping a rising sun over a field */}
+            <path d="M74,176 Q128,158 182,176 L182,190 Q128,174 74,190 Z" fill="#8BC34A" />
+            <circle cx="128" cy="132" r="15" fill="#FFB300" />
+            <g stroke="#FFB300" strokeWidth="5" strokeLinecap="round">
+              <path d="M128,100 L128,110" />
+              <path d="M101,113 L109,119" />
+              <path d="M155,113 L147,119" />
+              <path d="M96,140 L106,138" />
+              <path d="M160,140 L150,138" />
+            </g>
+            <path d="M180.8,165.6 A64,64 0 1 1 180.8,90.4" stroke="#34A853" strokeWidth="32" strokeLinecap="round" />
+            <path d="M180.8,90.4 Q168,66 198,52 Q194,82 180.8,90.4 Z" fill="#0A5C36" />
           </svg>
           <span className="app-splash-word">Cropify</span>
           <span className="app-splash-tagline">Smart Farm Management</span>

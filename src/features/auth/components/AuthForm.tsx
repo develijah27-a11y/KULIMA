@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Eye, EyeOff } from 'lucide-react';
+import { OtpInput } from '@/components/ui/OtpInput';
 
 interface AuthFormProps {
   mode: 'signin' | 'signup';
@@ -13,6 +14,7 @@ interface AuthFormProps {
 const supabase = createClient();
 
 const OTP_EXPIRY_SECONDS = 3600;
+const RESEND_COOLDOWN_SECONDS = 30;
 
 function formatCountdown(s: number) {
   return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
@@ -36,7 +38,10 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [verifying, setVerifying]             = useState(false);
   const [codeSentAt, setCodeSentAt]           = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft]         = useState<number | null>(null);
+  const [resendCooldown, setResendCooldown]   = useState(0);
+  const [otpErrorTick, setOtpErrorTick]       = useState(0);
   const [clearingSession, setClearingSession] = useState(false);
+  const [agreedToTerms, setAgreedToTerms]     = useState(false);
 
   // Refs for values that must not cause re-renders when changed
   const isSigningUpRef  = useRef(false);
@@ -87,6 +92,18 @@ export function AuthForm({ mode }: AuthFormProps) {
     };
     tick();
     const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [codeSentAt]);
+
+  // ── Resend cooldown — 30s, prevents hammering the resend-email API ───────
+  // Reuses codeSentAt (set both when the OTP screen first appears and on a
+  // successful resend) so no separate "screen opened" signal is needed.
+  useEffect(() => {
+    if (!codeSentAt) { setResendCooldown(0); return; }
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    const id = setInterval(() => {
+      setResendCooldown(prev => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
     return () => clearInterval(id);
   }, [codeSentAt]);
 
@@ -192,6 +209,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           fullName: fullName || data.user.email?.split('@')[0] || 'User',
           phoneNumber: phoneNumber || null,
           location: location || null,
+          termsAccepted: agreedToTerms,
         }),
       }).catch(() => {});
       await exchangeSessionAndRedirect(data.session);
@@ -202,7 +220,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     setSuccess(`Account created! We sent a 6-digit code to ${email} — enter it below to activate your account.`);
     setNeedsConfirmation(true);
     setCodeSentAt(Date.now());
-  }, [email, password, fullName, phoneNumber, location, exchangeSessionAndRedirect]);
+  }, [email, password, fullName, phoneNumber, location, agreedToTerms, exchangeSessionAndRedirect]);
 
   // ── handleSubmit ──────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
@@ -215,6 +233,13 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     if (mode === 'signup' && password !== confirmPassword) {
       setError("Passwords don't match. Please re-type them.");
+      submitLockRef.current = false;
+      submittingRef.current = false;
+      return;
+    }
+
+    if (mode === 'signup' && !agreedToTerms) {
+      setError('Please accept the Terms & Conditions to continue.');
       submitLockRef.current = false;
       submittingRef.current = false;
       return;
@@ -290,6 +315,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             fullName: fullName || data.user.email?.split('@')[0] || 'User',
             phoneNumber: phoneNumber || null,
             location: location || null,
+            termsAccepted: agreedToTerms,
           }),
         }).catch(() => {});
       }
@@ -307,9 +333,10 @@ export function AuthForm({ mode }: AuthFormProps) {
           ? 'That code is incorrect or has expired. Please check your email or request a new one.'
           : msg,
       );
+      setOtpErrorTick(t => t + 1);
       setVerifying(false);
     }
-  }, [code, verifying, email, mode, fullName, phoneNumber, location, exchangeSessionAndRedirect]);
+  }, [code, verifying, email, mode, fullName, phoneNumber, location, agreedToTerms, exchangeSessionAndRedirect]);
 
   // ── resendConfirmation ────────────────────────────────────────────────────
   const resendConfirmation = useCallback(async () => {
@@ -359,17 +386,17 @@ export function AuthForm({ mode }: AuthFormProps) {
         )}
 
         <div>
-          <label htmlFor="verifyCode" className="block text-sm mb-1.5"
+          <label className="block text-sm mb-1.5 text-center"
             style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>
-            6-digit verification code
+            Enter the 6-digit code
           </label>
-          <input
-            id="verifyCode" type="text" inputMode="numeric" autoComplete="one-time-code"
-            maxLength={6} value={code}
-            onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); verifyCode(); } }}
-            placeholder="000000" disabled={verifying} className="auth-input"
-            style={{ textAlign: 'center', fontSize: 22, letterSpacing: '0.4em', fontWeight: 800 }}
+          <OtpInput
+            length={6}
+            value={code}
+            onChange={setCode}
+            onComplete={verifyCode}
+            errorTick={otpErrorTick}
+            disabled={verifying}
           />
           {secondsLeft !== null && (
             secondsLeft > 0
@@ -392,11 +419,18 @@ export function AuthForm({ mode }: AuthFormProps) {
         </button>
 
         <div style={{ textAlign: 'center', paddingTop: 4 }}>
-          <button type="button" onClick={resendConfirmation} disabled={resending}
+          <button type="button" onClick={resendConfirmation} disabled={resending || resendCooldown > 0}
             style={{ background: 'none', border: 'none', padding: 0, fontSize: 13, fontWeight: 700,
-              color: resending ? 'rgba(240,253,244,0.35)' : 'var(--color-primary)',
-              cursor: resending ? 'default' : 'pointer', textDecoration: 'underline' }}>
-            {resending ? 'Sending…' : resent ? 'Email sent — check your inbox' : "Didn't get it? Resend code"}
+              color: resending || resendCooldown > 0 ? 'rgba(240,253,244,0.35)' : 'var(--color-primary)',
+              cursor: resending || resendCooldown > 0 ? 'default' : 'pointer',
+              textDecoration: resending || resendCooldown > 0 ? 'none' : 'underline' }}>
+            {resending
+              ? 'Sending…'
+              : resendCooldown > 0
+              ? `Resend code in ${resendCooldown}s`
+              : resent
+              ? 'Email sent — check your inbox'
+              : "Didn't get it? Resend code"}
           </button>
         </div>
 
@@ -582,23 +616,34 @@ export function AuthForm({ mode }: AuthFormProps) {
         </div>
       )}
 
+      {/* ── Terms acceptance (signup only) ── */}
+      {mode === 'signup' && (
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={agreedToTerms}
+            onChange={e => { setAgreedToTerms(e.target.checked); if (error) setError(null); }}
+            disabled={loading}
+            required
+            style={{ marginTop: 3, width: 15, height: 15, flexShrink: 0, cursor: 'pointer', accentColor: 'var(--color-primary)' }}
+          />
+          <span style={{ fontSize: 12, color: 'rgba(240,253,244,0.7)', lineHeight: 1.5 }}>
+            I agree to Cropify&rsquo;s{' '}
+            <Link href="/terms" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>Terms &amp; Conditions</Link>
+            {' '}and{' '}
+            <Link href="/privacy" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>Privacy Policy</Link>.
+          </span>
+        </label>
+      )}
+
       {/* ── Submit ── */}
       <button type="submit"
-        disabled={loading || pwMismatch}
+        disabled={loading || pwMismatch || (mode === 'signup' && !agreedToTerms)}
         className="auth-btn" style={{ marginTop: 8 }}>
         {loading
           ? mode === 'signup' ? 'Creating account…' : 'Signing in…'
           : mode === 'signup' ? 'Create account' : 'Sign in'}
       </button>
-
-      {mode === 'signup' && (
-        <p style={{ fontSize: 11.5, color: 'rgba(240,253,244,0.45)', textAlign: 'center', marginTop: 8, lineHeight: 1.5 }}>
-          By creating an account, you agree to Cropify&rsquo;s{' '}
-          <Link href="/terms" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>Terms &amp; Conditions</Link>
-          {' '}and{' '}
-          <Link href="/privacy" target="_blank" style={{ color: 'var(--color-primary)', textDecoration: 'underline' }}>Privacy Policy</Link>.
-        </p>
-      )}
     </form>
   );
 }

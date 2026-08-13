@@ -30,7 +30,7 @@ export async function DELETE(_req: Request, { params }: Params) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  // If the member is linked to a real AgriNova account, remove the
+  // If the member is linked to a real Cropify account, remove the
   // farmer_group_members row too so their farmer dashboard no longer shows
   // this group.
   if (member.farmer_id) {
