@@ -21,7 +21,6 @@
 
   <!-- Leaf overlapping the ring's lower terminus -->
   <path d="M198,178 Q198.8,217.5 238,222 Q237.2,182.5 198,178 Z" fill="url(#leafGrad)"/>
-  <path d="M198,178 L238,222" stroke="#0A5C36" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
 
   <!-- Sunburst -->
   <g stroke="#FFB300" stroke-width="7" stroke-linecap="round">

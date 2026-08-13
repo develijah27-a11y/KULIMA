@@ -42,6 +42,22 @@ async function run() {
     console.log(`favicon/favicon-${size}.png`);
   }
 
+  // Maskable variants for Android adaptive icons: the base icon's leaf tip
+  // reaches almost to the canvas edge, which Android's circular/squircle
+  // mask would clip on install. Maskable icons need content kept inside a
+  // safe zone of ~66% of the canvas — pad the mark down to that before
+  // compositing onto a full-bleed white square background.
+  const MASKABLE_SIZES = [192, 512];
+  for (const size of MASKABLE_SIZES) {
+    const markSize = Math.round(size * 0.66);
+    const markBuf = await sharp(iconSvg, { density: 384 }).resize(markSize, markSize).png().toBuffer();
+    await sharp({ create: { width: size, height: size, channels: 4, background: '#FFFFFF' } })
+      .composite([{ input: markBuf, gravity: 'center' }])
+      .png()
+      .toFile(path.join(iconsOut, `icon-maskable-${size}.png`));
+    console.log(`icons/icon-maskable-${size}.png`);
+  }
+
   // Splash: icon centered on the brand page background, generous padding
   // (standard practice for PWA install/splash surfaces).
   const splashSize = 1024;

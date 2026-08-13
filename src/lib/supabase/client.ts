@@ -25,5 +25,10 @@ if (typeof window !== 'undefined') {
 }
 
 export const createClient = () => {
-  return createBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // experimental.passkey unlocks auth.signInWithPasskey() / auth.registerPasskey()
+  // / auth.passkey.* — device biometric (fingerprint/face) or device PIN sign-in
+  // via WebAuthn, matched by a passkey-enabled Supabase Auth project config.
+  return createBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { experimental: { passkey: true } },
+  });
 };

@@ -1,12 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Phone, ShieldCheck, Loader2 } from 'lucide-react';
+import { OtpInput } from '@/components/ui/OtpInput';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
   cardBg: 'var(--d-card)', green: 'var(--color-primary)',
 };
+
+const RESEND_COOLDOWN_SECONDS = 30;
 
 interface Props {
   initialPhone: string | null;
@@ -26,6 +29,21 @@ export function PhoneVerifyStep({ initialPhone, onVerified }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [resending, setResending] = useState(false);
+  const [codeSentAt, setCodeSentAt] = useState<number | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [errorTick, setErrorTick] = useState(0);
+
+  // Resend cooldown — 30s, prevents hammering the SMS send API (each send
+  // also costs a real SMS credit, unlike the free email OTP resend).
+  useEffect(() => {
+    if (!codeSentAt) { setResendCooldown(0); return; }
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    const id = setInterval(() => {
+      setResendCooldown(prev => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [codeSentAt]);
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -38,6 +56,8 @@ export function PhoneVerifyStep({ initialPhone, onVerified }: Props) {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? 'Could not send code.');
       setStage('code');
+      setCode('');
+      setCodeSentAt(Date.now());
       setNotice(`Code sent to ${phone}. It expires in 10 minutes.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
@@ -46,13 +66,33 @@ export function PhoneVerifyStep({ initialPhone, onVerified }: Props) {
     }
   }
 
-  async function confirmCode(e: React.FormEvent) {
-    e.preventDefault();
+  async function resendCode() {
+    if (resending || resendCooldown > 0) return;
+    setResending(true); setError(''); setNotice('');
+    try {
+      const res = await fetch('/api/verify/phone/send', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phone }),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error ?? 'Could not resend code.');
+      setCode('');
+      setCodeSentAt(Date.now());
+      setNotice(`Code resent to ${phone}.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not resend the code. Please try again.');
+    } finally {
+      setResending(false);
+    }
+  }
+
+  const confirmCode = useCallback(async (submittedCode: string) => {
+    if (submittedCode.trim().length < 6 || loading) return;
     setLoading(true); setError('');
     try {
       const res = await fetch('/api/verify/phone/confirm', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code: submittedCode }),
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? 'Incorrect code.');
@@ -60,10 +100,11 @@ export function PhoneVerifyStep({ initialPhone, onVerified }: Props) {
       onVerified?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
+      setErrorTick(t => t + 1);
     } finally {
       setLoading(false);
     }
-  }
+  }, [loading, onVerified]);
 
   if (stage === 'done') {
     return (
@@ -96,23 +137,37 @@ export function PhoneVerifyStep({ initialPhone, onVerified }: Props) {
           </button>
         </form>
       ) : (
-        <form onSubmit={confirmCode} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {notice && <p style={{ fontSize: 12, color: 'var(--color-success)', margin: 0 }}>{notice}</p>}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <input
-              type="text" inputMode="numeric" value={code}
-              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="6-digit code" required disabled={loading}
-              style={{ flex: '1 1 140px', padding: '10px 14px', borderRadius: 10, border: `1px solid ${C.border}`, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', fontSize: 15, letterSpacing: '0.15em', fontFamily: 'monospace' }}
-            />
-            <button type="submit" disabled={loading || code.length !== 6} style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: C.green, color: '#fff', fontWeight: 700, fontSize: 13, cursor: loading ? 'default' : 'pointer', opacity: code.length !== 6 ? 0.6 : 1 }}>
-              {loading ? 'Verifying…' : 'Verify'}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {notice && <p style={{ fontSize: 12, color: 'var(--color-success)', margin: 0, textAlign: 'center' }}>{notice}</p>}
+
+          <OtpInput
+            length={6}
+            value={code}
+            onChange={setCode}
+            onComplete={confirmCode}
+            errorTick={errorTick}
+            disabled={loading}
+          />
+
+          <button type="button" onClick={() => confirmCode(code)}
+            disabled={loading || code.length !== 6}
+            style={{ padding: '10px 18px', borderRadius: 10, border: 'none', background: C.green, color: '#fff', fontWeight: 700, fontSize: 13, cursor: loading ? 'default' : 'pointer', opacity: code.length !== 6 ? 0.6 : 1 }}>
+            {loading ? 'Verifying…' : 'Verify'}
+          </button>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 }}>
+            <button type="button" onClick={() => { setStage('phone'); setError(''); setNotice(''); }} disabled={loading} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0 }}>
+              Wrong number? Change it
+            </button>
+            <button type="button" onClick={resendCode} disabled={resending || resendCooldown > 0 || loading}
+              style={{ background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 700,
+                color: resending || resendCooldown > 0 ? C.muted : C.green,
+                cursor: resending || resendCooldown > 0 ? 'default' : 'pointer',
+                textDecoration: resending || resendCooldown > 0 ? 'none' : 'underline' }}>
+              {resending ? 'Sending…' : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend code'}
             </button>
           </div>
-          <button type="button" onClick={() => { setStage('phone'); setError(''); setNotice(''); }} disabled={loading} style={{ background: 'none', border: 'none', color: C.muted, fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left', padding: 0 }}>
-            Wrong number? Change it
-          </button>
-        </form>
+        </div>
       )}
 
       {error && <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: '10px 0 0' }}>{error}</p>}

@@ -75,7 +75,7 @@ export function TillClient() {
     setCart([]);
     fetch(`/api/supplier-products?storeId=${selectedStoreId}`)
       .then(r => r.json())
-      .then(json => setProducts((json.data ?? []).filter((p: Product) => p.is_available)))
+      .then(json => setProducts(json.data ?? []))
       .finally(() => setLoadingProducts(false));
   }, [selectedStoreId]);
 

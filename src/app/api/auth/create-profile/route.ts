@@ -5,10 +5,20 @@ import { logSystemEvent, withApiLogging } from '@/lib/system-log';
 import { syncGroupMembershipByPhone } from '@/lib/group-sync';
 
 async function handlePOST(req: Request) {
-  const { userId, fullName, phoneNumber, location } = await req.json().catch(() => ({}));
+  const { userId, fullName, phoneNumber, location, termsAccepted } = await req.json().catch(() => ({}));
 
   if (!userId || !fullName) {
     return NextResponse.json({ ok: false, error: 'userId and fullName required' }, { status: 400 });
+  }
+
+  // Client-side already blocks submission without the checkbox — this is
+  // the server-side backstop, since this route is what actually persists
+  // the profile a real account is built on. Enforced here rather than
+  // blocking supabase.auth.signUp() itself so the check has one place to
+  // live instead of being duplicated across both signup code paths
+  // (immediate-session and email/OTP-confirmed) that both call this route.
+  if (!termsAccepted) {
+    return NextResponse.json({ ok: false, error: 'You must accept the Terms & Conditions to create an account.' }, { status: 400 });
   }
 
   // This endpoint uses the service-role client (bypasses RLS) specifically to
@@ -41,6 +51,7 @@ async function handlePOST(req: Request) {
       location:     location ?? null,
       role:         'pending',
       roles:        ['pending'],
+      terms_accepted_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' }
   );

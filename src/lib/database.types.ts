@@ -26,6 +26,7 @@ export interface Database {
           trust_score: number | null
           remote_fee_ugx: number | null
           visit_fee_ugx: number | null
+          terms_accepted_at: string | null
           created_at: string
           updated_at: string
         }
@@ -45,6 +46,7 @@ export interface Database {
           trust_score?: number | null
           remote_fee_ugx?: number | null
           visit_fee_ugx?: number | null
+          terms_accepted_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -64,6 +66,7 @@ export interface Database {
           trust_score?: number | null
           remote_fee_ugx?: number | null
           visit_fee_ugx?: number | null
+          terms_accepted_at?: string | null
           created_at?: string
           updated_at?: string
         }

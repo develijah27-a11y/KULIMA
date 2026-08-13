@@ -102,15 +102,15 @@ export default function RootLayout({
       <head>
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* ?v=7 cache-busts the final approved Cropify logo — these paths
+        {/* ?v=8 cache-busts the final approved Cropify logo — these paths
             aren't content-hashed, and the old files were served with a
             1-year immutable Cache-Control, so browsers/CDN need a new URL
             to notice the change. Bump this version any time icon.svg's
             content changes. */}
-        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=7" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=7" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=7" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=7" />
+        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=8" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=8" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=8" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=8" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
@@ -152,7 +152,6 @@ export default function RootLayout({
             </defs>
             <path d="M195.4,184.6 A88,88 0 1 1 195.4,71.4" stroke="url(#splashRingGrad)" strokeWidth="46" strokeLinecap="round" />
             <path d="M198,178 Q198.8,217.5 238,222 Q237.2,182.5 198,178 Z" fill="url(#splashLeafGrad)" />
-            <path d="M198,178 L238,222" stroke="#0A5C36" strokeWidth="2" strokeLinecap="round" opacity={0.5} />
             <g stroke="#FFB300" strokeWidth="7" strokeLinecap="round">
               <path d="M132,112 L148,112" />
               <path d="M125,129 L136.3,140.3" />

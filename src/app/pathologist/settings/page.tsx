@@ -3,6 +3,7 @@
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
 import { Stethoscope, Banknote, Bell, Microscope, ClipboardList, AlertOctagon, Map, LogOut } from 'lucide-react';
 import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
+import { PasskeySettings } from '@/components/settings/PasskeySettings';
 
 const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', shadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.05)', cardBg: 'var(--d-card)' };
 
@@ -58,6 +59,8 @@ export default function PathologistSettingsPage() {
         <p style={{ fontSize: 13, color: C.muted }}>Manage your pathologist account and preferences</p>
       </div>
       <SettingsRoleSwitcher />
+
+      <PasskeySettings />
       {SECTIONS.map(section => (
         <div key={section.title}>
           <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{section.title}</p>

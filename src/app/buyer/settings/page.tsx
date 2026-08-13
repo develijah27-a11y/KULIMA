@@ -3,6 +3,7 @@
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
 import { User, CreditCard, Bell, Package, FileText, Truck, Snowflake, LogOut } from 'lucide-react';
 import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
+import { PasskeySettings } from '@/components/settings/PasskeySettings';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -64,6 +65,8 @@ export default function BuyerSettingsPage() {
         <p style={{ fontSize: 13, color: C.muted }}>Manage your buyer account and preferences</p>
       </div>
       <SettingsRoleSwitcher />
+
+      <PasskeySettings />
       {SECTIONS.map(section => (
         <div key={section.title}>
           <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>{section.title}</p>

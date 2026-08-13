@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Fingerprint, Loader2 } from 'lucide-react';
 import { OtpInput } from '@/components/ui/OtpInput';
 
 interface AuthFormProps {
@@ -42,6 +42,8 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [otpErrorTick, setOtpErrorTick]       = useState(0);
   const [clearingSession, setClearingSession] = useState(false);
   const [agreedToTerms, setAgreedToTerms]     = useState(false);
+  const [biometricSupported, setBiometricSupported] = useState(false);
+  const [biometricLoading, setBiometricLoading]     = useState(false);
 
   // Refs for values that must not cause re-renders when changed
   const isSigningUpRef  = useRef(false);
@@ -61,6 +63,15 @@ export function AuthForm({ mode }: AuthFormProps) {
       fetch('/api/auth/logout', { method: 'POST' })
         .finally(() => window.location.reload());
     });
+  }, [mode]);
+
+  // ── Detect platform biometric/passcode support (sign-in only) ────────────
+  useEffect(() => {
+    if (mode !== 'signin') return;
+    if (typeof window === 'undefined' || !window.PublicKeyCredential) return;
+    window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+      .then(setBiometricSupported)
+      .catch(() => setBiometricSupported(false));
   }, [mode]);
 
   // ── Listen for SIGNED_IN — used for signup confirmation path only ────────
@@ -170,6 +181,32 @@ export function AuthForm({ mode }: AuthFormProps) {
       await exchangeSessionAndRedirect(data.session);
     }
   }, [email, password, exchangeSessionAndRedirect]);
+
+  // ── Sign in with biometrics/device passcode (WebAuthn passkey) ───────────
+  const signInWithBiometrics = useCallback(async () => {
+    const { data, error: passkeyError } = await supabase.auth.signInWithPasskey();
+    if (passkeyError) throw passkeyError;
+    if (data.session) {
+      await exchangeSessionAndRedirect(data.session);
+    }
+  }, [exchangeSessionAndRedirect]);
+
+  const handleBiometricClick = useCallback(async () => {
+    if (biometricLoading || loading) return;
+    setBiometricLoading(true);
+    setError(null);
+    try {
+      await signInWithBiometrics();
+    } catch (err: unknown) {
+      // A cancelled/dismissed prompt is a normal "changed my mind," not an error worth alarming over.
+      const name = (err as any)?.name;
+      const msg  = err instanceof Error ? err.message : '';
+      const isCancel = name === 'NotAllowedError' || /cancel|not allowed/i.test(msg);
+      if (!isCancel) setError('Biometric sign-in didn’t work. Please try again or sign in with your password.');
+    } finally {
+      setBiometricLoading(false);
+    }
+  }, [biometricLoading, loading, signInWithBiometrics]);
 
   // ── Sign up ───────────────────────────────────────────────────────────────
   const signUp = useCallback(async () => {
@@ -644,6 +681,31 @@ export function AuthForm({ mode }: AuthFormProps) {
           ? mode === 'signup' ? 'Creating account…' : 'Signing in…'
           : mode === 'signup' ? 'Create account' : 'Sign in'}
       </button>
+
+      {/* ── Biometric / device-passcode sign-in ── */}
+      {mode === 'signin' && biometricSupported && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '4px 0' }}>
+            <span style={{ flex: 1, height: 1, background: 'rgba(240,253,244,0.14)' }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(240,253,244,0.45)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>or</span>
+            <span style={{ flex: 1, height: 1, background: 'rgba(240,253,244,0.14)' }} />
+          </div>
+          <button
+            type="button"
+            onClick={handleBiometricClick}
+            disabled={loading || biometricLoading}
+            className="auth-btn"
+            style={{
+              marginTop: 0, background: 'transparent', border: '1.5px solid rgba(240,253,244,0.2)',
+              color: 'var(--color-text-on-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}
+          >
+            {biometricLoading
+              ? <><Loader2 size={16} className="animate-spin" /> Follow the prompt on your device…</>
+              : <><Fingerprint size={17} /> Sign in with biometrics</>}
+          </button>
+        </>
+      )}
     </form>
   );
 }

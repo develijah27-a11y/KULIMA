@@ -3,6 +3,7 @@
 import { SettingsRoleSwitcher } from '@/components/ui/SettingsRoleSwitcher';
 import { User, CreditCard, Bell, Leaf, Package, Tractor, CalendarDays, Banknote, ShieldCheck, LogOut } from 'lucide-react';
 import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
+import { PasskeySettings } from '@/components/settings/PasskeySettings';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -67,6 +68,8 @@ export default function FarmerSettingsPage() {
       </div>
 
       <SettingsRoleSwitcher />
+
+      <PasskeySettings />
 
       {SECTIONS.map(section => (
         <div key={section.title}>

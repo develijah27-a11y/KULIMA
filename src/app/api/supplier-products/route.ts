@@ -28,11 +28,22 @@ export async function GET(req: Request) {
   // catalogue management view, which still shows everything across branches.
   const { searchParams } = new URL(req.url);
   const storeId = searchParams.get('storeId');
+  // The till only ever renders these 8 fields per product (see TillClient's
+  // Product interface) — select(*) was pulling description/image_url/
+  // category/district/etc. on every catalogue load for nothing, which
+  // matters here specifically because a busy till reloads this on every
+  // store switch and needs the response back before the next scan.
+  const posFields = 'id, name, sku, barcode, price_per_unit, unit, stock_qty, is_available';
+  const managementFields = '*';
 
   let query = (admin.from as any)('supplier_products')
-    .select('*')
+    .select(storeId ? posFields : managementFields)
     .eq('supplier_id', ownerProfileId);
-  if (storeId) query = query.eq('store_id', storeId);
+  // Till only ever wants sellable items — same filter the client used to
+  // apply after the fact, moved server-side so an unavailable product's
+  // full row (and every other product's) isn't shipped down just to be
+  // thrown away in the browser.
+  if (storeId) query = query.eq('store_id', storeId).eq('is_available', true);
 
   const { data, error } = await query.order('created_at', { ascending: false }).limit(200);
 

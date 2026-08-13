@@ -29,7 +29,6 @@ export function AppIcon({ size = 28, rounded = 0 }: { size?: number; rounded?: n
       </defs>
       <path d="M195.4,184.6 A88,88 0 1 1 195.4,71.4" stroke="url(#appIconRingGrad)" strokeWidth="46" strokeLinecap="round" />
       <path d="M198,178 Q198.8,217.5 238,222 Q237.2,182.5 198,178 Z" fill="url(#appIconLeafGrad)" />
-      <path d="M198,178 L238,222" stroke="#0A5C36" strokeWidth="2" strokeLinecap="round" opacity={0.5} />
       <g stroke="#FFB300" strokeWidth="7" strokeLinecap="round">
         <path d="M132,112 L148,112" />
         <path d="M125,129 L136.3,140.3" />
