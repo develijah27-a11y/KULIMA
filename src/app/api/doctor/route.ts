@@ -109,6 +109,156 @@ const DISEASES = [
   },
 ];
 
+interface DiagnosisResult {
+  diseaseName: string;
+  confidence: number;
+  severity: 'low' | 'medium' | 'high';
+  affectedPart: string;
+  symptoms: string[];
+  treatment: string[];
+  prevention: string[];
+  urgency: string;
+  cropType: string;
+  matchedKnownDisease?: boolean;
+  analysisUnavailable?: boolean;
+}
+
+// Primary diagnosis path: a real vision-capable model actually looking at
+// the photo, grounded in our own reviewed disease/treatment entries (the
+// "agricultural knowledge base" step) rather than the old approach of
+// running a generic image-labeler and string-matching its labels against
+// disease keywords, which was closer to a guess than a diagnosis.
+async function diagnoseWithOpenAI(base64Content: string, cropType: string): Promise<DiagnosisResult | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || !base64Content) return null;
+
+  const knowledgeBase = DISEASES.map(d => ({
+    name: d.name, crops: d.crops, severity: d.severity, affectedPart: d.affectedPart,
+    symptoms: d.symptoms, treatment: d.treatment, prevention: d.prevention, urgency: d.urgency,
+  }));
+
+  const systemPrompt = `You are Cropify's AI Crop Doctor, helping smallholder farmers in Uganda identify possible crop diseases and pests from a photo.
+
+You have a reviewed knowledge base of ${knowledgeBase.length} diseases common in Uganda:
+${JSON.stringify(knowledgeBase)}
+
+Rules:
+1. If the photo clearly matches one of the diseases above, use that entry's treatment/prevention/urgency text verbatim (it has been agronomically reviewed) and set matchedKnownDisease=true.
+2. If it doesn't match any of those but you recognize a different crop disease or pest from general knowledge, you may name it, but set matchedKnownDisease=false, keep treatment cautious and general, and always include "Confirm with your local agro-dealer or extension officer before applying any chemical or pesticide."
+3. If the photo doesn't clearly show a plant, leaf, or crop problem, or you can't make a confident assessment, set inconclusive=true, confidence to 0-20, diseaseName to "Inconclusive", and say plainly in symptoms/treatment that the photo didn't allow a clear assessment — never guess a disease from an unclear photo.
+4. If the plant looks healthy with no disease signs, set diseaseName to "No Disease Detected", confidence reflecting how sure you are it's healthy, and treatment/prevention as general good-practice monitoring advice.
+5. Never state a diagnosis as certain — this is advisory, not a substitute for a professional diagnosis.
+6. Respond ONLY with a JSON object, no other text, matching exactly:
+{"diseaseName": string, "confidence": number (0-100), "severity": "low"|"medium"|"high", "affectedPart": string, "symptoms": string[], "treatment": string[], "prevention": string[], "urgency": string, "matchedKnownDisease": boolean, "inconclusive": boolean}`;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        response_format: { type: 'json_object' },
+        max_tokens: 1000,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: cropType ? `Crop type: ${cropType}. Diagnose this photo.` : 'Diagnose this photo.' },
+              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64Content}` } },
+            ],
+          },
+        ],
+      }),
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    const raw = json.choices?.[0]?.message?.content;
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.diseaseName !== 'string') return null;
+
+    return {
+      diseaseName: parsed.inconclusive ? 'Inconclusive' : parsed.diseaseName,
+      confidence: Math.max(0, Math.min(100, Math.round(parsed.confidence ?? 0))),
+      severity: ['low', 'medium', 'high'].includes(parsed.severity) ? parsed.severity : 'low',
+      affectedPart: parsed.affectedPart ?? 'N/A',
+      symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms : [],
+      treatment: Array.isArray(parsed.treatment) ? parsed.treatment : [],
+      prevention: Array.isArray(parsed.prevention) ? parsed.prevention : [],
+      urgency: parsed.urgency ?? '',
+      cropType,
+      matchedKnownDisease: !!parsed.matchedKnownDisease,
+    };
+  } catch {
+    return null; // Network error, timeout, or malformed JSON — caller falls back.
+  }
+}
+
+// Secondary path if OpenAI is unavailable/unconfigured/failed: the original
+// generic-label-detection + keyword-overlap approach. Weaker than a real
+// vision diagnosis, but still better than nothing.
+async function diagnoseWithVisionFallback(base64Content: string, cropType: string): Promise<DiagnosisResult | null> {
+  const googleApiKey = process.env.GOOGLE_CLOUD_API_KEY;
+  if (!googleApiKey || !base64Content) return null;
+
+  let visionLabels: string[] = [];
+  try {
+    const vRes = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${googleApiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [{
+          image: { content: base64Content },
+          features: [
+            { type: 'LABEL_DETECTION', maxResults: 15 },
+            { type: 'OBJECT_LOCALIZATION', maxResults: 5 },
+          ],
+        }],
+      }),
+    });
+    const vJson = await vRes.json();
+    visionLabels = (vJson.responses?.[0]?.labelAnnotations ?? [])
+      .map((a: any) => (a.description ?? '').toLowerCase()) as string[];
+  } catch {
+    return null;
+  }
+  if (visionLabels.length === 0) return null;
+
+  let best: (typeof DISEASES)[0] | null = null;
+  let bestScore = 0;
+  for (const disease of DISEASES) {
+    const cropBonus = disease.crops.includes(cropType.toLowerCase()) ? 0.2 : 0;
+    const matchCount = disease.keywords.filter((kw) =>
+      visionLabels.some((lbl) => lbl.includes(kw) || kw.includes(lbl))
+    ).length;
+    const score = (matchCount / disease.keywords.length) + cropBonus;
+    if (score > bestScore) { bestScore = score; best = disease; }
+  }
+  const confidence = Math.min(95, Math.round(bestScore * 100));
+
+  if (best && confidence >= 10) {
+    return {
+      diseaseName: best.name, confidence, severity: best.severity, affectedPart: best.affectedPart,
+      symptoms: best.symptoms, treatment: best.treatment, prevention: best.prevention, urgency: best.urgency,
+      cropType, matchedKnownDisease: true,
+    };
+  }
+  return {
+    diseaseName: 'No Disease Detected', confidence: 0, severity: 'low', affectedPart: 'N/A',
+    symptoms: ['No symptoms of known disease detected'],
+    treatment: ['Crop appears healthy. Continue regular monitoring.', 'Ensure adequate watering and nutrient supply.'],
+    prevention: ['Scout weekly for early detection', 'Maintain clean fields — remove weeds and debris'],
+    urgency: 'No immediate action required.', cropType,
+  };
+}
+
 export async function POST(req: Request) {
   let body: any;
   try {
@@ -159,41 +309,20 @@ export async function POST(req: Request) {
     ? imageBase64.replace(/^data:image\/[a-z]+;base64,/, '')
     : '';
 
-  let visionLabels: string[] = [];
-  let visionAttempted = false;
+  let result = base64Content ? await diagnoseWithOpenAI(base64Content, cropType) : null;
 
-  const googleApiKey = process.env.GOOGLE_CLOUD_API_KEY;
-  if (googleApiKey && base64Content) {
-    visionAttempted = true;
-    try {
-      const vRes = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${googleApiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [{
-            image: { content: base64Content },
-            features: [
-              { type: 'LABEL_DETECTION', maxResults: 15 },
-              { type: 'OBJECT_LOCALIZATION', maxResults: 5 },
-            ],
-          }],
-        }),
-      });
-      const vJson = await vRes.json();
-      visionLabels = (vJson.responses?.[0]?.labelAnnotations ?? [])
-        .map((a: any) => (a.description ?? '').toLowerCase()) as string[];
-    } catch {
-      // visionAttempted stays true — request was made but failed, handled below
-    }
+  // Fall back to the old Vision-label + keyword-overlap approach only if
+  // OpenAI is unavailable/unconfigured/failed — kept as a second attempt
+  // rather than removed outright, since it still beats returning nothing.
+  if (!result) {
+    result = await diagnoseWithVisionFallback(base64Content, cropType);
   }
 
-  // No GOOGLE_CLOUD_API_KEY configured, or the API call itself failed/returned
-  // nothing: be honest about it instead of seeding generic labels like
-  // ['leaf','plant','damage', cropType] — that fallback let the keyword
-  // matcher "diagnose" a disease from the selected crop alone, with no photo
-  // analysis behind it at all, and present it as a confident AI result.
-  if (!visionAttempted || visionLabels.length === 0) {
-    const result = {
+  // Neither path could produce a result: be honest about it instead of
+  // guessing — a wrong "confident" diagnosis on a real pesticide decision
+  // is worse than admitting the scan didn't work.
+  if (!result) {
+    result = {
       diseaseName: 'AI Analysis Unavailable',
       confidence: 0,
       severity: 'low' as const,
@@ -208,51 +337,7 @@ export async function POST(req: Request) {
       cropType,
       analysisUnavailable: true,
     };
-    return NextResponse.json({ success: true, data: result });
   }
-
-  // Score each disease against detected labels
-  let best: (typeof DISEASES)[0] | null = null;
-  let bestScore = 0;
-
-  for (const disease of DISEASES) {
-    // Boost score if crop matches
-    const cropBonus = disease.crops.includes(cropType.toLowerCase()) ? 0.2 : 0;
-    const matchCount = disease.keywords.filter((kw) =>
-      visionLabels.some((lbl) => lbl.includes(kw) || kw.includes(lbl))
-    ).length;
-    const score = (matchCount / disease.keywords.length) + cropBonus;
-    if (score > bestScore) {
-      bestScore = score;
-      best = disease;
-    }
-  }
-
-  const confidence = Math.min(95, Math.round(bestScore * 100));
-
-  const result = best && confidence >= 10
-    ? {
-        diseaseName: best.name,
-        confidence,
-        severity: best.severity,
-        affectedPart: best.affectedPart,
-        symptoms: best.symptoms,
-        treatment: best.treatment,
-        prevention: best.prevention,
-        urgency: best.urgency,
-        cropType,
-      }
-    : {
-        diseaseName: 'No Disease Detected',
-        confidence: 0,
-        severity: 'low' as const,
-        affectedPart: 'N/A',
-        symptoms: ['No symptoms of known disease detected'],
-        treatment: ['Crop appears healthy. Continue regular monitoring.', 'Ensure adequate watering and nutrient supply.'],
-        prevention: ['Scout weekly for early detection', 'Maintain clean fields — remove weeds and debris'],
-        urgency: 'No immediate action required.',
-        cropType,
-      };
 
   // Persist to diagnoses table (non-critical)
   try {
@@ -265,7 +350,7 @@ export async function POST(req: Request) {
         severity: result.severity,
         treatment: result.treatment,
         crop_type: cropType || null,
-        confidence,
+        confidence: result.confidence,
       });
     }
   } catch {
