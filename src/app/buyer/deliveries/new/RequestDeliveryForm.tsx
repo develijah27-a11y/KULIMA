@@ -2,10 +2,14 @@
 
 import { useState, useEffect, useCallback, type FormEvent, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
-import { Truck, Zap, Snowflake, MapPin, Clock, CheckCircle2, Megaphone, AlertTriangle } from 'lucide-react';
+import {
+  Truck, Zap, Snowflake, MapPin, Clock, CheckCircle2, Megaphone, AlertTriangle,
+  ArrowLeft, ChevronRight, History, Pencil,
+} from 'lucide-react';
 import type { DeliveryType, FareBreakdown } from '@/lib/delivery-pricing';
 import { FareConfirmSheet } from '@/components/delivery/FareConfirmSheet';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
+import { DestinationSearchSheet } from '@/components/delivery/DestinationSearchSheet';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -64,6 +68,24 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   const [submitted, setSubmitted]             = useState(false);
   const [driversNotified, setDriversNotified] = useState<number | null>(null);
   const [showConfirm, setShowConfirm]         = useState(false);
+
+  // Map-first flow: a live "drivers near you" screen (like a ride-hailing
+  // home screen) is step one — pickup/drop-off are chosen there via a
+  // search sheet instead of plain dropdowns — then step two is the rest of
+  // the trip details (cargo, date, notes, fare). prefilledOffer already
+  // fixes pickup, but drop-off still needs picking, so both start on 'map'.
+  const [step, setStep]               = useState<'map' | 'details'>('map');
+  const [showPickupSheet, setShowPickupSheet]   = useState(false);
+  const [showDropoffSheet, setShowDropoffSheet] = useState(false);
+  const [recentPickup, setRecentPickup]   = useState<string[]>([]);
+  const [recentDropoff, setRecentDropoff] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch('/api/deliveries/recent-destinations')
+      .then(res => res.json())
+      .then(json => { setRecentPickup(json.pickup ?? []); setRecentDropoff(json.dropoff ?? []); })
+      .catch(() => {});
+  }, []);
 
   const fetchFare = useCallback(async () => {
     if (!pickupDistrict || !dropoffDistrict || !cargoKg || parseFloat(cargoKg) <= 0) {
@@ -156,13 +178,111 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
     );
   }
 
+  // Step one: a live "drivers near you" map screen. Pickup/drop-off are
+  // picked here via a search sheet (not a plain <select>), ride-hailing
+  // style — "Continue" only appears once both districts are set. The
+  // overlay bar is deliberately fixed light/white regardless of app theme
+  // (same fallback colors FareConfirmSheet uses), since it sits directly on
+  // top of the map rather than the themed dashboard background.
+  if (step === 'map') {
+    const bothSet = !!pickupDistrict && !!dropoffDistrict;
+    return (
+      <div>
+        {/* -24px cancels the 24px card padding each deliveries/new page.tsx
+            wraps this form in, so the map bleeds to the card's own edges. */}
+        <div style={{ position: 'relative', margin: '-24px -24px 0', borderRadius: 16, overflow: 'hidden', height: 'clamp(440px, 78vh, 640px)' }}>
+          <NearbyDriversMap userDistrict={pickupDistrict || userDistrict} height="100%" />
+
+          <button type="button" onClick={() => router.back()} aria-label="Back" style={{
+            position: 'absolute', top: 14, left: 14, zIndex: 600, width: 38, height: 38, borderRadius: '50%',
+            border: 'none', cursor: 'pointer', background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,.25)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <ArrowLeft size={18} style={{ color: '#182018' }} />
+          </button>
+
+          <div style={{
+            position: 'absolute', left: 12, right: 12, bottom: 12, zIndex: 600,
+            background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,.22)', padding: 12,
+            display: 'flex', flexDirection: 'column', gap: 8,
+          }}>
+            <button type="button" onClick={() => setShowPickupSheet(true)} style={{
+              display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', borderRadius: 11,
+              border: '1px solid #e4e8e1', background: '#f7f8f6', cursor: 'pointer', textAlign: 'left',
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-primary)', flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: pickupDistrict ? '#182018' : '#6b7566' }}>
+                {pickupDistrict || 'Pickup district'}
+              </span>
+              <ChevronRight size={15} style={{ color: '#6b7566' }} />
+            </button>
+
+            <button type="button" onClick={() => setShowDropoffSheet(true)} style={{
+              display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', borderRadius: 11,
+              border: '1px solid #e4e8e1', background: '#f7f8f6', cursor: 'pointer', textAlign: 'left',
+            }}>
+              <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-danger)', flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: dropoffDistrict ? '#182018' : '#6b7566' }}>
+                {dropoffDistrict || 'Where to?'}
+              </span>
+              <ChevronRight size={15} style={{ color: '#6b7566' }} />
+            </button>
+
+            {bothSet && (
+              <button type="button" onClick={() => setStep('details')} style={{
+                padding: '13px', borderRadius: 11, border: 'none', background: 'var(--color-primary)',
+                color: '#fff', fontWeight: 800, fontSize: 14, cursor: 'pointer',
+              }}>
+                Continue →
+              </button>
+            )}
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" onClick={() => router.back()} style={{
+                flex: 1, padding: '9px', borderRadius: 9, border: '1px solid #e4e8e1', background: 'transparent',
+                color: '#182018', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+              }}>
+                Back
+              </button>
+              <button type="button" onClick={() => setShowDropoffSheet(true)} style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '9px',
+                borderRadius: 9, border: '1px solid #e4e8e1', background: 'transparent', color: '#182018',
+                fontWeight: 700, fontSize: 12, cursor: 'pointer',
+              }}>
+                <History size={12} /> Recent
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {prefilledOffer && (
+          <div style={{ marginTop: 14, padding: '11px 14px', background: 'var(--color-primary-bg)', borderRadius: 10, border: '1px solid var(--color-primary-muted)' }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-success)', margin: 0 }}>
+              <CheckCircle2 size={12} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 4 }} />
+              Linked deal: {prefilledOffer.crop_type} · {prefilledOffer.quantity_kg} kg — pickup district set to {prefilledOffer.district}
+            </p>
+          </div>
+        )}
+
+        <DestinationSearchSheet open={showPickupSheet} onClose={() => setShowPickupSheet(false)}
+          onSelect={setPickupDistrict} title="Pickup district" districts={DISTRICTS} recent={recentPickup} />
+        <DestinationSearchSheet open={showDropoffSheet} onClose={() => setShowDropoffSheet(false)}
+          onSelect={setDropoffDistrict} title="Where to?" districts={DISTRICTS} recent={recentDropoff} />
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={openConfirm} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-      <div>
-        <p style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 8 }}>Drivers Near You</p>
-        <NearbyDriversMap userDistrict={pickupDistrict || userDistrict} height={280} />
-      </div>
+      <button type="button" onClick={() => setStep('map')} style={{
+        display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '13px 14px', borderRadius: 12,
+        border: `1px solid ${C.border}`, background: 'var(--color-primary-bg)', cursor: 'pointer', textAlign: 'left',
+      }}>
+        <MapPin size={16} style={{ color: C.green, flexShrink: 0 }} />
+        <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: C.text }}>{pickupDistrict} → {dropoffDistrict}</span>
+        <Pencil size={13} style={{ color: C.green, flexShrink: 0 }} />
+      </button>
 
       {prefilledOffer && (
         <div style={{ padding: '11px 14px', background: 'var(--color-primary-bg)', borderRadius: 10, border: '1px solid var(--color-primary-muted)' }}>
@@ -212,25 +332,6 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
             <Snowflake size={11} /> Only refrigerated vehicles will be matched for cold chain deliveries
           </p>
         )}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div>
-          <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Pickup District *</label>
-          <select value={pickupDistrict} onChange={e => setPickupDistrict(e.target.value)}
-            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: pickupDistrict ? C.text : C.muted, background: 'var(--d-input-bg)' }}>
-            <option value="">Select...</option>
-            {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
-        <div>
-          <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Dropoff District *</label>
-          <select value={dropoffDistrict} onChange={e => setDropoffDistrict(e.target.value)}
-            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 13, outline: 'none', color: dropoffDistrict ? C.text : C.muted, background: 'var(--d-input-bg)' }}>
-            <option value="">Select...</option>
-            {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
