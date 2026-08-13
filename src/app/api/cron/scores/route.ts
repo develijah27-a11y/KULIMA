@@ -30,9 +30,10 @@ export async function GET(req: Request) {
 
   // upsert LoanProfile records
   for (const s of scores) {
-    await admin.from('loan_profiles').upsert({
-      farmer_id: s.farmerId, score: s.farmScore,
-    });
+    await admin.from('loan_profiles').upsert(
+      { farmer_id: s.farmerId, score: s.farmScore, credit_limit: s.creditLimit },
+      { onConflict: 'farmer_id' },
+    );
   }
 
   return NextResponse.json({ success: true, updated: scores.length });
