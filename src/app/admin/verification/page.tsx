@@ -46,7 +46,7 @@ async function VerificationQueue({ filter }: { filter: string }) {
   return (
     <div className="divide-y" style={{ borderColor: C.border }}>
       {rows.map((v: any) => {
-        const badge = BADGE_CONFIG[v.level as VerificationLevel];
+        const badge = BADGE_CONFIG[v.level as VerificationLevel] ?? BADGE_CONFIG.grey;
         const status = STATUS_CFG[v.status as keyof typeof STATUS_CFG] ?? STATUS_CFG.pending;
         const profile = v.profile ?? {};
         return (

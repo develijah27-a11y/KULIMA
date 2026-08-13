@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { BADGE_CONFIG } from '@/lib/trust';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -9,12 +10,12 @@ const C = {
   cardShadow: 'var(--d-shadow-card)',
 } as const;
 
-const VER: Record<string, { label: string; color: string; bg: string }> = {
-  none:     { label: 'Unverified', color: C.muted,                bg: 'var(--color-surface-2)'  },
-  basic:    { label: 'Basic',      color: 'var(--color-harvest)', bg: 'var(--color-harvest-bg)' },
-  standard: { label: 'Standard',  color: C.blue,                 bg: 'var(--color-sky-bg)'     },
-  premium:  { label: 'Premium',   color: 'var(--color-success)', bg: 'var(--color-success-bg)' },
-};
+// profiles.verification_level is a DB-level enum: none/grey/green/blue/gold
+// (see 20260608000000_verification_trust.sql) — this used to key off a
+// none/basic/standard/premium map that didn't share a single value with the
+// real enum, so any profile with a real verification level (i.e. almost all
+// of them) crashed this page with "Cannot read properties of undefined".
+// BADGE_CONFIG is the one canonical source for these labels/colors.
 
 function timeAgo(iso: string) {
   const d = Math.round((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -52,7 +53,7 @@ async function BuyersList() {
 
       <div className="divide-y" style={{ borderColor: C.border }}>
         {rows.map((b: any) => {
-          const ver = VER[b.verification_level ?? 'none'];
+          const ver = BADGE_CONFIG[(b.verification_level as keyof typeof BADGE_CONFIG) ?? 'none'] ?? BADGE_CONFIG.none;
           return (
             <div key={b.id} className="px-5 py-3.5 flex items-center gap-4">
               <div className="flex items-center gap-3 flex-1 min-w-0">
