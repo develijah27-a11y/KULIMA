@@ -1,18 +1,26 @@
 <!--
-  Monochrome status-bar / notification-badge icon.
-  Android (and Chrome's Web Push "badge") re-tints and masks this to a flat
-  white silhouette in the status bar — only the alpha shape matters, never
-  the fill color. Kept to one bare leaf silhouette with no internal detail:
-  at true status-bar size (~24dp) fine detail just turns to mud, so the
-  simplest recognizable outline reads best.
+  Monochrome status-bar / notification-badge icon — same design contract
+  Android and Chrome's Web Push "badge" use for every app (WhatsApp
+  included): the OS re-tints and masks this to a flat, single-color
+  silhouette in the status bar, so only the alpha shape matters, never a
+  fill color, gradient, or internal detail. Two things WhatsApp's own
+  status-bar mark gets right that this now matches:
+    1. It's a simplified silhouette of the REAL app icon's most
+       recognizable single element (their phone/bubble shape) — not an
+       unrelated symbol. This badge uses the same leaf silhouette and
+       orientation as the leaf in icon.svg, just simplified to a bare
+       outline with no vein/gradient detail, which disappears at true
+       status-bar size anyway.
+    2. It's bold and single-shape — no fine internal lines, since those
+       just turn to mud at ~24dp.
 
-  Canvas is 96x96; the glyph is held within the center 48x48 (the 24dp
-  "keyline" safe area doubled for a higher-density export) so it isn't
-  clipped by the OS's own circular/square masking.
+  Canvas is 96x96; the glyph is held within the center 48x48 (24dp keyline
+  safe area, doubled for a higher-density export) so it isn't clipped by
+  the OS's own circular/square status-bar masking.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
   <path
     fill="#FFFFFF"
-    d="M48,20 C68,30 68,56 48,76 C28,56 28,30 48,20 Z"
+    d="M22,74 Q61.4,61.4 74,22 Q34.6,34.6 22,74 Z"
   />
 </svg>

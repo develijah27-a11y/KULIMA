@@ -102,15 +102,15 @@ export default function RootLayout({
       <head>
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* ?v=8 cache-busts the final approved Cropify logo — these paths
+        {/* ?v=9 cache-busts the final approved Cropify logo — these paths
             aren't content-hashed, and the old files were served with a
             1-year immutable Cache-Control, so browsers/CDN need a new URL
             to notice the change. Bump this version any time icon.svg's
             content changes. */}
-        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=8" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=8" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=8" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=8" />
+        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=9" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=9" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=9" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=9" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
@@ -141,29 +141,25 @@ export default function RootLayout({
                 with a leaf overlapping the ring's lower terminus — matches
                 public/icons/icon.svg; keep both in sync. */}
             <defs>
-              <linearGradient id="splashRingGrad" x1="195" y1="71" x2="195" y2="185" gradientUnits="userSpaceOnUse">
+              <linearGradient id="splashRingGrad" x1="128" y1="40" x2="195" y2="185" gradientUnits="userSpaceOnUse">
                 <stop offset="0" stopColor="#0A5C36" />
-                <stop offset="1" stopColor="#34A853" />
+                <stop offset="0.55" stopColor="#34A853" />
+                <stop offset="1" stopColor="#8BC34A" />
               </linearGradient>
-              <linearGradient id="splashLeafGrad" x1="198" y1="178" x2="238" y2="222" gradientUnits="userSpaceOnUse">
+              <linearGradient id="splashLeafGrad" x1="192" y1="170" x2="242" y2="228" gradientUnits="userSpaceOnUse">
                 <stop offset="0" stopColor="#0A5C36" />
                 <stop offset="1" stopColor="#8BC34A" />
               </linearGradient>
             </defs>
             <path d="M195.4,184.6 A88,88 0 1 1 195.4,71.4" stroke="url(#splashRingGrad)" strokeWidth="46" strokeLinecap="round" />
-            <path d="M198,178 Q198.8,217.5 238,222 Q237.2,182.5 198,178 Z" fill="url(#splashLeafGrad)" />
-            <g stroke="#FFB300" strokeWidth="7" strokeLinecap="round">
-              <path d="M132,112 L148,112" />
-              <path d="M125,129 L136.3,140.3" />
-              <path d="M108,136 L108,152" />
-              <path d="M91,129 L79.7,140.3" />
-              <path d="M84,112 L68,112" />
-              <path d="M91,95 L79.7,83.7" />
-              <path d="M108,88 L108,72" />
-              <path d="M125,95 L136.3,83.7" />
-            </g>
-            <circle cx="108" cy="112" r="19" fill="#FFB300" />
-            <path d="M50,178 Q92,148 130,166 Q152,153 176,166 L176,196 L50,196 Z" fill="#8BC34A" />
+            <circle cx="115" cy="110" r="30" fill="#FFB300" />
+            <path d="M115,74 L120.7,96.1 L140.5,84.5 L128.9,104.3 L151,110 L128.9,115.7 L140.5,135.5 L120.7,123.9 L115,146 L109.3,123.9 L89.5,135.5 L101.1,115.7 L79,110 L101.1,104.3 L89.5,84.5 L109.3,96.1 Z" fill="#FFFFFF" />
+            <path d="M45,178 Q90,148 130,165 Q155,151 180,164 Q188,168 185,178 L185,202 L45,202 Z" fill="#34A853" />
+            <path d="M45,188 Q85,163 125,178 Q150,166 175,177 Q184,182 180,190 L180,206 L45,206 Z" fill="#8BC34A" />
+            <path d="M193,172 Q195,214 242,226 Q239,182 193,172 Z" fill="url(#splashLeafGrad)" />
+            <path d="M197,178 Q210,198 236,220" stroke="#F4FBF6" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity={0.85} />
+            <path d="M206,190 L216,186" stroke="#F4FBF6" strokeWidth="2" strokeLinecap="round" opacity={0.7} />
+            <path d="M216,202 L227,200" stroke="#F4FBF6" strokeWidth="2" strokeLinecap="round" opacity={0.7} />
           </svg>
           <span className="app-splash-word">Cropify</span>
           <span className="app-splash-tagline">Grow smart. Farm better.</span>
