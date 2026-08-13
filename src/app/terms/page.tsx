@@ -5,11 +5,12 @@ export const metadata: Metadata = { title: 'Terms & Conditions — Cropify' };
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms & Conditions" updated="15 July 2026">
+    <LegalPage title="Terms & Conditions" updated="13 August 2026">
       <p>
         These Terms &amp; Conditions ("Terms") govern your use of Cropify — the app, website, and
         underlying services (together, the "Platform"). By creating an account or otherwise using the
-        Platform, you agree to be bound by these Terms. If you don't agree, please don't use Cropify.
+        Platform, you agree to be bound by these Terms and our <a href="/privacy">Privacy Policy</a>. If
+        you don't agree, please don't use Cropify.
       </p>
 
       <h2>1. What Cropify is</h2>
@@ -21,6 +22,12 @@ export default function TermsPage() {
         between those users. Cropify provides the marketplace, escrow, verification, and communication
         tools that make the transaction possible and safer for both sides.
       </p>
+      <p>
+        Cropify also provides agricultural information — weather forecasts, market prices, planting-season
+        guidance, and AI-assisted crop disease detection — to help you make farming decisions. This
+        information is provided to help, not to guarantee an outcome; see Section 7 below on how much to
+        rely on it.
+      </p>
 
       <h2>2. Eligibility &amp; accounts</h2>
       <ul>
@@ -28,6 +35,7 @@ export default function TermsPage() {
         <li>You must provide accurate information when registering and keep it up to date.</li>
         <li>You're responsible for keeping your password and account secure, and for all activity under your account.</li>
         <li>One person may hold multiple roles (e.g. farmer and group member) on a single account, but may not create multiple accounts to evade a suspension or manipulate ratings/pricing.</li>
+        <li>Signing in and some account actions use a one-time verification code (OTP) sent to your phone or email. Never share this code with anyone, including someone claiming to be Cropify staff — we will never ask for it, and anyone who does is trying to take over your account.</li>
       </ul>
 
       <h2>3. Verification (KYC)</h2>
@@ -64,13 +72,20 @@ export default function TermsPage() {
         <li>Cropify is not a common carrier and does not itself transport goods; transporters are independent users of the Platform, not Cropify employees or agents. Cropify's liability for loss or damage to cargo during a delivery is limited as set out in Section 9.</li>
       </ul>
 
-      <h2>7. Crop disease diagnosis</h2>
+      <h2>7. Crop disease diagnosis &amp; AI-assisted information</h2>
       <p>
         The AI-assisted crop disease detection feature provides an automated best-effort diagnosis based
         on your photo, and is <strong>not a substitute for professional agronomic advice</strong>. For a
         confirmed diagnosis and treatment plan, use the paid consultation feature to connect with a
         human pathologist. Cropify is not liable for crop losses resulting from reliance on the
         automated diagnosis alone.
+      </p>
+      <p>
+        More generally, any AI-generated content on Cropify — crop diagnosis, planting-season alerts, or
+        other automated guidance — may be incomplete or wrong, and should not be your only input for a
+        decision with real financial, agricultural, or safety consequences. Where a decision matters,
+        confirm with a qualified agricultural professional or extension worker in addition to what
+        Cropify shows you.
       </p>
 
       <h2>8. Prohibited conduct</h2>
@@ -81,6 +96,8 @@ export default function TermsPage() {
         <li>Harass, defraud, or impersonate another user or Cropify staff.</li>
         <li>Submit false verification documents or falsely report a dispute.</li>
         <li>Attempt to access another user's account or data, or interfere with the Platform's normal operation (including attempting to bypass security controls).</li>
+        <li>Scrape, harvest, or bulk-collect other users' data, or abuse Cropify's APIs beyond normal in-app use.</li>
+        <li>Post fake reviews, manipulate ratings, or artificially inflate or deflate marketplace prices.</li>
         <li>Use the Platform for money laundering or any other unlawful purpose.</li>
       </ul>
       <p>Violating these rules may result in warning, suspension, permanent account termination, and/or forfeiture of funds tied to the violation, at Cropify's discretion.</p>

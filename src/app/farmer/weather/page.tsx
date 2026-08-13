@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import { fetchWeatherForDistrict } from '@/lib/weather-server';
 import { DISTRICT_NAMES } from '@/lib/districts';
-import { getCurrentSeasonSummary, generatePlantingAlerts } from '@/lib/planting-calendar';
+import { getCurrentSeasonSummary, generatePlantingAlerts, applyWeatherToPlantingAlerts } from '@/lib/planting-calendar';
 import { WeatherDistrictSelector } from './WeatherDistrictSelector';
 import { Sun, Moon, CloudSun, Cloud, CloudRain, CloudLightning, Snowflake, Wind, Droplets, CalendarDays, Leaf, Sprout } from 'lucide-react';
 
@@ -69,7 +69,10 @@ export default async function WeatherPage({
   const farmerCrops = primaryCrop ? [primaryCrop] : [];
   const now = new Date();
   const seasonSummary = getCurrentSeasonSummary(now.getMonth());
-  const plantingAlerts = generatePlantingAlerts(now.getMonth(), now.getDate(), farmerCrops);
+  const plantingAlerts = applyWeatherToPlantingAlerts(
+    generatePlantingAlerts(now.getMonth(), now.getDate(), farmerCrops),
+    weather.daily,
+  );
   const phaseStyle = PHASE_COLOR[seasonSummary.phase];
 
   return (

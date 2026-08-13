@@ -454,3 +454,47 @@ export function getCurrentSeasonSummary(month: number): {
  * truth other pages (listing forms, group-listing forms) should draw their
  * crop dropdowns from, so a crop with calendar data is always listable. */
 export const ALL_CROP_KEYS = PLANTING_CALENDAR.map(c => c.crop);
+
+/**
+ * Weather cross-check for plant_now / plant_soon alerts only. The calendar
+ * is purely climatological (same window every year), but Uganda's rains
+ * shift year to year — a farmer told "plant now" when no rain has actually
+ * shown up yet is exactly the kind of confusing guidance this guards
+ * against. weed_now/harvest_now/harvest_soon/prepare are left untouched
+ * since they're less timing-sensitive to short-term rainfall.
+ *
+ * Threshold: under 10mm of total forecast rain over the next 7 days is
+ * treated as "the rain hasn't arrived yet" — a single useful rain event in
+ * Uganda is typically 5-15mm, so less than that across a whole week means
+ * the ground likely isn't wet enough to plant into. This is a deliberately
+ * simple, defensible cutoff, not a precise agronomic figure. 25mm+ over the
+ * same window is treated as a healthy signal worth reinforcing.
+ */
+export function applyWeatherToPlantingAlerts(
+  alerts: PlantingAlert[],
+  next7DaysForecast: { precipMm: number }[],
+): PlantingAlert[] {
+  const DRY_THRESHOLD_MM = 10;
+  const WET_THRESHOLD_MM = 25;
+  const totalMm = next7DaysForecast
+    .slice(0, 7)
+    .reduce((sum, d) => sum + (d.precipMm ?? 0), 0);
+
+  return alerts.map((alert) => {
+    if (alert.type !== 'plant_now' && alert.type !== 'plant_soon') return alert;
+
+    if (totalMm < DRY_THRESHOLD_MM) {
+      return {
+        ...alert,
+        message: `${alert.message} Weather update: very little rain is forecast in your area over the next 7 days (about ${Math.round(totalMm)}mm). The calendar window is open, but the rain hasn't arrived yet — you may want to wait a few days so seeds don't sit in dry soil.`,
+      };
+    }
+    if (totalMm >= WET_THRESHOLD_MM) {
+      return {
+        ...alert,
+        message: `${alert.message} Weather update: good rain is forecast in your area over the next 7 days (about ${Math.round(totalMm)}mm) — conditions look favorable to plant now.`,
+      };
+    }
+    return alert;
+  });
+}

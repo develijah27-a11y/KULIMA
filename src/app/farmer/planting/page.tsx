@@ -3,9 +3,11 @@ import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import {
   PLANTING_CALENDAR,
   generatePlantingAlerts,
+  applyWeatherToPlantingAlerts,
   getCurrentSeasonSummary,
   type PlantingWindow,
 } from '@/lib/planting-calendar';
+import { fetchWeatherForDistrict } from '@/lib/weather-server';
 import type { JSX } from 'react';
 import { Leaf, Clock, Wrench, ClipboardList, Sun } from 'lucide-react';
 import { SeasonProblemCard } from './SeasonProblemCard';
@@ -120,7 +122,7 @@ export default async function PlantingPage() {
 
   const supabase = await getSupabase();
   const [profileRes, farmsRes] = await Promise.all([
-    supabase.from('profiles').select('primary_crop, full_name').eq('user_id', session.user.id).single(),
+    supabase.from('profiles').select('primary_crop, full_name, location').eq('user_id', session.user.id).single(),
     (supabase.from as any)('farms').select('crop_types').eq('user_id', session.user.id).eq('is_active', true),
   ]);
 
@@ -131,7 +133,11 @@ export default async function PlantingPage() {
 
   const now = new Date();
   const currentMonth = now.getMonth();
-  const alerts = generatePlantingAlerts(currentMonth, now.getDate(), farmerCrops);
+  const weather = await fetchWeatherForDistrict((profileRes.data as any)?.location || 'Kampala');
+  const alerts = applyWeatherToPlantingAlerts(
+    generatePlantingAlerts(currentMonth, now.getDate(), farmerCrops),
+    weather.daily,
+  );
   const season = getCurrentSeasonSummary(currentMonth);
   const phaseCfg = PHASE_CFG[season.phase];
 

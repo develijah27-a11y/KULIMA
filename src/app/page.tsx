@@ -756,7 +756,7 @@ function Footer() {
           {/* Company */}
           <div>
             <p style={{ fontSize: 11, fontWeight: 800, color: INK, textTransform: 'uppercase', letterSpacing: '0.10em', margin: '0 0 16px' }}>Company</p>
-            {[['Privacy','/privacy'],['Terms','/terms'],['Contact','/contact'],['Support','/farmer/support']].map(([l,h]) => (
+            {[['About','/about'],['How Cropify Works','/how-it-works'],['Privacy','/privacy'],['Terms','/terms'],['Refund Policy','/refund-policy'],['FAQ','/faq'],['Contact','/contact'],['Support','/farmer/support']].map(([l,h]) => (
               <a key={l} href={h} style={{ display: 'block', fontSize: 13, color: INK_MUTE, textDecoration: 'none', marginBottom: 10, fontWeight: 600 }}>{l}</a>
             ))}
           </div>

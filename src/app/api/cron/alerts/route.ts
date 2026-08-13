@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { sendPushToUsers } from '@/lib/push';
-import { generatePlantingAlerts } from '@/lib/planting-calendar';
+import { generatePlantingAlerts, applyWeatherToPlantingAlerts } from '@/lib/planting-calendar';
+import { fetchWeatherForDistrict, type ServerWeatherData } from '@/lib/weather-server';
 
 // Vercel cron — every 6 hours
 export async function GET(req: Request) {
@@ -171,7 +172,7 @@ export async function GET(req: Request) {
   // unset crop means generatePlantingAlerts would return every tracked
   // crop, which would be noisy spam rather than a useful nudge).
   const { data: cropFarmers } = await (supabase.from as any)('profiles')
-    .select('user_id, primary_crop')
+    .select('user_id, primary_crop, location')
     .eq('role', 'farmer')
     .not('primary_crop', 'is', null);
 
@@ -179,8 +180,28 @@ export async function GET(req: Request) {
   const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
   let plantingAlertsSent = 0;
 
+  // Cache forecasts per district for the duration of this single cron run —
+  // avoids one Open-Meteo await per farmer when many farmers share a district
+  // (weather-server also caches for 30 min at the fetch level, this is just
+  // avoiding redundant awaits within one invocation).
+  const weatherByDistrict = new Map<string, ServerWeatherData>();
+
   for (const farmer of (cropFarmers ?? []) as any[]) {
-    const alerts = generatePlantingAlerts(now.getMonth(), now.getDate(), [farmer.primary_crop]);
+    let alerts = generatePlantingAlerts(now.getMonth(), now.getDate(), [farmer.primary_crop]);
+
+    // Cross-check plant_now/plant_soon alerts against the real forecast so
+    // the calendar's climatological guess doesn't contradict what the rain
+    // is actually doing this year.
+    const districtName = farmer.location as string | undefined;
+    if (districtName) {
+      let weather = weatherByDistrict.get(districtName);
+      if (!weather) {
+        weather = await fetchWeatherForDistrict(districtName);
+        weatherByDistrict.set(districtName, weather);
+      }
+      alerts = applyWeatherToPlantingAlerts(alerts, weather.daily);
+    }
+
     // Only the actionable, time-sensitive ones — not the low-urgency
     // "21 days out" heads-up, which would otherwise refire every 6 hours.
     const actionable = alerts.filter((a) =>
