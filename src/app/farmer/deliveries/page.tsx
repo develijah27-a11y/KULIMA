@@ -6,6 +6,7 @@ import { Search, Car, Truck, Package, X as XIcon, Zap, Snowflake, User, CheckCir
 import { PayDeliveryButton } from '@/app/buyer/deliveries/PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { TrackDeliveryButton } from '@/components/delivery/TrackDeliveryButton';
+import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -205,6 +206,7 @@ function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any;
               }}
             />
           )}
+          <CancelDeliveryButton deliveryId={d.id} status={d.status} route={`${d.pickup_district} → ${d.dropoff_district}`} />
         </div>
       </div>
 

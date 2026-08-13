@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { PayDeliveryButton } from './PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { TrackDeliveryButton } from '@/components/delivery/TrackDeliveryButton';
+import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
 import type { JSX } from 'react';
 import { Truck, Search, Car, Package, Snowflake, Zap, CheckCircle2, User } from 'lucide-react';
 
@@ -213,6 +214,7 @@ function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any;
               }}
             />
           )}
+          <CancelDeliveryButton deliveryId={d.id} status={d.status} route={`${d.pickup_district} → ${d.dropoff_district}`} />
         </div>
       </div>
 

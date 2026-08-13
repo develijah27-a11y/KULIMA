@@ -31,12 +31,22 @@ interface Props {
 //
 // The driver's position itself is visible without opening anything — a
 // lightweight poll runs the moment this mounts (i.e. as soon as a driver is
-// matched) and shows a live one-line status right on the button, so the
-// requester sees "looking for driver" -> "driver is near you, on the way"
-// passively instead of having to tap "Track driver" first to find out.
+// matched) and shows a live one-line status right on the button.
+//
+// This component is only ever rendered once a driver has already accepted
+// the job (delivery.status is 'assigned' or 'in_transit' — see canTrack in
+// the callers), so its status text must never say "looking for a driver":
+// that copy previously fired whenever the driver just hadn't broadcast a
+// live position yet (e.g. hasn't opened their own tracking sheet), which
+// read as "still searching" right next to a "Driver Coming" badge that
+// already said otherwise — a driver had been found, just not located yet.
+const firstName = (name: string) => name.split(' ')[0];
+const acceptedLabel = (name: string) => `${firstName(name)} accepted — getting ready`;
+const enRouteLabel  = (name: string) => `${firstName(name)} is on the way`;
+
 export function TrackDeliveryButton({ delivery, driver }: Props) {
   const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState<string>(`Looking for ${driver.name.split(' ')[0]}…`);
+  const [status, setStatus] = useState<string>(acceptedLabel(driver.name));
 
   useEffect(() => {
     let cancelled = false;
@@ -46,13 +56,13 @@ export function TrackDeliveryButton({ delivery, driver }: Props) {
         const json = await res.json();
         if (cancelled) return;
         if (!json.location) {
-          setStatus(`Looking for ${driver.name.split(' ')[0]}…`);
+          setStatus(acceptedLabel(driver.name));
         } else {
           // Coarse "has moved recently" freshness check — full ETA math
           // only runs inside the opened sheet (needs the district
           // centroid); here we just need a proximity-flavored status line.
           const ageMin = (Date.now() - new Date(json.location.updated_at).getTime()) / 60000;
-          setStatus(ageMin < 5 ? `${driver.name.split(' ')[0]} is on the way` : `Looking for ${driver.name.split(' ')[0]}…`);
+          setStatus(ageMin < 5 ? enRouteLabel(driver.name) : acceptedLabel(driver.name));
         }
       } catch { /* transient — next poll retries */ }
     }

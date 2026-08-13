@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Search, Car, Truck, Package, X as XIcon, Zap, Snowflake, User, CheckCircle2 } from 'lucide-react';
 import { PayDeliveryButton } from '@/app/buyer/deliveries/PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
+import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -150,12 +151,15 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
           </p>
         )}
 
-        <ShareLocationButton
-          deliveryId={d.id}
-          active={['assigned', 'in_transit'].includes(d.status) && !!d.transporter}
-          autoStart
-          label="location visible to driver"
-        />
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <ShareLocationButton
+            deliveryId={d.id}
+            active={['assigned', 'in_transit'].includes(d.status) && !!d.transporter}
+            autoStart
+            label="location visible to driver"
+          />
+          <CancelDeliveryButton deliveryId={d.id} status={d.status} route={`${d.pickup_district} → ${d.dropoff_district}`} />
+        </div>
       </div>
 
       {showPay && !paid && (
