@@ -834,6 +834,44 @@ async function VerifyPrompt({ userId }: { userId: string }) {
   );
 }
 
+// ─── Streaming: Crop prompt ───────────────────────────────────────────────────
+// Every planting/weeding/harvest alert (in-app and push) is keyed off
+// primary_crop — without it a farmer gets none of them, silently, with no
+// indication anything is missing (the season-plan widget below quietly
+// defaults to maize instead of asking). This nudges toward the one profile
+// field that unlocks the rest of the planting features.
+
+async function CropPrompt({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  if (profile?.primary_crop) return null;
+  return (
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: '14px',
+        padding: '14px 18px', borderRadius: '14px',
+        background: 'var(--color-success-bg)', border: '1.5px solid var(--color-primary-muted)',
+      }}
+    >
+      <span style={{ display: 'flex', flexShrink: 0, color: 'var(--color-success)' }}><Sprout size={26} /></span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ fontSize: '13px', fontWeight: 700, color: C.text, marginBottom: '2px' }}>Set your primary crop</p>
+        <p style={{ fontSize: '12px', color: C.muted }}>Get planting, weeding and harvest alerts timed to your crop — including push notifications when a window opens.</p>
+      </div>
+      <Link
+        href="/farmer/profile"
+        prefetch={true}
+        style={{
+          padding: '8px 14px', background: 'var(--color-primary)', color: '#FFFFFF',
+          borderRadius: '8px', fontSize: '12px', fontWeight: 700, textDecoration: 'none',
+          flexShrink: 0, whiteSpace: 'nowrap',
+        }}
+      >
+        Set crop
+      </Link>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function FarmerDashboardPage() {
@@ -848,6 +886,11 @@ export default async function FarmerDashboardPage() {
       {/* 0 · Verification prompt */}
       <Suspense fallback={<div className="dash-skeleton h-16 rounded-xl" />}>
         <VerifyPrompt userId={userId} />
+      </Suspense>
+
+      {/* 0b · Crop prompt — only renders when primary_crop is unset */}
+      <Suspense fallback={null}>
+        <CropPrompt userId={userId} />
       </Suspense>
 
       {/* 1 · Weather card */}
