@@ -3,16 +3,14 @@
   Android and Chrome's Web Push "badge" use for every app (WhatsApp
   included): the OS re-tints and masks this to a flat, single-color
   silhouette in the status bar, so only the alpha shape matters, never a
-  fill color, gradient, or internal detail. Two things WhatsApp's own
-  status-bar mark gets right that this now matches:
-    1. It's a simplified silhouette of the REAL app icon's most
-       recognizable single element (their phone/bubble shape) — not an
-       unrelated symbol. This badge uses the same leaf silhouette and
-       orientation as the leaf in icon.svg, just simplified to a bare
-       outline with no vein/gradient detail, which disappears at true
-       status-bar size anyway.
-    2. It's bold and single-shape — no fine internal lines, since those
-       just turn to mud at ~24dp.
+  fill color, gradient, or internal detail.
+
+  Uses the "C" ring from the actual app icon (public/icons/icon.svg) —
+  not an isolated leaf — since that ring is the brand's genuinely
+  distinctive shape (literally the initial letter), simplified to a bare
+  stroke with no sun/hills/leaf detail, which would just turn to mud at
+  ~24dp anyway. Same single-bold-shape rule WhatsApp's own badge follows,
+  applied to the more recognizable half of the mark.
 
   Canvas is 96x96; the glyph is held within the center 48x48 (24dp keyline
   safe area, doubled for a higher-density export) so it isn't clipped by
@@ -20,7 +18,10 @@
 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
   <path
-    fill="#FFFFFF"
-    d="M22,74 Q61.4,61.4 74,22 Q34.6,34.6 22,74 Z"
+    d="M73.3,69.2 A33,33 0 1 1 73.3,26.8"
+    stroke="#FFFFFF"
+    stroke-width="17"
+    stroke-linecap="round"
+    fill="none"
   />
 </svg>
