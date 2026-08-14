@@ -7,6 +7,7 @@ import { PayDeliveryButton } from '@/app/buyer/deliveries/PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { TrackDeliveryButton } from '@/components/delivery/TrackDeliveryButton';
 import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
+import { ShipmentStatusCard } from '@/components/delivery/ShipmentStatusCard';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -37,7 +38,7 @@ export default async function FarmerDeliveriesPage() {
     .select(`
       id, pickup_district, pickup_location, dropoff_district, dropoff_location,
       cargo_kg, cargo_type, delivery_type, estimated_fare, distance_km,
-      driver_earnings, status, payment_status, pickup_date, created_at, transporter_id,
+      driver_earnings, status, payment_status, pickup_date, created_at, updated_at, transporter_id,
       transporter:profiles!delivery_requests_transporter_profile_fkey(full_name, phone_number)
     `)
     .eq('requester_id', user.id)
@@ -80,6 +81,20 @@ export default async function FarmerDeliveriesPage() {
   const delivered = rows.filter((d: any) => d.status === 'delivered');
   const past      = rows.filter((d: any) => d.status === 'cancelled');
 
+  // Feature the single most-in-progress delivery as a hero card — everything
+  // else still lives in the compact row list below. Progress is a status-
+  // based estimate (no live GPS fix available server-side here); the driver-
+  // tracking sheet's own haversine ETA is the real-time source once opened.
+  const featured = active.find((d: any) => d.status === 'in_transit') ?? active.find((d: any) => d.status === 'assigned');
+  const FEATURED_PROGRESS: Record<string, number> = { open: 10, assigned: 35, in_transit: 70 };
+  const featuredVehicle = featured ? vehicleByUser.get(featured.transporter_id) as any : null;
+  const featuredEtaLabel = featured?.distance_km
+    ? `~${Math.max(5, Math.round((Number(featured.distance_km) / 22) * 60))} min away`
+    : null;
+  const featuredRecentUpdate = featured?.updated_at
+    ? Date.now() - new Date(featured.updated_at).getTime() < 30 * 60 * 1000
+    : false;
+
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -94,6 +109,23 @@ export default async function FarmerDeliveriesPage() {
           + Request
         </Link>
       </div>
+
+      {featured && (
+        <ShipmentStatusCard
+          statusLabel={featured.status === 'in_transit' ? 'Shipment in transit' : 'Driver on the way to pickup'}
+          referenceNumber={`CRP-UG-${String(featured.id).replace(/-/g, '').slice(0, 6).toUpperCase()}`}
+          etaLabel={featuredEtaLabel}
+          progressPercent={FEATURED_PROGRESS[featured.status] ?? 20}
+          pickupLabel={featured.pickup_district}
+          dropoffLabel={featured.dropoff_district}
+          rider={featured.transporter ? {
+            name: featured.transporter.full_name ?? 'Driver',
+            idLabel: featuredVehicle?.plate_number ?? null,
+            avatarUrl: photoByUser.get(featured.transporter_id) ?? null,
+          } : null}
+          hasRecentUpdate={featuredRecentUpdate}
+        />
+      )}
 
       {rows.length === 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>

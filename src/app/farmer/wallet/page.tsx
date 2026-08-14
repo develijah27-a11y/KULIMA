@@ -1,7 +1,7 @@
 ﻿import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { WalletActions } from './WalletActions';
-import { AccountNumberBadge } from '@/components/wallet/AccountNumberBadge';
+import { WalletCard } from '@/components/wallet/WalletCard';
 import { Banknote } from 'lucide-react';
 
 const C = {
@@ -29,7 +29,7 @@ export default async function FarmerWalletPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const [walletRes, txnsRes, escrowRes] = await Promise.all([
+  const [walletRes, txnsRes, escrowRes, profileRes] = await Promise.all([
     (supabase.from as any)('wallets').select('*').eq('user_id', user.id).maybeSingle(),
     (supabase.from as any)('wallet_transactions')
       .select('*')
@@ -41,11 +41,13 @@ export default async function FarmerWalletPage() {
       .eq('seller_user_id', user.id)
       .in('status', ['funded', 'disputed'])
       .order('funded_at', { ascending: false }),
+    supabase.from('profiles').select('full_name').eq('user_id', user.id).single(),
   ]);
 
   const wallet  = walletRes.data;
   const txns    = txnsRes.data ?? [];
   const escrows = escrowRes.data ?? [];
+  const holderName = (profileRes.data as any)?.full_name ?? 'Cropify User';
 
   const balance       = wallet?.balance ?? 0;
   const escrowBalance = wallet?.escrow_balance ?? 0;
@@ -62,30 +64,22 @@ export default async function FarmerWalletPage() {
       </div>
 
       {/* Balance card */}
-      <div style={{ background: C.green, borderRadius: 20, padding: '24px 24px 20px', color: '#fff' }}>
-        <p style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>
-          Available Balance
-        </p>
-        <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-          UGX {Math.round(balance).toLocaleString()}
-        </p>
-        <AccountNumberBadge accountNumber={wallet?.account_number} dark />
-        {escrowBalance > 0 && (
-          <p style={{ fontSize: 12, opacity: 0.65, margin: '0 0 20px' }}>
-            + UGX {Math.round(escrowBalance).toLocaleString()} in escrow (held for active deals)
-          </p>
-        )}
-        {escrowBalance === 0 && <div style={{ marginBottom: 20 }} />}
+      <WalletCard
+        balance={balance}
+        accountNumber={wallet?.account_number}
+        holderName={holderName}
+        escrowBalance={escrowBalance}
+      />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 14px' }}>
-            <p style={{ fontSize: 9, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', margin: '0 0 3px' }}>Total Received</p>
-            <p style={{ fontSize: 15, fontWeight: 800, margin: 0 }}>UGX {Math.round(totalIn).toLocaleString()}</p>
-          </div>
-          <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 14px' }}>
-            <p style={{ fontSize: 9, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', margin: '0 0 3px' }}>Total Sent Out</p>
-            <p style={{ fontSize: 15, fontWeight: 800, margin: 0 }}>UGX {Math.round(totalOut).toLocaleString()}</p>
-          </div>
+      {/* Period totals */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Total Received</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>UGX {Math.round(totalIn).toLocaleString()}</p>
+        </div>
+        <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Total Sent Out</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>UGX {Math.round(totalOut).toLocaleString()}</p>
         </div>
       </div>
 
