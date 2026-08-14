@@ -8,6 +8,7 @@ import { PagePrefetcher } from "@/components/ui/PagePrefetcher";
 import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { ServiceWorkerRegistrar } from "@/components/shared/ServiceWorkerRegistrar";
 import { InstallPrompt } from "@/components/shared/InstallPrompt";
+import { Wordmark } from "@/components/ui/Wordmark";
 
 // Self-hosted via next/font: fonts are fetched at build time and served from
 // our own origin, eliminating the fonts.googleapis.com/fonts.gstatic.com
@@ -146,22 +147,20 @@ export default function RootLayout({
                 <stop offset="0.55" stopColor="#34A853" />
                 <stop offset="1" stopColor="#8BC34A" />
               </linearGradient>
-              <linearGradient id="splashLeafGrad" x1="192" y1="170" x2="242" y2="228" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#0A5C36" />
-                <stop offset="1" stopColor="#8BC34A" />
-              </linearGradient>
             </defs>
             <path d="M195.4,184.6 A88,88 0 1 1 195.4,71.4" stroke="url(#splashRingGrad)" strokeWidth="46" strokeLinecap="round" />
             <circle cx="115" cy="110" r="30" fill="#FFB300" />
             <path d="M115,74 L120.7,96.1 L140.5,84.5 L128.9,104.3 L151,110 L128.9,115.7 L140.5,135.5 L120.7,123.9 L115,146 L109.3,123.9 L89.5,135.5 L101.1,115.7 L79,110 L101.1,104.3 L89.5,84.5 L109.3,96.1 Z" fill="#FFFFFF" />
-            <path d="M45,178 Q90,148 130,165 Q155,151 180,164 Q188,168 185,178 L185,202 L45,202 Z" fill="#34A853" />
-            <path d="M45,188 Q85,163 125,178 Q150,166 175,177 Q184,182 180,190 L180,206 L45,206 Z" fill="#8BC34A" />
-            <path d="M193,172 Q195,214 242,226 Q239,182 193,172 Z" fill="url(#splashLeafGrad)" />
-            <path d="M197,178 Q210,198 236,220" stroke="#F4FBF6" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity={0.85} />
-            <path d="M206,190 L216,186" stroke="#F4FBF6" strokeWidth="2" strokeLinecap="round" opacity={0.7} />
-            <path d="M216,202 L227,200" stroke="#F4FBF6" strokeWidth="2" strokeLinecap="round" opacity={0.7} />
+            <path d="M45,170 Q88,142 128,158 Q152,146 178,157 Q186,161 183,170 L183,202 L45,202 Z" fill="#0A5C36" />
+            <path d="M45,180 Q90,150 130,167 Q155,153 180,166 Q188,170 185,180 L185,204 L45,204 Z" fill="#34A853" />
+            <path d="M45,190 Q85,165 125,180 Q150,168 175,179 Q184,184 180,192 L180,208 L45,208 Z" fill="#8BC34A" />
+            <path d="M193,172 Q195,214 242,226 Q217,198 193,172 Z" fill="#8BC34A" />
+            <path d="M193,172 Q217,198 242,226 Q239,182 193,172 Z" fill="#0A5C36" />
+            <path d="M193,172 Q217,198 242,226" stroke="#F4FBF6" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity={0.9} />
+            <path d="M204,188 L214,183" stroke="#F4FBF6" strokeWidth="1.8" strokeLinecap="round" opacity={0.7} />
+            <path d="M215,201 L226,198" stroke="#F4FBF6" strokeWidth="1.8" strokeLinecap="round" opacity={0.7} />
           </svg>
-          <span className="app-splash-word">Cropify</span>
+          <span className="app-splash-word"><Wordmark color="#FFFFFF" leafColor="#8BE9A8" style={{ fontSize: 'inherit' }} /></span>
           <span className="app-splash-tagline">Grow smart. Farm better.</span>
           <div className="app-splash-dots"><span /><span /><span /></div>
         </div>

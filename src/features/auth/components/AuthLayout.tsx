@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { AppIcon } from '@/components/ui/AppIcon';
+import { Wordmark } from '@/components/ui/Wordmark';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -47,9 +48,7 @@ export function AuthLayout({ children, title, subtitle, footer }: AuthLayoutProp
         >
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
             <AppIcon size={32} rounded={9} />
-            <span className="text-xl font-black" style={{ color: 'var(--color-text-on-dark)', letterSpacing: '-0.03em' }}>
-              Cropify
-            </span>
+            <Wordmark color="var(--color-text-on-dark)" style={{ fontSize: 20 }} />
           </Link>
 
           <h1

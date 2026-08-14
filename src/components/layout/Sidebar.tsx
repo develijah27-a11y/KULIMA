@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useLiveUnreadBadge } from './useLiveUnreadBadge';
 import { AppIcon } from '@/components/ui/AppIcon';
+import { Wordmark } from '@/components/ui/Wordmark';
 
 type IconComponent = React.ComponentType<{ size?: number; strokeWidth?: number; className?: string; style?: React.CSSProperties }>;
 
@@ -182,15 +183,10 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
       >
         <AppIcon size={28} rounded={8} />
         {!collapsed && (
-          <span
-            style={{
-              fontSize: 16, fontWeight: 800, color: 'var(--color-sidebar-text)',
-              letterSpacing: '-0.02em', fontFamily: 'var(--font-display)',
-              whiteSpace: 'nowrap', overflow: 'hidden',
-            }}
-          >
-            Cropify
-          </span>
+          <Wordmark
+            color="var(--color-sidebar-text)"
+            style={{ fontSize: 16, whiteSpace: 'nowrap', overflow: 'hidden' }}
+          />
         )}
       </div>
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { PLANS } from '@/lib/subscriptions/plans';
 import { AppIcon } from '@/components/ui/AppIcon';
+import { Wordmark } from '@/components/ui/Wordmark';
 import {
   ArrowRight, Check, Sparkles, TrendingUp, Users, Microscope,
   Leaf, ShoppingCart, Truck, ShieldCheck, Lock, Scale,
@@ -74,7 +75,7 @@ function Nav() {
         {/* Logo */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 9, textDecoration: 'none', flexShrink: 0 }}>
           <AppIcon size={33} rounded={10} />
-          <span style={{ fontSize: 17, fontWeight: 900, letterSpacing: '-0.03em', color: INK }}>Cropify</span>
+          <Wordmark color={INK} style={{ fontSize: 17 }} />
         </Link>
 
         {/* Desktop links */}
@@ -740,7 +741,7 @@ function Footer() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <AppIcon size={28} rounded={8} />
-              <span style={{ fontSize: 15, fontWeight: 900, color: INK, letterSpacing: '-0.025em' }}>Cropify</span>
+              <Wordmark color={INK} style={{ fontSize: 15 }} />
             </div>
             <p style={{ fontSize: 13, color: INK_MUTE, lineHeight: 1.65, margin: '0 0 14px', maxWidth: 210 }}>Uganda&rsquo;s farm-to-market platform. Free for farmers, always.</p>
           </div>
