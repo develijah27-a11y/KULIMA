@@ -21,7 +21,14 @@ const TXN_TYPE_CFG: Record<string, { label: string; color: string; sign: '+' | '
 };
 
 function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' });
+  const d = new Date(iso);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  const isYesterday = d.toDateString() === yesterday.toDateString();
+  const day = isToday ? 'Today' : isYesterday ? 'Yesterday' : d.toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' });
+  const time = d.toLocaleTimeString('en-UG', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${day} • ${time}`;
 }
 
 export default async function FarmerWalletPage() {
@@ -144,11 +151,11 @@ export default async function FarmerWalletPage() {
                   <div>
                     <p style={{ fontSize: 13, fontWeight: 600, color: failed ? 'var(--color-danger)' : C.text, margin: 0 }}>
                       {cfg.label}
-                      {pending && <span style={{ fontSize: 10, color: 'var(--color-harvest)', fontWeight: 700, marginLeft: 6 }}>PENDING</span>}
-                      {failed  && <span style={{ fontSize: 10, color: 'var(--color-danger)', fontWeight: 700, marginLeft: 6 }}>FAILED</span>}
                     </p>
                     {t.description && <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{t.description}</p>}
-                    <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>{fmtDate(t.created_at)}</p>
+                    <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>
+                      {fmtDate(t.created_at)} · {pending ? 'Pending' : failed ? 'Failed' : 'Successful'}
+                    </p>
                   </div>
                   <p style={{ fontSize: 14, fontWeight: 800, color: failed ? C.muted : cfg.color, margin: 0, opacity: pending ? 0.6 : 1 }}>
                     {cfg.sign}UGX {Math.round(t.amount).toLocaleString()}

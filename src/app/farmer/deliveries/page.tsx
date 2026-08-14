@@ -7,6 +7,7 @@ import { PayDeliveryButton } from '@/app/buyer/deliveries/PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { TrackDeliveryButton } from '@/components/delivery/TrackDeliveryButton';
 import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
+import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
 import { ShipmentStatusCard } from '@/components/delivery/ShipmentStatusCard';
 
 const C = {
@@ -214,6 +215,22 @@ function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any;
               <> · <a href={`tel:${d.transporter.phone_number}`} style={{ color: C.green, fontWeight: 700, textDecoration: 'none' }}>{d.transporter.phone_number}</a></>
             )}
           </p>
+        )}
+
+        {/* Map is always visible here, not just behind a "track" button —
+            this IS the map, the button below just opens the fuller sheet
+            with call/message actions. */}
+        {canTrack && (
+          <div style={{ height: 190, borderRadius: 12, overflow: 'hidden', marginBottom: 10 }}>
+            <DeliveryTrackingMap
+              deliveryId={d.id}
+              pickupDistrict={d.pickup_district}
+              dropoffDistrict={d.dropoff_district}
+              pickupCoords={d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null}
+              dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
+              otherPartyLabel={d.transporter?.full_name ?? 'Driver'}
+            />
+          </div>
         )}
 
         {/* Live location — helps the driver find you without a phone call while driving */}
