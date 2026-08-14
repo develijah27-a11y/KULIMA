@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
+import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -561,6 +562,25 @@ export default async function BuyerDashboardPage() {
         </Suspense>
       </div>
 
+      <Suspense fallback={<div className="dash-skeleton h-[340px] rounded-xl" />}>
+        <NearbyDriversWidget userId={userId} />
+      </Suspense>
+
     </div>
+  );
+}
+
+async function NearbyDriversWidget({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  return (
+    <Card>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Drivers Near You</p>
+        <Link href="/buyer/deliveries/new" className="text-xs font-semibold" style={{ color: C.greenMed }}>Request delivery →</Link>
+      </div>
+      <div style={{ height: 280, padding: 12 }}>
+        <NearbyDriversMap userDistrict={profile?.location} height="100%" />
+      </div>
+    </Card>
   );
 }

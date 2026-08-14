@@ -10,6 +10,10 @@ interface Props {
     status: string;
     pickup_district: string;
     dropoff_district: string;
+    pickup_lat?: number | null;
+    pickup_lng?: number | null;
+    dropoff_lat?: number | null;
+    dropoff_lng?: number | null;
     cargo_type?: string | null;
     cargo_kg?: number | null;
   };

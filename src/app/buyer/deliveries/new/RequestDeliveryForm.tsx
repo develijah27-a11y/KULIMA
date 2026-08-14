@@ -10,6 +10,7 @@ import type { DeliveryType, FareBreakdown } from '@/lib/delivery-pricing';
 import { FareConfirmSheet } from '@/components/delivery/FareConfirmSheet';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import { DestinationSearchSheet } from '@/components/delivery/DestinationSearchSheet';
+import { LocationPinPicker } from '@/components/delivery/LocationPinPicker';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -80,6 +81,16 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   const [recentPickup, setRecentPickup]   = useState<string[]>([]);
   const [recentDropoff, setRecentDropoff] = useState<string[]>([]);
 
+  // Exact pins — captured via LocationPinPicker right after each district is
+  // chosen, so the driver's in-app map and Navigate handoff point at the
+  // real spot instead of just the district centroid. Optional: skipping
+  // leaves these null and every downstream consumer falls back to the
+  // district centroid exactly as before.
+  const [pickupPin, setPickupPin]   = useState<{ lat: number; lng: number } | null>(null);
+  const [dropoffPin, setDropoffPin] = useState<{ lat: number; lng: number } | null>(null);
+  const [showPickupPin, setShowPickupPin]   = useState(false);
+  const [showDropoffPin, setShowDropoffPin] = useState(false);
+
   useEffect(() => {
     fetch('/api/deliveries/recent-destinations')
       .then(res => res.json())
@@ -126,8 +137,12 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
           offer_id:         prefilledOffer?.id ?? null,
           pickup_district:  pickupDistrict,
           pickup_location:  pickupLocation || pickupDistrict,
+          pickup_lat:       pickupPin?.lat ?? null,
+          pickup_lng:       pickupPin?.lng ?? null,
           dropoff_district: dropoffDistrict,
           dropoff_location: dropoffLocation || dropoffDistrict,
+          dropoff_lat:      dropoffPin?.lat ?? null,
+          dropoff_lng:      dropoffPin?.lng ?? null,
           cargo_kg:         parseFloat(cargoKg),
           cargo_type:       cargoType || null,
           pickup_date:      pickupDate,
@@ -206,27 +221,47 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
             background: '#fff', borderRadius: 16, boxShadow: '0 4px 20px rgba(0,0,0,.22)', padding: 12,
             display: 'flex', flexDirection: 'column', gap: 8,
           }}>
-            <button type="button" onClick={() => setShowPickupSheet(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', borderRadius: 11,
-              border: '1px solid #e4e8e1', background: '#f7f8f6', cursor: 'pointer', textAlign: 'left',
-            }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-primary)', flexShrink: 0 }} />
-              <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: pickupDistrict ? '#182018' : '#6b7566' }}>
-                {pickupDistrict || 'Pickup district'}
-              </span>
-              <ChevronRight size={15} style={{ color: '#6b7566' }} />
-            </button>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button type="button" onClick={() => setShowPickupSheet(true)} style={{
+                flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', borderRadius: 11,
+                border: '1px solid #e4e8e1', background: '#f7f8f6', cursor: 'pointer', textAlign: 'left', minWidth: 0,
+              }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-primary)', flexShrink: 0 }} />
+                <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 700, color: pickupDistrict ? '#182018' : '#6b7566' }}>
+                  {pickupDistrict || 'Pickup district'}
+                </span>
+                <ChevronRight size={15} style={{ color: '#6b7566', flexShrink: 0 }} />
+              </button>
+              {pickupDistrict && (
+                <button type="button" onClick={() => setShowPickupPin(true)} title="Adjust exact pickup pin" style={{
+                  flexShrink: 0, width: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 11,
+                  border: '1px solid #e4e8e1', background: pickupPin ? 'var(--color-primary-bg)' : '#f7f8f6', cursor: 'pointer',
+                }}>
+                  <MapPin size={15} style={{ color: pickupPin ? 'var(--color-primary)' : '#6b7566' }} />
+                </button>
+              )}
+            </div>
 
-            <button type="button" onClick={() => setShowDropoffSheet(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 12px', borderRadius: 11,
-              border: '1px solid #e4e8e1', background: '#f7f8f6', cursor: 'pointer', textAlign: 'left',
-            }}>
-              <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-danger)', flexShrink: 0 }} />
-              <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: dropoffDistrict ? '#182018' : '#6b7566' }}>
-                {dropoffDistrict || 'Where to?'}
-              </span>
-              <ChevronRight size={15} style={{ color: '#6b7566' }} />
-            </button>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button type="button" onClick={() => setShowDropoffSheet(true)} style={{
+                flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', borderRadius: 11,
+                border: '1px solid #e4e8e1', background: '#f7f8f6', cursor: 'pointer', textAlign: 'left', minWidth: 0,
+              }}>
+                <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-danger)', flexShrink: 0 }} />
+                <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 700, color: dropoffDistrict ? '#182018' : '#6b7566' }}>
+                  {dropoffDistrict || 'Where to?'}
+                </span>
+                <ChevronRight size={15} style={{ color: '#6b7566', flexShrink: 0 }} />
+              </button>
+              {dropoffDistrict && (
+                <button type="button" onClick={() => setShowDropoffPin(true)} title="Adjust exact drop-off pin" style={{
+                  flexShrink: 0, width: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 11,
+                  border: '1px solid #e4e8e1', background: dropoffPin ? 'var(--color-primary-bg)' : '#f7f8f6', cursor: 'pointer',
+                }}>
+                  <MapPin size={15} style={{ color: dropoffPin ? 'var(--color-primary)' : '#6b7566' }} />
+                </button>
+              )}
+            </div>
 
             {bothSet && (
               <button type="button" onClick={() => setStep('details')} style={{
@@ -265,9 +300,28 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         )}
 
         <DestinationSearchSheet open={showPickupSheet} onClose={() => setShowPickupSheet(false)}
-          onSelect={setPickupDistrict} title="Pickup district" districts={DISTRICTS} recent={recentPickup} />
+          onSelect={(d) => { setPickupDistrict(d); setPickupPin(null); setShowPickupSheet(false); setShowPickupPin(true); }}
+          title="Pickup district" districts={DISTRICTS} recent={recentPickup} />
         <DestinationSearchSheet open={showDropoffSheet} onClose={() => setShowDropoffSheet(false)}
-          onSelect={setDropoffDistrict} title="Where to?" districts={DISTRICTS} recent={recentDropoff} />
+          onSelect={(d) => { setDropoffDistrict(d); setDropoffPin(null); setShowDropoffSheet(false); setShowDropoffPin(true); }}
+          title="Where to?" districts={DISTRICTS} recent={recentDropoff} />
+
+        {pickupDistrict && (
+          <LocationPinPicker
+            open={showPickupPin} onClose={() => setShowPickupPin(false)}
+            onConfirm={(pos) => { setPickupPin(pos); setShowPickupPin(false); }}
+            onSkip={() => setShowPickupPin(false)}
+            title="Confirm exact pickup spot" district={pickupDistrict}
+          />
+        )}
+        {dropoffDistrict && (
+          <LocationPinPicker
+            open={showDropoffPin} onClose={() => setShowDropoffPin(false)}
+            onConfirm={(pos) => { setDropoffPin(pos); setShowDropoffPin(false); }}
+            onSkip={() => setShowDropoffPin(false)}
+            title="Confirm exact drop-off spot" district={dropoffDistrict}
+          />
+        )}
       </div>
     );
   }

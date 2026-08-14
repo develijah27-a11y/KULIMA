@@ -8,6 +8,10 @@ interface Props {
   deliveryId: string;
   pickupDistrict: string;
   dropoffDistrict: string;
+  /** Exact pin captured at request time (LocationPinPicker) — preferred
+   *  over the district centroid whenever present. */
+  pickupCoords?: { lat: number; lng: number } | null;
+  dropoffCoords?: { lat: number; lng: number } | null;
   /** Label shown on the live marker's popup — e.g. the driver's name */
   otherPartyLabel: string;
   /** Polling interval for the other party's live position, ms */
@@ -15,13 +19,18 @@ interface Props {
   onPosition?: (pos: { lat: number; lng: number; updatedAt: string } | null) => void;
 }
 
-// Live tracking map for a single delivery — pickup/dropoff pins (from Uganda
-// district centroids, the only geocoding this app has) plus a moving marker
-// for whichever party is broadcasting via /api/deliveries/[id]/location
-// (see ShareLocationButton). Same async-import Leaflet pattern as
-// FarmMapClient.tsx — the one other real map in this codebase.
+// Live tracking map for a single delivery — pickup/dropoff pins plus a
+// moving marker for whichever party is broadcasting via
+// /api/deliveries/[id]/location (see ShareLocationButton). Same async-import
+// Leaflet pattern as FarmMapClient.tsx — the one other real map in this
+// codebase.
+//
+// Pickup/dropoff pins prefer the exact coordinate captured by
+// LocationPinPicker at request time; a district centroid (the only
+// geocoding this app had before) is the fallback for older requests that
+// were made before pin capture existed, or where the requester skipped it.
 export function DeliveryTrackingMap({
-  deliveryId, pickupDistrict, dropoffDistrict, otherPartyLabel, pollMs = 8_000, onPosition,
+  deliveryId, pickupDistrict, dropoffDistrict, pickupCoords, dropoffCoords, otherPartyLabel, pollMs = 8_000, onPosition,
 }: Props) {
   const mapRef       = useRef<LMap | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,8 +38,12 @@ export function DeliveryTrackingMap({
   const routeLineRef  = useRef<LPolyline | null>(null);
   const [ready, setReady] = useState(false);
 
-  const pickup  = UGANDA_DISTRICTS[pickupDistrict];
-  const dropoff = UGANDA_DISTRICTS[dropoffDistrict];
+  const districtPickup  = UGANDA_DISTRICTS[pickupDistrict];
+  const districtDropoff = UGANDA_DISTRICTS[dropoffDistrict];
+  const pickup  = pickupCoords  ? { lat: pickupCoords.lat,  lng: pickupCoords.lng }  : districtPickup;
+  const dropoff = dropoffCoords ? { lat: dropoffCoords.lat, lng: dropoffCoords.lng } : districtDropoff;
+  const pickupIsExact  = !!pickupCoords;
+  const dropoffIsExact = !!dropoffCoords;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -47,7 +60,11 @@ export function DeliveryTrackingMap({
       });
 
       const center: [number, number] = pickup ? [pickup.lat, pickup.lng] : [1.3733, 32.2903];
-      const map = L.map(containerRef.current!, { zoomControl: true, attributionControl: false }).setView(center, 8);
+      // Zoom in close when we have a real pin to show; stay wide/district-
+      // level when all we have is a centroid, since anything closer would
+      // just be zooming into empty space with false precision.
+      const initialZoom = pickup && (pickupIsExact || dropoffIsExact) ? 13 : 8;
+      const map = L.map(containerRef.current!, { zoomControl: true, attributionControl: false }).setView(center, initialZoom);
       mapRef.current = map;
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -62,7 +79,8 @@ export function DeliveryTrackingMap({
           className: '', iconSize: [16, 16], iconAnchor: [8, 8],
           html: `<div style="width:14px;height:14px;border-radius:50%;background:#166B3A;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
         });
-        L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(map).bindPopup(`Pickup — ${pickupDistrict}`);
+        L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(map)
+          .bindPopup(pickupIsExact ? `Exact pickup spot` : `Pickup — ${pickupDistrict} (approximate)`);
         bounds.push([pickup.lat, pickup.lng]);
       }
       if (dropoff) {
@@ -70,7 +88,8 @@ export function DeliveryTrackingMap({
           className: '', iconSize: [16, 16], iconAnchor: [8, 8],
           html: `<div style="width:14px;height:14px;border-radius:50%;background:#DC2626;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
         });
-        L.marker([dropoff.lat, dropoff.lng], { icon: dropoffIcon }).addTo(map).bindPopup(`Drop-off — ${dropoffDistrict}`);
+        L.marker([dropoff.lat, dropoff.lng], { icon: dropoffIcon }).addTo(map)
+          .bindPopup(dropoffIsExact ? `Exact drop-off spot` : `Drop-off — ${dropoffDistrict} (approximate)`);
         bounds.push([dropoff.lat, dropoff.lng]);
       }
       if (pickup && dropoff) {

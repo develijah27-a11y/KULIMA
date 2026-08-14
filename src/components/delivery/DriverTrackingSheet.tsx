@@ -32,6 +32,10 @@ interface Props {
     status: string;
     pickup_district: string;
     dropoff_district: string;
+    pickup_lat?: number | null;
+    pickup_lng?: number | null;
+    dropoff_lat?: number | null;
+    dropoff_lng?: number | null;
     cargo_type?: string | null;
     cargo_kg?: number | null;
     is_cold_capable?: boolean;
@@ -65,9 +69,14 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
   const [etaMin, setEtaMin] = useState<number | null>(null);
   const [lastSeen, setLastSeen] = useState<string | null>(null);
 
+  const pickupCoords  = delivery.pickup_lat != null && delivery.pickup_lng != null
+    ? { lat: delivery.pickup_lat, lng: delivery.pickup_lng } : null;
+  const dropoffCoords = delivery.dropoff_lat != null && delivery.dropoff_lng != null
+    ? { lat: delivery.dropoff_lat, lng: delivery.dropoff_lng } : null;
+
   const target = delivery.status === 'in_transit'
-    ? UGANDA_DISTRICTS[delivery.dropoff_district]
-    : UGANDA_DISTRICTS[delivery.pickup_district];
+    ? (dropoffCoords ?? UGANDA_DISTRICTS[delivery.dropoff_district])
+    : (pickupCoords ?? UGANDA_DISTRICTS[delivery.pickup_district]);
 
   function handlePosition(pos: { lat: number; lng: number; updatedAt: string } | null) {
     setLastSeen(pos?.updatedAt ?? null);
@@ -97,6 +106,8 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
           deliveryId={delivery.id}
           pickupDistrict={delivery.pickup_district}
           dropoffDistrict={delivery.dropoff_district}
+          pickupCoords={pickupCoords}
+          dropoffCoords={dropoffCoords}
           otherPartyLabel={otherParty.name}
           onPosition={handlePosition}
         />

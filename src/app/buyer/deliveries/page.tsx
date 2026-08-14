@@ -35,7 +35,7 @@ export default async function BuyerDeliveriesPage() {
 
   const { data: deliveries } = await (supabase.from as any)('delivery_requests')
     .select(`
-      id, pickup_district, pickup_location, dropoff_district, dropoff_location,
+      id, pickup_district, pickup_location, pickup_lat, pickup_lng, dropoff_district, dropoff_location, dropoff_lat, dropoff_lng,
       cargo_kg, cargo_type, delivery_type, estimated_fare, distance_km,
       commission_amount, driver_earnings,
       status, payment_status, pickup_date, transporter_id,

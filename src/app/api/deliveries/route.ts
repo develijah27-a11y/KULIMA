@@ -43,12 +43,15 @@ export async function POST(req: Request) {
   const body = await req.json();
   const {
     offer_id,
-    pickup_district, pickup_location,
-    dropoff_district, dropoff_location,
+    pickup_district, pickup_location, pickup_lat, pickup_lng,
+    dropoff_district, dropoff_location, dropoff_lat, dropoff_lng,
     cargo_kg, cargo_type,
     pickup_date, notes,
     delivery_type = 'standard',
   } = body;
+
+  const validCoord = (v: unknown): v is number => typeof v === 'number' && !Number.isNaN(v) && v >= -90 && v <= 90;
+  const validLng = (v: unknown): v is number => typeof v === 'number' && !Number.isNaN(v) && v >= -180 && v <= 180;
 
   if (!pickup_district || !dropoff_district || !cargo_kg || !pickup_date) {
     return NextResponse.json({ error: 'pickup_district, dropoff_district, cargo_kg, pickup_date are required' }, { status: 400 });
@@ -65,8 +68,12 @@ export async function POST(req: Request) {
     requester_id:     user.id,
     pickup_district,
     pickup_location:  pickup_location || pickup_district,
+    pickup_lat:       validCoord(pickup_lat) && validLng(pickup_lng) ? pickup_lat : null,
+    pickup_lng:       validCoord(pickup_lat) && validLng(pickup_lng) ? pickup_lng : null,
     dropoff_district,
     dropoff_location: dropoff_location || dropoff_district,
+    dropoff_lat:      validCoord(dropoff_lat) && validLng(dropoff_lng) ? dropoff_lat : null,
+    dropoff_lng:      validCoord(dropoff_lat) && validLng(dropoff_lng) ? dropoff_lng : null,
     cargo_kg:         parseFloat(cargo_kg),
     cargo_type:       cargo_type ?? null,
     pickup_date,

@@ -8,6 +8,7 @@ import { buildSeasonalPlan, generateDiseaseAlerts, type InsightSeverity } from '
 import { generatePlantingAlerts } from '@/lib/planting-calendar';
 import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
+import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import {
   Package, DollarSign, Home, Bell, CheckCircle2, Sprout,
   Sun, Moon, Cloud, CloudSun, CloudRain, CloudLightning, Snowflake,
@@ -783,6 +784,28 @@ async function DeliveryHistory({ userId }: { userId: string }) {
   );
 }
 
+// ─── Streaming: Nearby drivers map ───────────────────────────────────────────
+// Visibility into who's around for tracking/planning purposes, separate from
+// the request flow's own copy of this map — a farmer can check "is there
+// even a driver near me right now" before deciding to book, not just after.
+
+async function NearbyDriversWidget({ userId }: { userId: string }) {
+  const profile = await getProfile(userId);
+  return (
+    <Card>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+          Drivers Near You
+        </p>
+        <Link href="/farmer/deliveries/new" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Request delivery →</Link>
+      </div>
+      <div style={{ height: 280, padding: 12 }}>
+        <NearbyDriversMap userDistrict={profile?.location} height="100%" />
+      </div>
+    </Card>
+  );
+}
+
 // ─── Quick actions ────────────────────────────────────────────────────────────
 
 function QuickActions() {
@@ -915,6 +938,11 @@ export default async function FarmerDashboardPage() {
       {/* 4 · Delivery history */}
       <Suspense fallback={<div className="dash-skeleton h-[420px] rounded-xl" />}>
         <DeliveryHistory userId={userId} />
+      </Suspense>
+
+      {/* 4b · Nearby drivers map */}
+      <Suspense fallback={<div className="dash-skeleton h-[340px] rounded-xl" />}>
+        <NearbyDriversWidget userId={userId} />
       </Suspense>
 
       {/* 5 · Market prices + Weather forecast (2-col) */}

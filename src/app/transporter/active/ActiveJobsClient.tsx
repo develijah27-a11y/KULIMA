@@ -352,6 +352,11 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
               ? `${d.dropoff_location ?? ''}, ${d.dropoff_district}`
               : `${d.pickup_location ?? ''}, ${d.pickup_district}`
           }
+          exactCoords={
+            isInTransit
+              ? (d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null)
+              : (d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null)
+          }
         />
       </div>
 
