@@ -5,6 +5,7 @@ import { PayDeliveryButton } from './PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { TrackDeliveryButton } from '@/components/delivery/TrackDeliveryButton';
 import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
+import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
 import type { JSX } from 'react';
 import { Truck, Search, Car, Package, Snowflake, Zap, CheckCircle2, User } from 'lucide-react';
 
@@ -192,6 +193,19 @@ function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any;
           </p>
         )}
 
+        {canTrack && (
+          <div style={{ height: 190, borderRadius: 12, overflow: 'hidden', marginBottom: 10 }}>
+            <DeliveryTrackingMap
+              deliveryId={d.id}
+              pickupDistrict={d.pickup_district}
+              dropoffDistrict={d.dropoff_district}
+              pickupCoords={d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null}
+              dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
+              otherPartyLabel={d.transporter?.full_name ?? 'Driver'}
+            />
+          </div>
+        )}
+
         {/* Live location — helps the driver find you without a phone call while driving */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <ShareLocationButton
@@ -219,7 +233,7 @@ function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any;
       </div>
 
       {/* Pay button */}
-      {showPay && !paid && (
+      {(showPay || (['assigned','in_transit'].includes(d.status) && d.transporter)) && !paid && (
         <PayDeliveryButton deliveryId={d.id} amount={Number(d.estimated_fare)} />
       )}
       {paid && (

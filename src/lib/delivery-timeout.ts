@@ -32,18 +32,28 @@
  *                         (shorter window, so they must pay faster)
  *   ABUSE_RESTRICT_NEW  — whether flagged accounts are blocked from new requests
  */
+// These were originally written for a per-minute cron (see the state-machine
+// comment above) — this project's Vercel plan only allows a daily cron
+// schedule (see vercel.json), so a delivery is only ever re-checked once a
+// day. Minute-scale thresholds under a daily sweep would be permanently
+// past-due the moment they're checked — every unpaid delivery would hit
+// cancel_due on the very first run regardless of how recently it was
+// assigned. Rescaled to hour/day thresholds so the daily sweep is actually
+// meaningful. The "Pay Now" prompt shown immediately in the UI once a
+// driver is assigned is the real first line of defense; this is the
+// backstop for requesters who never pay at all.
 export const DELIVERY_TIMEOUT = {
   /** Seconds after driver assignment before first reminder push */
-  REMIND_1_SECS: 120,               // 2 minutes
+  REMIND_1_SECS: 3 * 3600,          // 3 hours
 
   /** Seconds after driver assignment before second reminder push */
-  REMIND_2_SECS: 300,               // 5 minutes
+  REMIND_2_SECS: 12 * 3600,         // 12 hours
 
   /** Seconds after driver assignment before auto-cancel (if not in_transit) */
-  CANCEL_SECS: 420,                 // 7 minutes
+  CANCEL_SECS: 24 * 3600,           // 24 hours
 
   /** Extra seconds before cancel if driver is already in transit */
-  IN_TRANSIT_GRACE_EXTRA: 300,      // 5 extra minutes (total 12 min)
+  IN_TRANSIT_GRACE_EXTRA: 24 * 3600, // extra 24h grace (total 48h) — a driver already en route shouldn't get yanked back for the requester's non-payment
 
   /**
    * Buffer for MoMo confirmation lag.

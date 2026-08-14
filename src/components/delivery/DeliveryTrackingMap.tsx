@@ -19,6 +19,33 @@ interface Props {
   onPosition?: (pos: { lat: number; lng: number; updatedAt: string } | null) => void;
 }
 
+// Real road-following geometry from OSRM's public routing API (free, no key
+// — this app has no routing engine of its own and running one is well
+// beyond what a Leaflet+OSM map needs). Best-effort: any failure just keeps
+// whatever line is already drawn (the straight dashed fallback), since a
+// route line is a nice-to-have visual, not something worth blocking the map
+// on. The public demo server is rate-limited and meant for light/dev use —
+// fine for this app's volume today, but if delivery volume grows enough to
+// hit those limits, self-hosting OSRM (or switching to a paid provider)
+// would be the next step, not something to silently swap in now.
+async function fetchRoadRoute(
+  from: { lat: number; lng: number },
+  to: { lat: number; lng: number },
+): Promise<[number, number][] | null> {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6_000) });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const coords = json?.routes?.[0]?.geometry?.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) return null;
+    // GeoJSON is [lng, lat] — Leaflet wants [lat, lng].
+    return coords.map((c: [number, number]) => [c[1], c[0]]);
+  } catch {
+    return null;
+  }
+}
+
 // Live tracking map for a single delivery — pickup/dropoff pins plus a
 // moving marker for whichever party is broadcasting via
 // /api/deliveries/[id]/location (see ShareLocationButton). Same async-import
@@ -93,9 +120,18 @@ export function DeliveryTrackingMap({
         bounds.push([dropoff.lat, dropoff.lng]);
       }
       if (pickup && dropoff) {
+        // Straight dashed line first (instant), then swapped for the real
+        // road-following path once OSRM responds — never leave the map with
+        // no route line while the fetch is in flight.
         routeLineRef.current = L.polyline([[pickup.lat, pickup.lng], [dropoff.lat, dropoff.lng]], {
           color: '#166B3A', weight: 3, opacity: 0.35, dashArray: '6 8',
         }).addTo(map);
+
+        fetchRoadRoute(pickup, dropoff).then(coords => {
+          if (!mounted || !mapRef.current || !coords) return;
+          routeLineRef.current?.remove();
+          routeLineRef.current = L.polyline(coords, { color: '#166B3A', weight: 4, opacity: 0.75 }).addTo(map);
+        });
       }
       if (bounds.length > 0) map.fitBounds(bounds, { padding: [48, 48] });
 

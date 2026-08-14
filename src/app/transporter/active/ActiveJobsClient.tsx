@@ -6,6 +6,7 @@ import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Targe
 import { NavigateButton } from '@/components/delivery/NavigateButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { DriverTrackingSheet } from '@/components/delivery/DriverTrackingSheet';
+import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -343,6 +344,17 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
           {isInTransit && d.dropoff_location && <p style={{ margin: 0 }}>{d.dropoff_location}, {d.dropoff_district}</p>}
         </div>
       )}
+
+      <div style={{ height: 190, borderRadius: 12, overflow: 'hidden', marginBottom: 10 }}>
+        <DeliveryTrackingMap
+          deliveryId={d.id}
+          pickupDistrict={d.pickup_district}
+          dropoffDistrict={d.dropoff_district}
+          pickupCoords={d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null}
+          dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
+          otherPartyLabel={d.requester?.full_name ?? 'Requester'}
+        />
+      </div>
 
       <div style={{ marginBottom: 10 }}>
         <NavigateButton

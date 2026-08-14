@@ -23,6 +23,10 @@
     {
       "path": "/api/cron/scores",
       "schedule": "0 0 * * 0"
+    },
+    {
+      "path": "/api/deliveries/timeout",
+      "schedule": "0 6 * * *"
     }
   ]
 }

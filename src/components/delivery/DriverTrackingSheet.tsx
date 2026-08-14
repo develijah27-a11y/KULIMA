@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { DeliveryTrackingMap } from './DeliveryTrackingMap';
 import { ShareLocationButton } from './ShareLocationButton';
@@ -134,8 +135,10 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
           flexShrink: 0, overflow: 'hidden',
         }}>
           {otherParty.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={otherParty.photoUrl} alt={otherParty.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            // The original KYC selfie can be several MB straight off a phone
+            // camera — next/image resizes/re-encodes to this 44x44 slot
+            // instead of shipping the full file to a mobile connection.
+            <Image src={otherParty.photoUrl} alt={otherParty.name} width={44} height={44} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : otherParty.role === 'driver'
             ? (VEHICLE_ICON[otherParty.vehicleType ?? ''] ?? <Truck size={22} />)
             : <User size={22} />}

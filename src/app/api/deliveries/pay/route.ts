@@ -5,9 +5,16 @@ import { rateLimit } from '@/lib/rate-limit';
 import { notifyUser } from '@/lib/notify';
 import { logSystemEvent } from '@/lib/system-log';
 
-// Requester pays for the delivery after goods arrive.
+// Requester pays for the delivery — allowed from the moment a driver is
+// assigned, not only after goods arrive. This is deliberate: a driver
+// shouldn't have to drive to pickup on the strength of an unpaid request.
+// /api/deliveries/timeout (see vercel.json cron) reminds and eventually
+// auto-cancels an 'assigned' delivery that stays unpaid for too long — that
+// system only makes sense if paying that early is actually possible, which
+// it wasn't before this route required 'delivered'.
 // Flow: deduct from requester wallet → pay driver their earnings (fare minus 10% commission) →
-//       app retains commission → mark delivery paid → mark vehicle available again.
+//       app retains commission → mark delivery paid → mark vehicle available again
+//       once actually delivered (paying early doesn't free the vehicle early).
 export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -33,7 +40,9 @@ export async function POST(req: Request) {
     .single();
 
   if (deliveryErr || !delivery) return NextResponse.json({ error: 'Delivery not found' }, { status: 404 });
-  if (delivery.status !== 'delivered') return NextResponse.json({ error: 'Delivery not yet completed by the driver' }, { status: 400 });
+  if (!['assigned', 'in_transit', 'delivered'].includes(delivery.status)) {
+    return NextResponse.json({ error: 'This delivery has no driver assigned yet.' }, { status: 400 });
+  }
   if (delivery.payment_status === 'paid') return NextResponse.json({ error: 'Already paid' }, { status: 409 });
 
   const totalFare      = Number(delivery.estimated_fare);
@@ -102,12 +111,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Already paid' }, { status: 409 });
   }
 
-  await Promise.all([
-    (admin.from as any)('vehicles').update({
+  // Only free the vehicle once the job itself is actually done — paying
+  // early (status 'assigned'/'in_transit') must not make the driver look
+  // available again while they're still out on this delivery.
+  if (delivery.status === 'delivered') {
+    await (admin.from as any)('vehicles').update({
       is_available: true,
       updated_at:   now,
-    }).eq('user_id', delivery.transporter_id),
-  ]);
+    }).eq('user_id', delivery.transporter_id);
+  }
 
   // Notify the driver of payment
   try {

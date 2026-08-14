@@ -60,6 +60,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'delivery_type must be cold, fast, or standard' }, { status: 400 });
   }
 
+  // Fairness backstop: don't let someone book a new driver while they've
+  // already left a driver unpaid for 24h+ on a past job — that driver did
+  // the work and is still waiting. /api/deliveries/timeout independently
+  // reminds/flags the overdue one; this just stops it from happening twice.
+  const overdueSince = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const { count: overdueUnpaid } = await (supabase.from as any)('delivery_requests')
+    .select('id', { count: 'exact', head: true })
+    .eq('requester_id', user.id)
+    .in('status', ['assigned', 'in_transit', 'delivered'])
+    .neq('payment_status', 'paid')
+    .lte('accepted_at', overdueSince);
+  if ((overdueUnpaid ?? 0) > 0) {
+    return NextResponse.json({
+      error: 'You have an unpaid delivery from more than a day ago. Please pay it before requesting a new one — your driver is still waiting.',
+    }, { status: 403 });
+  }
+
   // Calculate fare automatically based on route + type + weight
   const fare = calcFare(pickup_district, dropoff_district, parseFloat(cargo_kg), delivery_type as DeliveryType);
 

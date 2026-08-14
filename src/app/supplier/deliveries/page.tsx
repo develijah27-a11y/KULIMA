@@ -6,6 +6,7 @@ import { Search, Car, Truck, Package, X as XIcon, Zap, Snowflake, User, CheckCir
 import { PayDeliveryButton } from '@/app/buyer/deliveries/PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
+import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -151,6 +152,19 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
           </p>
         )}
 
+        {['assigned', 'in_transit'].includes(d.status) && d.transporter && (
+          <div style={{ height: 190, borderRadius: 12, overflow: 'hidden', marginBottom: 10 }}>
+            <DeliveryTrackingMap
+              deliveryId={d.id}
+              pickupDistrict={d.pickup_district}
+              dropoffDistrict={d.dropoff_district}
+              pickupCoords={d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null}
+              dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
+              otherPartyLabel={d.transporter?.full_name ?? 'Driver'}
+            />
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <ShareLocationButton
             deliveryId={d.id}
@@ -162,7 +176,7 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
         </div>
       </div>
 
-      {showPay && !paid && (
+      {(showPay || (['assigned','in_transit'].includes(d.status) && d.transporter)) && !paid && (
         <PayDeliveryButton deliveryId={d.id} amount={Number(d.estimated_fare)} />
       )}
       {paid && (

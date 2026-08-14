@@ -259,7 +259,7 @@ function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any;
         </div>
       </div>
 
-      {showPay && !paid && (
+      {(showPay || (['assigned','in_transit'].includes(d.status) && d.transporter)) && !paid && (
         <PayDeliveryButton deliveryId={d.id} amount={Number(d.estimated_fare)} />
       )}
       {paid && (
