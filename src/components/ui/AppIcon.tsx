@@ -32,6 +32,7 @@ export function AppIcon({ size = 28, rounded = 0 }: { size?: number; rounded?: n
       <path d="M45,170 Q88,142 128,158 Q152,146 178,157 Q186,161 183,170 L183,202 L45,202 Z" fill="#0A5C36" />
       <path d="M45,180 Q90,150 130,167 Q155,153 180,166 Q188,170 185,180 L185,204 L45,204 Z" fill="#34A853" />
       <path d="M45,190 Q85,165 125,180 Q150,168 175,179 Q184,184 180,192 L180,208 L45,208 Z" fill="#8BC34A" />
+      <path d="M75,95 Q130.6,138.4 165,200 Q109.4,156.6 75,95 Z" fill="#FFFFFF" opacity={0.92} />
       <path d="M193,172 Q195,214 242,226 Q217,198 193,172 Z" fill="#8BC34A" />
       <path d="M193,172 Q217,198 242,226 Q239,182 193,172 Z" fill="#0A5C36" />
       <path d="M193,172 Q217,198 242,226" stroke="#F4FBF6" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity={0.9} />
