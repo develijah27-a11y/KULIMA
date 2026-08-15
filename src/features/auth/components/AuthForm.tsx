@@ -44,6 +44,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [agreedToTerms, setAgreedToTerms]     = useState(false);
   const [biometricSupported, setBiometricSupported] = useState(false);
   const [biometricLoading, setBiometricLoading]     = useState(false);
+  const [biometricHint, setBiometricHint]           = useState<string | null>(null);
 
   // Refs for values that must not cause re-renders when changed
   const isSigningUpRef  = useRef(false);
@@ -195,14 +196,26 @@ export function AuthForm({ mode }: AuthFormProps) {
     if (biometricLoading || loading) return;
     setBiometricLoading(true);
     setError(null);
+    setBiometricHint(null);
     try {
       await signInWithBiometrics();
     } catch (err: unknown) {
-      // A cancelled/dismissed prompt is a normal "changed my mind," not an error worth alarming over.
+      // WebAuthn deliberately returns the same NotAllowedError whether the user
+      // cancelled the prompt or there was no passkey registered for this
+      // site/device to offer in the first place — browsers don't let sites
+      // distinguish the two (that'd let a site enumerate who has an account).
+      // So rather than staying silent (a dead end for the very common "never
+      // set this up" case) or crying wolf with a red error, show one hint that
+      // makes sense either way and points at the actual fix: sign in with a
+      // password once, then registration is offered right on the dashboard.
       const name = (err as any)?.name;
       const msg  = err instanceof Error ? err.message : '';
-      const isCancel = name === 'NotAllowedError' || /cancel|not allowed/i.test(msg);
-      if (!isCancel) setError('Biometric sign-in didn’t work. Please try again or sign in with your password.');
+      const isCancelOrUnavailable = name === 'NotAllowedError' || /cancel|not allowed/i.test(msg);
+      if (isCancelOrUnavailable) {
+        setBiometricHint('No biometric sign-in set up on this device yet. Sign in with your password below — we’ll offer to turn it on right after.');
+      } else {
+        setError('Biometric sign-in didn’t work. Please try again or sign in with your password.');
+      }
     } finally {
       setBiometricLoading(false);
     }
@@ -574,6 +587,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             onChange={e => {
               setPassword(e.target.value);
               if (error) setError(null);
+              if (biometricHint) setBiometricHint(null);
             }}
             placeholder={showPassword ? 'Enter your password' : '••••••••'}
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
@@ -704,6 +718,11 @@ export function AuthForm({ mode }: AuthFormProps) {
               ? <><Loader2 size={16} className="animate-spin" /> Follow the prompt on your device…</>
               : <><Fingerprint size={17} /> Sign in with biometrics</>}
           </button>
+          {biometricHint && (
+            <p style={{ fontSize: 12, color: 'rgba(240,253,244,0.65)', margin: '2px 2px 0', lineHeight: 1.5, textAlign: 'center' }}>
+              {biometricHint}
+            </p>
+          )}
         </>
       )}
     </form>
