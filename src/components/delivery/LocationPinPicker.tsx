@@ -5,6 +5,7 @@ import type { Map as LMap } from 'leaflet';
 import { LocateFixed, Check, MapPin } from 'lucide-react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
+import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
 
 interface Props {
   open: boolean;
@@ -44,9 +45,7 @@ export function LocationPinPicker({ open, onClose, onConfirm, title, district, o
       const map = L.map(containerRef.current!, { zoomControl: true, attributionControl: false }).setView([start.lat, start.lng], 14);
       mapRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap', maxZoom: 19,
-      }).addTo(map);
+      L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
 
       map.on('moveend', () => {
         const c = map.getCenter();

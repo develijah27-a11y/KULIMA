@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Map as LMap, Marker as LMarker } from 'leaflet';
 import { Users, LocateFixed } from 'lucide-react';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
+import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
 
 interface Driver {
   id: string;
@@ -73,9 +74,7 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
       const map = L.map(containerRef.current!, { zoomControl: true, attributionControl: false }).setView([center.lat, center.lng], 13);
       mapRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap', maxZoom: 19,
-      }).addTo(map);
+      L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
 
       setReady(true);
     });

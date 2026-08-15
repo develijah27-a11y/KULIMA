@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Map as LMap, Marker as LMarker, Polyline as LPolyline } from 'leaflet';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
+import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
 
 interface Props {
   deliveryId: string;
@@ -17,30 +18,30 @@ interface Props {
   /** Polling interval for the other party's live position, ms */
   pollMs?: number;
   onPosition?: (pos: { lat: number; lng: number; updatedAt: string } | null) => void;
+  /** Fires once the real road route resolves, with ORS's own duration
+   *  estimate — a straight-line/haversine guess until then, if the caller
+   *  was already showing one. */
+  onRouteInfo?: (info: { durationSeconds: number | null }) => void;
 }
 
-// Real road-following geometry from OSRM's public routing API (free, no key
-// — this app has no routing engine of its own and running one is well
-// beyond what a Leaflet+OSM map needs). Best-effort: any failure just keeps
-// whatever line is already drawn (the straight dashed fallback), since a
-// route line is a nice-to-have visual, not something worth blocking the map
-// on. The public demo server is rate-limited and meant for light/dev use —
-// fine for this app's volume today, but if delivery volume grows enough to
-// hit those limits, self-hosting OSRM (or switching to a paid provider)
-// would be the next step, not something to silently swap in now.
+// Real road-following geometry via our own /api/routing/directions proxy
+// (OpenRouteService, authenticated + rate-limited server-side) — replaces
+// the previous direct call to OSRM's public demo server, which had no
+// Cropify auth gate and is only meant for light/dev use. Best-effort: any
+// failure just keeps whatever line is already drawn (the straight dashed
+// fallback), since a route line is a nice-to-have visual, not something
+// worth blocking the map on.
 async function fetchRoadRoute(
   from: { lat: number; lng: number },
   to: { lat: number; lng: number },
-): Promise<[number, number][] | null> {
+): Promise<{ path: [number, number][]; durationSeconds: number | null } | null> {
   try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${from.lng},${from.lat};${to.lng},${to.lat}?overview=full&geometries=geojson`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(6_000) });
+    const url = `/api/routing/directions?fromLat=${from.lat}&fromLng=${from.lng}&toLat=${to.lat}&toLng=${to.lng}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
     if (!res.ok) return null;
     const json = await res.json();
-    const coords = json?.routes?.[0]?.geometry?.coordinates;
-    if (!Array.isArray(coords) || coords.length < 2) return null;
-    // GeoJSON is [lng, lat] — Leaflet wants [lat, lng].
-    return coords.map((c: [number, number]) => [c[1], c[0]]);
+    if (!Array.isArray(json.path) || json.path.length < 2) return null;
+    return { path: json.path, durationSeconds: json.durationSeconds ?? null };
   } catch {
     return null;
   }
@@ -57,7 +58,7 @@ async function fetchRoadRoute(
 // geocoding this app had before) is the fallback for older requests that
 // were made before pin capture existed, or where the requester skipped it.
 export function DeliveryTrackingMap({
-  deliveryId, pickupDistrict, dropoffDistrict, pickupCoords, dropoffCoords, otherPartyLabel, pollMs = 8_000, onPosition,
+  deliveryId, pickupDistrict, dropoffDistrict, pickupCoords, dropoffCoords, otherPartyLabel, pollMs = 8_000, onPosition, onRouteInfo,
 }: Props) {
   const mapRef       = useRef<LMap | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -94,10 +95,7 @@ export function DeliveryTrackingMap({
       const map = L.map(containerRef.current!, { zoomControl: true, attributionControl: false }).setView(center, initialZoom);
       mapRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-        maxZoom: 19,
-      }).addTo(map);
+      L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
 
       const bounds: [number, number][] = [];
 
@@ -121,16 +119,17 @@ export function DeliveryTrackingMap({
       }
       if (pickup && dropoff) {
         // Straight dashed line first (instant), then swapped for the real
-        // road-following path once OSRM responds — never leave the map with
+        // road-following path once ORS responds — never leave the map with
         // no route line while the fetch is in flight.
         routeLineRef.current = L.polyline([[pickup.lat, pickup.lng], [dropoff.lat, dropoff.lng]], {
           color: '#166B3A', weight: 3, opacity: 0.35, dashArray: '6 8',
         }).addTo(map);
 
-        fetchRoadRoute(pickup, dropoff).then(coords => {
-          if (!mounted || !mapRef.current || !coords) return;
+        fetchRoadRoute(pickup, dropoff).then(route => {
+          if (!mounted || !mapRef.current || !route) return;
           routeLineRef.current?.remove();
-          routeLineRef.current = L.polyline(coords, { color: '#166B3A', weight: 4, opacity: 0.75 }).addTo(map);
+          routeLineRef.current = L.polyline(route.path, { color: '#166B3A', weight: 4, opacity: 0.75 }).addTo(map);
+          onRouteInfo?.({ durationSeconds: route.durationSeconds });
         });
       }
       if (bounds.length > 0) map.fitBounds(bounds, { padding: [48, 48] });
