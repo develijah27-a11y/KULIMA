@@ -9,6 +9,7 @@ import { generatePlantingAlerts } from '@/lib/planting-calendar';
 import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
+import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 import {
   Package, DollarSign, Home, Bell, CheckCircle2, Sprout,
   Sun, Moon, Cloud, CloudSun, CloudRain, CloudLightning, Snowflake,
@@ -915,6 +916,10 @@ export default async function FarmerDashboardPage() {
       <Suspense fallback={null}>
         <CropPrompt userId={userId} />
       </Suspense>
+
+      {/* 0c · Biometric sign-in nudge — client-side, renders nothing unless
+          this device supports it and no passkey is registered yet */}
+      <BiometricSetupBanner />
 
       {/* 1 · Weather card */}
       <Suspense fallback={<div className="dash-skeleton h-[420px] sm:h-36 rounded-xl" />}>

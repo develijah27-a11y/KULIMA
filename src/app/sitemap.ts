@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const SITE_URL = 'https://cropify-ug.vercel.app';
+const SITE_URL = 'https://www.cropifyapp.com';
 
 // Only the genuinely public pages — everything else sits behind auth and
 // is personal to whichever account is logged in, so it has no business in

@@ -25,7 +25,11 @@ const oswald    = Oswald({ subsets: ["latin"], weight: ["500","600","700"], vari
 const plexSans  = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400","500","600"], variable: "--font-plex-sans", display: "swap" });
 const plexMono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400","500","600"], variable: "--font-plex-mono", display: "swap" });
 
-const SITE_URL = "https://cropify-ug.vercel.app";
+// Must match Supabase Auth's site_url and WebAuthn rp_origins exactly —
+// passkey sign-in only validates against this exact origin, so drifting
+// this from what auth is actually configured for silently breaks
+// biometric sign-in for anyone who lands here via search/shared links.
+const SITE_URL = "https://www.cropifyapp.com";
 const SITE_TITLE = "Cropify — Smart Farm Management for Uganda";
 const SITE_DESCRIPTION =
   "Real-time weather forecasts, market prices, crop disease detection, and buyer connections — all in one platform for Ugandan smallholder farmers.";
