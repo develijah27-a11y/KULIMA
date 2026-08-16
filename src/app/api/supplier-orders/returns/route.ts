@@ -119,14 +119,23 @@ export async function PATCH(req: Request) {
   };
   if (supplier_note) update.supplier_note = supplier_note;
 
-  const { error } = await (supabase.from as any)('input_returns')
+  // Guard the write on the status still being 'pending' (the state the read
+  // above found it in) and check a row actually came back — otherwise two
+  // concurrent/duplicate approve calls can each pass the stale ret.status
+  // check below and each credit stock_qty back, double-crediting inventory.
+  const { data: claimed, error } = await (supabase.from as any)('input_returns')
     .update(update)
     .eq('id', id)
-    .eq('supplier_id', profile.id);
+    .eq('supplier_id', profile.id)
+    .eq('status', 'pending')
+    .select('id');
 
   if (error) {
     console.error('[/api/supplier-orders/returns]', error);
     return NextResponse.json({ error: 'Failed to update return request. Please try again.' }, { status: 500 });
+  }
+  if (!claimed || claimed.length === 0) {
+    return NextResponse.json({ error: 'This return request was already resolved.' }, { status: 409 });
   }
 
   if (status === 'approved' && ret.status !== 'approved') {
