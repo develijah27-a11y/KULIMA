@@ -4,6 +4,7 @@ import { createClient as createAdmin } from '@supabase/supabase-js';
 import { calcFare, type DeliveryType } from '@/lib/delivery-pricing';
 import { sendPushToUsers } from '@/lib/push';
 import { sendEmail, deliveryArrivedEmail } from '@/lib/email';
+import { logSystemEvent } from '@/lib/system-log';
 
 // ─── GET: list open deliveries for transporters to browse ────────────────────
 export async function GET(req: Request) {
@@ -150,8 +151,30 @@ export async function POST(req: Request) {
       matchedVehicles = res.data;
     }
 
-    if (matchedVehicles && matchedVehicles.length > 0) {
-      const driverUserIds: string[] = [...new Set<string>(matchedVehicles.map((v: any) => v.user_id as string))];
+    let driverUserIds: string[] = matchedVehicles
+      ? [...new Set<string>(matchedVehicles.map((v: any) => v.user_id as string))]
+      : [];
+
+    // Fallback 2: no vehicle anywhere in the system is available/right-sized
+    // for this job (or no vehicle has ever been registered at all) — don't
+    // silently notify nobody, notify every transporter-role account
+    // directly so they still hear about the job and can register a vehicle
+    // / bid from the open-jobs list. Confirmed live in production
+    // 2026-08-16: 5 transporter accounts exist but only 1 vehicle row
+    // exists total, so vehicle-based matching alone misses most registered
+    // transporters.
+    if (driverUserIds.length === 0) {
+      const [{ data: byRole }, { data: byRoles }] = await Promise.all([
+        (admin.from as any)('profiles').select('user_id').eq('role', 'transporter').limit(200),
+        (admin.from as any)('profiles').select('user_id').contains('roles', ['transporter']).limit(200),
+      ]);
+      const allTransporterIds = new Set<string>();
+      (byRole ?? []).forEach((p: any) => allTransporterIds.add(p.user_id));
+      (byRoles ?? []).forEach((p: any) => allTransporterIds.add(p.user_id));
+      if (allTransporterIds.size > 0) driverUserIds = [...allTransporterIds];
+    }
+
+    if (driverUserIds.length > 0) {
       driversNotified = driverUserIds.length;
 
       const assignments = driverUserIds.map((driverId: string) => ({
@@ -184,8 +207,24 @@ export async function POST(req: Request) {
         });
       }
     }
-  } catch {
-    // Driver matching is non-critical — delivery is already created
+  } catch (err) {
+    // Driver matching is non-critical — the delivery request itself is
+    // already created and visible in the open-jobs browse list regardless.
+    // But a failure here used to be completely invisible (no log anywhere),
+    // so a real bug (bad query, RLS, malformed insert) could silently mean
+    // nobody ever gets notified with zero trace. Log it so that's visible.
+    logSystemEvent({
+      category: 'error',
+      level: 'error',
+      route: '/api/deliveries',
+      method: 'POST',
+      userId: user.id,
+      message: err instanceof Error ? err.message : 'Driver auto-match/notify failed',
+      metadata: {
+        deliveryId, pickup_district, dropoff_district, delivery_type, cargo_kg,
+        stack: err instanceof Error ? err.stack?.slice(0, 2000) : undefined,
+      },
+    });
   }
 
   return NextResponse.json({ success: true, deliveryId, fare, driversNotified });
