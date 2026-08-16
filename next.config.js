@@ -57,12 +57,15 @@ const nextConfig = {
     // that map was silently non-functional in production because this CSP
     // blocked both leaflet.css (style-src) and the OSM tile/marker images
     // (img-src) it loads from unpkg.com and *.tile.openstreetmap.org.
+    // tiles.stadiamaps.com was added later (src/lib/map-tiles.ts) as the
+    // primary basemap and missed this allowlist at the time — same failure
+    // mode, blank map tiles in production, caught in a later QA pass.
     const csp = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org",
+      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org https://tiles.stadiamaps.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openweathermap.org",
       "object-src 'none'",
       "base-uri 'self'",
