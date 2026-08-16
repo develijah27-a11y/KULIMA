@@ -12,6 +12,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'delivery_id, vehicle_id, price required' }, { status: 400 });
   }
 
+  // Same blue/gold verification gate the two direct-accept routes
+  // (/api/deliveries/[id]/accept, /api/deliveries/respond) already enforce —
+  // this route was the one path that let an unverified transporter win a
+  // real job, since only vehicle ownership was checked below.
+  const { data: driverProfile } = await (supabase.from as any)('profiles')
+    .select('verification_level, role_verification_levels').eq('user_id', user.id).single();
+  const driverLevel = driverProfile?.role_verification_levels?.transporter ?? driverProfile?.verification_level;
+  if (!driverProfile || !['blue', 'gold'].includes(driverLevel)) {
+    return NextResponse.json({
+      error: 'Submit your driving license, vehicle registration, and a selfie for verification before bidding on jobs.',
+    }, { status: 403 });
+  }
+
   // Verify transporter owns the vehicle
   const { data: vehicle } = await (supabase.from as any)('vehicles').select('id').eq('id', vehicle_id).eq('user_id', user.id).single();
   if (!vehicle) return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
@@ -54,17 +67,33 @@ export async function PATCH(req: Request) {
     const dr = bid.delivery as any;
     const route = dr ? `${dr.cargo_kg}kg from ${dr.pickup_district} → ${dr.dropoff_district}` : 'your delivery';
 
-    // Accept this bid, reject others, assign transporter, notify winner
-    await Promise.all([
-      (supabase.from as any)('delivery_bids').update({ status: 'accepted' }).eq('id', bid_id),
-      (supabase.from as any)('delivery_bids').update({ status: 'rejected' }).eq('delivery_id', bid.delivery_id).neq('id', bid_id),
-      (supabase.from as any)('delivery_requests').update({
+    // Claim the delivery atomically — unlike the two direct-accept routes,
+    // this had no status guard at all, so a double-click or two near-
+    // simultaneous bid acceptances could each report success and race each
+    // other to assign the job. .eq('status','open') + checking a row was
+    // actually returned makes the claim atomic; bail out cleanly if someone
+    // else's accept (or an auto-cancel) already won the race.
+    const { data: claimed } = await (supabase.from as any)('delivery_requests')
+      .update({
         status: 'assigned',
         transporter_id: bid.transporter_id,
         assigned_vehicle_id: bid.vehicle_id,
         agreed_price: bid.price,
         updated_at: new Date().toISOString(),
-      }).eq('id', bid.delivery_id),
+      })
+      .eq('id', bid.delivery_id)
+      .eq('status', 'open')
+      .select('id');
+
+    if (!claimed || claimed.length === 0) {
+      return NextResponse.json({ error: 'This delivery is no longer available.' }, { status: 409 });
+    }
+
+    // Accept this bid, reject others, lock the winning vehicle, notify winner
+    await Promise.all([
+      (supabase.from as any)('delivery_bids').update({ status: 'accepted' }).eq('id', bid_id),
+      (supabase.from as any)('delivery_bids').update({ status: 'rejected' }).eq('delivery_id', bid.delivery_id).neq('id', bid_id),
+      (supabase.from as any)('vehicles').update({ is_available: false, updated_at: new Date().toISOString() }).eq('id', bid.vehicle_id),
       notifyUser(supabase, {
         userId: bid.transporter_id,
         role: 'transporter',
