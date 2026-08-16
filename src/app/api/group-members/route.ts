@@ -60,12 +60,18 @@ export async function POST(req: Request) {
     // to link an existing account, not to expose data to the client), so it
     // needs the service-role client to actually see other users' rows.
     const admin = createServiceRoleClient();
-    const { data: matchedProfile } = await admin
+    // Fetch every match, not just one — phone_number has no uniqueness
+    // constraint and real production data has multiple accounts sharing the
+    // same number. Preferring the phone-verified one (if any) is the only
+    // sane tiebreaker: it's real evidence of ownership, an unverified
+    // duplicate is not, and matching the wrong account silently linked a
+    // stranger instead of the actual person the admin meant to add.
+    const { data: candidateProfiles } = await admin
       .from('profiles')
-      .select('id, user_id, full_name, location')
-      .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+256${normalizedPhone.slice(1)}`)
-      .limit(1)
-      .maybeSingle();
+      .select('id, user_id, full_name, location, phone_verified')
+      .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+256${normalizedPhone.slice(1)}`);
+
+    const matchedProfile = (candidateProfiles ?? []).find(p => (p as any).phone_verified) ?? (candidateProfiles ?? [])[0] ?? null;
 
     if (matchedProfile) {
       // Same-district check — the whole point of a group is collecting
@@ -86,13 +92,38 @@ export async function POST(req: Request) {
       // their own district (checked above) — no longer capped at one group.
       // Resolve this admin's own farmer_groups.id and name
       const { data: myProfile } = await supabase.from('profiles').select('id, full_name').eq('user_id', user.id).single();
-      const { data: myGroup } = myProfile
-        ? await (supabase.from as any)('farmer_groups').select('id, name').eq('leader_id', (myProfile as any).id).maybeSingle()
-        : { data: null };
+      let myGroup: { id: string; name: string | null } | null = null;
+      if (myProfile) {
+        const { data: existingGroup } = await (admin.from as any)('farmer_groups')
+          .select('id, name').eq('leader_id', (myProfile as any).id).maybeSingle();
+        myGroup = existingGroup ?? null;
+
+        // The /groups leader dashboard is built entirely around admin_id-
+        // scoped rosters (group_members) — it has no "create a group" step
+        // of its own, that only exists on the separate /farmer/groups
+        // self-serve flow (POST /api/groups). A leader who only ever used
+        // /groups therefore never got a farmer_groups row at all, so this
+        // lookup was unconditionally null for them — confirmed live: the
+        // farmer_groups table had zero rows in production despite real
+        // leaders actively adding members for weeks. Every linked-member
+        // insert below silently no-op'd as a result, and the farmer's own
+        // /farmer/groups page (which reads farmer_group_members) never
+        // showed them as belonging to anything. Auto-create it here so the
+        // FK chain this route was already written to use actually exists.
+        if (!myGroup) {
+          const { data: createdGroup } = await (admin.from as any)('farmer_groups').insert({
+            name: `${(myProfile as any).full_name ?? 'My'} Group`,
+            leader_id: (myProfile as any).id,
+            district: district || null,
+            is_active: true,
+          }).select('id, name').single();
+          myGroup = createdGroup ?? null;
+        }
+      }
 
       if (myGroup) {
-        const { error: linkError } = await (supabase.from as any)('farmer_group_members').insert({
-          group_id: (myGroup as any).id,
+        const { error: linkError } = await (admin.from as any)('farmer_group_members').insert({
+          group_id: myGroup.id,
           farmer_id: matchedProfile.id,
           role: role ?? 'member',
         });
@@ -102,7 +133,7 @@ export async function POST(req: Request) {
           linkedFarmerId = matchedProfile.id;
 
           const adminName = (myProfile as any)?.full_name ?? 'Your group leader';
-          const groupName = (myGroup as any)?.name ?? 'a farmer group';
+          const groupName = myGroup.name ?? 'a farmer group';
 
           await notifyUser(supabase, {
             userId: (matchedProfile as any).user_id,
@@ -112,6 +143,13 @@ export async function POST(req: Request) {
             body: `${adminName} added you to "${groupName}" on Cropify. Open the app to see your group members and activities.`,
             url: '/farmer/groups',
           });
+        } else if ((linkError as any).code !== '23505') {
+          // 23505 = unique violation (already a member of this group) — an
+          // expected, harmless case (e.g. re-adding after a phone-number
+          // correction). Anything else is a real failure worth knowing
+          // about instead of silently falling back to an unlinked roster
+          // entry with no trace of why.
+          console.error('[/api/group-members] farmer_group_members insert failed', linkError);
         }
       }
     }
