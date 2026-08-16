@@ -7,9 +7,11 @@ const C = { text: 'var(--d-text)', muted: 'var(--d-muted)' };
 const CONFIRM_WORD = 'DELETE';
 
 // Irreversible, so this asks for a typed confirmation word rather than just
-// a click-through modal — the backend (/api/auth/delete-account) actually
-// deletes the auth user, which cascades to the profile and everything tied
-// to it via foreign keys. No undo.
+// a click-through modal. The backend (/api/auth/delete-account) hard-deletes
+// the account outright when nothing else references it; if the account has
+// real order/delivery/dispute/rating history, it instead deactivates sign-in
+// and scrubs personal info while keeping a depersonalized row so other
+// users' own transaction records still resolve. No undo either way.
 export function DeleteAccountButton() {
   const [open, setOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
@@ -60,7 +62,7 @@ export function DeleteAccountButton() {
               <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>Delete your account?</p>
             </div>
             <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, margin: '0 0 16px' }}>
-              This permanently deletes your account, profile, and everything tied to it — listings, orders, wallet history, messages. This cannot be undone.
+              This permanently disables sign-in and removes your personal info — name, phone, photo, location. If you have order, delivery, or dispute history, those records are anonymized and kept rather than deleted, since other users' own transaction history depends on them. This cannot be undone.
             </p>
             <p style={{ fontSize: 12.5, color: C.text, fontWeight: 600, margin: '0 0 6px' }}>
               Type <span style={{ fontFamily: 'monospace', color: 'var(--color-danger)' }}>{CONFIRM_WORD}</span> to confirm
