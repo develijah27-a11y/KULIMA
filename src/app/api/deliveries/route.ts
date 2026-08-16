@@ -226,12 +226,25 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Failed to complete delivery. Please try again.' }, { status: 500 });
     }
 
+    const admin = createAdmin(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+
+    // Free the vehicle the moment the job is physically done — not only when
+    // /api/deliveries/pay happens to run while status is already 'delivered'.
+    // Payment is allowed as early as 'assigned' (see that route's own
+    // comment), so a delivery paid before completion would otherwise never
+    // release the driver's vehicle here, leaving them permanently marked
+    // unavailable after every such delivery. Setting is_available:true twice
+    // (here and, redundantly, in the pay route for the pay-after case) is
+    // harmless.
+    await (admin.from as any)('vehicles')
+      .update({ is_available: true, updated_at: new Date().toISOString() })
+      .eq('user_id', user.id);
+
     // Notify the requester that their goods have arrived
     try {
-      const admin = createAdmin(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      );
       const { data: delivery } = await (admin.from as any)('delivery_requests')
         .select(`
           requester_id, requester_role, estimated_fare, cargo_type, cargo_kg,
