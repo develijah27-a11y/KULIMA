@@ -53,13 +53,13 @@ export const metadata: Metadata = {
     siteName: "Cropify",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Cropify — Grow Smart. Farm Better." }],
+    images: [{ url: "/og-image.png?v=2", width: 1200, height: 630, alt: "Cropify — Grow Smart. Farm Better." }],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
-    images: ["/og-image.png"],
+    images: ["/og-image.png?v=2"],
   },
 };
 
@@ -107,15 +107,15 @@ export default function RootLayout({
       <head>
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* ?v=10 cache-busts the final approved Cropify logo — these paths
+        {/* ?v=11 cache-busts the final approved Cropify logo — these paths
             aren't content-hashed, and the old files were served with a
             1-year immutable Cache-Control, so browsers/CDN need a new URL
             to notice the change. Bump this version any time icon.svg's
             content changes. */}
-        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=10" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=10" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=10" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=10" />
+        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=11" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=11" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=11" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=11" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
@@ -158,12 +158,11 @@ export default function RootLayout({
             <path d="M45,170 Q88,142 128,158 Q152,146 178,157 Q186,161 183,170 L183,202 L45,202 Z" fill="#0A5C36" />
             <path d="M45,180 Q90,150 130,167 Q155,153 180,166 Q188,170 185,180 L185,204 L45,204 Z" fill="#34A853" />
             <path d="M45,190 Q85,165 125,180 Q150,168 175,179 Q184,184 180,192 L180,208 L45,208 Z" fill="#8BC34A" />
-            <path d="M75,95 Q130.6,138.4 165,200 Q109.4,156.6 75,95 Z" fill="#FFFFFF" opacity={0.92} />
-            <path d="M193,172 Q195,214 242,226 Q217,198 193,172 Z" fill="#8BC34A" />
-            <path d="M193,172 Q217,198 242,226 Q239,182 193,172 Z" fill="#0A5C36" />
-            <path d="M193,172 Q217,198 242,226" stroke="#F4FBF6" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity={0.9} />
-            <path d="M204,188 L214,183" stroke="#F4FBF6" strokeWidth="1.8" strokeLinecap="round" opacity={0.7} />
-            <path d="M215,201 L226,198" stroke="#F4FBF6" strokeWidth="1.8" strokeLinecap="round" opacity={0.7} />
+            <path d="M192,183 Q177,119.3 215,66 Q203.5,124.5 192,183 Z" fill="#0A5C36" />
+            <path d="M192,183 Q203.5,124.5 215,66 Q230,129.7 192,183 Z" fill="#8BC34A" />
+            <path d="M192,183 Q203.5,124.5 215,66" stroke="#F4FBF6" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity={0.95} />
+            <path d="M199,143 L188,132" stroke="#F4FBF6" strokeWidth="1.5" strokeLinecap="round" opacity={0.75} />
+            <path d="M208,105 L218,113" stroke="#F4FBF6" strokeWidth="1.5" strokeLinecap="round" opacity={0.75} />
           </svg>
           <span className="app-splash-word"><Wordmark color="#FFFFFF" leafColor="#8BE9A8" style={{ fontSize: 'inherit' }} /></span>
           <span className="app-splash-tagline">Grow smart. Farm better.</span>
