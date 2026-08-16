@@ -80,8 +80,16 @@ const serwist = new Serwist({
     // ── Static assets ─────────────────────────────────────────────────────────
     {
       matcher: ({ request }) => request.destination === 'image',
+      // CacheFirst never re-checks the network once an entry exists, so the
+      // logo/icon files (same filenames, revised many times this session)
+      // stayed stuck on whatever version a returning visitor's browser
+      // cached during their earliest visit within the last 30 days — a real
+      // deploy could ship a brand new logo and their device would keep
+      // showing the old one regardless. Bucket renamed (v2) to drop
+      // whatever's already cached, same fix already used below for the
+      // weather-cache strategy change.
       handler: new CacheFirst({
-        cacheName: 'cropify-images',
+        cacheName: 'cropify-images-v2',
         plugins: [new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 2592000 })],
       }),
     },
