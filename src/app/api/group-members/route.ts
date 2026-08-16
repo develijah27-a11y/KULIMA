@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
 
 export async function GET(req: Request) {
@@ -49,7 +49,18 @@ export async function POST(req: Request) {
   if (phone_number) {
     const normalizedPhone = String(phone_number).replace(/\s+/g, '').replace(/^\+256/, '0').replace(/^256/, '0');
 
-    const { data: matchedProfile } = await supabase
+    // profiles' SELECT RLS only allows a caller to read their own row (or an
+    // admin to read any row) — under the regular request-scoped client this
+    // lookup silently returned nothing for every phone number except the
+    // admin's own, since RLS filtered the other farmer's row out before the
+    // phone_number match even ran. Every real add-member call was landing as
+    // an unlinked roster-only record no matter how correct the phone number
+    // was. This is a legitimate server-side lookup (the route already
+    // authenticated the caller and only uses id/user_id/full_name/location
+    // to link an existing account, not to expose data to the client), so it
+    // needs the service-role client to actually see other users' rows.
+    const admin = createServiceRoleClient();
+    const { data: matchedProfile } = await admin
       .from('profiles')
       .select('id, user_id, full_name, location')
       .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+256${normalizedPhone.slice(1)}`)
@@ -59,9 +70,15 @@ export async function POST(req: Request) {
     if (matchedProfile) {
       // Same-district check — the whole point of a group is collecting
       // produce for one shipment, which only works if everyone is local.
-      if ((matchedProfile as any).location && (matchedProfile as any).location !== district) {
+      // Compared case/whitespace-insensitively: real profile data has
+      // inconsistent casing and stray trailing spaces (e.g. "Kampala " vs
+      // "kampala"), which would otherwise reject a genuinely matching
+      // district as if it were a different one.
+      const matchedLocation = ((matchedProfile as any).location ?? '').trim();
+      const inputDistrict = String(district).trim();
+      if (matchedLocation && matchedLocation.toLowerCase() !== inputDistrict.toLowerCase()) {
         return NextResponse.json({
-          error: `${matchedProfile.full_name} is registered in ${(matchedProfile as any).location}, not ${district}. Group members must be in the same district.`,
+          error: `${matchedProfile.full_name} is registered in ${matchedLocation}, not ${inputDistrict}. Group members must be in the same district.`,
         }, { status: 400 });
       }
 
