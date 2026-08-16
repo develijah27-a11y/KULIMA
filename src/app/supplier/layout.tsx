@@ -28,6 +28,7 @@ const SUPPLIER_NAV = [
   // ── Market Info
   { href: '/supplier/demand',      icon: 'demand',       label: 'What Farmers Need', divider: true, sectionLabel: 'Market Info' },
   { href: '/supplier/coverage',    icon: 'coverage',     label: 'Service Area' },
+  { href: '/supplier/news',        icon: 'news',         label: 'Agri Updates' },
   // ── Account
   { href: '/supplier/wallet',      icon: 'wallet',       label: 'Wallet',        divider: true, sectionLabel: 'Account' },
   { href: '/supplier/notifications',icon: 'notifications',label: 'Notifications' },

@@ -10,6 +10,7 @@ import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
+import { NewsWidget } from '@/components/news/NewsWidget';
 import {
   Package, DollarSign, Home, Bell, CheckCircle2, Sprout,
   Sun, Moon, Cloud, CloudSun, CloudRain, CloudLightning, Snowflake,
@@ -978,6 +979,11 @@ export default async function FarmerDashboardPage() {
       {/* 6 · Finance overview */}
       <Suspense fallback={<div className="dash-skeleton h-40 rounded-xl" />}>
         <FinanceOverview userId={userId} />
+      </Suspense>
+
+      {/* 6b · Agricultural news */}
+      <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
+        <NewsWidget />
       </Suspense>
 
       {/* 7 · Quick actions */}

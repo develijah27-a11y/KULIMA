@@ -32,6 +32,7 @@ const FARMER_NAV = [
   { href: '/farmer/groups',      icon: 'groups',       label: 'Farmer Groups', divider: true, sectionLabel: 'Community' },
   { href: '/farmer/geocluster',  icon: 'geocluster',   label: 'Farmers Near Me' },
   { href: '/farmer/weather',     icon: 'weather',      label: 'Weather' },
+  { href: '/farmer/news',        icon: 'news',         label: 'Agri Updates' },
   // ── Account
   { href: '/farmer/wallet',      icon: 'wallet',       label: 'Wallet',       divider: true, sectionLabel: 'Account' },
   { href: '/farmer/favourite-suppliers', icon: 'favourites', label: 'Saved Suppliers' },

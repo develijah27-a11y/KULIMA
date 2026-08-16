@@ -20,6 +20,7 @@ const BUYER_NAV = [
   { href: '/buyer/orders',       icon: 'orders',       label: 'Orders' },
   { href: '/buyer/favourites',   icon: 'favourites',   label: 'Saved Items' },
   { href: '/buyer/contracts',    icon: 'contracts',    label: 'Agreements' },
+  { href: '/buyer/news',         icon: 'news',         label: 'Agri Updates' },
   // ── Logistics
   { href: '/buyer/deliveries',   icon: 'deliveries',   label: 'Deliveries',   divider: true, sectionLabel: 'Logistics' },
   { href: '/buyer/cold-chain',   icon: 'cold-chain',   label: 'Cool Transport' },
