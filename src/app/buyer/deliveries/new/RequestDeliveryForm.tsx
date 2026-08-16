@@ -205,7 +205,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
       <div>
         {/* -24px cancels the 24px card padding each deliveries/new page.tsx
             wraps this form in, so the map bleeds to the card's own edges. */}
-        <div style={{ position: 'relative', margin: '-24px -24px 0', borderRadius: 16, overflow: 'hidden', height: 'clamp(440px, 78vh, 640px)' }}>
+        <div style={{ position: 'relative', margin: '-24px -24px 0', borderRadius: 16, overflow: 'hidden', height: 'clamp(560px, 92vh, 900px)' }}>
           <NearbyDriversMap userDistrict={pickupDistrict || userDistrict} height="100%" />
 
           <button type="button" onClick={() => router.back()} aria-label="Back" style={{
@@ -249,7 +249,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
               }}>
                 <span style={{ width: 8, height: 8, borderRadius: 2, background: 'var(--color-danger)', flexShrink: 0 }} />
                 <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 700, color: dropoffDistrict ? '#182018' : '#6b7566' }}>
-                  {dropoffDistrict || 'Where to?'}
+                  {dropoffDistrict || 'Drop-off district'}
                 </span>
                 <ChevronRight size={15} style={{ color: '#6b7566', flexShrink: 0 }} />
               </button>
@@ -304,7 +304,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
           title="Pickup district" districts={DISTRICTS} recent={recentPickup} />
         <DestinationSearchSheet open={showDropoffSheet} onClose={() => setShowDropoffSheet(false)}
           onSelect={(d) => { setDropoffDistrict(d); setDropoffPin(null); setShowDropoffSheet(false); setShowDropoffPin(true); }}
-          title="Where to?" districts={DISTRICTS} recent={recentDropoff} />
+          title="Drop-off district" districts={DISTRICTS} recent={recentDropoff} />
 
         {pickupDistrict && (
           <LocationPinPicker

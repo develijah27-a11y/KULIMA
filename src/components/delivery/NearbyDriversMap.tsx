@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Map as LMap, Marker as LMarker } from 'leaflet';
 import { Users, LocateFixed } from 'lucide-react';
-import { UGANDA_DISTRICTS } from '@/lib/districts';
+import { UGANDA_DISTRICTS, getDefaultDistrict } from '@/lib/districts';
 import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
 
 interface Driver {
@@ -42,7 +42,14 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
   const [locationDenied, setLocationDenied] = useState(false);
   const [driverCount, setDriverCount] = useState<number | null>(null);
 
-  const fallbackCenter = userDistrict ? UGANDA_DISTRICTS[userDistrict] : undefined;
+  // Always resolves to something — previously fell through to `undefined`
+  // whenever userDistrict was empty or unset (e.g. a user's first time on
+  // this screen, before picking a pickup district, with location access
+  // denied/not yet granted), which left the component stuck showing a
+  // "Loading map…" placeholder forever instead of an actual map. Falls back
+  // to Kampala (getDefaultDistrict()) as a last resort, same convention
+  // already used for weather/fare defaults elsewhere in this codebase.
+  const fallbackCenter = (userDistrict && UGANDA_DISTRICTS[userDistrict]) || getDefaultDistrict();
 
   // Get + follow the requester's own live position.
   useEffect(() => {
@@ -148,21 +155,6 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
     const interval = setInterval(poll, pollMs);
     return () => { cancelled = true; clearInterval(interval); };
   }, [ready, selfPos, fallbackCenter, pollMs]);
-
-  if (!selfPos && !fallbackCenter) {
-    return (
-      <div style={{ height, borderRadius: 14, background: 'var(--d-input-bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 16, textAlign: 'center' }}>
-        {locationDenied ? (
-          <>
-            <LocateFixed size={20} style={{ color: 'var(--d-muted)' }} />
-            <p style={{ fontSize: 12, color: 'var(--d-muted)', margin: 0 }}>Enable location access to see drivers near you</p>
-          </>
-        ) : (
-          <p style={{ fontSize: 12, color: 'var(--d-muted)', margin: 0 }}>Loading map…</p>
-        )}
-      </div>
-    );
-  }
 
   return (
     <div style={{ position: 'relative', height, borderRadius: 14, overflow: 'hidden' }}>
