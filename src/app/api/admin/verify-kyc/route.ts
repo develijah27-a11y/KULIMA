@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
 import { withApiLogging } from '@/lib/system-log';
 import { NEXT_LEVEL, getLevelDetails, type VerificationLevel } from '@/lib/trust';
@@ -74,7 +74,16 @@ async function handlePOST(req: NextRequest) {
       update.verification_level = targetLevel;
     }
 
-    const { error: pErr } = await (supabase.from as any)('profiles')
+    // profiles' UPDATE RLS policy only allows a row's own user to update it
+    // (auth.uid() = user_id) — there is no admin-override clause, so running
+    // this through the admin's own request-scoped client silently touches
+    // zero rows for any OTHER user's profile (no error, update just doesn't
+    // happen) and the "approved" notification below would go out even
+    // though the badge was never actually granted. Use the service-role
+    // client, same as every other admin-writes-another-user's-profile path
+    // in this codebase (see verify/phone/confirm, subscriptions).
+    const svc = createServiceRoleClient();
+    const { error: pErr } = await (svc.from as any)('profiles')
       .update(update)
       .eq('user_id', userId);
     if (pErr) {
