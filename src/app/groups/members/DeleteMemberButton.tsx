@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
 
 export function DeleteMemberButton({ memberId, memberName }: { memberId: string; memberName: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [deleted, setDeleted] = useState(false);
 
@@ -14,6 +16,10 @@ export function DeleteMemberButton({ memberId, memberName }: { memberId: string;
       const res = await fetch(`/api/group-members/${memberId}`, { method: 'DELETE' });
       if (res.ok) {
         setDeleted(true);
+        // Re-run the page's Server Component fetch so the member row and
+        // every count derived from it (header "N members", "Members (N)"
+        // section label) update immediately, without a manual refresh.
+        router.refresh();
       } else {
         const json = await res.json();
         alert(json.error ?? 'Failed to remove member');
