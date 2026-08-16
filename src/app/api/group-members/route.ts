@@ -66,8 +66,7 @@ export async function POST(req: Request) {
     // sane tiebreaker: it's real evidence of ownership, an unverified
     // duplicate is not, and matching the wrong account silently linked a
     // stranger instead of the actual person the admin meant to add.
-    const { data: candidateProfiles } = await admin
-      .from('profiles')
+    const { data: candidateProfiles } = await (admin.from as any)('profiles')
       .select('id, user_id, full_name, location, phone_verified')
       .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+256${normalizedPhone.slice(1)}`);
 
