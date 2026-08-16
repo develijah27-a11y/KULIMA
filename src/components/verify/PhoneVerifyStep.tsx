@@ -147,6 +147,9 @@ export function PhoneVerifyStep({ initialPhone, onVerified }: Props) {
             onComplete={confirmCode}
             errorTick={errorTick}
             disabled={loading}
+            textColor="var(--d-text)"
+            boxBg="var(--d-input-bg, var(--color-surface))"
+            emptyBorderColor="var(--d-border)"
           />
 
           <button type="button" onClick={() => confirmCode(code)}

@@ -12,13 +12,25 @@ interface OtpInputProps {
    *  (e.g. the same wrong code submitted twice in a row). */
   errorTick?: number;
   disabled?: boolean;
+  /** Colors assume a dark backdrop (AuthForm's dark gradient auth card) by
+   *  default — override these when placing this on a light dashboard card
+   *  (e.g. PhoneVerifyStep), otherwise the white-on-white-ish digits are
+   *  effectively invisible even though the boxes themselves render fine. */
+  textColor?: string;
+  boxBg?: string;
+  emptyBorderColor?: string;
 }
 
 // Modern segmented code entry — one square box per digit, instead of a
 // single text field with letter-spacing faking the look. Handles paste
 // (splitting a full clipboard code across every box in one action) and
 // per-box keyboard nav so typing/backspacing feels native.
-export function OtpInput({ length = 6, value, onChange, onComplete, errorTick, disabled }: OtpInputProps) {
+export function OtpInput({
+  length = 6, value, onChange, onComplete, errorTick, disabled,
+  textColor = 'var(--color-text-on-dark)',
+  boxBg = 'rgba(255,255,255,0.06)',
+  emptyBorderColor = 'rgba(255,255,255,0.18)',
+}: OtpInputProps) {
   const boxRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [shaking, setShaking] = useState(false);
   const digits = Array.from({ length }, (_, i) => value[i] ?? '');
@@ -114,9 +126,9 @@ export function OtpInput({ length = 6, value, onChange, onComplete, errorTick, d
             width: 44, height: 52, textAlign: 'center',
             fontSize: 22, fontWeight: 800,
             borderRadius: 12,
-            border: `1.5px solid ${shaking ? 'var(--color-danger)' : d ? 'var(--color-primary)' : 'rgba(255,255,255,0.18)'}`,
-            background: 'rgba(255,255,255,0.06)',
-            color: 'var(--color-text-on-dark)',
+            border: `1.5px solid ${shaking ? 'var(--color-danger)' : d ? 'var(--color-primary)' : emptyBorderColor}`,
+            background: boxBg,
+            color: textColor,
             outline: 'none',
             transition: 'border-color 0.15s ease',
           }}
