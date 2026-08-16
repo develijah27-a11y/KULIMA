@@ -49,6 +49,7 @@ export async function VerificationStatusCard({ role }: Props) {
       verifiedLabel: 'Verified',
       unverifiedLabel: 'Not confirmed',
       unverifiedAction: '/auth/signup', // resend flow handled on auth page
+      actionLabel: 'Resend',
     },
     {
       label: 'Phone Number',
@@ -58,6 +59,7 @@ export async function VerificationStatusCard({ role }: Props) {
       verifiedLabel: 'Verified',
       unverifiedLabel: phoneNumber ? 'Not verified' : 'Not added',
       unverifiedAction: verifyHref,
+      actionLabel: 'Verify',
     },
     {
       label: 'Identity (KYC)',
@@ -68,6 +70,7 @@ export async function VerificationStatusCard({ role }: Props) {
       verifiedLabel: badge.label,
       unverifiedLabel: 'Not verified',
       unverifiedAction: verifyHref,
+      actionLabel: 'Verify',
     },
   ];
 
@@ -167,14 +170,18 @@ export async function VerificationStatusCard({ role }: Props) {
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 3,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: 'var(--color-primary)',
+                      gap: 4,
+                      fontSize: 11.5,
+                      fontWeight: 800,
+                      padding: '6px 12px',
+                      borderRadius: 8,
+                      background: 'var(--color-primary)',
+                      color: '#fff',
                       textDecoration: 'none',
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    Fix <ArrowRight size={11} />
+                    {item.actionLabel} <ArrowRight size={11} />
                   </a>
                 )}
               </div>
