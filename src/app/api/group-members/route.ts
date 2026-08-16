@@ -70,7 +70,7 @@ export async function POST(req: Request) {
       .select('id, user_id, full_name, location, phone_verified')
       .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+256${normalizedPhone.slice(1)}`);
 
-    const matchedProfile = (candidateProfiles ?? []).find(p => (p as any).phone_verified) ?? (candidateProfiles ?? [])[0] ?? null;
+    const matchedProfile = (candidateProfiles ?? []).find((p: any) => p.phone_verified) ?? (candidateProfiles ?? [])[0] ?? null;
 
     if (matchedProfile) {
       // Same-district check — the whole point of a group is collecting
