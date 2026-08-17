@@ -72,6 +72,16 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
         }, () => {});
       }
 
+      // Leaflet measures the container's actual pixel size the instant
+      // .setView() runs — if that happens before this dynamically-loaded
+      // component has been fully laid out (a real risk right after a
+      // next/dynamic swap), it initializes against a stale/zero size and
+      // renders a blank or half-painted map that never self-corrects
+      // without an explicit nudge. invalidateSize() forces Leaflet to
+      // re-measure and redraw against the real, final container size.
+      requestAnimationFrame(() => map.invalidateSize());
+      setTimeout(() => map.invalidateSize(), 300);
+
       setMapReady(true);
     });
 
@@ -101,10 +111,21 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
       trackLayerRef.current = L.polyline([], { color: 'var(--color-primary)', weight: 3, dashArray: '6 4' }).addTo(mapRef.current);
     }
 
+    let lastAcceptedAt = 0;
     watchIdRef.current = navigator.geolocation.watchPosition(
       pos => {
         const { latitude: lat, longitude: lng, accuracy } = pos.coords;
         if (accuracy > 30) return;
+
+        // enableHighAccuracy + maximumAge:0 can fire updates faster than
+        // once a second on some Android GPS chips — without a time floor,
+        // each one triggers a React re-render, a full polyline redraw, and
+        // an animated map pan, and those animated pans queue up faster
+        // than they can finish, which is what actually read as the map
+        // "freezing/lagging" while walking rather than any one operation
+        // being slow on its own.
+        const now = Date.now();
+        if (now - lastAcceptedAt < 1000) return;
 
         const newPt: [number, number] = [lat, lng];
         const prev = pointsRef.current;
@@ -116,11 +137,15 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
           if (dist < 2) return;
         }
 
+        lastAcceptedAt = now;
         pointsRef.current = [...prev, newPt];
         setPoints([...pointsRef.current]);
 
         if (mapRef.current) {
-          mapRef.current.panTo([lat, lng]);
+          // animate:false — an instant jump reads better than an animated
+          // pan that's guaranteed to be interrupted by the next update
+          // within a second anyway.
+          mapRef.current.panTo([lat, lng], { animate: false });
           trackLayerRef.current?.setLatLngs(pointsRef.current);
         }
       },

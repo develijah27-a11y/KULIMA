@@ -83,6 +83,13 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
 
       L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
 
+      // Re-measure against the real container size once layout has
+      // actually settled — Leaflet sizes itself off the container at the
+      // instant setView() runs, which can be a stale/zero size right after
+      // mount and never self-corrects without this nudge.
+      requestAnimationFrame(() => map.invalidateSize());
+      setTimeout(() => map.invalidateSize(), 300);
+
       setReady(true);
     });
 

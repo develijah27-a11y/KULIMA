@@ -134,6 +134,13 @@ export function DeliveryTrackingMap({
       }
       if (bounds.length > 0) map.fitBounds(bounds, { padding: [48, 48] });
 
+      // Re-measure against the real container size once layout has
+      // actually settled — Leaflet sizes itself off the container at the
+      // instant setView()/fitBounds() runs, which can be a stale/zero size
+      // right after mount and never self-corrects without this nudge.
+      requestAnimationFrame(() => map.invalidateSize());
+      setTimeout(() => map.invalidateSize(), 300);
+
       setReady(true);
     });
 

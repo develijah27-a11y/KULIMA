@@ -52,6 +52,14 @@ export function LocationPinPicker({ open, onClose, onConfirm, title, district, o
         setCenter({ lat: c.lat, lng: c.lng });
       });
 
+      // Re-measure against the real container size once layout has
+      // actually settled — this map opens inside a modal/sheet, exactly
+      // the scenario most prone to Leaflet sizing itself off a stale/zero
+      // container the instant setView() runs, before the sheet's open
+      // transition has actually finished.
+      requestAnimationFrame(() => map.invalidateSize());
+      setTimeout(() => map.invalidateSize(), 300);
+
       setReady(true);
     });
 
