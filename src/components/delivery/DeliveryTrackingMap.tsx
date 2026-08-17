@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Marker as LMarker, Polyline as LPolyline } from 'leaflet';
+import { Locate } from 'lucide-react';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
 import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
 
@@ -47,6 +48,37 @@ async function fetchRoadRoute(
   }
 }
 
+function bearingDeg(from: [number, number], to: [number, number]): number {
+  const [lat1, lng1] = from.map(d => (d * Math.PI) / 180);
+  const [lat2, lng2] = to.map(d => (d * Math.PI) / 180);
+  const dLng = lng2 - lng1;
+  const y = Math.sin(dLng) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+}
+
+// Nearest point on `path` to `pos`, by index — used to split the route into
+// a "traveled" (behind the vehicle) and "remaining" (ahead) segment. Path
+// lengths here are realistically a few hundred points at most, so a linear
+// scan is plenty fast — no need for anything cleverer.
+function nearestPathIndex(path: [number, number][], pos: [number, number]): number {
+  let bestIdx = 0, bestDist = Infinity;
+  for (let i = 0; i < path.length; i++) {
+    const d = (path[i][0] - pos[0]) ** 2 + (path[i][1] - pos[1]) ** 2;
+    if (d < bestDist) { bestDist = d; bestIdx = i; }
+  }
+  return bestIdx;
+}
+
+const vehicleIconHtml = (rotationDeg: number) => `
+  <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+    <div class="cropify-live-pulse" style="position:absolute;width:40px;height:40px;border-radius:50%;background:rgba(14,165,233,0.35);"></div>
+    <div style="position:relative;width:26px;height:26px;border-radius:50%;background:#0EA5E9;border:3px solid #fff;box-shadow:0 2px 10px rgba(14,165,233,.55);display:flex;align-items:center;justify-content:center;transform:rotate(${rotationDeg}deg);transition:transform 0.4s ease-out;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2 L19 21 L12 17 L5 21 Z" fill="#fff"/></svg>
+    </div>
+  </div>
+`;
+
 // Live tracking map for a single delivery — pickup/dropoff pins plus a
 // moving marker for whichever party is broadcasting via
 // /api/deliveries/[id]/location (see ShareLocationButton). Same async-import
@@ -60,11 +92,19 @@ async function fetchRoadRoute(
 export function DeliveryTrackingMap({
   deliveryId, pickupDistrict, dropoffDistrict, pickupCoords, dropoffCoords, otherPartyLabel, pollMs = 8_000, onPosition, onRouteInfo,
 }: Props) {
-  const mapRef       = useRef<LMap | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef        = useRef<LMap | null>(null);
+  const containerRef  = useRef<HTMLDivElement>(null);
   const liveMarkerRef = useRef<LMarker | null>(null);
   const routeLineRef  = useRef<LPolyline | null>(null);
+  const traveledLineRef = useRef<LPolyline | null>(null);
+  const routePathRef  = useRef<[number, number][] | null>(null);
+  const lastPosRef    = useRef<[number, number] | null>(null);
+  const headingRef    = useRef(0);
+  const animRef       = useRef<number | null>(null);
+  const userPannedRef = useRef(false);
+
   const [ready, setReady] = useState(false);
+  const [showRecenter, setShowRecenter] = useState(false);
 
   const districtPickup  = UGANDA_DISTRICTS[pickupDistrict];
   const districtDropoff = UGANDA_DISTRICTS[dropoffDistrict];
@@ -72,6 +112,13 @@ export function DeliveryTrackingMap({
   const dropoff = dropoffCoords ? { lat: dropoffCoords.lat, lng: dropoffCoords.lng } : districtDropoff;
   const pickupIsExact  = !!pickupCoords;
   const dropoffIsExact = !!dropoffCoords;
+
+  const recenter = useCallback(() => {
+    if (!mapRef.current || !lastPosRef.current) return;
+    userPannedRef.current = false;
+    setShowRecenter(false);
+    mapRef.current.panTo(lastPosRef.current, { animate: true, duration: 0.6 });
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -92,10 +139,17 @@ export function DeliveryTrackingMap({
       // level when all we have is a centroid, since anything closer would
       // just be zooming into empty space with false precision.
       const initialZoom = pickup && (pickupIsExact || dropoffIsExact) ? 13 : 8;
-      const map = L.map(containerRef.current!, { zoomControl: true, attributionControl: false }).setView(center, initialZoom);
+      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false }).setView(center, initialZoom);
       mapRef.current = map;
 
       L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      // A manual pan/drag (not a programmatic panTo from recenter()) means
+      // the user wants to look somewhere else — stop auto-following until
+      // they explicitly ask to jump back via the recenter FAB. Google
+      // Maps' own convention for a live-tracking view.
+      map.on('dragstart', () => { userPannedRef.current = true; setShowRecenter(true); });
 
       const bounds: [number, number][] = [];
 
@@ -118,21 +172,27 @@ export function DeliveryTrackingMap({
         bounds.push([dropoff.lat, dropoff.lng]);
       }
       if (pickup && dropoff) {
-        // Straight dashed line first (instant), then swapped for the real
+        // Dashed line first (instant), then swapped for the real
         // road-following path once ORS responds — never leave the map with
-        // no route line while the fetch is in flight.
+        // no route line while the fetch is in flight. Rounded caps + brand
+        // color throughout, matching the "real road network" feel rather
+        // than a raw straight line.
         routeLineRef.current = L.polyline([[pickup.lat, pickup.lng], [dropoff.lat, dropoff.lng]], {
-          color: '#166B3A', weight: 3, opacity: 0.35, dashArray: '6 8',
+          color: '#166B3A', weight: 4, opacity: 0.4, dashArray: '2 10', lineCap: 'round',
         }).addTo(map);
 
         fetchRoadRoute(pickup, dropoff).then(route => {
           if (!mounted || !mapRef.current || !route) return;
+          routePathRef.current = route.path;
           routeLineRef.current?.remove();
-          routeLineRef.current = L.polyline(route.path, { color: '#166B3A', weight: 4, opacity: 0.75 }).addTo(map);
+          // Remaining segment: dashed, lighter — ahead of the vehicle.
+          routeLineRef.current = L.polyline(route.path, {
+            color: '#166B3A', weight: 5, opacity: 0.35, dashArray: '2 10', lineCap: 'round', lineJoin: 'round',
+          }).addTo(map);
           onRouteInfo?.({ durationSeconds: route.durationSeconds });
         });
       }
-      if (bounds.length > 0) map.fitBounds(bounds, { padding: [48, 48] });
+      if (bounds.length > 0) map.fitBounds(bounds, { padding: [56, 56] });
 
       // Re-measure against the real container size once layout has
       // actually settled — Leaflet sizes itself off the container at the
@@ -146,13 +206,18 @@ export function DeliveryTrackingMap({
 
     return () => {
       mounted = false;
+      if (animRef.current) cancelAnimationFrame(animRef.current);
       mapRef.current?.remove();
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Poll the other party's live position and move/create their marker
+  // Poll the other party's live position and smoothly animate their marker
+  // to it, instead of snapping — a teleporting dot is the #1 tell of an
+  // unpolished tracking map. Also re-draws the traveled/remaining route
+  // split each time, and keeps the camera on the vehicle unless the user
+  // has manually panned away.
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
@@ -167,16 +232,52 @@ export function DeliveryTrackingMap({
         if (!loc) return;
 
         const L = await import('leaflet');
+        const nextPos: [number, number] = [loc.lat, loc.lng];
+        const prevPos = lastPosRef.current;
+
+        if (prevPos && (prevPos[0] !== nextPos[0] || prevPos[1] !== nextPos[1])) {
+          headingRef.current = bearingDeg(prevPos, nextPos);
+        }
+
         if (!liveMarkerRef.current) {
-          const liveIcon = L.divIcon({
-            className: '', iconSize: [26, 26], iconAnchor: [13, 13],
-            html: `<div style="width:22px;height:22px;border-radius:50%;background:#0EA5E9;border:3px solid #fff;box-shadow:0 2px 8px rgba(14,165,233,.5);display:flex;align-items:center;justify-content:center"></div>`,
-          });
-          liveMarkerRef.current = L.marker([loc.lat, loc.lng], { icon: liveIcon, zIndexOffset: 1000 })
-            .addTo(mapRef.current)
-            .bindPopup(otherPartyLabel);
-        } else {
-          liveMarkerRef.current.setLatLng([loc.lat, loc.lng]);
+          const icon = L.divIcon({ className: '', iconSize: [40, 40], iconAnchor: [20, 20], html: vehicleIconHtml(headingRef.current) });
+          liveMarkerRef.current = L.marker(nextPos, { icon, zIndexOffset: 1000 }).addTo(mapRef.current).bindPopup(otherPartyLabel);
+          lastPosRef.current = nextPos;
+        } else if (prevPos) {
+          // Interpolate over ~1s rather than snapping straight to the new
+          // point — smooth movement is what reads as "really moving" as
+          // opposed to a static image with a dot on it.
+          if (animRef.current) cancelAnimationFrame(animRef.current);
+          const marker = liveMarkerRef.current;
+          const icon = L.divIcon({ className: '', iconSize: [40, 40], iconAnchor: [20, 20], html: vehicleIconHtml(headingRef.current) });
+          marker.setIcon(icon);
+
+          const start = performance.now();
+          const DURATION = 900;
+          const step = (now: number) => {
+            const t = Math.min(1, (now - start) / DURATION);
+            const eased = 1 - (1 - t) * (1 - t); // ease-out
+            const lat = prevPos[0] + (nextPos[0] - prevPos[0]) * eased;
+            const lng = prevPos[1] + (nextPos[1] - prevPos[1]) * eased;
+            marker.setLatLng([lat, lng]);
+            if (!userPannedRef.current && mapRef.current) mapRef.current.panTo([lat, lng], { animate: false });
+            if (t < 1) { animRef.current = requestAnimationFrame(step); }
+            else { lastPosRef.current = nextPos; }
+          };
+          animRef.current = requestAnimationFrame(step);
+        }
+
+        // Split the route at the vehicle's nearest point: solid/opaque
+        // behind it (traveled), dashed/lighter ahead (remaining) — set up
+        // when the road route first resolves, above.
+        const path = routePathRef.current;
+        if (path && mapRef.current) {
+          const idx = nearestPathIndex(path, nextPos);
+          const traveled = path.slice(0, idx + 1);
+          if (traveled.length >= 2) {
+            if (traveledLineRef.current) traveledLineRef.current.setLatLngs(traveled);
+            else traveledLineRef.current = L.polyline(traveled, { color: '#166B3A', weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }).addTo(mapRef.current);
+          }
         }
       } catch { /* transient — next poll will retry */ }
     }
@@ -187,9 +288,54 @@ export function DeliveryTrackingMap({
   }, [ready, deliveryId, otherPartyLabel, pollMs, onPosition]);
 
   return (
-    <>
+    <div style={{ position: 'relative', height: '100%', width: '100%', borderRadius: 16, overflow: 'hidden' }}>
       <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-      <div ref={containerRef} style={{ height: '100%', width: '100%', borderRadius: 14, overflow: 'hidden' }} />
-    </>
+      <style>{`
+        .cropify-live-pulse { animation: cropify-pulse 1.8s ease-out infinite; }
+        @keyframes cropify-pulse {
+          0%   { transform: scale(0.6); opacity: 0.55; }
+          70%  { transform: scale(1.8); opacity: 0; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+        .leaflet-control-zoom { border: none !important; box-shadow: 0 2px 10px rgba(0,0,0,0.18) !important; border-radius: 10px !important; overflow: hidden; }
+        .leaflet-control-zoom a { width: 34px !important; height: 34px !important; line-height: 34px !important; background: #fff !important; color: #123825 !important; font-weight: 700 !important; }
+        .leaflet-control-zoom a:hover { background: #f3f4f6 !important; }
+      `}</style>
+
+      <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
+
+      {/* Skeleton/shimmer loading state — a broken map and a loading map
+          previously looked identical (both a flat gray box), which is part
+          of why a real rendering bug went unnoticed for a while. */}
+      {!ready && (
+        <div style={{
+          position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #eef1ee 25%, #e4e8e4 37%, #eef1ee 63%)',
+          backgroundSize: '400% 100%', animation: 'cropify-shimmer 1.4s ease infinite',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <style>{`@keyframes cropify-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }`}</style>
+          <p style={{ fontSize: 12, color: '#9ca3af', fontWeight: 600 }}>Loading map…</p>
+        </div>
+      )}
+
+      {/* Recenter FAB — only once the user has manually panned away from
+          the tracked vehicle, Google Maps' own convention rather than
+          fighting their pan with a forced re-center every poll. */}
+      {ready && showRecenter && (
+        <button
+          type="button"
+          onClick={recenter}
+          aria-label="Recenter on driver"
+          style={{
+            position: 'absolute', bottom: 14, left: 14, zIndex: 500,
+            width: 40, height: 40, borderRadius: '50%', border: 'none', cursor: 'pointer',
+            background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.22)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <Locate size={18} style={{ color: '#0EA5E9' }} />
+        </button>
+      )}
+    </div>
   );
 }

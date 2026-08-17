@@ -114,15 +114,33 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
         />
       </div>
 
+      {/* One status badge + one line underneath — consolidated from what
+          used to read as several differently-styled, overlapping status
+          messages (this headline, the share-location button's own inline
+          state, a separate "last updated" line) into a single place a
+          user's eye actually goes to for "what's happening right now". */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 10px', borderRadius: 999,
+          background: etaMin != null ? 'var(--color-success-bg, #e3f5e8)' : 'var(--color-surface-2, #f3f5f1)',
+          color: etaMin != null ? 'var(--color-success, #16a34a)' : 'var(--d-muted, #6b7566)',
+          fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em',
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: '50%',
+            background: etaMin != null ? 'var(--color-success, #16a34a)' : 'var(--d-muted, #6b7566)',
+            animation: etaMin != null ? 'cropify-live-dot 1.6s ease infinite' : undefined,
+          }} />
+          {etaMin != null ? 'Live' : 'Connecting'}
+        </span>
+      </div>
+      <style>{`@keyframes cropify-live-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }`}</style>
       <h3 style={{ fontSize: 17, fontWeight: 800, color: 'var(--d-text, #182018)', margin: '0 0 4px', letterSpacing: '-0.01em' }}>
         {headline}
       </h3>
-      {lastSeen && (
-        <p style={{ fontSize: 11.5, color: 'var(--d-muted, #6b7566)', margin: '0 0 16px' }}>
-          Last updated {new Date(lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-        </p>
-      )}
-      {!lastSeen && <div style={{ marginBottom: 16 }} />}
+      <p style={{ fontSize: 11.5, color: 'var(--d-muted, #6b7566)', margin: '0 0 16px' }}>
+        {lastSeen ? `Last updated ${new Date(lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ' '}
+      </p>
 
       {/* Vehicle / person card */}
       <div style={{
