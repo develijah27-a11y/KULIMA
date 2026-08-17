@@ -66,7 +66,16 @@ export function NewFarmForm() {
         }),
       });
       const json = await res.json();
-      if (!json.success) throw new Error(json.error ?? 'Failed to save farm');
+      if (!json.success) {
+        // /api/farms returns a structured error ({ message, fields }) for
+        // validation failures, not a plain string like the rest of this
+        // app's routes — throwing json.error directly here coerced that
+        // object to the literal text "[object Object]" via Error's default
+        // String() conversion, which is what the user actually saw instead
+        // of the real validation message.
+        const message = typeof json.error === 'string' ? json.error : json.error?.message;
+        throw new Error(message || 'Failed to save farm');
+      }
       router.push('/farmer/farm');
       router.refresh();
     } catch (err: any) {
