@@ -22,7 +22,8 @@ const ADMIN_NAV = [
   { href: '/admin/commission',   icon: 'finance',      label: 'Commission', divider: true, sectionLabel: 'Settings' },
   { href: '/admin/listings',     icon: 'marketplace',  label: 'Listings' },
   { href: '/admin/prices',       icon: 'prices',       label: 'Prices',     divider: true, sectionLabel: 'Content' },
-  { href: '/admin/alert',        icon: 'notifications',label: 'Alerts' },
+  { href: '/admin/notifications',icon: 'notifications',label: 'Notifications' },
+  { href: '/admin/alert',        icon: 'alert',         label: 'Broadcast Alert' },
   { href: '/admin/analytics',    icon: 'analytics',    label: 'Analytics',  divider: true, sectionLabel: 'Reports' },
   { href: '/admin/revenue',      icon: 'finance',      label: 'Revenue' },
   { href: '/admin/audit-logs',   icon: 'history',      label: 'Audit Logs' },
@@ -59,33 +60,46 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   let profile: { name: string; role: string } | null = null;
   let location = '';
   let roles: string[] = [];
+  let unreadCount = 0;
 
   if (data) {
     profile = { name: (data as any).full_name ?? 'Admin', role: 'Admin' };
     location = (data as any).location ?? '';
     roles = (data as any).roles ?? [];
+
+    const { count } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('read', false)
+      .or('role.eq.admin,role.is.null');
+    unreadCount = count ?? 0;
   }
 
   const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'Admin';
   const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
 
+  const navWithBadge = ADMIN_NAV.map(item =>
+    item.href === '/admin/notifications' && unreadCount > 0 ? { ...item, badge: unreadCount } : item,
+  );
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>
       <Sidebar
-        navItems={ADMIN_NAV}
+        navItems={navWithBadge}
         profile={profile}
         roleSwitcher={<RoleSwitcher currentRole="admin" allRoles={roles} />}
       />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <TopBar greeting={greeting} location={location} currentRole="admin" allRoles={roles} />
+        <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/admin/notifications" currentRole="admin" allRoles={roles} />
         <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6">
           <PageTransition>{children}</PageTransition>
         </main>
       </div>
-      <MobileNav navItems={ADMIN_NAV} />
-      <MobileSidebarDrawer navItems={ADMIN_NAV} profile={profile} roleSwitcher={<RoleSwitcher currentRole="admin" allRoles={roles} />} />
-      <NavCommandPalette items={ADMIN_NAV} />
+      <MobileNav navItems={navWithBadge} />
+      <MobileSidebarDrawer navItems={navWithBadge} profile={profile} roleSwitcher={<RoleSwitcher currentRole="admin" allRoles={roles} />} />
+      <NavCommandPalette items={navWithBadge} />
     </div>
   );
 }
