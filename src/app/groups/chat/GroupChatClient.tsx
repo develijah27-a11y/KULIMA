@@ -198,6 +198,15 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
       if (confirmed) {
         setMessages(prev => prev.map(m => (m.id === tempId ? confirmed : m)));
       }
+      // Best-effort — the message itself already sent regardless of whether
+      // this succeeds. Realtime only reaches whoever already has this exact
+      // chat screen open; this is what tells everyone else a message
+      // actually arrived.
+      fetch('/api/groups/notify-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminId, senderName: currentUserName, body: text }),
+      }).catch(() => {});
     }
     setSending(false);
     inputRef.current?.focus();

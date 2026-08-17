@@ -77,6 +77,16 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
         qualifications_url: urls.qualifications ?? null,
       });
       if (dbErr) throw new Error(dbErr.message);
+
+      // Admins previously had no way to know a submission was waiting other
+      // than checking the queue themselves — best-effort, never blocks the
+      // "done" state the applicant sees even if this fails.
+      fetch('/api/verify/notify-admins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ level: target, role }),
+      }).catch(() => {});
+
       setStep('done');
     } catch (e: any) {
       setError(e.message ?? 'Something went wrong. Please try again.');
