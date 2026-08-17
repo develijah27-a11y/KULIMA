@@ -7,6 +7,7 @@ import { NavigateButton } from '@/components/delivery/NavigateButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { DriverTrackingSheet } from '@/components/delivery/DriverTrackingSheet';
 import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
+import { ShowPaymentQR } from '@/components/delivery/ShowPaymentQR';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -222,13 +223,14 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                       {d.cargo_kg} kg · {d.delivered_at ? new Date(d.delivered_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' }) : ''}
                     </p>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                     <p style={{ fontSize: 13, fontWeight: 700, color: C.green, margin: '0 0 2px' }}>
                       UGX {Number(d.driver_earnings ?? 0).toLocaleString()}
                     </p>
                     <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: paid ? 'var(--color-success-bg)' : 'var(--color-harvest-bg)', color: paid ? 'var(--color-success)' : 'var(--color-harvest)' }}>
                       {paid ? <><CheckCircle2 size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 2 }} />Paid</> : 'Awaiting payment'}
                     </span>
+                    {!paid && <ShowPaymentQR deliveryId={d.id} amount={Number(d.driver_earnings ?? 0)} />}
                   </div>
                 </div>
               );

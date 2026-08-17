@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Delete, X } from 'lucide-react';
+import { ScanToPayButton } from '@/components/delivery/ScanToPayButton';
 
 interface Props {
   deliveryId: string;
@@ -168,13 +169,18 @@ export function PayDeliveryButton({ deliveryId, amount }: Props) {
   return (
     <>
       {/* Inline pay button */}
-      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
         <button
           onClick={startPay}
           style={{ padding: '8px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: '#7C3AED', color: '#fff', fontSize: 12, fontWeight: 700 }}
         >
           Pay UGX {amount.toLocaleString()}
         </button>
+        {/* "Pay nearby" — scans the driver's QR to jump straight to this
+            same delivery's confirm screen, for when payer and payee are
+            physically together at handoff. The manual button above still
+            works exactly as before if scanning isn't an option. */}
+        <ScanToPayButton />
         {error && <p style={{ fontSize: 10, color: 'var(--color-danger)', margin: 0, maxWidth: 150, textAlign: 'right' }}>{error}</p>}
         {pinError && <p style={{ fontSize: 10, color: 'var(--color-danger)', margin: 0, maxWidth: 150, textAlign: 'right' }}>{pinError}</p>}
       </div>
