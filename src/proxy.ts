@@ -137,11 +137,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Deliberately includes /api — RATE_LIMIT_RULES above targets /api/* paths
-  // by design, and excluding "api" from this matcher (as boilerplate configs
-  // often do) would silently turn every one of those rules into dead code.
-  // Non-protected /api paths still short-circuit to NextResponse.next() below
-  // without touching Supabase session/cookie logic, so this only adds the
-  // rate-limit check for them, nothing else.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js|icons/|favicon/|og-image.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|json|js|css|map)$).*)',
+  ],
 };

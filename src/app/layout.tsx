@@ -13,17 +13,13 @@ import { Wordmark } from "@/components/ui/Wordmark";
 // Self-hosted via next/font: fonts are fetched at build time and served from
 // our own origin, eliminating the fonts.googleapis.com/fonts.gstatic.com
 // round-trips that used to block first paint on every fresh page load.
-const poppins = Poppins({ subsets: ["latin"], weight: ["300","400","500","600","700"], variable: "--font-poppins", display: "swap" });
-const inter   = Inter({ subsets: ["latin"], weight: ["300","400","500","600","700"], variable: "--font-inter", display: "swap" });
-const dmMono  = DM_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-mono", display: "swap" });
-
-// Landing-page-only type system ("cargo manifest" redesign) — industrial
-// stamped headlines, plain body text, monospace for anything data-like
-// (prices, ledger entries) so the price ticker and role cards read as
-// authentic records rather than decorative UI.
-const oswald    = Oswald({ subsets: ["latin"], weight: ["500","600","700"], variable: "--font-oswald", display: "swap" });
-const plexSans  = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400","500","600"], variable: "--font-plex-sans", display: "swap" });
-const plexMono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400","500","600"], variable: "--font-plex-mono", display: "swap" });
+// Streamlined font weights with swap display for minimal blocking and instant LCP
+const poppins   = Poppins({ subsets: ["latin"], weight: ["400","600","700"], variable: "--font-poppins", display: "swap" });
+const inter     = Inter({ subsets: ["latin"], weight: ["400","500","600","700"], variable: "--font-inter", display: "swap" });
+const dmMono    = DM_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-mono", display: "swap" });
+const oswald    = Oswald({ subsets: ["latin"], weight: ["600","700"], variable: "--font-oswald", display: "swap" });
+const plexSans  = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400","600"], variable: "--font-plex-sans", display: "swap" });
+const plexMono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400","500"], variable: "--font-plex-mono", display: "swap" });
 
 // Must match Supabase Auth's site_url and WebAuthn rp_origins exactly —
 // passkey sign-in only validates against this exact origin, so drifting
@@ -44,9 +40,6 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Cropify",
   },
-  // Explicit OG/Twitter cards so search results and shared links show the
-  // Cropify logo — without these, some crawlers/platforms fall back to a
-  // blank or generic preview instead of our branding.
   openGraph: {
     type: "website",
     url: SITE_URL,
@@ -75,25 +68,27 @@ const themeScript = `
 })();
 `;
 
-// Dismisses the splash on window `load` (all resources in, not just DOM
-// parsed) rather than a fixed CSS timer — on the slow rural connections
-// this app targets, a blind timer tied to the splash's own first-paint
-// clock can finish well before the rest of the page has actually loaded.
-// Enforces a minimum hold so it doesn't just flash on fast connections, and
-// a hard timeout so it can never get stuck if `load` never fires.
+// Instant splash dismissal — transitions out immediately on DOMContentLoaded/interactive
+// so the UI is immediately responsive without waiting for slow background network assets.
 const splashScript = `
 (function(){
-  var MIN_MS = 500, MAX_MS = 4000, start = Date.now(), done = false;
+  var done = false;
   function hide(){
     if (done) return;
     done = true;
     var el = document.getElementById('app-splash');
-    if (el) el.classList.add('is-leaving');
+    if (el) {
+      el.classList.add('is-leaving');
+      setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 350);
+    }
   }
-  function schedule(){ setTimeout(hide, Math.max(0, MIN_MS - (Date.now() - start))); }
-  if (document.readyState === 'complete') schedule();
-  else window.addEventListener('load', schedule);
-  setTimeout(hide, MAX_MS);
+  if (document.readyState === 'interactive' || document.readyState === 'complete') {
+    setTimeout(hide, 30);
+  } else {
+    document.addEventListener('DOMContentLoaded', hide);
+    window.addEventListener('load', hide);
+  }
+  setTimeout(hide, 600);
 })();
 `;
 

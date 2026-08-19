@@ -181,8 +181,7 @@ export function PagePrefetcher() {
 
     const currentRole = detectRole(pathname);
 
-    // Re-run the full prefetch sequence whenever the user enters a new role
-    // (e.g. logs in and lands on /farmer/dashboard for the first time).
+    // Skip if role hasn't changed
     if (currentRole === prefetchedRole.current) return;
     prefetchedRole.current = currentRole;
 
@@ -190,19 +189,26 @@ export function PagePrefetcher() {
     timers.current.forEach(clearTimeout);
     timers.current = [];
 
+    // On landing / public pages: only prefetch signin & signup after the initial page has settled
+    if (!currentRole) {
+      timers.current.push(
+        setTimeout(() => {
+          scheduleIdle(() => {
+            try { router.prefetch('/auth/signin'); } catch {}
+            try { router.prefetch('/auth/signup'); } catch {}
+          });
+        }, 1500)
+      );
+      return;
+    }
+
+    // Inside a specific role (e.g. /farmer): only prefetch top 5 key routes for that active role
     const primaryRoutes = [
       ...SHARED_ROUTES,
-      ...(currentRole ? ROUTES_BY_ROLE[currentRole] : []),
+      ...(ROUTES_BY_ROLE[currentRole]?.slice(0, 5) ?? []),
     ];
-    const secondaryRoutes = ALL_ROLES
-      .filter(r => r !== currentRole)
-      .flatMap(r => ROUTES_BY_ROLE[r]);
 
-    // Phase 1 — current role: starts immediately, idle-scheduled in chunks
-    timers.current.push(...prefetchChunked(primaryRoutes, router, 0));
-
-    // Phase 2 — all other roles: starts after 4 s so the primary role is fully warm
-    timers.current.push(...prefetchChunked(secondaryRoutes, router, 4000));
+    timers.current.push(...prefetchChunked(primaryRoutes, router, 600, 150, 3));
 
     return () => { timers.current.forEach(clearTimeout); };
   // eslint-disable-next-line react-hooks/exhaustive-deps

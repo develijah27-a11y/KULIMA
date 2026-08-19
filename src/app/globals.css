@@ -1166,7 +1166,8 @@ input.auth-input:-webkit-autofill:active {
   background: linear-gradient(160deg, #2FA34F 0%, #166B3A 62%, #0F4C2A 100%);
 }
 .app-splash.is-leaving {
-  animation: appSplashOut 450ms ease forwards;
+  animation: appSplashOut 300ms ease forwards;
+  pointer-events: none;
 }
 .app-splash-mark {
   /* Fluid instead of a fixed 96px — was rendering proportionally tiny on
