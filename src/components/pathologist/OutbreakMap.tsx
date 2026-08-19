@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Map as LMap, CircleMarker as LCircleMarker } from 'leaflet';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
+import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
 
 export interface Hotspot {
   district: string;
@@ -37,10 +38,7 @@ export function OutbreakMap({ hotspots }: Props) {
       const map = L.map(containerRef.current!, { zoomControl: true, attributionControl: false }).setView([1.3733, 32.2903], 6.4);
       mapRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-        maxZoom: 18,
-      }).addTo(map);
+      L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
 
       const bounds: [number, number][] = [];
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { Map as LMap } from 'leaflet';
+import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
 
 interface Farm {
   id: string;
@@ -37,10 +38,10 @@ export function FarmMapClient({ farms }: Props) {
       const map = L.map(containerRef.current!, { zoomControl: true }).setView([1.3733, 32.2903], 7);
       mapRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19,
-      }).addTo(map);
+      L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+
+      requestAnimationFrame(() => map.invalidateSize());
+      setTimeout(() => map.invalidateSize(), 300);
 
       const bounds: [number, number][] = [];
 

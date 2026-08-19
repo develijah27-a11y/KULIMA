@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Polyline, Polygon } from 'leaflet';
 import { MapPin, Check } from 'lucide-react';
+import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
 
 interface Props {
   onBoundaryChange: (coords: [number, number][], areaHa: number) => void;
@@ -61,10 +62,7 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
       const map = L.map(containerRef.current!).setView([1.3733, 32.2903], 13);
       mapRef.current = map;
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 19,
-      }).addTo(map);
+      L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
 
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
