@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { sendEmail, purchaseReceiptEmail } from '@/lib/email';
 import { notifyUser } from '@/lib/notify';
@@ -143,7 +143,9 @@ export async function POST(req: Request) {
         receiptNo:   `AGN-${String((order as any).id).slice(0, 8).toUpperCase()}`,
         purchasedAt: (order as any).created_at ?? new Date().toISOString(),
       }),
-    );
+    ).catch((emailErr) => {
+      console.error('[/api/supplier-orders:POST] Failed to send purchase receipt email:', emailErr);
+    });
   }
 
   return NextResponse.json({ success: true, data: order }, { status: 201 });
@@ -254,8 +256,8 @@ export async function PATCH(req: Request) {
       // order isn't a real purchase until the buyer accepts the dealer's quote.
       if (status === 'confirmed' && user.email) {
         const [{ data: dealerProfile }, { data: buyerProfile }] = await Promise.all([
-          (supabase.from as any)('profiles').select('full_name, business_name').eq('id', (buyerOwned as any).supplier_id).single(),
-          supabase.from('profiles').select('full_name').eq('id', profile.id).single(),
+          (supabase.from as any)('profiles').select('full_name, business_name').eq('id', (buyerOwned as any).supplier_id).maybeSingle(),
+          supabase.from('profiles').select('full_name').eq('id', profile.id).maybeSingle(),
         ]);
         await sendEmail(
           user.email,
@@ -272,7 +274,9 @@ export async function PATCH(req: Request) {
             receiptNo:   `AGN-${String(id).slice(0, 8).toUpperCase()}`,
             purchasedAt: new Date().toISOString(),
           }),
-        );
+        ).catch((emailErr) => {
+          console.error('[/api/supplier-orders] Failed to send purchase receipt email:', emailErr);
+        });
       }
 
       return NextResponse.json({ success: true });

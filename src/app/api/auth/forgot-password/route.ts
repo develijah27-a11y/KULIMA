@@ -20,8 +20,31 @@ import { rateLimit } from '@/lib/rate-limit';
 // exists — the account-existence check happens here, server-side, but is
 // never surfaced to the caller, so this endpoint can't be used to enumerate
 // registered emails.
+function getAppOrigin(req: Request): string {
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '');
+  }
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, '');
+  }
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/+$/, '')}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/+$/, '')}`;
+  }
+
+  const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
+  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+  if (forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+
+  return new URL(req.url).origin;
+}
+
 export async function POST(req: Request) {
-  const { origin } = new URL(req.url);
+  const origin = getAppOrigin(req);
   const { email } = await req.json().catch(() => ({ email: null }));
 
   if (!email || typeof email !== 'string') {
@@ -52,13 +75,20 @@ export async function POST(req: Request) {
     // A missing/invalid account surfaces here as an error (e.g. "User not
     // found") — swallow it and fall through to the same generic success
     // response as the real-account path below.
-    if (!error && data?.properties?.hashed_token) {
+    if (error) {
+      console.warn(`[/api/auth/forgot-password] Supabase generateLink response for "${normalizedEmail}":`, error.message);
+    } else if (data?.properties?.hashed_token) {
       const resetUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=recovery&next=${encodeURIComponent('/auth/reset-password')}`;
-      await sendEmail(
+      const emailResult = await sendEmail(
         normalizedEmail,
         'Reset your Cropify password',
         resetPasswordEmail({ resetUrl, requestedAt: new Date().toISOString() }),
       );
+      if (!emailResult.success && !emailResult.skipped) {
+        console.error(`[/api/auth/forgot-password] Failed to dispatch reset email to "${normalizedEmail}":`, emailResult.error);
+      }
+    } else {
+      console.warn(`[/api/auth/forgot-password] No hashed_token generated for "${normalizedEmail}"`);
     }
   } catch (err) {
     console.error('[/api/auth/forgot-password]', err);

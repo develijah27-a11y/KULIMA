@@ -9,6 +9,25 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Database } from '@/lib/database.types';
 
+const singleMock = jest.fn();
+const eqMock = jest.fn();
+const selectMock = jest.fn();
+const updateMock = jest.fn();
+const insertMock = jest.fn();
+
+const queryBuilder: any = {
+  insert: insertMock,
+  update: updateMock,
+  select: selectMock,
+  eq: eqMock,
+  single: singleMock,
+};
+
+insertMock.mockReturnValue(queryBuilder);
+updateMock.mockReturnValue(queryBuilder);
+selectMock.mockReturnValue(queryBuilder);
+eqMock.mockReturnValue(queryBuilder);
+
 // Mock the Supabase server client
 const mockSupabaseClient = {
   auth: {
@@ -21,25 +40,7 @@ const mockSupabaseClient = {
       deleteUser: jest.fn(),
     },
   },
-  from: jest.fn(() => ({
-    insert: jest.fn(() => ({
-      select: jest.fn(() => ({
-        single: jest.fn(),
-      })),
-    })),
-    update: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(),
-        })),
-      })),
-    })),
-    select: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        single: jest.fn(),
-      })),
-    })),
-  })),
+  from: jest.fn(() => queryBuilder),
 };
 
 // Mock the entire Supabase server module to avoid Next.js cookies() issue

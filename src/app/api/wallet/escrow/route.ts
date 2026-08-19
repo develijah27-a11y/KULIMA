@@ -194,7 +194,7 @@ export async function POST(req: Request) {
         // else lib/email.ts is used.
         if (user.email) {
           const [{ data: buyerProfile }, { data: farmerProfile }] = await Promise.all([
-            (db.from as any)('profiles').select('full_name').eq('user_id', user.id).single(),
+            (db.from as any)('profiles').select('full_name').eq('user_id', user.id).maybeSingle(),
             (db.from as any)('profiles').select('full_name, business_name').eq('id', order.farmer_profile_id).maybeSingle(),
           ]);
           await sendEmail(
@@ -212,7 +212,9 @@ export async function POST(req: Request) {
               receiptNo:   `AGN-${orderId.slice(0, 8).toUpperCase()}`,
               purchasedAt: now,
             }),
-          ).catch(() => {});
+          ).catch((emailErr) => {
+            console.error('[/api/wallet/escrow] Failed to send purchase receipt email:', emailErr);
+          });
         }
 
         // Notify seller

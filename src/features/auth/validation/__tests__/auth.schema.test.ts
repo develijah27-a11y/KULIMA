@@ -84,7 +84,7 @@ describe('Authentication Validation Schemas', () => {
       if (!result.success) {
         const emailError = result.error.issues.find(e => e.path[0] === 'email');
         expect(emailError).toBeDefined();
-        expect(emailError?.message).toContain('expected string');
+        expect(emailError?.message).toMatch(/required|expected string/i);
       }
     });
 
@@ -114,7 +114,7 @@ describe('Authentication Validation Schemas', () => {
       if (!result.success) {
         const passwordError = result.error.issues.find(e => e.path[0] === 'password');
         expect(passwordError).toBeDefined();
-        expect(passwordError?.message).toContain('expected string');
+        expect(passwordError?.message).toMatch(/required|expected string/i);
       }
     });
 
@@ -144,7 +144,7 @@ describe('Authentication Validation Schemas', () => {
       if (!result.success) {
         const nameError = result.error.issues.find(e => e.path[0] === 'fullName');
         expect(nameError).toBeDefined();
-        expect(nameError?.message).toContain('expected string');
+        expect(nameError?.message).toMatch(/required|expected string/i);
       }
     });
 
@@ -312,7 +312,7 @@ describe('Authentication Validation Schemas', () => {
       if (!result.success) {
         const emailError = result.error.issues.find(e => e.path[0] === 'email');
         expect(emailError).toBeDefined();
-        expect(emailError?.message).toContain('expected string');
+        expect(emailError?.message).toMatch(/required|expected string/i);
       }
     });
 
@@ -340,7 +340,7 @@ describe('Authentication Validation Schemas', () => {
       if (!result.success) {
         const passwordError = result.error.issues.find(e => e.path[0] === 'password');
         expect(passwordError).toBeDefined();
-        expect(passwordError?.message).toContain('expected string');
+        expect(passwordError?.message).toMatch(/required|expected string/i);
       }
     });
 

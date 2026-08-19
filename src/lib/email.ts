@@ -1,21 +1,39 @@
 import { Resend } from 'resend';
 
-// No-ops silently if Resend isn't configured yet (RESEND_API_KEY / EMAIL_FROM
-// not set) — matches how web push (NEXT_PUBLIC_VAPID_PUBLIC_KEY) degrades in
-// this codebase, so the rest of the app never depends on email actually
-// having been set up.
-const apiKey = process.env.RESEND_API_KEY;
-const from   = process.env.EMAIL_FROM ?? 'Cropify <onboarding@resend.dev>';
-const resend = apiKey ? new Resend(apiKey) : null;
+export interface SendEmailResult {
+  success: boolean;
+  skipped: boolean;
+  data?: any;
+  error?: any;
+}
 
-export async function sendEmail(to: string, subject: string, html: string) {
-  if (!resend) return { skipped: true as const };
+export function getResendClient(): { client: Resend | null; from: string } {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM || 'Cropify <onboarding@resend.dev>';
+  if (!apiKey || apiKey === 'REDACTED_REMOVED_FROM_REPO') {
+    return { client: null, from };
+  }
+  return { client: new Resend(apiKey), from };
+}
+
+export async function sendEmail(to: string, subject: string, html: string): Promise<SendEmailResult> {
+  const { client, from } = getResendClient();
+  if (!client) {
+    console.warn(`[sendEmail:skipped] RESEND_API_KEY is not configured. Email to "${to}" with subject "${subject}" was skipped.`);
+    return { success: false, skipped: true };
+  }
+
   try {
-    await resend.emails.send({ from, to, subject, html });
-    return { skipped: false as const };
+    const { data, error } = await client.emails.send({ from, to, subject, html });
+    if (error) {
+      console.error(`[sendEmail:error] Resend API error sending to "${to}":`, error);
+      return { success: false, skipped: false, error };
+    }
+    console.log(`[sendEmail:success] Email delivered to "${to}" (id: ${data?.id})`);
+    return { success: true, skipped: false, data };
   } catch (err) {
-    console.error('[sendEmail]', err);
-    return { skipped: false as const, error: err };
+    console.error(`[sendEmail:exception] Exception sending to "${to}":`, err);
+    return { success: false, skipped: false, error: err };
   }
 }
 

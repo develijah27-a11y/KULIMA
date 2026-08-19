@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
           style={{ background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)', color: '#86efac' }}
           role="status"
         >
-          Check your inbox. If there's a Cropify account for {email}, a password reset link is on its way — it can take a minute or two to arrive.
+          Check your inbox. A password reset link is on its way and may take a minute to arrive.
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">

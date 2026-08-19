@@ -1,12 +1,28 @@
 import { describe, it, expect, beforeEach, afterAll } from '@jest/globals';
 
+function loadEnv() {
+  try {
+    delete require.cache[require.resolve('../env')];
+  } catch {}
+  return require('../env');
+}
+
 describe('Environment Configuration', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
     // Reset modules and environment before each test
     jest.resetModules();
+    delete require.cache[require.resolve('../env')];
     process.env = { ...originalEnv } as NodeJS.ProcessEnv;
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+    delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    delete process.env.DATABASE_URL;
+    delete process.env.LOG_LEVEL;
+    process.env.NODE_ENV = 'test';
+    process.env.NEXTAUTH_SECRET = 'test-nextauth-secret-key';
   });
 
   afterAll(() => {
@@ -20,11 +36,12 @@ describe('Environment Configuration', () => {
       process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key';
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+      process.env.NEXTAUTH_SECRET = 'test-nextauth-secret-key';
       process.env.NODE_ENV = 'test';
       process.env.LOG_LEVEL = 'info';
 
       // Act
-      const { env } = require('../env');
+      const { env } = loadEnv();
 
       // Assert
       expect(env.NEXT_PUBLIC_SUPABASE_URL).toBe('https://test.supabase.co');
@@ -39,11 +56,12 @@ describe('Environment Configuration', () => {
       process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key';
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+      process.env.NEXTAUTH_SECRET = 'test-nextauth-secret-key';
       process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
       process.env.NODE_ENV = 'test';
 
       // Act
-      const { env } = require('../env');
+      const { env } = loadEnv();
 
       // Assert
       expect(env.DATABASE_URL).toBe('postgresql://user:pass@localhost:5432/db');
@@ -54,11 +72,12 @@ describe('Environment Configuration', () => {
       process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-publishable-key';
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
+      process.env.NEXTAUTH_SECRET = 'test-nextauth-secret-key';
       delete process.env.NODE_ENV;
       delete process.env.LOG_LEVEL;
 
       // Act
-      const { env } = require('../env');
+      const { env } = loadEnv();
 
       // Assert
       expect(env.NODE_ENV).toBe('development');
@@ -75,7 +94,7 @@ describe('Environment Configuration', () => {
 
       // Act & Assert
       expect(() => {
-        require('../env');
+        loadEnv();
       }).toThrow('Environment validation failed');
     });
 
@@ -87,7 +106,7 @@ describe('Environment Configuration', () => {
 
       // Act & Assert
       expect(() => {
-        require('../env');
+        loadEnv();
       }).toThrow('Environment validation failed');
     });
 
@@ -95,11 +114,12 @@ describe('Environment Configuration', () => {
       // Arrange
       process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
       delete process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+      delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key';
 
       // Act & Assert
       expect(() => {
-        require('../env');
+        loadEnv();
       }).toThrow('Environment validation failed');
     });
 
@@ -111,7 +131,7 @@ describe('Environment Configuration', () => {
 
       // Act & Assert
       expect(() => {
-        require('../env');
+        loadEnv();
       }).toThrow('Environment validation failed');
     });
 
@@ -124,7 +144,7 @@ describe('Environment Configuration', () => {
 
       // Act & Assert
       expect(() => {
-        require('../env');
+        loadEnv();
       }).toThrow('Environment validation failed');
     });
 
@@ -133,11 +153,11 @@ describe('Environment Configuration', () => {
       process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-key';
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key';
-      process.env.NODE_ENV = 'invalid-env';
+      process.env.NODE_ENV = 'invalid-env' as any;
 
       // Act & Assert
       expect(() => {
-        require('../env');
+        loadEnv();
       }).toThrow('Environment validation failed');
     });
 
@@ -146,11 +166,11 @@ describe('Environment Configuration', () => {
       process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-key';
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key';
-      process.env.LOG_LEVEL = 'invalid-level';
+      process.env.LOG_LEVEL = 'invalid-level' as any;
 
       // Act & Assert
       expect(() => {
-        require('../env');
+        loadEnv();
       }).toThrow('Environment validation failed');
     });
   });
@@ -161,9 +181,10 @@ describe('Environment Configuration', () => {
       process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = 'test-key';
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key';
+      process.env.NEXTAUTH_SECRET = 'test-nextauth-secret-key';
 
       // Act
-      const { env } = require('../env');
+      const { env } = loadEnv();
 
       // Assert - TypeScript will catch type errors at compile time
       expect(typeof env.NEXT_PUBLIC_SUPABASE_URL).toBe('string');

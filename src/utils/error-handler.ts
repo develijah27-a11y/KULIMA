@@ -402,9 +402,9 @@ export function handleError(
     };
   }
 
-  if (error instanceof ZodError) {
+  if (error instanceof ZodError || (error as any)?.name === 'ZodError' || Array.isArray((error as any)?.issues)) {
     return {
-      response: handleZodError(error),
+      response: handleZodError(error as ZodError),
       statusCode: 400,
     };
   }

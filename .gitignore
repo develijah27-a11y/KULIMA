@@ -36,8 +36,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Claude Code local settings (may contain API tokens)
-.claude/settings.local.json
+# Claude Code local settings & logs
+.claude/
+.claude/*
 
 # Local migration/admin scripts (may contain credentials)
 run_migration.js

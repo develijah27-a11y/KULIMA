@@ -308,12 +308,12 @@ export async function PATCH(req: Request) {
         // sends once RESEND_API_KEY/EMAIL_FROM are configured (see lib/email.ts).
         const [{ data: authUser }, { data: requesterProfile }, { data: driverProfile }, { data: vehicle }] = await Promise.all([
           admin.auth.admin.getUserById(delivery.requester_id),
-          admin.from('profiles').select('full_name, phone_number').eq('user_id', delivery.requester_id).single(),
+          admin.from('profiles').select('full_name, phone_number').eq('user_id', delivery.requester_id).maybeSingle(),
           delivery.transporter_id
-            ? admin.from('profiles').select('full_name, phone_number').eq('user_id', delivery.transporter_id).single()
+            ? admin.from('profiles').select('full_name, phone_number').eq('user_id', delivery.transporter_id).maybeSingle()
             : Promise.resolve({ data: null }),
           delivery.assigned_vehicle_id
-            ? (admin.from as any)('vehicles').select('make_model, plate_number').eq('id', delivery.assigned_vehicle_id).single()
+            ? (admin.from as any)('vehicles').select('make_model, plate_number').eq('id', delivery.assigned_vehicle_id).maybeSingle()
             : Promise.resolve({ data: null }),
         ]);
 

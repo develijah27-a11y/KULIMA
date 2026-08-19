@@ -1,4 +1,4 @@
-﻿import { z } from 'zod';
+import { z } from 'zod';
 
 const envSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url('Invalid Supabase URL'),
@@ -15,6 +15,9 @@ const envSchema = z.object({
   NYLON_PAY_PUBLIC_KEY: z.string().optional(),
   NYLON_PAY_SECRET_KEY: z.string().optional(),
   NYLON_PAY_WEBHOOK_SECRET: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
+  NEXT_PUBLIC_APP_URL: z.string().url('Invalid NEXT_PUBLIC_APP_URL').optional(),
   NEXTAUTH_SECRET: z.string().min(1, 'NEXTAUTH_SECRET is required'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
