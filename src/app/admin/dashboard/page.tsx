@@ -7,6 +7,7 @@ import {
   Building2, MessageCircle, Microscope, Truck, ShoppingCart, BarChart3,
   Bell, ShieldCheck, CreditCard, Activity,
 } from 'lucide-react';
+import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 const C = {
   text:       'var(--d-text)',
   muted:      'var(--d-muted)',
@@ -667,6 +668,8 @@ export default async function AdminDashboardPage() {
           <span className="text-xs font-semibold" style={{ color: 'var(--color-primary)' }}>All systems operational</span>
         </div>
       </div>
+
+      <BiometricSetupBanner />
 
       <Suspense fallback={<div className="dash-skeleton h-16 rounded-xl" />}>
         <AlertBanner />

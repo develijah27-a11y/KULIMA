@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
+import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -483,6 +484,8 @@ export default async function TransporterDashboard() {
         benefit="Unlock paid delivery jobs and protected fare payouts"
         requiredDocsLabel="national ID, driving permit, and a photo"
       />
+
+      <BiometricSetupBanner />
 
       {/* Stats */}
       <Suspense fallback={

@@ -10,6 +10,7 @@ import {
 import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
+import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -380,6 +381,8 @@ export default async function OfftakerDashboardPage() {
         benefit="Sign escrow-backed contracts and access bulk group harvests"
         requiredDocsLabel="national ID and a selfie"
       />
+
+      <BiometricSetupBanner />
 
       <div className="flex items-start justify-between">
         <div>

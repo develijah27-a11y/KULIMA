@@ -107,7 +107,7 @@ const serwist = new Serwist({
       matcher: ({ request }) => request.mode === 'navigate',
       handler: new NetworkFirst({
         cacheName: 'cropify-pages',
-        networkTimeoutSeconds: 3,
+        networkTimeoutSeconds: 15,
         plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 86400 })],
       }),
     },

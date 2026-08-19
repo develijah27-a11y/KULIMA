@@ -10,35 +10,59 @@ const C = {
 };
 
 const DISMISS_KEY = 'cropify-biometric-nudge-dismissed';
+const CONFIGURED_KEY = 'cropify-biometric-configured';
 
-// A one-time dashboard nudge toward setting up biometric sign-in — the full
-// management UI lives in PasskeySettings on the Settings page, but a
-// feature nobody discovers doesn't get used. Renders nothing at all unless
-// the device actually supports a platform authenticator AND the user has
-// zero passkeys registered yet; disappears permanently (this device) once
-// dismissed or once a passkey exists.
+// A one-time dashboard nudge toward setting up biometric sign-in.
+// Renders nothing at all if:
+// 1. Device lacks platform authenticator support.
+// 2. User has already enrolled biometric/passkey on this device (persisted in localStorage or Supabase).
+// 3. User previously dismissed the banner on this device.
 export function BiometricSetupBanner() {
   const [visible, setVisible] = useState(false);
   const [registering, setRegistering] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && sessionStorage.getItem(DISMISS_KEY)) return;
+    if (typeof window === 'undefined') return;
+
+    // Check permanent localStorage flags first
+    try {
+      if (localStorage.getItem(CONFIGURED_KEY) === 'true') return;
+      if (localStorage.getItem(DISMISS_KEY) === 'true') return;
+    } catch {
+      // Ignore localStorage read errors
+    }
+
     (async () => {
       if (!window.PublicKeyCredential) return;
       let platformAvailable = false;
-      try { platformAvailable = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(); } catch { platformAvailable = false; }
+      try {
+        platformAvailable = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      } catch {
+        platformAvailable = false;
+      }
       if (!platformAvailable) return;
 
-      const supabase = createClient();
-      const { data } = await supabase.auth.passkey.list();
-      if (!data || data.length === 0) setVisible(true);
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.auth.passkey.list();
+        if (data && data.length > 0) {
+          // Passkeys already exist! Remember permanently so banner never pops up again
+          try { localStorage.setItem(CONFIGURED_KEY, 'true'); } catch {}
+          return;
+        }
+        setVisible(true);
+      } catch {
+        // Silent failure if passkey list check errors
+      }
     })();
   }, []);
 
   function dismiss() {
     setVisible(false);
-    try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(DISMISS_KEY, 'true');
+    } catch { /* ignore */ }
   }
 
   async function setUp() {
@@ -48,7 +72,11 @@ export function BiometricSetupBanner() {
       const supabase = createClient();
       const { error } = await supabase.auth.registerPasskey();
       if (error) throw error;
-      dismiss();
+      // Successfully registered — save configured flag permanently
+      try {
+        localStorage.setItem(CONFIGURED_KEY, 'true');
+      } catch {}
+      setVisible(false);
     } catch (e: any) {
       const isCancel = e?.name === 'NotAllowedError' || /cancel|not allowed/i.test(e?.message ?? '');
       if (!isCancel) setError('Could not set this up on this device. Please try again, or use Settings later.');

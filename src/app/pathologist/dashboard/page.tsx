@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
+import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -348,6 +349,8 @@ export default async function PathologistDashboardPage() {
         benefit="Get matched to paid consultations and unlock higher fees"
         requiredDocsLabel="national ID, a selfie, and your professional qualifications"
       />
+
+      <BiometricSetupBanner />
 
       <div className="flex items-start justify-between">
         <div>

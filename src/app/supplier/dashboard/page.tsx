@@ -12,6 +12,7 @@ import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import { NewsWidget } from '@/components/news/NewsWidget';
+import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -366,6 +367,8 @@ export default async function SupplierDashboardPage() {
         benefit="Rank higher in search and unlock flash deals"
         requiredDocsLabel="national ID, a selfie, and business registration"
       />
+
+      <BiometricSetupBanner />
 
       <div className="flex items-start justify-between">
         <div>
