@@ -34,9 +34,11 @@ export const createClient = async () => {
 };
 
 export const createServiceRoleClient = () => {
+  const url = env.NEXT_PUBLIC_SUPABASE_URL || (process.env.NEXT_PUBLIC_SUPABASE_URL as string);
+  const key = env.SUPABASE_SERVICE_ROLE_KEY || (process.env.SUPABASE_SERVICE_ROLE_KEY as string) || '';
   return createServerClient<Database>(
-    env.NEXT_PUBLIC_SUPABASE_URL,
-    env.SUPABASE_SERVICE_ROLE_KEY,
+    url,
+    key,
     {
       cookies: {
         getAll() { return []; },

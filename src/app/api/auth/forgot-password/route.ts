@@ -51,17 +51,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
 
-  // Rate-limit by the submitted email (not just IP) so one address can't be
-  // hammered with reset emails from a rotating set of IPs, and one IP can't
-  // spam a large set of addresses either — cap both.
+  // Rate-limit with relaxed thresholds for testing & usability (10 attempts / 5 mins)
   const normalizedEmail = email.trim().toLowerCase();
   const [byEmail, byIp] = await Promise.all([
-    rateLimit(`forgot-password:email:${normalizedEmail}`, 3, 900),
-    rateLimit(`forgot-password:ip:${req.headers.get('x-forwarded-for') ?? 'unknown'}`, 10, 900),
+    rateLimit(`forgot-password:email:${normalizedEmail}`, 10, 300),
+    rateLimit(`forgot-password:ip:${req.headers.get('x-forwarded-for') ?? 'unknown'}`, 25, 300),
   ]);
   if (!byEmail || !byIp) {
-    // Still generic — don't reveal that rate limiting (vs. account
-    // non-existence) is why nothing happens this time.
+    console.warn(`[/api/auth/forgot-password] Rate limit reached for "${normalizedEmail}"`);
     return NextResponse.json({ success: true });
   }
 
@@ -72,11 +69,10 @@ export async function POST(req: Request) {
       email: normalizedEmail,
     });
 
-    // A missing/invalid account surfaces here as an error (e.g. "User not
-    // found") — swallow it and fall through to the same generic success
-    // response as the real-account path below.
+    let resendDispatched = false;
+
     if (error) {
-      console.warn(`[/api/auth/forgot-password] Supabase generateLink response for "${normalizedEmail}":`, error.message);
+      console.warn(`[/api/auth/forgot-password] Supabase generateLink notice for "${normalizedEmail}":`, error.message);
     } else if (data?.properties?.hashed_token) {
       const resetUrl = `${origin}/auth/confirm?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=recovery&next=${encodeURIComponent('/auth/reset-password')}`;
       const emailResult = await sendEmail(
@@ -84,16 +80,27 @@ export async function POST(req: Request) {
         'Reset your Cropify password',
         resetPasswordEmail({ resetUrl, requestedAt: new Date().toISOString() }),
       );
-      if (!emailResult.success && !emailResult.skipped) {
-        console.error(`[/api/auth/forgot-password] Failed to dispatch reset email to "${normalizedEmail}":`, emailResult.error);
+      if (emailResult.success) {
+        resendDispatched = true;
+        console.log(`[/api/auth/forgot-password] Custom branded reset email dispatched via Resend to "${normalizedEmail}"`);
+      } else {
+        console.warn(`[/api/auth/forgot-password] Resend delivery unfulfilled for "${normalizedEmail}" (${emailResult.error?.message || (emailResult.skipped ? 'skipped' : 'failed')}). Triggering Supabase recovery fallback...`);
       }
-    } else {
-      console.warn(`[/api/auth/forgot-password] No hashed_token generated for "${normalizedEmail}"`);
+    }
+
+    // Secondary fallback: If custom Resend email was not sent, trigger Supabase built-in reset email
+    if (!resendDispatched) {
+      const { error: sbError } = await admin.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: `${origin}/auth/confirm?next=/auth/reset-password`,
+      });
+      if (sbError) {
+        console.warn(`[/api/auth/forgot-password] Supabase resetPasswordForEmail notice for "${normalizedEmail}":`, sbError.message);
+      } else {
+        console.log(`[/api/auth/forgot-password] Supabase recovery email triggered successfully for "${normalizedEmail}"`);
+      }
     }
   } catch (err) {
-    console.error('[/api/auth/forgot-password]', err);
-    // Fall through — never let a server-side error leak account existence
-    // or turn into a distinguishable response for the caller.
+    console.error('[/api/auth/forgot-password] Exception during recovery dispatch:', err);
   }
 
   return NextResponse.json({ success: true });
