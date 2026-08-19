@@ -6,48 +6,15 @@ const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST || [],
   skipWaiting: true,
   clientsClaim: true,
-  navigationPreload: true,
-
-  // When a navigation can't be served from the network or any runtime
-  // cache (offline + never visited before), show the in-app offline
-  // screen instead of the browser's native "no internet" error.
-  fallbacks: {
-    entries: [
-      {
-        url: '/offline',
-        matcher: ({ request }) => request.mode === 'navigate',
-      },
-    ],
-  },
+  navigationPreload: false,
 
   runtimeCaching: [
-    // ── RSC payloads ──────────────────────────────────────────────────────────
-    // Both prefetch (Next-Router-Prefetch: 1) and navigation (no prefetch header)
-    // RSC requests go to the same URLs — unify them in one cache so the prefetched
-    // payload is served immediately when the user actually navigates.
-    // StaleWhileRevalidate: respond from cache instantly, then refresh in background.
-    // 200 entries covers every route across all roles; 5 min TTL.
-    {
-      matcher: ({ request }) => request.headers.get('RSC') === '1',
-      handler: new StaleWhileRevalidate({
-        cacheName: 'cropify-rsc',
-        plugins: [new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 300 })],
-      }),
-    },
-
     // ── API data ──────────────────────────────────────────────────────────────
-    // NetworkFirst, not StaleWhileRevalidate: farmers use this to decide
-    // whether to plant/spray/spray today, so a fresh network read (even a
-    // few seconds slower) beats instantly showing a cached reading that
-    // could be hours old. Falls back to cache only if the network is
-    // unreachable. Cache bucket renamed (v2) to drop whatever any
-    // already-installed device cached under the old always-serve-cached-
-    // first strategy.
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/weather'),
       handler: new NetworkFirst({
         cacheName: 'cropify-weather-v2',
-        networkTimeoutSeconds: 5,
+        networkTimeoutSeconds: 10,
         plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 1800 })],
       }),
     },
@@ -62,32 +29,10 @@ const serwist = new Serwist({
         plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 300 })],
       }),
     },
-    {
-      matcher: ({ url }) => (
-        url.pathname.startsWith('/api/farms') ||
-        url.pathname.startsWith('/api/farm-') ||
-        url.pathname.startsWith('/api/inventory') ||
-        url.pathname.startsWith('/api/listings') ||
-        url.pathname.startsWith('/api/planting')
-      ),
-      handler: new NetworkFirst({
-        cacheName: 'cropify-farmer',
-        networkTimeoutSeconds: 5,
-        plugins: [new ExpirationPlugin({ maxEntries: 30, maxAgeSeconds: 86400 })],
-      }),
-    },
 
     // ── Static assets ─────────────────────────────────────────────────────────
     {
       matcher: ({ request }) => request.destination === 'image',
-      // CacheFirst never re-checks the network once an entry exists, so the
-      // logo/icon files (same filenames, revised many times this session)
-      // stayed stuck on whatever version a returning visitor's browser
-      // cached during their earliest visit within the last 30 days — a real
-      // deploy could ship a brand new logo and their device would keep
-      // showing the old one regardless. Bucket renamed (v2) to drop
-      // whatever's already cached, same fix already used below for the
-      // weather-cache strategy change.
       handler: new CacheFirst({
         cacheName: 'cropify-images-v2',
         plugins: [new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 2592000 })],
@@ -98,17 +43,6 @@ const serwist = new Serwist({
       handler: new CacheFirst({
         cacheName: 'cropify-fonts',
         plugins: [new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 31536000 })],
-      }),
-    },
-
-    // ── Full-page HTML navigation ─────────────────────────────────────────────
-    // Only fires for hard refreshes (when the Next.js router isn't active yet).
-    {
-      matcher: ({ request }) => request.mode === 'navigate',
-      handler: new NetworkFirst({
-        cacheName: 'cropify-pages',
-        networkTimeoutSeconds: 15,
-        plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 86400 })],
       }),
     },
   ],
