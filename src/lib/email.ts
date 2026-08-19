@@ -9,7 +9,7 @@ export interface SendEmailResult {
 
 export function getResendClient(): { client: Resend | null; from: string } {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || 'Cropify <onboarding@resend.dev>';
+  const from = process.env.EMAIL_FROM || 'Cropify <noreply@cropifyapp.com>';
   if (!apiKey || apiKey === 'REDACTED_REMOVED_FROM_REPO') {
     return { client: null, from };
   }
@@ -356,7 +356,7 @@ export function resetPasswordEmail(opts: { resetUrl: string; requestedAt: string
             <div style="background: #F0FAF4; border: 1px solid #D8F0E1; border-radius: 14px; padding: 16px 18px;">
               <p style="margin: 0 0 8px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #2D8A57;">How to know this is genuinely from us</p>
               <p style="margin: 0; font-size: 12.5px; color: #374151; line-height: 1.65;">
-                This email always comes from <strong>${process.env.EMAIL_FROM?.match(/<(.+)>/)?.[1] ?? 'no-reply@cropify.app'}</strong>, and the button above always leads to a page on our own <strong>www.cropifyapp.com</strong> domain — check the address bar after tapping it. Cropify will never ask you for your password, PIN, or OTP by email, call, or SMS. If a message asks for those directly, it isn't us.
+                This email always comes from <strong>${process.env.EMAIL_FROM?.match(/<(.+)>/)?.[1] ?? 'noreply@cropifyapp.com'}</strong>, and the button above always leads to a page on our own <strong>www.cropifyapp.com</strong> domain — check the address bar after tapping it. Cropify will never ask you for your password, PIN, or OTP by email, call, or SMS. If a message asks for those directly, it isn't us.
               </p>
             </div>
           </td>

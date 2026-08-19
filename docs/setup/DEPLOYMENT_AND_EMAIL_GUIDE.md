@@ -15,24 +15,11 @@ Cropify uses [Resend](https://resend.com) for fast, reliable transactional email
 4. Copy the API key (starts with `re_...`).
 
 ### Step 2: Configure Sender Domain
-Resend provides two modes:
-
-#### Option A: Development / Testing Mode (Sandbox)
-* You can test immediately using the default sandbox sender:
-  ```env
-  EMAIL_FROM=Cropify <onboarding@resend.dev>
-  ```
-* **IMPORTANT LIMITATION**: Resend's free sandbox (`onboarding@resend.dev`) strictly allows sending emails **only to the email address registered on your Resend account**. It will reject emails to any other address with a 403 error.
-
-#### Option B: Production Mode (Live Customers & Farmers)
-1. Go to [resend.com/domains](https://resend.com/domains) -> click **Add Domain**.
-2. Enter your domain (e.g., `cropifyapp.com` or `yourdomain.com`).
-3. Add the DNS records (DKIM, SPF, MX) provided by Resend to your domain registrar (Namecheap, Cloudflare, GoDaddy, etc.).
-4. Once verified in Resend, set your sender in your environment variables:
-  ```env
-  EMAIL_FROM=Cropify <noreply@cropifyapp.com>
-  ```
-  *(Or `receipts@cropifyapp.com` / `support@cropifyapp.com`)*
+Set your sender in your environment variables using your verified domain:
+```env
+EMAIL_FROM=Cropify <noreply@cropifyapp.com>
+```
+*(Or `receipts@cropifyapp.com` / `support@cropifyapp.com`)*
 
 ### Step 3: Test Email Delivery
 You can test and verify your email setup at any time by sending a POST request to `/api/email/test`:
@@ -103,7 +90,7 @@ In Vercel -> Project Settings -> **Environment Variables**, add the following re
 | `NEXTAUTH_SECRET` | **Yes** | Random 32+ character string (`openssl rand -base64 32`) |
 | `NEXT_PUBLIC_APP_URL` | **Yes** | `https://www.cropifyapp.com` (or your Vercel deployment URL) |
 | `RESEND_API_KEY` | **Yes** | `re_123456789...` from [resend.com/api-keys](https://resend.com/api-keys) |
-| `EMAIL_FROM` | **Yes** | `Cropify <noreply@cropifyapp.com>` (or `Cropify <onboarding@resend.dev>`) |
+| `EMAIL_FROM` | **Yes** | `Cropify <noreply@cropifyapp.com>` |
 | `NODE_ENV` | **Yes** | `production` |
 | `NYLON_PAY_PUBLIC_KEY` | Optional | Nylon Pay public key for escrow payments |
 | `NYLON_PAY_SECRET_KEY` | Optional | Nylon Pay secret key |
