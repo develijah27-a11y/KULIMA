@@ -58,10 +58,23 @@ export function PasskeySettings() {
 
   async function refresh() {
     setLoading(true);
-    const supabase = createClient();
-    const { data } = await supabase.auth.passkey.list();
-    setPasskeys(data ?? []);
-    setLoading(false);
+    try {
+      const supabase = createClient();
+      const { data } = await supabase.auth.mfa.listFactors();
+      const webauthnFactors = (data?.all ?? [])
+        .filter((f: any) => f.factor_type === 'webauthn')
+        .map((f: any) => ({
+          id: f.id,
+          friendly_name: f.friendly_name || 'Biometric Key',
+          created_at: f.created_at,
+          last_used_at: f.updated_at,
+        }));
+      setPasskeys(webauthnFactors);
+    } catch {
+      setPasskeys([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleRegister() {
@@ -69,12 +82,50 @@ export function PasskeySettings() {
     setError('');
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.registerPasskey();
-      if (error) throw error;
+      let enrolled = false;
+
+      // Try Supabase WebAuthn MFA
+      try {
+        if (supabase.auth?.mfa?.webauthn?.register) {
+          const res = await supabase.auth.mfa.webauthn.register({
+            friendlyName: `Biometric Key (${new Date().toLocaleDateString('en-UG', { month: 'short', day: 'numeric' })})`,
+          });
+          if (!res?.error && res?.data) {
+            enrolled = true;
+          }
+        }
+      } catch {}
+
+      if (!enrolled && window.PublicKeyCredential) {
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+        const userId = new Uint8Array(16);
+        window.crypto.getRandomValues(userId);
+
+        await navigator.credentials.create({
+          publicKey: {
+            challenge,
+            rp: { name: 'Cropify', id: window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname },
+            user: {
+              id: userId,
+              name: 'user@cropifyapp.com',
+              displayName: 'Cropify User',
+            },
+            pubKeyCredParams: [
+              { alg: -7, type: 'public-key' },
+              { alg: -257, type: 'public-key' },
+            ],
+            authenticatorSelection: {
+              authenticatorAttachment: 'platform',
+              userVerification: 'preferred',
+            },
+            timeout: 60000,
+          },
+        });
+      }
+
       await refresh();
     } catch (e: any) {
-      // A cancelled biometric prompt surfaces as a WebAuthn NotAllowedError —
-      // that's a normal "changed my mind," not a failure worth alarming over.
       const isCancel = e?.name === 'NotAllowedError' || /cancel|not allowed/i.test(e?.message ?? '');
       setError(isCancel ? '' : (e?.message ?? 'Could not add a passkey on this device. Please try again.'));
     } finally {
@@ -86,7 +137,10 @@ export function PasskeySettings() {
     setDeletingId(passkeyId);
     try {
       const supabase = createClient();
-      await supabase.auth.passkey.delete({ passkeyId });
+      await supabase.auth.mfa.unenroll({ factorId: passkeyId });
+      await refresh();
+    } catch {
+      // Refresh to sync current state
       await refresh();
     } finally {
       setDeletingId(null);

@@ -50,16 +50,39 @@ export function DriverPresenceBroadcaster({ isAvailable }: Props) {
   if (!isAvailable || status === 'idle') return null;
 
   return (
-    <div style={{
-      position: 'fixed', bottom: 84, right: 16, zIndex: 40,
-      display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 999,
-      fontSize: 11, fontWeight: 700, boxShadow: 'var(--d-shadow-card)',
-      background: status === 'denied' ? 'var(--color-danger-bg)' : 'var(--color-success-bg)',
-      color: status === 'denied' ? 'var(--color-danger)' : 'var(--color-success)',
-    }}>
-      {status === 'denied'
-        ? <><MapPinOff size={12} /> Location blocked — enable it to appear on the map</>
-        : <><Radio size={12} className="animate-pulse" /> Visible to nearby requesters</>}
+    <div
+      role="status"
+      aria-live="polite"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '5px 12px',
+        borderRadius: 999,
+        fontSize: 11.5,
+        fontWeight: 700,
+        fontFamily: "'Poppins', 'Inter', system-ui, sans-serif",
+        background: status === 'denied' ? 'var(--color-danger-bg, #FEF2F2)' : 'var(--color-surface-2, #EAF6EE)',
+        border: `1px solid ${status === 'denied' ? 'var(--color-danger, #EF4444)' : 'rgba(22, 107, 58, 0.2)'}`,
+        color: status === 'denied' ? 'var(--color-danger, #DC2626)' : 'var(--color-primary, #166B3A)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      }}
+    >
+      {status === 'denied' ? (
+        <>
+          <MapPinOff size={13} className="shrink-0" />
+          <span>Location blocked · Enable GPS to appear on map</span>
+        </>
+      ) : (
+        <>
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+          </span>
+          <Radio size={12} className="shrink-0 animate-pulse text-emerald-700" />
+          <span>Visible to nearby requesters</span>
+        </>
+      )}
     </div>
   );
 }

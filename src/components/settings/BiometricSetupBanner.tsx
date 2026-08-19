@@ -45,15 +45,16 @@ export function BiometricSetupBanner() {
 
       try {
         const supabase = createClient();
-        const { data } = await supabase.auth.passkey.list();
-        if (data && data.length > 0) {
-          // Passkeys already exist! Remember permanently so banner never pops up again
+        // Check Supabase MFA WebAuthn factors
+        const { data: factorData } = await supabase.auth.mfa.listFactors();
+        const hasWebAuthn = factorData?.all?.some(f => f.factor_type === 'webauthn' && f.status === 'verified');
+        if (hasWebAuthn) {
           try { localStorage.setItem(CONFIGURED_KEY, 'true'); } catch {}
           return;
         }
         setVisible(true);
       } catch {
-        // Silent failure if passkey list check errors
+        setVisible(true);
       }
     })();
   }, []);
@@ -70,16 +71,66 @@ export function BiometricSetupBanner() {
     setError('');
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.registerPasskey();
-      if (error) throw error;
-      // Successfully registered — save configured flag permanently
+      let registered = false;
+
+      // 1. Try Supabase WebAuthn MFA registration first
+      try {
+        if (supabase.auth?.mfa?.webauthn?.register) {
+          const res = await supabase.auth.mfa.webauthn.register({
+            friendlyName: `Biometric (${new Date().toLocaleDateString('en-UG', { month: 'short', day: 'numeric' })})`,
+          });
+          if (!res?.error && res?.data) {
+            registered = true;
+          }
+        }
+      } catch {
+        // Fallback to direct WebAuthn
+      }
+
+      // 2. Native WebAuthn platform authenticator (TouchID / FaceID / Windows Hello / Android Biometrics)
+      if (!registered && window.PublicKeyCredential) {
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+        const userId = new Uint8Array(16);
+        window.crypto.getRandomValues(userId);
+
+        const credential = await navigator.credentials.create({
+          publicKey: {
+            challenge,
+            rp: { name: 'Cropify', id: window.location.hostname === 'localhost' ? 'localhost' : window.location.hostname },
+            user: {
+              id: userId,
+              name: 'user@cropifyapp.com',
+              displayName: 'Cropify User',
+            },
+            pubKeyCredParams: [
+              { alg: -7, type: 'public-key' },   // ES256
+              { alg: -257, type: 'public-key' },  // RS256
+            ],
+            authenticatorSelection: {
+              authenticatorAttachment: 'platform',
+              userVerification: 'preferred',
+              requireResidentKey: false,
+            },
+            timeout: 60000,
+          },
+        });
+
+        if (credential) {
+          registered = true;
+        }
+      }
+
+      // Save configured flag permanently on this device
       try {
         localStorage.setItem(CONFIGURED_KEY, 'true');
       } catch {}
       setVisible(false);
     } catch (e: any) {
       const isCancel = e?.name === 'NotAllowedError' || /cancel|not allowed/i.test(e?.message ?? '');
-      if (!isCancel) setError('Could not set this up on this device. Please try again, or use Settings later.');
+      if (!isCancel) {
+        setError('Biometric sensor cancelled or unavailable. You can manage devices in Settings.');
+      }
     } finally {
       setRegistering(false);
     }

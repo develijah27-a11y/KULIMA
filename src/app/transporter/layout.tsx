@@ -79,6 +79,11 @@ export default async function TransporterLayout({ children }: { children: React.
       <Sidebar navItems={navWithBadge} profile={profile} roleSwitcher={<RoleSwitcher currentRole="transporter" allRoles={roles} />} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/transporter/notifications" currentRole="transporter" allRoles={roles} />
+        {Boolean((vehicleRes.data as any)?.is_available) && (
+          <div className="px-5 md:px-6 pt-3 pb-0 flex items-center justify-end">
+            <DriverPresenceBroadcaster isAvailable={true} />
+          </div>
+        )}
         <main className="flex-1 overflow-y-auto p-5 md:p-6 pb-24 md:pb-6">
           <PageTransition>{children}</PageTransition>
         </main>
@@ -89,7 +94,6 @@ export default async function TransporterLayout({ children }: { children: React.
         <Truck size={21} strokeWidth={2.5} color="#fff" />
       </DashboardFab>
       <NavCommandPalette items={navWithBadge} />
-      <DriverPresenceBroadcaster isAvailable={(vehicleRes.data as any)?.is_available ?? false} />
     </div>
   );
 }
