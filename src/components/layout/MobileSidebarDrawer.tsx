@@ -41,11 +41,24 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
     }
   }, [open]);
 
+  const [signingOut, setSigningOut] = useState(false);
+
   const handleSignOut = useCallback(async () => {
+    if (signingOut) return;
+    setSigningOut(true);
     setOpen(false);
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.replace('/auth/signin');
-  }, []);
+    // See Sidebar.tsx's handleSignOut for why: no feedback during a slow
+    // logout request read as an unresponsive button, and the timeout
+    // means a hung request on a weak connection still lets the user out.
+    try {
+      await Promise.race([
+        fetch('/api/auth/logout', { method: 'POST' }),
+        new Promise(resolve => setTimeout(resolve, 4000)),
+      ]);
+    } finally {
+      window.location.replace('/auth/signin');
+    }
+  }, [signingOut]);
 
   const activeSet = useMemo(() => {
     const set = new Set<string>();
@@ -149,10 +162,12 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
             </div>
             <button
               onClick={handleSignOut}
+              disabled={signingOut}
               title="Sign out"
               className="cropify-drawer-signout"
+              style={{ opacity: signingOut ? 0.5 : 1 }}
             >
-              <LogOut size={15} />
+              <LogOut size={15} className={signingOut ? 'animate-spin' : ''} />
             </button>
           </div>
         )}

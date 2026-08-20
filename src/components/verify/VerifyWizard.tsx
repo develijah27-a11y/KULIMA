@@ -30,6 +30,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
   const [target, setTarget]       = useState<TargetLevel | null>(null);
   const [files, setFiles]         = useState<Record<string, File | null>>({});
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
   const [error, setError]         = useState('');
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -45,22 +46,33 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
     }
     setUploading(true);
     setError('');
+    setUploadProgress({ done: 0, total: docs.length });
 
     // The kyc-documents bucket is private — we store the storage path here,
     // not a public URL. Admin review generates short-lived signed URLs from
     // this path on demand via the service-role client.
+    //
+    // Uploaded in parallel, not one at a time — a gold-tier submission can
+    // require up to 8 documents, and awaiting each upload sequentially
+    // before starting the next meant total wait time was the *sum* of every
+    // file's transfer time. On the slow/limited connections this was
+    // reported against, that stacked up to several minutes. Running them
+    // concurrently means the wall-clock time is roughly the slowest single
+    // file, not the sum of all of them.
     const urls: Record<string, string> = {};
     try {
-      for (const doc of docs) {
+      const results = await Promise.all(docs.map(async (doc) => {
         const file = files[doc.key]!;
         const ext = file.name.split('.').pop() ?? 'jpg';
         const path = `${userId}/${target}/${doc.key}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from('kyc-documents')
           .upload(path, file, { upsert: true });
+        setUploadProgress(p => ({ ...p, done: p.done + 1 }));
         if (upErr) throw new Error(`Upload failed for ${doc.label}: ${upErr.message}`);
-        urls[doc.key] = path;
-      }
+        return { key: doc.key, path };
+      }));
+      for (const { key, path } of results) urls[key] = path;
 
       const { error: dbErr } = await supabase.from('verifications' as any).insert({
         user_id:            userId,
@@ -92,6 +104,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
       setError(e.message ?? 'Something went wrong. Please try again.');
     } finally {
       setUploading(false);
+      setUploadProgress({ done: 0, total: 0 });
     }
   }
 
@@ -288,7 +301,9 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
           fontWeight: 700, fontSize: 15, cursor: uploading ? 'not-allowed' : 'pointer',
         }}
       >
-        {uploading ? 'Uploading...' : 'Submit for Review'}
+        {uploading
+          ? (uploadProgress.total > 0 ? `Uploading… ${uploadProgress.done}/${uploadProgress.total}` : 'Uploading…')
+          : 'Submit for Review'}
       </button>
     </div>
   );

@@ -140,10 +140,28 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
     });
   }, []);
 
+  const [signingOut, setSigningOut] = React.useState(false);
+
   const handleSignOut = React.useCallback(async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.replace('/auth/signin');
-  }, []);
+    // Previously gave zero feedback while the logout POST was in flight —
+    // on a slow connection a click just sat there with nothing visibly
+    // happening, reading as a frozen/unresponsive button. Now shows a
+    // pending state immediately and guards against duplicate clicks
+    // firing multiple concurrent sign-out requests. The 4s timeout means
+    // a hung request (weak signal) still lets the user out locally rather
+    // than trapping them on a "broken" button indefinitely — the session
+    // cookies get a best-effort server-side clear either way.
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await Promise.race([
+        fetch('/api/auth/logout', { method: 'POST' }),
+        new Promise(resolve => setTimeout(resolve, 4000)),
+      ]);
+    } finally {
+      window.location.replace('/auth/signin');
+    }
+  }, [signingOut]);
 
   const activeSet = React.useMemo(() => {
     const set = new Set<string>();
@@ -307,11 +325,12 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
             </div>
             <button
               onClick={handleSignOut}
+              disabled={signingOut}
               title="Sign out"
               className="shrink-0 flex items-center justify-center rounded-lg transition-colors active:scale-95"
-              style={{ width: 28, height: 28, color: 'var(--color-sidebar-muted)', minHeight: 'unset', minWidth: 'unset' }}
+              style={{ width: 28, height: 28, color: 'var(--color-sidebar-muted)', minHeight: 'unset', minWidth: 'unset', opacity: signingOut ? 0.5 : 1, cursor: signingOut ? 'default' : 'pointer' }}
             >
-              <LogOut size={13} />
+              <LogOut size={13} className={signingOut ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>
@@ -336,11 +355,12 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
           </div>
           <button
             onClick={handleSignOut}
+            disabled={signingOut}
             title="Sign out"
             className="flex items-center justify-center rounded-lg active:scale-95"
-            style={{ width: 28, height: 28, color: 'var(--color-sidebar-muted)', minHeight: 'unset', minWidth: 'unset' }}
+            style={{ width: 28, height: 28, color: 'var(--color-sidebar-muted)', minHeight: 'unset', minWidth: 'unset', opacity: signingOut ? 0.5 : 1, cursor: signingOut ? 'default' : 'pointer' }}
           >
-            <LogOut size={13} />
+            <LogOut size={13} className={signingOut ? 'animate-spin' : ''} />
           </button>
         </div>
       )}
