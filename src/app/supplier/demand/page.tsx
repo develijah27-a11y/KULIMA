@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { DISTRICT_NAMES } from '@/lib/districts';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -42,7 +43,12 @@ export default async function SupplierDemandPage() {
   });
 
   const topCrops = Object.entries(cropCount).sort((a, b) => b[1].count - a[1].count);
-  const topDistricts = Object.entries(districtCount).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  // Every Uganda district, not just the ones with current listings — a
+  // dealer scouting where to open a branch or pre-stock needs to see the
+  // zero-demand districts too, not just wherever already has activity.
+  const allDistricts = DISTRICT_NAMES
+    .map(d => [d, districtCount[d] ?? 0] as [string, number])
+    .sort((a, b) => b[1] - a[1]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
@@ -55,12 +61,18 @@ export default async function SupplierDemandPage() {
         </p>
       </div>
 
-      {/* Active districts */}
+      {/* All districts, ranked by demand — including zero-demand ones so a
+          dealer can spot untapped territory, not just where's already hot */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px' }}>
-        <p className="text-sm font-bold mb-3" style={{ color: C.text }}>Hottest Districts</p>
+        <p className="text-sm font-bold mb-1" style={{ color: C.text }}>Demand by District</p>
+        <p className="text-xs mb-3" style={{ color: C.muted }}>All {allDistricts.length} districts — the quiet ones are where you'd have the least competition</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {topDistricts.map(([d, count]) => (
-            <div key={d} style={{ padding: '6px 14px', background: 'var(--color-primary-bg)', borderRadius: 999, fontSize: 12, fontWeight: 600, color: C.greenMed }}>
+          {allDistricts.map(([d, count]) => (
+            <div key={d} style={{
+              padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+              background: count > 0 ? 'var(--color-primary-bg)' : 'var(--color-surface-2)',
+              color: count > 0 ? C.greenMed : C.muted,
+            }}>
               {d} <span style={{ opacity: 0.6 }}>({count})</span>
             </div>
           ))}

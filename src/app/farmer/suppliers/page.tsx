@@ -6,6 +6,7 @@ import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { type VerificationLevel } from '@/lib/trust';
 import { FavouriteButton } from '@/components/ui/FavouriteButton';
 import { BuyProductButton } from './BuyProductButton';
+import { DISTRICT_NAMES } from '@/lib/districts';
 import type { JSX } from 'react';
 
 const C = {
@@ -36,7 +37,12 @@ export default async function FarmerSuppliersPage({
   const sp       = await searchParams;
   const q        = sp.q ?? '';
   const category = sp.category ?? '';
-  const district = sp.district ?? '';
+  // Validated against the canonical list before it ever reaches a raw
+  // PostgREST .or() filter string below — that string is built by
+  // interpolation, so an unvalidated value here would be a filter-
+  // injection surface (a crafted ?district= could splice in extra
+  // conditions via its comma/parenthesis syntax).
+  const district = DISTRICT_NAMES.includes(sp.district ?? '') ? (sp.district as string) : '';
   const supplier = sp.supplier ?? '';
 
   let query = (supabase.from as any)('supplier_products')
@@ -57,11 +63,17 @@ export default async function FarmerSuppliersPage({
     // Every registered agro-dealer business, not just ones with current
     // stock — a farmer choosing who to buy from wants the full roster,
     // not a list that's silently missing anyone temporarily sold out.
-    (supabase.from as any)('profiles')
-      .select('id, business_name, full_name, location, verification_level, role_verification_levels')
-      .or('role.eq.supplier,roles.cs.{supplier}')
-      .order('business_name', { ascending: true, nullsFirst: false })
-      .limit(40),
+    // When filtering by district, also match dealers who've listed it as
+    // an additional coverage area (not just whoever's home district it
+    // is) — that's the whole point of a dealer expanding their service
+    // area from /supplier/coverage.
+    (() => {
+      let q = (supabase.from as any)('profiles')
+        .select('id, business_name, full_name, location, coverage_districts, verification_level, role_verification_levels')
+        .or('role.eq.supplier,roles.cs.{supplier}');
+      if (district) q = q.or(`location.eq.${district},coverage_districts.cs.{${district}}`);
+      return q.order('business_name', { ascending: true, nullsFirst: false }).limit(40);
+    })(),
   ]);
 
   const favouritedIds = new Set((favRows ?? []).map((f: any) => f.supplier_id));

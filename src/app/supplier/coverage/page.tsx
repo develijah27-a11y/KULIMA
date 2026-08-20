@@ -1,25 +1,23 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
+import { DISTRICT_NAMES } from '@/lib/districts';
+import { CoverageDistrictsEditor } from './CoverageDistrictsEditor';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
   cardShadow: 'var(--d-shadow-card)', green: 'var(--color-primary)', greenMed: 'var(--color-primary-hover)',
 };
 
-const DISTRICTS = [
-  'Kampala','Wakiso','Mukono','Jinja','Mbale','Gulu','Lira','Masaka','Mbarara','Kabale',
-  'Fort Portal','Arua','Soroti','Tororo','Iganga','Hoima','Masindi','Mityana','Nakaseke',
-  'Rakai','Lyantonde','Ntungamo','Isingiro','Kiruhura','Bushenyi',
-];
+const DISTRICTS = DISTRICT_NAMES;
 
 export default async function SupplierCoveragePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: profile } = await supabase.from('profiles').select('location').eq('user_id', user.id).single();
+  const { data: profile } = await supabase.from('profiles').select('location, coverage_districts').eq('user_id', user.id).single();
   const homeDistrict = (profile as any)?.location ?? '';
+  const coverageDistricts: string[] = (profile as any)?.coverage_districts ?? [];
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -40,13 +38,7 @@ export default async function SupplierCoveragePage() {
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px' }}>
         <p className="text-sm font-bold mb-1" style={{ color: C.text }}>Additional Coverage Districts</p>
         <p className="text-xs mb-4" style={{ color: C.muted }}>Farmers in these districts can see your products and place orders</p>
-        <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 12, padding: '20px', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8, color: 'rgba(255,255,255,0.5)' }}><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg></div>
-          <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 6 }}>District Selection Coming Soon</p>
-          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, maxWidth: 280, margin: '0 auto' }}>
-            Select specific districts to expand your reach. Farmers in those areas will discover your catalogue.
-          </p>
-        </div>
+        <CoverageDistrictsEditor districts={DISTRICTS} homeDistrict={homeDistrict} initialSelected={coverageDistricts} />
       </div>
 
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>

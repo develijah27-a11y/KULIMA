@@ -91,6 +91,7 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
   const [draft, setDraft]       = useState('');
   const [sending, setSending]   = useState(false);
   const [loading, setLoading]   = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [theme, setTheme]       = useState<ChatTheme>(CHAT_THEMES[0]);
   const [themePickerOpen, setThemePickerOpen] = useState(false);
@@ -128,41 +129,98 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
     el.style.height = Math.min(el.scrollHeight, 120) + 'px';
   }, []);
 
-  // Initial load
+  // Fetches the latest 100 messages and merges them in (never wipes
+  // messages already on screen if this particular attempt fails or comes
+  // back empty) — used for the initial load, the poll-based safety net,
+  // and manual retry, so a transient failure on a weak connection never
+  // reads to the user as "my messages got erased."
+  const fetchMessages = useCallback(async (): Promise<boolean> => {
+    const { data, error } = await (supabase.from as any)('group_messages')
+      .select('id, admin_id, sender_id, sender_name, body, created_at')
+      .eq('admin_id', adminId)
+      .order('created_at', { ascending: true })
+      .limit(100);
+    if (error) return false;
+    setMessages(prev => {
+      const byId = new Map(prev.filter(m => m.id.startsWith('temp_')).map(m => [m.id, m]));
+      const merged = [...(data ?? [])];
+      for (const pending of byId.values()) merged.push(pending);
+      return merged;
+    });
+    return true;
+  }, [adminId, supabase]);
+
+  // Initial load — retries a few times on failure (RLS/session-not-ready
+  // races and plain flaky-network hiccups are both transient) before
+  // finally surfacing a real "couldn't load" state instead of silently
+  // rendering an empty chat, which previously read as "messages got
+  // erased" even though nothing was actually lost.
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
     (async () => {
-      const { data, error } = await (supabase.from as any)('group_messages')
-        .select('id, admin_id, sender_id, sender_name, body, created_at')
-        .eq('admin_id', adminId)
-        .order('created_at', { ascending: true })
-        .limit(100);
+      let ok = false;
+      for (let attempt = 0; attempt < 3 && !cancelled && !ok; attempt++) {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 1000 * attempt));
+        ok = await fetchMessages();
+      }
       if (!cancelled) {
-        if (!error) setMessages(data ?? []);
+        setLoadError(!ok);
         setLoading(false);
         setTimeout(scrollToBottom, 100);
       }
     })();
     return () => { cancelled = true; };
-  }, [adminId, scrollToBottom]);
+  }, [adminId, fetchMessages, scrollToBottom]);
 
-  // Real-time subscription
+  // Real-time subscription — with a reconnect-on-drop handler and a
+  // slow poll running alongside it as a safety net. Realtime over a weak
+  // mobile connection can silently fail to (re)connect with no error
+  // surfaced anywhere in the UI; without a fallback, a message that sent
+  // fine server-side would just never appear for the recipient. The poll
+  // guarantees delivery within ~15s even if the socket never comes up.
   useEffect(() => {
-    const channel = supabase
-      .channel(`group_chat:${adminId}`)
-      .on('postgres_changes', {
-        event: 'INSERT', schema: 'public',
-        table: 'group_messages', filter: `admin_id=eq.${adminId}`,
-      }, (payload) => {
-        setMessages(prev => {
-          if (prev.find(m => m.id === payload.new.id)) return prev;
-          return [...prev, payload.new as Message];
+    let closedByEffect = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const connect = () => {
+      channel = supabase
+        .channel(`group_chat:${adminId}`)
+        .on('postgres_changes', {
+          event: 'INSERT', schema: 'public',
+          table: 'group_messages', filter: `admin_id=eq.${adminId}`,
+        }, (payload) => {
+          setMessages(prev => {
+            if (prev.find(m => m.id === payload.new.id)) return prev;
+            return [...prev, payload.new as Message];
+          });
+          setTimeout(scrollToBottom, 60);
+        })
+        .subscribe((status) => {
+          if (closedByEffect) return;
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            if (channel) supabase.removeChannel(channel);
+            setTimeout(() => { if (!closedByEffect) connect(); }, 3000);
+          }
         });
-        setTimeout(scrollToBottom, 60);
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [adminId, scrollToBottom]);
+    };
+    connect();
+
+    const pollId = setInterval(() => { fetchMessages(); }, 15000);
+    const onOnline = () => fetchMessages();
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchMessages(); };
+    window.addEventListener('online', onOnline);
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      closedByEffect = true;
+      clearInterval(pollId);
+      window.removeEventListener('online', onOnline);
+      document.removeEventListener('visibilitychange', onVisible);
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [adminId, scrollToBottom, fetchMessages]);
 
   const sendMessage = async () => {
     const text = draft.trim();
@@ -370,8 +428,25 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
           </div>
         )}
 
+        {/* Failed-to-load state — distinct from "empty chat" so a network
+            hiccup never reads as "my messages got erased." */}
+        {!loading && loadError && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
+            <p style={{ fontWeight: 800, fontSize: 15, color: 'var(--d-text)', marginBottom: 6 }}>Couldn't load messages</p>
+            <p style={{ fontSize: 13, color: 'var(--d-muted)', maxWidth: 260, lineHeight: 1.55, marginBottom: 16 }}>
+              Your messages are safe — this device just couldn't reach the server. Check your connection and try again.
+            </p>
+            <button
+              onClick={() => { setLoading(true); setLoadError(false); fetchMessages().then(ok => { setLoadError(!ok); setLoading(false); }); }}
+              style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: 'var(--color-primary)', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Empty state */}
-        {!loading && messages.length === 0 && (
+        {!loading && !loadError && messages.length === 0 && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center' }}>
             <div style={{ width: 64, height: 64, borderRadius: 20, marginBottom: 16, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

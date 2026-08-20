@@ -40,7 +40,6 @@ const C = {
 const PAYMENT_METHODS: { id: string; label: string }[] = [
   { id: 'cash', label: 'Cash' },
   { id: 'wallet', label: 'Wallet' },
-  { id: 'mobile_money', label: 'Mobile Money' },
 ];
 
 export function TillClient() {
