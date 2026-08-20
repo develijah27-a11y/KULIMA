@@ -108,11 +108,23 @@
   --color-synced:        #22C55E;
   --color-synced-bg:     #DCFCE7;
 
-  /* ── Shadows ── */
-  --shadow-xs:    0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-card:  0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.07);
-  --shadow-modal: 0 8px 40px rgba(0, 0, 0, 0.16);
-  --shadow-green: 0 4px 16px rgba(22, 107, 58, 0.24);
+  /* ── Shadows — softer, more diffused, slate-tinted instead of flat black
+     (the "premium SaaS" look — Linear/Stripe/Notion all shadow this way):
+     a tight near-black hairline for edge definition, plus a wide, low-
+     opacity ambient shadow for depth, rather than one harsh mid-distance
+     blur. --shadow-card-hover is new — the elevated state for interactive
+     cards (see .dash-card-modern below), not a replacement for
+     --shadow-card at rest. ── */
+  --shadow-xs:         0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-card:       0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -4px rgba(15, 23, 42, 0.08);
+  --shadow-card-hover: 0 2px 4px rgba(15, 23, 42, 0.06), 0 16px 32px -8px rgba(15, 23, 42, 0.14);
+  --shadow-modal:      0 20px 60px -12px rgba(15, 23, 42, 0.28);
+  --shadow-green:      0 4px 16px rgba(22, 107, 58, 0.24);
+
+  /* ── Motion — one shared easing curve so hover/press/enter transitions
+     feel like the same system instead of every component inventing its
+     own timing ── */
+  --transition-base: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
 
   /* ── Radius ── */
   --radius-sm:   8px;
@@ -140,6 +152,7 @@
   --d-muted:       var(--color-text-muted);
   --d-border:      var(--color-border);
   --d-shadow-card: var(--shadow-card);
+  --d-shadow-card-hover: var(--shadow-card-hover);
   --d-input-bg:    var(--color-surface);
   --d-input-text:  var(--color-text);
   --d-placeholder: var(--color-text-hint);
@@ -235,8 +248,9 @@
   --color-synced:        #4ADE80;
   --color-synced-bg:     #0F2418;
 
-  --shadow-card:  0 1px 3px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
-  --shadow-modal: 0 8px 40px rgba(0, 0, 0, 0.70);
+  --shadow-card:       0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -4px rgba(0, 0, 0, 0.35);
+  --shadow-card-hover: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 32px -8px rgba(0, 0, 0, 0.45);
+  --shadow-modal:      0 20px 60px -12px rgba(0, 0, 0, 0.6);
 
   --color-accent:     var(--color-primary-hover);
   --color-accent-bg:  var(--color-primary-bg);
@@ -249,6 +263,7 @@
   --d-muted:       var(--color-text-muted);
   --d-border:      var(--color-border);
   --d-shadow-card: var(--shadow-card);
+  --d-shadow-card-hover: var(--shadow-card-hover);
   --d-input-bg:    var(--color-surface);
   --d-input-text:  var(--color-text);
   --d-placeholder: var(--color-text-hint);
@@ -430,6 +445,24 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97) translateZ(0); }
 
 .dark .skeleton::after {
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+/* Modern card lift — additive, not a replacement for the boxShadow most
+   dashboard cards already set inline via var(--d-shadow-card). Inline
+   styles always beat a class for the same property, so on those cards
+   only the hover transform actually applies (still a real, visible
+   "lifts off the page" micro-interaction) — the box-shadow rule below
+   deepens further on hover for anything styled purely via className
+   instead of inline style (e.g. src/components/ui/Card.tsx). Drop this
+   className on any existing card div — including the 13 near-duplicate
+   local `Card` components across the admin/farmer/buyer/etc. dashboards —
+   with no risk of fighting or breaking their own inline styling. */
+.dash-card-modern {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+.dash-card-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--d-shadow-card-hover, var(--shadow-card-hover));
 }
 
 .dash-skeleton {

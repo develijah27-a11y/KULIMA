@@ -14,7 +14,7 @@ const C = {
 };
 
 const Card = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, ...style }}>{children}</div>
+  <div className="dash-card-modern" style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, ...style }}>{children}</div>
 );
 
 async function getFarms(userId: string) {

@@ -100,7 +100,7 @@ const CROP_COLORS: Record<string, string> = {
 };
 
 const Card = ({ children, className = '', style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) => (
-  <div style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, ...style }} className={className}>
+  <div style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, ...style }} className={`dash-card-modern ${className}`.trim()}>
     {children}
   </div>
 );

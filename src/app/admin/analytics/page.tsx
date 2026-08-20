@@ -13,7 +13,7 @@ const C = {
 } as const;
 
 const Card = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{ background: C.cardBg, borderRadius: '14px', boxShadow: C.cardShadow, ...style }}>
+  <div className="dash-card-modern" style={{ background: C.cardBg, borderRadius: '14px', boxShadow: C.cardShadow, ...style }}>
     {children}
   </div>
 );
