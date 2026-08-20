@@ -10,6 +10,7 @@ import {
 import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
+import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -315,6 +316,54 @@ async function OpenJobs({ userId }: { userId: string }) {
 
 // ── Active deliveries ─────────────────────────────────────────────────────────
 
+// ── Live tracking map ─────────────────────────────────────────────────────────
+// Shows the requester's live position for the driver's single most-urgent
+// active job right on the dashboard — a driver shouldn't have to dig into
+// /transporter/active just to see where they're headed. Other dashboards
+// get a "drivers near you" map (browsing before booking); this one is the
+// opposite direction — one driver, tracking the one person waiting on them.
+
+async function LiveJobMap({ userId }: { userId: string }) {
+  const supabase = await createClient();
+  const { data: jobs } = await (supabase.from as any)('delivery_requests')
+    .select(`
+      id, status, pickup_district, dropoff_district,
+      pickup_lat, pickup_lng, dropoff_lat, dropoff_lng,
+      requester:profiles!delivery_requests_requester_profile_fkey(full_name)
+    `)
+    .eq('transporter_id', userId)
+    .in('status', ['assigned', 'in_transit'])
+    .order('accepted_at', { ascending: false })
+    .limit(1);
+
+  const job = (jobs ?? [])[0] as any;
+  if (!job) return null;
+
+  return (
+    <Card>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <div>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+            {job.status === 'in_transit' ? 'Heading to Drop-off' : 'Heading to Pickup'}
+          </p>
+          <p className="text-xs mt-0.5" style={{ color: C.muted }}>{job.pickup_district} → {job.dropoff_district}</p>
+        </div>
+        <Link href="/transporter/active" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Manage →</Link>
+      </div>
+      <div style={{ height: 280, padding: 12 }}>
+        <DeliveryTrackingMap
+          deliveryId={job.id}
+          pickupDistrict={job.pickup_district}
+          dropoffDistrict={job.dropoff_district}
+          pickupCoords={job.pickup_lat != null && job.pickup_lng != null ? { lat: job.pickup_lat, lng: job.pickup_lng } : null}
+          dropoffCoords={job.dropoff_lat != null && job.dropoff_lng != null ? { lat: job.dropoff_lat, lng: job.dropoff_lng } : null}
+          otherPartyLabel={job.requester?.full_name ?? 'Requester'}
+        />
+      </div>
+    </Card>
+  );
+}
+
 async function MyActiveJobs({ userId }: { userId: string }) {
   const supabase = await createClient();
   const { data: deliveries } = await (supabase.from as any)('delivery_requests')
@@ -502,6 +551,11 @@ export default async function TransporterDashboard() {
       {/* Vehicle */}
       <Suspense fallback={<div className="dash-skeleton h-24 rounded-xl" />}>
         <VehicleCard userId={userId} />
+      </Suspense>
+
+      {/* Live tracking map — only renders when there's an active job to show */}
+      <Suspense fallback={null}>
+        <LiveJobMap userId={userId} />
       </Suspense>
 
       {/* Open Jobs + Active Jobs (2-col) */}

@@ -62,11 +62,24 @@ const nextConfig = {
     // mode, blank map tiles in production, caught in a later QA pass.
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      // static.cloudflareinsights.com/beacon.min.js is auto-injected by
+      // Cloudflare itself on any domain proxied through it (orange-cloud
+      // DNS) — not something this app added — so it needs allow-listing
+      // here regardless of whether the app's own code ever references it,
+      // or it just spams the console with CSP violation errors forever.
+      "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
       "font-src 'self' https://fonts.gstatic.com",
-      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org https://tiles.stadiamaps.com https://api.mapbox.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openweathermap.org",
+      // basemaps.cartocdn.com (a/b/c/d subdomains — src/lib/map-tiles.ts's
+      // MAP_TILE_OPTIONS.subdomains) is the current default map tile
+      // source and was missing here — same recurring failure mode as
+      // Stadia and Mapbox before it: a new tile provider gets wired into
+      // map-tiles.ts but the CSP allowlist is a separate file nobody
+      // remembers to touch in the same change, so the map silently renders
+      // blank in production with no error the tile-source code itself
+      // would ever surface.
+      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.basemaps.cartocdn.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openweathermap.org https://cloudflareinsights.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

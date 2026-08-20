@@ -35,7 +35,7 @@ export function OutbreakMap({ hotspots }: Props) {
     import('leaflet').then(L => {
       if (!mounted || !containerRef.current || mapRef.current) return;
 
-      const map = L.map(containerRef.current!, { zoomControl: true, attributionControl: false }).setView([1.3733, 32.2903], 6.4);
+      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false }).setView([1.3733, 32.2903], 6.4);
       mapRef.current = map;
 
       L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);

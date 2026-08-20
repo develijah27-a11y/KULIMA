@@ -70,6 +70,19 @@ const themeScript = `
 
 // Instant splash dismissal — transitions out immediately on DOMContentLoaded/interactive
 // so the UI is immediately responsive without waiting for slow background network assets.
+//
+// This used to call el.parentNode.removeChild(el) 350ms after adding
+// is-leaving — a raw DOM mutation on a node that's also part of React's own
+// JSX tree (#app-splash is rendered directly in this file's markup below,
+// not via a portal). On any page load slow enough that hydration hadn't
+// finished by the time that removeChild fired (exactly the "slow rural
+// connection" case this splash exists for), React would go to reconcile a
+// node that vanilla JS had already ripped out from under it — a textbook
+// cause of React error #418 (hydration mismatch), which was firing on
+// every page load in production. is-leaving's CSS (globals.css) already
+// animates to opacity:0 + visibility:hidden + pointer-events:none and
+// stays there — the node never needs to be removed from the DOM at all,
+// only hidden, so it's left in place for React to keep owning.
 const splashScript = `
 (function(){
   var done = false;
@@ -77,10 +90,7 @@ const splashScript = `
     if (done) return;
     done = true;
     var el = document.getElementById('app-splash');
-    if (el) {
-      el.classList.add('is-leaving');
-      setTimeout(function(){ if (el && el.parentNode) el.parentNode.removeChild(el); }, 350);
-    }
+    if (el) el.classList.add('is-leaving');
   }
   if (document.readyState === 'interactive' || document.readyState === 'complete') {
     setTimeout(hide, 30);

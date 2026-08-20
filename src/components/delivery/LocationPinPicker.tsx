@@ -42,7 +42,7 @@ export function LocationPinPicker({ open, onClose, onConfirm, title, district, o
 
     import('leaflet').then(L => {
       if (!mounted || !containerRef.current || mapRef.current) return;
-      const map = L.map(containerRef.current!, { zoomControl: true, attributionControl: false }).setView([start.lat, start.lng], 14);
+      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false }).setView([start.lat, start.lng], 14);
       mapRef.current = map;
 
       L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);

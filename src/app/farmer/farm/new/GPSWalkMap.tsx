@@ -59,7 +59,7 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
         shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       });
 
-      const map = L.map(containerRef.current!).setView([1.3733, 32.2903], 13);
+      const map = L.map(containerRef.current!, { zoomControl: false }).setView([1.3733, 32.2903], 13);
       mapRef.current = map;
 
       L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
