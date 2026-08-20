@@ -2,6 +2,7 @@
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { FarmMapLoader } from './FarmMapLoader';
+import { OfflineFarmBanner } from './OfflineFarmBanner';
 import { Leaf, HardHat } from 'lucide-react';
 import { getCropColor } from '@/lib/crop-photos';
 
@@ -29,6 +30,7 @@ export default async function FarmerFarmPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">
+      <OfflineFarmBanner />
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>

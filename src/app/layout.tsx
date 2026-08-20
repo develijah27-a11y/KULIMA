@@ -7,6 +7,7 @@ import { ToastContainer } from "@/components/ui/Toast";
 import { PagePrefetcher } from "@/components/ui/PagePrefetcher";
 import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { ServiceWorkerRegistrar } from "@/components/shared/ServiceWorkerRegistrar";
+import { OfflineSyncManager } from "@/components/shared/OfflineSyncManager";
 import { InstallPrompt } from "@/components/shared/InstallPrompt";
 import { Wordmark } from "@/components/ui/Wordmark";
 
@@ -179,6 +180,7 @@ export default function RootLayout({
         <NavigationProgress />
         <PagePrefetcher />
         <ServiceWorkerRegistrar />
+        <OfflineSyncManager />
         <InstallPrompt />
       </body>
     </html>

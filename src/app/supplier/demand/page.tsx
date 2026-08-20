@@ -25,11 +25,20 @@ export default async function SupplierDemandPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const { data: listings } = await (supabase.from as any)('listings')
-    .select('crop_type, district, quantity_kg')
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(200);
+  const [{ data: listings }, { data: purchaseInsights }] = await Promise.all([
+    (supabase.from as any)('listings')
+      .select('crop_type, district, quantity_kg')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(200),
+    // Refreshed daily by the /api/cron/demand-insights job from real
+    // supplier_orders across every dealer's customers, not just this
+    // dealer's own — what farmers are actually buying, not just selling.
+    (supabase.from as any)('supplier_demand_insights')
+      .select('product_name, order_count, total_qty, buyer_count, computed_at')
+      .order('order_count', { ascending: false })
+      .limit(12),
+  ]);
 
   const rows = listings ?? [];
   const cropCount: Record<string, { count: number; qty: number }> = {};
@@ -59,6 +68,37 @@ export default async function SupplierDemandPage() {
         <p className="text-sm mt-1" style={{ color: C.muted }}>
           {rows.length} farmers are selling right now — stock these items to match demand
         </p>
+      </div>
+
+      {/* Trending purchases — real orders across every dealer's customers,
+          refreshed daily, distinct from the crop cards below which are
+          based on what farmers are selling rather than buying */}
+      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '20px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
+          <p className="text-sm font-bold" style={{ color: C.text }}>Trending Purchases (system-wide)</p>
+          {purchaseInsights?.[0]?.computed_at && (
+            <span style={{ fontSize: 10, color: C.muted }}>
+              Updated {new Date(purchaseInsights[0].computed_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}
+            </span>
+          )}
+        </div>
+        <p className="text-xs mb-3" style={{ color: C.muted }}>What farmers have actually been ordering from agro-dealers, updated daily</p>
+        {!purchaseInsights || purchaseInsights.length === 0 ? (
+          <p style={{ fontSize: 13, color: C.muted, padding: '12px 0' }}>No purchase data yet — this fills in once farmers start ordering inputs.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {purchaseInsights.map((p: any, i: number) => (
+              <div key={p.product_name} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ width: 20, fontSize: 11, fontWeight: 800, color: C.muted }}>{i + 1}</span>
+                <p style={{ flex: 1, fontSize: 13, fontWeight: 600, color: C.text, margin: 0 }}>{p.product_name}</p>
+                <span style={{ fontSize: 11, color: C.muted }}>{p.buyer_count} buyer{p.buyer_count === 1 ? '' : 's'}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: 'var(--color-primary-bg)', color: C.greenMed }}>
+                  {p.order_count} order{p.order_count === 1 ? '' : 's'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* All districts, ranked by demand — including zero-demand ones so a

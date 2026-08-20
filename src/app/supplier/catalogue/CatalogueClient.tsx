@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Leaf, FlaskConical, Wrench, Settings, Package, Store, Camera } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/CameraCapture';
 import { BarcodeScanner } from '@/components/ui/BarcodeScanner';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 function getCatIcon(category: string, size = 22) {
   const cat = category?.toLowerCase();
@@ -197,7 +198,7 @@ export function CatalogueClient({ products: initial }: { products: Product[] }) 
                 {/* Photo header */}
                 <div style={{ height: 130, position: 'relative', overflow: 'hidden', background: 'var(--color-primary-bg)' }}>
                   {p.image_url ? (
-                    <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <OptimizedImage src={p.image_url} alt={p.name} fill sizes="(max-width: 640px) 100vw, 33vw" className="w-full h-full" />
                   ) : (
                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.green }}>
                       {getCatIcon(p.category, 40)}

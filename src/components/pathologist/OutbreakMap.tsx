@@ -85,7 +85,7 @@ export function OutbreakMap({ hotspots }: Props) {
 
   return (
     <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', height: 340 }}>
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <link rel="stylesheet" href="/leaflet/leaflet.css" />
       <div ref={containerRef} style={{ width: '100%', height: '100%', background: '#e5e7eb' }} />
       {!ready && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f3f4f6' }}>

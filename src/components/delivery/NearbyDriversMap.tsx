@@ -33,6 +33,14 @@ interface Props {
 // recently-active vehicle. Distinct from DeliveryTrackingMap, which only
 // tracks one already-matched driver on an already-created delivery.
 export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }: Props) {
+  // Collapsed by default — this card sits on 5 different dashboards, so
+  // mounting it used to mean every single dashboard visit silently started
+  // continuous GPS tracking (watchPosition), a full Leaflet map, and an
+  // 8s-interval network poll running indefinitely in the background,
+  // whether or not the user actually cared about nearby drivers right
+  // then. All of that now only starts once the user explicitly asks for
+  // it by expanding the card.
+  const [expanded, setExpanded] = useState(false);
   const mapRef        = useRef<LMap | null>(null);
   const containerRef   = useRef<HTMLDivElement>(null);
   const selfMarkerRef  = useRef<LMarker | null>(null);
@@ -53,6 +61,7 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
 
   // Get + follow the requester's own live position.
   useEffect(() => {
+    if (!expanded) return;
     if (!('geolocation' in navigator)) { setLocationDenied(true); return; }
     const watchId = navigator.geolocation.watchPosition(
       (pos) => setSelfPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -60,10 +69,11 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
       { enableHighAccuracy: true, maximumAge: 15_000 },
     );
     return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
+  }, [expanded]);
 
   // Init map once we know where to center it (own GPS, or district fallback).
   useEffect(() => {
+    if (!expanded) return;
     const center = selfPos ?? (fallbackCenter ? { lat: fallbackCenter.lat, lng: fallbackCenter.lng } : null);
     if (!containerRef.current || mapRef.current || !center) return;
     let mounted = true;
@@ -73,9 +83,9 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
 
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconRetinaUrl: '/leaflet/images/marker-icon-2x.png',
+        iconUrl: '/leaflet/images/marker-icon.png',
+        shadowUrl: '/leaflet/images/marker-shadow.png',
       });
 
       const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false }).setView([center.lat, center.lng], 13);
@@ -99,7 +109,7 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
       mapRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [!!selfPos || !!fallbackCenter]);
+  }, [expanded, !!selfPos || !!fallbackCenter]);
 
   // Move/create the self marker whenever live GPS updates.
   useEffect(() => {
@@ -163,9 +173,27 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
     return () => { cancelled = true; clearInterval(interval); };
   }, [ready, selfPos, fallbackCenter, pollMs]);
 
+  if (!expanded) {
+    return (
+      <button
+        onClick={() => setExpanded(true)}
+        style={{
+          height, width: '100%', borderRadius: 14, cursor: 'pointer',
+          border: '1.5px dashed var(--d-border)', background: 'var(--color-surface-2)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+          color: 'var(--d-muted)',
+        }}
+      >
+        <Users size={22} style={{ color: 'var(--color-primary)' }} />
+        <span style={{ fontSize: 12, fontWeight: 700 }}>Show drivers near you</span>
+        <span style={{ fontSize: 10.5 }}>Uses your location — tap to load the live map</span>
+      </button>
+    );
+  }
+
   return (
     <div style={{ position: 'relative', height, borderRadius: 14, overflow: 'hidden' }}>
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <link rel="stylesheet" href="/leaflet/leaflet.css" />
       <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
 
       <div style={{

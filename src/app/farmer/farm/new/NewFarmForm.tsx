@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Check, AlertTriangle } from 'lucide-react';
+import { Check, AlertTriangle, CloudOff } from 'lucide-react';
+import { queueFarm, isNetworkFailure } from '@/lib/offline-farm-queue';
 
 const GPSWalkMap = dynamic(() => import('./GPSWalkMap').then(m => m.GPSWalkMap), {
   ssr: false,
@@ -30,6 +31,7 @@ export function NewFarmForm() {
   const [areaHa, setAreaHa]     = useState(0);
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState('');
+  const [savedOffline, setSavedOffline] = useState(false);
 
   const onBoundaryChange = useCallback((coords: [number, number][], ha: number) => {
     setBoundary(coords);
@@ -46,24 +48,36 @@ export function NewFarmForm() {
     if (!name.trim()) { setError('Farm name is required'); return; }
     if (!district) { setError('Please select a district'); return; }
 
+    const payload = {
+      name: name.trim(),
+      district,
+      location: district,
+      size_hectares: sizeHa ? parseFloat(sizeHa) : null,
+      farm_type: farmType || null,
+      crop_types: selectedCrops.length > 0 ? selectedCrops : null,
+      description: description || null,
+      boundary: boundary.length >= 3 ? {
+        type: 'Polygon',
+        coordinates: [[...boundary.map(([lat, lng]) => [lng, lat]), [boundary[0][1], boundary[0][0]]]],
+      } : null,
+    };
+
+    // Offline (or the device just thinks it is, e.g. airplane mode) —
+    // don't even attempt the request, straight to the local queue. A
+    // remote farmer walking their field boundary with no signal shouldn't
+    // lose that GPS work to a failed save.
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      queueFarm(payload);
+      setSavedOffline(true);
+      return;
+    }
+
     setLoading(true); setError('');
     try {
       const res = await fetch('/api/farms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          district,
-          location: district,
-          size_hectares: sizeHa ? parseFloat(sizeHa) : null,
-          farm_type: farmType || null,
-          crop_types: selectedCrops.length > 0 ? selectedCrops : null,
-          description: description || null,
-          boundary: boundary.length >= 3 ? {
-            type: 'Polygon',
-            coordinates: [[...boundary.map(([lat, lng]) => [lng, lat]), [boundary[0][1], boundary[0][0]]]],
-          } : null,
-        }),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!json.success) {
@@ -79,10 +93,40 @@ export function NewFarmForm() {
       router.push('/farmer/farm');
       router.refresh();
     } catch (err: any) {
-      setError(err.message);
+      // A thrown TypeError here means fetch() itself never reached the
+      // server (no connection, DNS failure, mid-flight drop) — distinct
+      // from the server actively rejecting the request above, which
+      // still deserves a real validation error, not a silent queue.
+      if (isNetworkFailure(err)) {
+        queueFarm(payload);
+        setSavedOffline(true);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
+  }
+
+  if (savedOffline) {
+    return (
+      <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+        <div style={{ width: 64, height: 64, borderRadius: 20, margin: '0 auto 16px', background: 'var(--color-harvest-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <CloudOff size={28} style={{ color: 'var(--color-harvest)' }} />
+        </div>
+        <p style={{ fontWeight: 800, fontSize: 16, color: C.text, marginBottom: 6 }}>Saved on this device</p>
+        <p style={{ fontSize: 13, color: C.muted, maxWidth: 320, margin: '0 auto 20px', lineHeight: 1.6 }}>
+          No connection right now, so "{name.trim()}" is saved on your phone. It'll upload automatically the next time you're online — nothing is lost.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.push('/farmer/farm')}
+          style={{ padding: '11px 22px', borderRadius: 10, border: 'none', background: C.green, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+        >
+          Back to Farms
+        </button>
+      </div>
+    );
   }
 
   return (

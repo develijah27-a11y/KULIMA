@@ -129,9 +129,9 @@ export function DeliveryTrackingMap({
 
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        iconRetinaUrl: '/leaflet/images/marker-icon-2x.png',
+        iconUrl: '/leaflet/images/marker-icon.png',
+        shadowUrl: '/leaflet/images/marker-shadow.png',
       });
 
       const center: [number, number] = pickup ? [pickup.lat, pickup.lng] : [1.3733, 32.2903];
@@ -289,7 +289,7 @@ export function DeliveryTrackingMap({
 
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%', borderRadius: 16, overflow: 'hidden' }}>
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <link rel="stylesheet" href="/leaflet/leaflet.css" />
       <style>{`
         .cropify-live-pulse { animation: cropify-pulse 1.8s ease-out infinite; }
         @keyframes cropify-pulse {

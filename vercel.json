@@ -27,6 +27,10 @@
     {
       "path": "/api/deliveries/timeout",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/demand-insights",
+      "schedule": "30 5 * * *"
     }
   ]
 }

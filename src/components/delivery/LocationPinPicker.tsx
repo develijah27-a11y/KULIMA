@@ -92,7 +92,7 @@ export function LocationPinPicker({ open, onClose, onConfirm, title, district, o
       </p>
 
       <div style={{ position: 'relative', height: 260, borderRadius: 14, overflow: 'hidden', marginBottom: 12 }}>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <link rel="stylesheet" href="/leaflet/leaflet.css" />
         <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
 
         {/* Fixed center pin — the map moves underneath this, not the other way round */}
