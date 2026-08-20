@@ -54,7 +54,7 @@ async function RevenueKPIs() {
       {kpis.map(({ label, value, sub, color, border }) => (
         <div key={label} style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '16px 18px' }}>
           <p style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.muted, margin: '0 0 8px' }}>{label}</p>
-          <p style={{ fontSize: 18, fontWeight: 900, color, letterSpacing: '-0.03em', margin: '0 0 2px' }}>{value}</p>
+          <p style={{ fontSize: 18, fontWeight: 900, color, letterSpacing: '-0.03em', margin: '0 0 2px', fontFamily: 'var(--font-mono)' }}>{value}</p>
           <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>{sub}</p>
         </div>
       ))}
@@ -100,7 +100,7 @@ async function FeeBreakdown() {
               <div key={desc}>
                 <div className="flex justify-between mb-1">
                   <span style={{fontSize:12,color:C.text,fontWeight:600}}>{desc}</span>
-                  <span style={{fontSize:12,fontWeight:800,color:C.greenMed}}>{fmt(amount)}</span>
+                  <span style={{fontSize:12,fontWeight:800,color:C.greenMed,fontFamily:'var(--font-mono)'}}>{fmt(amount)}</span>
                 </div>
                 <div style={{height:5,background:'var(--color-surface-2)',borderRadius:999}}>
                   <div style={{height:5,width:`${Math.round((amount/total)*100)}%`,background:C.greenMed,borderRadius:999}}/>
@@ -161,8 +161,8 @@ async function RecentFeeTransactions() {
               {(txns ?? []).map((t:any)=>(
                 <tr key={t.id} style={{borderBottom:`1px solid ${C.border}`}}>
                   <td style={{padding:'10px 16px',color:C.text,fontWeight:600}}>{t.description ?? '—'}</td>
-                  <td style={{padding:'10px 16px',color:C.muted,fontFamily:'monospace'}}>{t.reference?.slice(0,16) ?? '—'}</td>
-                  <td style={{padding:'10px 16px',color:C.green,fontWeight:800}}>{fmt(Number(t.amount))}</td>
+                  <td style={{padding:'10px 16px',color:C.muted,fontFamily:'var(--font-mono)'}}>{t.reference?.slice(0,16) ?? '—'}</td>
+                  <td style={{padding:'10px 16px',color:C.green,fontWeight:800,fontFamily:'var(--font-mono)'}}>{fmt(Number(t.amount))}</td>
                   <td style={{padding:'10px 16px'}}>
                     <span style={{fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:99,background:t.status==='completed'?'var(--color-success-bg)':'var(--color-harvest-bg)',color:t.status==='completed'?'var(--color-success)':C.amber}}>
                       {t.status}

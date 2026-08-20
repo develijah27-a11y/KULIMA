@@ -82,11 +82,11 @@ export default async function FarmerWalletPage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Total Received</p>
-          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>UGX {Math.round(totalIn).toLocaleString()}</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0, fontFamily: 'var(--font-mono)' }}>UGX {Math.round(totalIn).toLocaleString()}</p>
         </div>
         <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
           <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Total Sent Out</p>
-          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>UGX {Math.round(totalOut).toLocaleString()}</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0, fontFamily: 'var(--font-mono)' }}>UGX {Math.round(totalOut).toLocaleString()}</p>
         </div>
       </div>
 
@@ -114,7 +114,7 @@ export default async function FarmerWalletPage() {
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-harvest)', margin: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-harvest)', margin: 0, fontFamily: 'var(--font-mono)' }}>
                       UGX {Math.round(e.amount).toLocaleString()}
                     </p>
                     <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>held in escrow</p>
@@ -157,7 +157,7 @@ export default async function FarmerWalletPage() {
                       {fmtDate(t.created_at)} · {pending ? 'Pending' : failed ? 'Failed' : 'Successful'}
                     </p>
                   </div>
-                  <p style={{ fontSize: 14, fontWeight: 800, color: failed ? C.muted : cfg.color, margin: 0, opacity: pending ? 0.6 : 1 }}>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: failed ? C.muted : cfg.color, margin: 0, opacity: pending ? 0.6 : 1, fontFamily: 'var(--font-mono)' }}>
                     {cfg.sign}UGX {Math.round(t.amount).toLocaleString()}
                   </p>
                 </div>

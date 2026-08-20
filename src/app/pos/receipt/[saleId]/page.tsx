@@ -119,25 +119,25 @@ export default async function PosReceiptPage({
                   {it.product_name}{it.sku && <span style={{ display: 'block', fontSize: 11, color: '#9ca3af', fontWeight: 400 }}>SKU: {it.sku}</span>}
                 </td>
                 <td style={{ padding: '14px 12px', textAlign: 'right', fontSize: 14, color: '#374151', borderBottom: '1px solid #f9fafb' }}>{Number(it.quantity).toLocaleString()}</td>
-                <td style={{ padding: '14px 12px', textAlign: 'right', fontSize: 14, color: '#374151', borderBottom: '1px solid #f9fafb' }}>UGX {Number(it.unit_price_ugx).toLocaleString()}</td>
-                <td style={{ padding: '14px 12px', textAlign: 'right', fontSize: 14, fontWeight: 700, color: '#111', borderBottom: '1px solid #f9fafb' }}>UGX {Number(it.line_total_ugx).toLocaleString()}</td>
+                <td style={{ padding: '14px 12px', textAlign: 'right', fontSize: 14, color: '#374151', borderBottom: '1px solid #f9fafb', fontFamily: 'var(--font-mono)' }}>UGX {Number(it.unit_price_ugx).toLocaleString()}</td>
+                <td style={{ padding: '14px 12px', textAlign: 'right', fontSize: 14, fontWeight: 700, color: '#111', borderBottom: '1px solid #f9fafb', fontFamily: 'var(--font-mono)' }}>UGX {Number(it.line_total_ugx).toLocaleString()}</td>
               </tr>
             ))}
           </tbody>
           <tfoot>
             <tr>
               <td colSpan={3} style={{ padding: '6px 12px', textAlign: 'right', fontSize: 12, color: '#6b7280' }}>Subtotal</td>
-              <td style={{ padding: '6px 12px', textAlign: 'right', fontSize: 13, color: '#374151' }}>UGX {Number(sale.subtotal_ugx).toLocaleString()}</td>
+              <td style={{ padding: '6px 12px', textAlign: 'right', fontSize: 13, color: '#374151', fontFamily: 'var(--font-mono)' }}>UGX {Number(sale.subtotal_ugx).toLocaleString()}</td>
             </tr>
             {Number(sale.discount_ugx) > 0 && (
               <tr>
                 <td colSpan={3} style={{ padding: '6px 12px', textAlign: 'right', fontSize: 12, color: '#6b7280' }}>Discount</td>
-                <td style={{ padding: '6px 12px', textAlign: 'right', fontSize: 13, color: '#374151' }}>&minus; UGX {Number(sale.discount_ugx).toLocaleString()}</td>
+                <td style={{ padding: '6px 12px', textAlign: 'right', fontSize: 13, color: '#374151', fontFamily: 'var(--font-mono)' }}>&minus; UGX {Number(sale.discount_ugx).toLocaleString()}</td>
               </tr>
             )}
             <tr>
               <td colSpan={3} style={{ padding: '14px 12px', textAlign: 'right', fontSize: 13, fontWeight: 700, color: '#374151' }}>Total</td>
-              <td style={{ padding: '14px 12px', textAlign: 'right', fontSize: 18, fontWeight: 900, color: '#15803d' }}>UGX {Number(sale.total_ugx).toLocaleString()}</td>
+              <td style={{ padding: '14px 12px', textAlign: 'right', fontSize: 18, fontWeight: 900, color: '#15803d', fontFamily: 'var(--font-mono)' }}>UGX {Number(sale.total_ugx).toLocaleString()}</td>
             </tr>
           </tfoot>
         </table>

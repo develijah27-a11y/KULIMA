@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { AppIcon } from '@/components/ui/AppIcon';
 import { Wordmark } from '@/components/ui/Wordmark';
+import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 import { Copy, Check } from 'lucide-react';
 
 export interface WalletCardProps {
@@ -86,12 +87,12 @@ export function WalletCard({ balance, currency = 'UGX', accountNumber, holderNam
         <p style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)', margin: '0 0 4px' }}>
           Available Balance
         </p>
-        <p style={{ fontSize: 'clamp(24px, 7vw, 32px)', fontWeight: 900, letterSpacing: '-0.02em', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {currency} {Math.round(balance).toLocaleString()}
+        <p style={{ fontSize: 'clamp(24px, 7vw, 32px)', fontWeight: 900, letterSpacing: '-0.02em', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'var(--font-mono)' }}>
+          {currency} <AnimatedNumber value={balance} />
         </p>
         {escrowBalance > 0 && (
-          <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.65)', margin: '3px 0 0' }}>
-            + {currency} {Math.round(escrowBalance).toLocaleString()} in escrow
+          <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.65)', margin: '3px 0 0', fontFamily: 'var(--font-mono)' }}>
+            + {currency} <AnimatedNumber value={escrowBalance} /> in escrow
           </p>
         )}
       </div>

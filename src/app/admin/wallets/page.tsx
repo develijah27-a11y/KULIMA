@@ -115,7 +115,7 @@ export default async function AdminWalletsPage({
               <span style={{ display: 'flex', color }}>{icon}</span>
               <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: C.muted, margin: 0 }}>{label}</p>
             </div>
-            <p style={{ fontSize: 22, fontWeight: 900, color, letterSpacing: '-0.03em', margin: 0 }}>{value}</p>
+            <p style={{ fontSize: 22, fontWeight: 900, color, letterSpacing: '-0.03em', margin: 0, fontFamily: 'var(--font-mono)' }}>{value}</p>
           </div>
         ))}
       </div>
@@ -155,7 +155,7 @@ export default async function AdminWalletsPage({
                     </p>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{ fontSize: 14, fontWeight: 800, color: w.balance > 0 ? C.green : C.muted, margin: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: w.balance > 0 ? C.green : C.muted, margin: 0, fontFamily: 'var(--font-mono)' }}>
                       UGX {Math.round(w.balance).toLocaleString()}
                     </p>
                     <p style={{ fontSize: 10, color: C.muted, margin: '0 0 6px' }}>{w.currency ?? 'UGX'}</p>
@@ -184,7 +184,7 @@ export default async function AdminWalletsPage({
                   <div key={tx.id} style={{ padding: '10px 18px', borderBottom: `1px solid ${C.border}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                       <span style={{ fontSize: 10, fontWeight: 700, color: cfg.color }}>{cfg.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: 800, color: cfg.credit ? 'var(--color-success)' : C.red }}>
+                      <span style={{ fontSize: 12, fontWeight: 800, color: cfg.credit ? 'var(--color-success)' : C.red, fontFamily: 'var(--font-mono)' }}>
                         {cfg.credit ? '+' : '-'}UGX {Math.round(tx.amount).toLocaleString()}
                       </span>
                     </div>
