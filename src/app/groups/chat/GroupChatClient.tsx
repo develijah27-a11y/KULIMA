@@ -412,7 +412,7 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
                 const isListing = msg.body.startsWith(LISTING_PREFIX);
 
                 return (
-                  <div key={msg.id} style={{ display: 'flex', flexDirection: isOwn ? 'row-reverse' : 'row', gap: 8, alignItems: 'flex-end' }}>
+                  <div key={msg.id} className="chat-bubble-pop-in" style={{ display: 'flex', flexDirection: isOwn ? 'row-reverse' : 'row', gap: 8, alignItems: 'flex-end' }}>
                     {/* Avatar (others only) */}
                     {!isOwn && (
                       <div style={{

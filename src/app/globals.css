@@ -1134,6 +1134,18 @@ input.auth-input:-webkit-autofill:active {
 }
 
 /* Drawer animation keyframes */
+/* Group chat: new message bubbles pop in instead of just appearing —
+   now that realtime is actually wired up (group_messages was missing from
+   the Postgres replication publication), incoming messages arrive live and
+   should read as "just landed", not blend in silently. */
+@keyframes chatBubblePopIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.chat-bubble-pop-in {
+  animation: chatBubblePopIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 @keyframes drawerSlideIn {
   from { transform: translateX(-100%); }
   to   { transform: translateX(0); }
