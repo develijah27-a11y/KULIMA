@@ -465,6 +465,24 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97) translateZ(0); }
   box-shadow: var(--d-shadow-card-hover, var(--shadow-card-hover));
 }
 
+/* Form control baseline — every input/select/textarea across the app is
+   styled ad hoc per-page (no shared component, same situation the cards
+   were in), so this fills in only what they're missing rather than
+   overriding what each page already sets. Bare element selectors have the
+   lowest possible specificity, so any page's own border/background/ring
+   classes still win outright — this only reaches the (common) case of an
+   otherwise-unstyled focus state, plus a shared transition and a green
+   accent-color for native checkboxes/radios instead of the browser default
+   blue. */
+input, select, textarea {
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  accent-color: var(--color-primary);
+}
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+
 .dash-skeleton {
   background: #E9EDF0;
   position: relative;
