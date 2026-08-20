@@ -8,6 +8,7 @@ import { PagePrefetcher } from "@/components/ui/PagePrefetcher";
 import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { ServiceWorkerRegistrar } from "@/components/shared/ServiceWorkerRegistrar";
 import { OfflineSyncManager } from "@/components/shared/OfflineSyncManager";
+import { OfflineBanner } from "@/components/shared/OfflineBanner";
 import { InstallPrompt } from "@/components/shared/InstallPrompt";
 import { Wordmark } from "@/components/ui/Wordmark";
 
@@ -181,6 +182,7 @@ export default function RootLayout({
         <PagePrefetcher />
         <ServiceWorkerRegistrar />
         <OfflineSyncManager />
+        <OfflineBanner />
         <InstallPrompt />
       </body>
     </html>
