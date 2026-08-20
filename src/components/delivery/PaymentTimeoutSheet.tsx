@@ -135,7 +135,7 @@ export function PaymentTimeoutSheet({
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <span style={{ fontSize: 13, color: 'var(--d-muted)', fontWeight: 600 }}>Amount due</span>
-          <span style={{ fontSize: 20, fontWeight: 900, color: 'var(--d-text)', letterSpacing: '-0.02em' }}>
+          <span style={{ fontSize: 20, fontWeight: 900, color: 'var(--d-text)', letterSpacing: '-0.02em', fontFamily: 'var(--font-mono)' }}>
             UGX {Math.round(estimatedFare).toLocaleString()}
           </span>
         </div>

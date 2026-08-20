@@ -204,7 +204,7 @@ export default function AdminCommissionPage() {
               <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0 }}>{label}</p>
               <span style={{ color }}>{icon}</span>
             </div>
-            <p style={{ fontSize: 18, fontWeight: 900, color, margin: 0, letterSpacing: '-0.02em' }}>{value}</p>
+            <p style={{ fontSize: 18, fontWeight: 900, color, margin: 0, letterSpacing: '-0.02em', fontFamily: 'var(--font-mono)' }}>{value}</p>
           </div>
         ))}
       </div>
@@ -260,7 +260,7 @@ export default function AdminCommissionPage() {
             </p>
             {platformWallet ? (
               <>
-                <p style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 6px' }}>
+                <p style={{ fontSize: 30, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 6px', fontFamily: 'var(--font-mono)' }}>
                   UGX {Math.round(platformWallet.balance).toLocaleString()}
                 </p>
                 <p style={{ fontSize: 12, opacity: 0.75, margin: '0 0 4px' }}>
@@ -346,9 +346,9 @@ export default function AdminCommissionPage() {
                   const fee = calcFee(amt);
                   return (
                     <tr key={amt} style={{ borderTop: `1px solid ${C.border}` }}>
-                      <td style={{ padding: '12px 20px', fontSize: 13, color: C.text, fontWeight: 600 }}>UGX {amt.toLocaleString()}</td>
-                      <td style={{ padding: '12px 20px', fontSize: 13, color: C.amber, fontWeight: 600, textAlign: 'right' }}>UGX {fee.toLocaleString()}</td>
-                      <td style={{ padding: '12px 20px', fontSize: 13, fontWeight: 800, color: C.green, textAlign: 'right' }}>UGX {(amt - fee).toLocaleString()}</td>
+                      <td style={{ padding: '12px 20px', fontSize: 13, color: C.text, fontWeight: 600, fontFamily: 'var(--font-mono)' }}>UGX {amt.toLocaleString()}</td>
+                      <td style={{ padding: '12px 20px', fontSize: 13, color: C.amber, fontWeight: 600, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>UGX {fee.toLocaleString()}</td>
+                      <td style={{ padding: '12px 20px', fontSize: 13, fontWeight: 800, color: C.green, textAlign: 'right', fontFamily: 'var(--font-mono)' }}>UGX {(amt - fee).toLocaleString()}</td>
                     </tr>
                   );
                 })}

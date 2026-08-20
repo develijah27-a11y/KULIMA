@@ -200,7 +200,7 @@ export function ScanToPayButton() {
             <div style={{ background: '#f9fafb', borderRadius: 12, padding: 16, marginBottom: 14, textAlign: 'center' }}>
               <p style={{ fontSize: 11, color: '#9ca3af', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 700 }}>Paying</p>
               <p style={{ fontSize: 16, fontWeight: 800, color: '#111', margin: '0 0 6px' }}>{payment.payeeName}</p>
-              <p style={{ fontSize: 26, fontWeight: 900, color: '#15803d', margin: 0 }}>UGX {payment.amount.toLocaleString()}</p>
+              <p style={{ fontSize: 26, fontWeight: 900, color: '#15803d', margin: 0, fontFamily: 'var(--font-mono)' }}>UGX {payment.amount.toLocaleString()}</p>
               <p style={{ fontSize: 11.5, color: '#9ca3af', margin: '6px 0 0' }}>{payment.route.pickupDistrict} → {payment.route.dropoffDistrict}</p>
             </div>
             <p style={{ fontSize: 11.5, color: '#9ca3af', textAlign: 'center', marginBottom: 14 }}>This cannot be undone once confirmed.</p>

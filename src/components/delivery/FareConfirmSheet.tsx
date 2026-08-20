@@ -92,7 +92,7 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0' }}>
       <span style={{ fontSize: bold ? 14 : 13, fontWeight: bold ? 800 : 500, color: bold ? 'var(--d-text, #182018)' : 'var(--d-muted, #6b7566)' }}>{label}</span>
-      <span style={{ fontSize: bold ? 16 : 13, fontWeight: bold ? 900 : 600, color: bold ? 'var(--color-primary, #166B3A)' : 'var(--d-text, #182018)' }}>{value}</span>
+      <span style={{ fontSize: bold ? 16 : 13, fontWeight: bold ? 900 : 600, color: bold ? 'var(--color-primary, #166B3A)' : 'var(--d-text, #182018)', fontFamily: 'var(--font-mono)' }}>{value}</span>
     </div>
   );
 }

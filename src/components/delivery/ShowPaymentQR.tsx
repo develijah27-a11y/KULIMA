@@ -98,7 +98,7 @@ export function ShowPaymentQR({ deliveryId, amount }: Props) {
             <X size={18} />
           </button>
         </div>
-        <p style={{ fontSize: 22, fontWeight: 900, color: '#15803d', margin: '4px 0 16px' }}>
+        <p style={{ fontSize: 22, fontWeight: 900, color: '#15803d', margin: '4px 0 16px', fontFamily: 'var(--font-mono)' }}>
           UGX {amount.toLocaleString()}
         </p>
 

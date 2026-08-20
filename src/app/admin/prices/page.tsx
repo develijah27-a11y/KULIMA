@@ -100,7 +100,7 @@ export default async function AdminPricesPage() {
                       <td style={{ padding: '10px 16px', fontSize: '13px', color: C.muted }}>
                         {p.market_name ?? '—'}
                       </td>
-                      <td style={{ padding: '10px 16px', fontSize: '14px', fontWeight: 700, color: C.text }}>
+                      <td style={{ padding: '10px 16px', fontSize: '14px', fontWeight: 700, color: C.text, fontFamily: 'var(--font-mono)' }}>
                         UGX {Math.round(p.price_per_kg).toLocaleString()}
                       </td>
                       <td style={{ padding: '10px 16px' }}>
