@@ -28,7 +28,6 @@ const RATE_LIMIT_RULES: { prefix: string; limit: number; windowMs: number }[] = 
   { prefix: '/api/wallet/transfer',    limit: 15, windowMs: 60_000  },
   // AI diagnosis — expensive upstream calls
   { prefix: '/api/doctor',            limit: 10, windowMs: 60_000  },
-  { prefix: '/api/disease-scans',     limit: 10, windowMs: 60_000  },
   // Support tickets
   { prefix: '/api/support',           limit: 30, windowMs: 60_000  },
   // General API — generous fallback to catch abusive scraping
