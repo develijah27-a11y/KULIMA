@@ -85,8 +85,13 @@ export interface Database {
           user_id: string
           name: string
           location: string
+          district: string | null
           size_hectares: number | null
           farm_type: string | null
+          crop_types: string[] | null
+          description: string | null
+          boundary: Json | null
+          is_active: boolean
           created_at: string
           updated_at: string
         }
@@ -95,8 +100,13 @@ export interface Database {
           user_id: string
           name: string
           location: string
+          district?: string | null
           size_hectares?: number | null
           farm_type?: string | null
+          crop_types?: string[] | null
+          description?: string | null
+          boundary?: Json | null
+          is_active?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -105,8 +115,13 @@ export interface Database {
           user_id?: string
           name?: string
           location?: string
+          district?: string | null
           size_hectares?: number | null
           farm_type?: string | null
+          crop_types?: string[] | null
+          description?: string | null
+          boundary?: Json | null
+          is_active?: boolean
           created_at?: string
           updated_at?: string
         }

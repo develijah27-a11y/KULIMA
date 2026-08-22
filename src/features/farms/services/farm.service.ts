@@ -15,15 +15,23 @@ export interface CreateFarmParams {
   userId: string;
   name: string;
   location: string;
-  sizeHectares?: number;
-  farmType?: string;
+  district?: string | null;
+  sizeHectares?: number | null;
+  farmType?: string | null;
+  cropTypes?: string[] | null;
+  description?: string | null;
+  boundary?: unknown;
 }
 
 export interface UpdateFarmParams {
   name?: string;
   location?: string;
-  sizeHectares?: number;
-  farmType?: string;
+  district?: string | null;
+  sizeHectares?: number | null;
+  farmType?: string | null;
+  cropTypes?: string[] | null;
+  description?: string | null;
+  boundary?: unknown;
 }
 
 export async function createFarm(params: CreateFarmParams): Promise<Farm> {
@@ -33,8 +41,12 @@ export async function createFarm(params: CreateFarmParams): Promise<Farm> {
     user_id: params.userId,
     name: params.name,
     location: params.location,
+    district: params.district || null,
     size_hectares: params.sizeHectares || null,
     farm_type: params.farmType || null,
+    crop_types: params.cropTypes || null,
+    description: params.description || null,
+    boundary: (params.boundary ?? null) as FarmInsert['boundary'],
   };
 
   const { data, error } = await supabase
@@ -107,8 +119,12 @@ export async function updateFarm(
   const updateData: FarmUpdate = {};
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.location !== undefined) updateData.location = updates.location;
+  if (updates.district !== undefined) updateData.district = updates.district;
   if (updates.sizeHectares !== undefined) updateData.size_hectares = updates.sizeHectares;
   if (updates.farmType !== undefined) updateData.farm_type = updates.farmType;
+  if (updates.cropTypes !== undefined) updateData.crop_types = updates.cropTypes;
+  if (updates.description !== undefined) updateData.description = updates.description;
+  if (updates.boundary !== undefined) updateData.boundary = updates.boundary as FarmUpdate['boundary'];
 
   const { data, error } = await supabase
     .from('farms')

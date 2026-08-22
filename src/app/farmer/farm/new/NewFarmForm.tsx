@@ -52,9 +52,9 @@ export function NewFarmForm() {
       name: name.trim(),
       district,
       location: district,
-      size_hectares: sizeHa ? parseFloat(sizeHa) : null,
-      farm_type: farmType || null,
-      crop_types: selectedCrops.length > 0 ? selectedCrops : null,
+      sizeHectares: sizeHa ? parseFloat(sizeHa) : null,
+      farmType: farmType || null,
+      cropTypes: selectedCrops.length > 0 ? selectedCrops : null,
       description: description || null,
       boundary: boundary.length >= 3 ? {
         type: 'Polygon',

@@ -23,6 +23,7 @@ const sizeHectaresSchema = z
   .number({ message: 'Size must be a number' })
   .positive('Size must be greater than 0')
   .max(1000000, 'Size must be less than 1,000,000 hectares')
+  .nullable()
   .optional();
 
 const farmTypeSchema = z
@@ -30,6 +31,7 @@ const farmTypeSchema = z
   .min(1, 'Farm type cannot be empty')
   .max(50, 'Farm type must be less than 50 characters')
   .trim()
+  .nullable()
   .optional();
 
 const sortBySchema = z
@@ -68,9 +70,9 @@ const limitSchema = z
 // keys" behavior silently discarded every one of these fields from every
 // farm ever created or edited through this form: crop types, notes, and
 // the entire GPS-walked boundary never reached the database at all.
-const districtSchema = z.string().max(100).trim().optional();
-const cropTypesSchema = z.array(z.string()).optional();
-const descriptionSchema = z.string().max(2000).optional();
+const districtSchema = z.string().max(100).trim().nullable().optional();
+const cropTypesSchema = z.array(z.string()).nullable().optional();
+const descriptionSchema = z.string().max(2000).nullable().optional();
 const boundarySchema = z.any().optional(); // GeoJSON Polygon — validated by PostGIS/jsonb column, not here
 
 export const createFarmSchema = z.object({

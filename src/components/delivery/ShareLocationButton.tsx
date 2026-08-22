@@ -18,7 +18,10 @@ interface Props {
 // Lets either party on a delivery (the requester finding a driver, or the
 // driver en route to the requester) broadcast their live location so the
 // other side can see it instead of relying on a phone call. Updates are
-// throttled to once every 10s. Which delivery_locations row this writes to
+// throttled to once every 4s — tight enough that a driver moving at highway
+// speed doesn't drift ~300m stale on the other party's map between updates
+// (the old 10s throttle, paired with the tracking map's old 8s poll,
+// meant up to ~18s of lag end to end). Which delivery_locations row this writes to
 // (and who can read it) is entirely governed by RLS, keyed on the caller's
 // own user_id — see /api/deliveries/[id]/location.
 export function ShareLocationButton({ deliveryId, active, autoStart, label }: Props) {
@@ -47,7 +50,7 @@ export function ShareLocationButton({ deliveryId, active, autoStart, label }: Pr
     watchId.current = navigator.geolocation.watchPosition(
       (pos) => {
         const now = Date.now();
-        if (now - lastSentAt.current < 10_000) return; // throttle to 1 update / 10s
+        if (now - lastSentAt.current < 4_000) return; // throttle to 1 update / 4s
         lastSentAt.current = now;
         fetch(`/api/deliveries/${deliveryId}/location`, {
           method: 'POST',

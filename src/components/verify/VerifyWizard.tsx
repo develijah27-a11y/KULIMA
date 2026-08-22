@@ -238,7 +238,7 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
         Upload Documents
       </h2>
       <p style={{ color: C.muted, fontSize: 14, marginBottom: 24 }}>
-        Upload clear photos or PDFs. Files must be under 5 MB each.
+        Upload clear photos or PDFs. Files must be under 10 MB each.
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

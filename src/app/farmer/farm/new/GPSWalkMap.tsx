@@ -113,6 +113,7 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
     watchIdRef.current = navigator.geolocation.watchPosition(
       pos => {
         const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+        setStatus('Walking boundary... move around the edge of your farm');
         if (accuracy > 30) return;
 
         // enableHighAccuracy + maximumAge:0 can fire updates faster than
@@ -148,10 +149,21 @@ export function GPSWalkMap({ onBoundaryChange }: Props) {
         }
       },
       err => {
-        setError(`GPS error: ${err.message}`);
-        stopWalk();
+        // A TIMEOUT (code 3) or momentary POSITION_UNAVAILABLE (code 2) is
+        // routine under tree cover, cloud cover, or a cold GPS fix — it
+        // does *not* mean the watch died, the browser keeps retrying on
+        // its own. Previously any error at all called stopWalk(), which
+        // silently discarded every point recorded so far and forced the
+        // farmer to restart the whole boundary walk over one dropped fix.
+        // Only a real permission denial is unrecoverable.
+        if (err.code === err.PERMISSION_DENIED) {
+          setError(`GPS error: ${err.message}`);
+          stopWalk();
+        } else {
+          setStatus('Waiting for GPS signal... keep walking, this will resume automatically');
+        }
       },
-      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 25000 },
     );
   }, []);
 

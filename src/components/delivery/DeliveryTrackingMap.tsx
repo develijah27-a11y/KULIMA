@@ -90,7 +90,7 @@ const vehicleIconHtml = (rotationDeg: number) => `
 // geocoding this app had before) is the fallback for older requests that
 // were made before pin capture existed, or where the requester skipped it.
 export function DeliveryTrackingMap({
-  deliveryId, pickupDistrict, dropoffDistrict, pickupCoords, dropoffCoords, otherPartyLabel, pollMs = 8_000, onPosition, onRouteInfo,
+  deliveryId, pickupDistrict, dropoffDistrict, pickupCoords, dropoffCoords, otherPartyLabel, pollMs = 4_000, onPosition, onRouteInfo,
 }: Props) {
   const mapRef        = useRef<LMap | null>(null);
   const containerRef  = useRef<HTMLDivElement>(null);
