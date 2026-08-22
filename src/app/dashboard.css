@@ -1,0 +1,678 @@
+/* ═══════════════════════════════════════════════════════════════════
+   DASHBOARD-ONLY STYLES
+
+   Split out of globals.css so the public landing page and auth pages
+   (which import only globals.css, via the root layout) don't have to
+   download every rule the authenticated app uses — these classes are
+   used exclusively by dashboard-shell components (Sidebar, TopBar,
+   MobileNav, MobileSidebarDrawer), the 13 near-duplicate local `Card`
+   components across role dashboards, and GroupChatClient. Verified via
+   full-repo grep before moving: every one of these class names appears
+   only inside src/app/{role}/** or the dashboard-shell components
+   listed above, never in page.tsx, auth/**, or any other public route.
+
+   Imported in each role's layout.tsx — NOT in the root layout.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Interactive states ─── */
+
+.sidebar-item {
+  transition: background 80ms ease, transform 80ms ease, border-left-color 80ms ease;
+  -webkit-user-select: none; user-select: none;
+  will-change: transform;
+}
+.sidebar-item:hover  { background: rgba(255,255,255,0.08) !important; }
+.sidebar-item:active { background: rgba(74,222,128,0.20) !important; transform: scale(0.97) translateZ(0); }
+.dark .sidebar-item:hover  { background: rgba(74,222,128,0.08) !important; }
+.dark .sidebar-item:active { background: rgba(74,222,128,0.18) !important; transform: scale(0.97) translateZ(0); }
+
+.mobile-nav-item {
+  transition: transform 80ms ease, opacity 80ms ease;
+  -webkit-user-select: none; user-select: none;
+  will-change: transform;
+}
+.mobile-nav-item:active { transform: scale(0.88) translateZ(0); opacity: 0.6; }
+
+.topbar-btn {
+  transition: background 80ms ease, transform 80ms ease;
+  cursor: pointer;
+  will-change: transform;
+}
+.topbar-btn:hover  { background: var(--color-surface-2) !important; }
+.topbar-btn:active { transform: scale(0.93) translateZ(0); }
+
+/* Modern card lift — additive, not a replacement for the boxShadow most
+   dashboard cards already set inline via var(--d-shadow-card). Inline
+   styles always beat a class for the same property, so on those cards
+   only the hover transform actually applies (still a real, visible
+   "lifts off the page" micro-interaction) — the box-shadow rule below
+   deepens further on hover for anything styled purely via className
+   instead of inline style (e.g. src/components/ui/Card.tsx). Drop this
+   className on any existing card div — including the 13 near-duplicate
+   local `Card` components across the admin/farmer/buyer/etc. dashboards —
+   with no risk of fighting or breaking their own inline styling. */
+.dash-card-modern {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+.dash-card-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--d-shadow-card-hover, var(--shadow-card-hover));
+}
+
+.dash-skeleton {
+  background: #E9EDF0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.dash-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  animation: shimmer 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+.dark .dash-skeleton {
+  background: #131417;
+}
+
+.dark .dash-skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+
+.orange-skeleton {
+  background: var(--color-soil-mid);
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.orange-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: shimmer 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CARD COMPONENTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+.card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-radius: var(--radius-card);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+}
+.dark .card {
+  background: rgba(22, 24, 30, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.40),
+    0 8px 24px rgba(0, 0, 0, 0.30);
+}
+
+.dash-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.70);
+}
+.dark .dash-card {
+  background: rgba(22, 24, 30, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 2px 8px rgba(0, 0, 0, 0.40),
+    0 8px 24px rgba(0, 0, 0, 0.30);
+}
+
+/* Stat cards with coloured top border */
+.dash-stat {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid;
+}
+.dash-stat-primary { border-top-color: var(--color-primary); }
+.dash-stat-accent  { border-top-color: var(--color-primary-hover); }
+.dash-stat-support { border-top-color: var(--color-primary); }
+.dash-stat-green   { border-top-color: var(--color-success); }
+.dash-stat-amber   { border-top-color: var(--color-harvest); }
+.dash-stat-red     { border-top-color: var(--color-danger); }
+.dash-stat-blue    { border-top-color: var(--color-sky); }
+.dash-stat-violet  { border-top-color: #8B5CF6; }
+.dash-stat-danger  { border-top-color: var(--color-danger); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Primary — growth green */
+.btn-primary {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 80ms ease, transform 80ms ease, opacity 80ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+.btn-primary:hover:not(:disabled)  { background: var(--color-primary-hover); }
+.btn-primary:active:not(:disabled) { transform: scale(0.97); opacity: 0.9; }
+.btn-primary:disabled              { opacity: 0.45; cursor: not-allowed; }
+
+/* Harvest — amber for money/price actions */
+.btn-harvest {
+  background: var(--color-harvest);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 80ms ease, transform 80ms ease, opacity 80ms ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-harvest:hover:not(:disabled)  { background: var(--color-harvest-hover); }
+.btn-harvest:active:not(:disabled) { transform: scale(0.97); }
+.btn-harvest:disabled              { opacity: 0.45; cursor: not-allowed; }
+
+/* Accent — alias of btn-primary for compatibility */
+.btn-accent {
+  background: var(--color-primary-hover);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 80ms ease, transform 80ms ease, opacity 80ms ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-accent:hover:not(:disabled)  { background: var(--color-primary-dark); }
+.btn-accent:active:not(:disabled) { transform: scale(0.97); opacity: 0.9; }
+.btn-accent:disabled              { opacity: 0.45; cursor: not-allowed; }
+
+/* Ghost */
+.btn-ghost {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-border-mid);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: background 80ms ease, transform 80ms ease, border-color 80ms ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-ghost:hover:not(:disabled)  { background: var(--color-primary-bg); border-color: var(--color-primary); }
+.btn-ghost:active:not(:disabled) { transform: scale(0.97); }
+.btn-ghost:disabled              { opacity: 0.45; cursor: not-allowed; }
+
+/* Danger */
+.btn-danger {
+  background: var(--color-danger);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: background 80ms ease, transform 80ms ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-danger:hover:not(:disabled)  { background: #B91C1C; }
+.btn-danger:active:not(:disabled) { transform: scale(0.97); }
+.btn-danger:disabled              { opacity: 0.45; cursor: not-allowed; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   MOBILE SIDEBAR DRAWER — all sizing fluid for 320px → 428px screens
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Root overlay container */
+.cropify-drawer-root {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+}
+
+/* Semi-transparent backdrop with blur */
+.cropify-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: drawerFadeIn 180ms ease forwards;
+}
+
+/* The panel itself */
+.cropify-drawer-panel {
+  position: relative;
+  z-index: 1;
+  /* Fluid width: 85vw on tiny screens, capped at 288px on normal phones */
+  width: min(288px, 87vw);
+  /* Use dynamic viewport height so the drawer fills screen even when browser chrome is visible */
+  height: 100dvh;
+  height: 100vh; /* fallback */
+  display: flex;
+  flex-direction: column;
+  /* Rich gradient: top lighter, bottom darker — adds depth on low-quality panels */
+  background: linear-gradient(170deg, #16673B 0%, #0F4C2A 45%, #0C3D22 100%);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  animation: drawerSlideIn 230ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  /* Stronger shadow for low-DPI screens — makes the panel "pop" off the page */
+  box-shadow:
+    6px 0 24px rgba(0, 0, 0, 0.30),
+    12px 0 48px rgba(0, 0, 0, 0.22),
+    1px 0 0 rgba(255, 255, 255, 0.08);
+  /* Prevent scroll chaining to the page behind */
+  touch-action: pan-y;
+}
+
+/* Header row */
+.cropify-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* Fluid height: taller on large phones, compact on small ones */
+  height: clamp(50px, 7.5vh, 60px);
+  padding: 0 clamp(12px, 4vw, 18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  flex-shrink: 0;
+}
+
+/* Logo mark (the "A" square) */
+.cropify-drawer-logo-mark {
+  width: clamp(24px, 6.5vw, 30px);
+  height: clamp(24px, 6.5vw, 30px);
+  border-radius: clamp(6px, 1.8vw, 9px);
+  background: rgba(255, 255, 255, 0.20);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(11px, 3vw, 14px);
+  font-weight: 900;
+  color: #F0FDF4;
+  font-family: var(--font-display);
+  flex-shrink: 0;
+}
+
+/* "Cropify" wordmark */
+.cropify-drawer-logo-text {
+  font-size: clamp(14px, 4.2vw, 17px);
+  font-weight: 800;
+  color: #F0FDF4;
+  letter-spacing: -0.03em;
+  font-family: var(--font-display);
+}
+
+/* Close button */
+.cropify-drawer-close {
+  width: clamp(30px, 8vw, 34px);
+  height: clamp(30px, 8vw, 34px);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(240, 253, 244, 0.65);
+  transition: background 100ms ease;
+  flex-shrink: 0;
+  min-height: unset; /* override global button min-height */
+  min-width: unset;
+}
+.cropify-drawer-close:active {
+  background: rgba(255, 255, 255, 0.18);
+  transform: scale(0.92);
+}
+
+/* Role sub-label row */
+.cropify-drawer-role {
+  padding: clamp(5px, 1.4vh, 8px) clamp(12px, 4vw, 18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+.cropify-drawer-role-text {
+  font-size: clamp(9px, 2.4vw, 10px);
+  font-weight: 800;
+  color: rgba(240, 253, 244, 0.50);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: var(--font-body);
+}
+
+/* Nav scroll area */
+.cropify-drawer-nav {
+  flex: 1;
+  padding: clamp(8px, 2vh, 12px) clamp(8px, 2.5vw, 12px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Section divider + label */
+.cropify-drawer-section-wrap {
+  margin-top: clamp(10px, 2.5vh, 16px);
+  margin-bottom: clamp(4px, 1vh, 6px);
+}
+.cropify-drawer-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.09);
+  margin-bottom: clamp(5px, 1.2vh, 7px);
+}
+.cropify-drawer-section-label {
+  font-size: clamp(8px, 2.1vw, 9px);
+  font-weight: 800;
+  color: rgba(240, 253, 244, 0.38);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  padding-left: clamp(8px, 2.5vw, 12px);
+  font-family: var(--font-body);
+}
+
+/* Nav link row */
+.cropify-drawer-link {
+  display: flex;
+  align-items: center;
+  gap: clamp(9px, 2.8vw, 13px);
+  /* Fluid vertical padding — taller on big phones, compact on 320px devices */
+  padding: clamp(8px, 2vh, 11px) clamp(8px, 2.5vw, 12px);
+  border-radius: clamp(8px, 2.2vw, 11px);
+  background: transparent;
+  color: rgba(240, 253, 244, 0.55);
+  text-decoration: none;
+  margin-bottom: clamp(1px, 0.4vh, 3px);
+  /* Minimum touch target */
+  min-height: clamp(42px, 6.5vh, 48px);
+  border-left: 3px solid transparent;
+  transition: background 90ms ease, color 90ms ease;
+  position: relative;
+}
+.cropify-drawer-link--active {
+  background: rgba(124, 197, 118, 0.20);
+  color: #F0FDF4;
+  border-left-color: #4ADE80;
+  /* Subtle green glow on active item — visible even on poor panels */
+  box-shadow: inset 0 0 0 1px rgba(124, 197, 118, 0.12);
+}
+.cropify-drawer-link:active {
+  background: rgba(255, 255, 255, 0.10);
+  transform: scale(0.98) translateZ(0);
+}
+
+/* Link label */
+.cropify-drawer-link-label {
+  font-size: clamp(13px, 3.7vw, 14.5px);
+  font-weight: 700;
+  flex: 1;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-body);
+  /* Prevent sub-pixel blur on low-DPI screens */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Notification badge inside drawer */
+.cropify-drawer-badge {
+  font-size: clamp(9px, 2.3vw, 10px);
+  font-weight: 800;
+  padding: clamp(2px, 0.5vh, 3px) clamp(5px, 1.5vw, 8px);
+  border-radius: 99px;
+  flex-shrink: 0;
+  background: rgba(124, 197, 118, 0.28);
+  color: #86EFAC;
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  letter-spacing: 0;
+}
+
+/* Profile footer */
+.cropify-drawer-footer {
+  padding: clamp(10px, 2.2vh, 15px) clamp(12px, 4vw, 18px);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  display: flex;
+  align-items: center;
+  gap: clamp(9px, 2.8vw, 13px);
+  flex-shrink: 0;
+  /* Subtle frosted glass at the bottom of the panel */
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* Avatar circle */
+.cropify-drawer-avatar {
+  width: clamp(32px, 8.5vw, 38px);
+  height: clamp(32px, 8.5vw, 38px);
+  border-radius: clamp(8px, 2.2vw, 11px);
+  background: rgba(255, 255, 255, 0.18);
+  border: 1.5px solid rgba(255, 255, 255, 0.20);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(13px, 3.5vw, 15px);
+  font-weight: 800;
+  color: #F0FDF4;
+  flex-shrink: 0;
+}
+
+/* Name */
+.cropify-drawer-name {
+  font-size: clamp(12px, 3.4vw, 13.5px);
+  font-weight: 700;
+  color: rgba(240, 253, 244, 0.92);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}
+
+/* Role sub-text in footer */
+.cropify-drawer-role-sub {
+  font-size: clamp(10px, 2.6vw, 11px);
+  font-weight: 600;
+  color: rgba(240, 253, 244, 0.45);
+  text-transform: capitalize;
+  font-family: var(--font-body);
+}
+
+/* Sign-out button */
+.cropify-drawer-signout {
+  width: clamp(30px, 8vw, 36px);
+  height: clamp(30px, 8vw, 36px);
+  border-radius: clamp(7px, 2vw, 9px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(240, 253, 244, 0.50);
+  transition: background 90ms ease, color 90ms ease;
+  flex-shrink: 0;
+  min-height: unset;
+  min-width: unset;
+}
+.cropify-drawer-signout:active {
+  background: rgba(239, 68, 68, 0.20);
+  color: #FCA5A5;
+}
+
+/* Group chat: new message bubbles pop in instead of just appearing —
+   now that realtime is actually wired up (group_messages was missing from
+   the Postgres replication publication), incoming messages arrive live and
+   should read as "just landed", not blend in silently. */
+@keyframes chatBubblePopIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.chat-bubble-pop-in {
+  animation: chatBubblePopIn 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Drawer animation keyframes */
+@keyframes drawerSlideIn {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes drawerFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   GLASSMORPHISM
+   Frosted-glass surfaces for top bar, mobile nav, cards, and modals.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.glass {
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+.dark .glass {
+  background: rgba(10, 11, 13, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.30);
+  border-radius: var(--radius-card);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.dark .glass-card {
+  background: rgba(19, 20, 23, 0.80);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.glass-topbar {
+  background: rgba(255, 255, 255, 0.84) !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07) !important;
+  box-shadow: 0 1px 14px rgba(0, 0, 0, 0.06);
+}
+.dark .glass-topbar {
+  background: rgba(10, 11, 13, 0.88) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 1px 14px rgba(0, 0, 0, 0.30);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border-top: 1px solid rgba(0, 0, 0, 0.07) !important;
+  /* Multi-layer shadow — reads well even on washed-out low-DPI screens */
+  box-shadow:
+    0 -1px 0 rgba(0, 0, 0, 0.05),
+    0 -4px 24px rgba(0, 0, 0, 0.09) !important;
+}
+.dark .glass-nav {
+  background: rgba(9, 10, 13, 0.96) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow:
+    0 -1px 0 rgba(255, 255, 255, 0.04),
+    0 -4px 24px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Sidebar — light: rich emerald brand colour, dark: near-black graphite (green kept as an accent, not a wash) */
+.glass-sidebar {
+  background: #1C3D2A !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: 2px 0 32px rgba(0, 0, 0, 0.22);
+}
+.dark .glass-sidebar {
+  background: #0C0D10 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 2px 0 32px rgba(0, 0, 0, 0.55);
+}
+
+/* Glass modal / sheet */
+.glass-modal {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.40);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.dark .glass-modal {
+  background: rgba(15, 16, 19, 0.90);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Hover-lift for cards */
+.card-lift {
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 200ms ease;
+  will-change: transform;
+}
+.card-lift:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+.dark .card-lift:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.30);
+}
+
+/* Float-shadow buttons */
+.btn-float {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 160ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 160ms ease, background 80ms ease !important;
+  will-change: transform;
+}
+.btn-float:hover:not(:disabled) {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.10);
+}
+.btn-float:active:not(:disabled) {
+  transform: scale(0.97) translateZ(0);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.10);
+}

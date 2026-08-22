@@ -1,3 +1,4 @@
+import '../dashboard.css';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Sidebar } from '@/components/layout/Sidebar';

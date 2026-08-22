@@ -1,3 +1,4 @@
+import '../dashboard.css';
 import { redirect } from 'next/navigation';
 import { MessageSquare } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
