@@ -249,6 +249,7 @@ async function QuickStats({ userId }: { userId: string }) {
       sub: 'Buyers can see these',
       icon: <Package size={18} />,
       color: C.greenBright,
+      bg: 'var(--color-primary-bg)',
       border: C.greenBright,
     },
     {
@@ -257,6 +258,7 @@ async function QuickStats({ userId }: { userId: string }) {
       sub: priceTrend !== null ? `${priceTrend >= 0 ? '↑' : '↓'} ${Math.abs(priceTrend).toFixed(1)}% today` : 'per kg',
       icon: <DollarSign size={18} />,
       color: priceTrend !== null && priceTrend < 0 ? C.red : C.amber,
+      bg: priceTrend !== null && priceTrend < 0 ? 'var(--color-danger-bg)' : 'var(--color-harvest-bg)',
       border: priceTrend !== null && priceTrend < 0 ? C.red : C.amber,
     },
     {
@@ -265,6 +267,7 @@ async function QuickStats({ userId }: { userId: string }) {
       sub: 'Add items to see value',
       icon: <Home size={18} />,
       color: C.blue,
+      bg: 'var(--color-sky-bg)',
       border: C.blue,
     },
     {
@@ -273,19 +276,20 @@ async function QuickStats({ userId }: { userId: string }) {
       sub: hasAlerts ? 'You have new messages' : 'All clear',
       icon: hasAlerts ? <Bell size={18} /> : <CheckCircle2 size={18} />,
       color: hasAlerts ? C.red : C.greenBright,
+      bg: hasAlerts ? 'var(--color-danger-bg)' : 'var(--color-primary-bg)',
       border: hasAlerts ? C.red : C.greenBright,
     },
   ];
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map(({ label, value, sub, icon, color, border }) => (
+      {stats.map(({ label, value, sub, icon, color, bg, border }) => (
         <div key={label} style={{ background: C.cardBg, borderRadius: '12px', boxShadow: C.cardShadow, borderTop: `3px solid ${border}`, padding: '20px' }}>
           <div className="flex items-start justify-between mb-3">
             <p className="text-xs font-semibold" style={{ color: C.muted }}>{label}</p>
-            <div style={{ color }}>{icon}</div>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: bg, color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
           </div>
-          <p className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>{value}</p>
+          <p className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: 'var(--font-mono)' }}>{value}</p>
           <p className="text-xs mt-1" style={{ color }}>{sub}</p>
         </div>
       ))}
