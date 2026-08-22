@@ -16,9 +16,22 @@ import { Wordmark } from "@/components/ui/Wordmark";
 // our own origin, eliminating the fonts.googleapis.com/fonts.gstatic.com
 // round-trips that used to block first paint on every fresh page load.
 // Streamlined font weights with swap display for minimal blocking and instant LCP
-const poppins   = Poppins({ subsets: ["latin"], weight: ["400","600","700"], variable: "--font-poppins", display: "swap" });
-const inter     = Inter({ subsets: ["latin"], weight: ["400","500","600","700"], variable: "--font-inter", display: "swap" });
-const dmMono    = DM_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-mono", display: "swap" });
+//
+// preload:false on poppins/inter/dmMono — these are the authenticated
+// dashboard's fonts, not the landing page's (landing uses oswald/plexSans/
+// plexMono as primaries; poppins/inter/dmMono only ever appear as CSS
+// fallback names in its font stacks, never actually needed on first
+// render). Every font here is declared once in the root layout, so
+// without this all 6 families' files were eagerly preloaded on EVERY
+// page including the landing page — on a throttled connection those 3
+// unused-there font fetches competed directly with the landing page's
+// actual CSS/fonts for bandwidth. A live trace at ~400kbps/400ms latency
+// (a rural-3G proxy) showed first paint not happening until ~32s;
+// preload:false stops the eager fetch, the font still loads normally
+// (and instantly, same-origin) once a page that actually uses it renders.
+const poppins   = Poppins({ subsets: ["latin"], weight: ["400","600","700"], variable: "--font-poppins", display: "swap", preload: false });
+const inter     = Inter({ subsets: ["latin"], weight: ["400","500","600","700"], variable: "--font-inter", display: "swap", preload: false });
+const dmMono    = DM_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-mono", display: "swap", preload: false });
 const oswald    = Oswald({ subsets: ["latin"], weight: ["600","700"], variable: "--font-oswald", display: "swap" });
 const plexSans  = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400","600"], variable: "--font-plex-sans", display: "swap" });
 const plexMono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400","500"], variable: "--font-plex-mono", display: "swap" });
