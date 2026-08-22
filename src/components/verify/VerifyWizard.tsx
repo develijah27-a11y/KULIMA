@@ -61,6 +61,18 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
     // file, not the sum of all of them.
     const urls: Record<string, string> = {};
     try {
+      // Firing several parallel requests can race a near-expiry access
+      // token: if it lapses mid-batch, whichever upload happens to land
+      // after the refresh swaps it out can momentarily carry an invalid
+      // token, which storage's RLS check reports as a generic "new row
+      // violates row-level security policy" — indistinguishable from an
+      // actual permissions problem, and only some uploads in the batch,
+      // not all, which is exactly the intermittent "used to work, now it
+      // doesn't" pattern this was reported as. Forcing a session check
+      // (supabase-js refreshes internally if near/past expiry) before the
+      // batch starts means every parallel request shares one guaranteed-
+      // fresh token instead of racing a refresh mid-flight.
+      await supabase.auth.getSession();
       const results = await Promise.all(docs.map(async (doc) => {
         const file = files[doc.key]!;
         const ext = file.name.split('.').pop() ?? 'jpg';

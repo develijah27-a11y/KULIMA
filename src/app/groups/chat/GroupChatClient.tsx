@@ -244,6 +244,12 @@ export function GroupChatClient({ adminId, currentUserId, currentUserName, membe
       .select('id, admin_id, sender_id, sender_name, body, created_at');
 
     if (insertError) {
+      // The generic on-screen message intentionally doesn't expose raw
+      // Postgres/RLS detail to the user, but that also meant the real
+      // cause (permission error vs network vs something else) was
+      // discarded entirely with nothing to go on when this got reported —
+      // logging it so it's at least visible via devtools console.
+      console.error('[GroupChat] send failed:', insertError);
       setMessages(prev => prev.filter(m => m.id !== tempId));
       setError('Message not sent. Please try again.');
       setDraft(text);

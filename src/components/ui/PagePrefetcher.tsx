@@ -202,10 +202,15 @@ export function PagePrefetcher() {
       return;
     }
 
-    // Inside a specific role (e.g. /farmer): only prefetch top 5 key routes for that active role
+    // Inside a specific role (e.g. /farmer): prefetch that role's key routes.
+    // Route-level RSC payloads are small and this only ever runs staggered
+    // through idle callbacks (never blocking real navigation), so widening
+    // past the previous top-5 is cheap even on a slower connection — the
+    // goal is that by the time someone actually taps into a section, its
+    // page is already warm instead of loading cold on first tap.
     const primaryRoutes = [
       ...SHARED_ROUTES,
-      ...(ROUTES_BY_ROLE[currentRole]?.slice(0, 5) ?? []),
+      ...(ROUTES_BY_ROLE[currentRole]?.slice(0, 10) ?? []),
     ];
 
     timers.current.push(...prefetchChunked(primaryRoutes, router, 600, 150, 3));

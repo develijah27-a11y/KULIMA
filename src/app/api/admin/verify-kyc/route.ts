@@ -6,6 +6,14 @@ import { NEXT_LEVEL, getLevelDetails, type VerificationLevel } from '@/lib/trust
 
 const LEVEL_LABEL: Record<string, string> = { green: 'Green', blue: 'Blue', gold: 'Gold' };
 
+// trust_score is a separate numeric field profile pages display (defaulting
+// to 50 when unset) but no code path ever actually wrote to it — a verified
+// account looked identical to an unverified one everywhere that showed this
+// number. Approval now raises it to reflect the tier earned; never lowers
+// it, so a lower-tier secondary-role approval can't undercut a score
+// already earned via the account's primary role.
+const LEVEL_TRUST_SCORE: Record<string, number> = { green: 65, blue: 80, gold: 95 };
+
 async function handlePOST(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -58,7 +66,7 @@ async function handlePOST(req: NextRequest) {
   // On approve: upgrade the profile's per-role verification level
   if (action === 'approve') {
     const { data: profile } = await (supabase.from as any)('profiles')
-      .select('role, role_verification_levels')
+      .select('role, role_verification_levels, trust_score')
       .eq('user_id', userId)
       .single();
 
@@ -72,6 +80,9 @@ async function handlePOST(req: NextRequest) {
     // role's approval can't overwrite the badge the primary identity earned.
     if (!(profile as any)?.role || submissionRole === (profile as any).role) {
       update.verification_level = targetLevel;
+      const currentTrust = (profile as any)?.trust_score ?? 50;
+      const earnedTrust = LEVEL_TRUST_SCORE[targetLevel] ?? currentTrust;
+      if (earnedTrust > currentTrust) update.trust_score = earnedTrust;
     }
 
     // profiles' UPDATE RLS policy only allows a row's own user to update it
