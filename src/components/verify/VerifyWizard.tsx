@@ -7,6 +7,7 @@ import {
   type VerificationLevel,
 } from '@/lib/trust';
 import { Clock, CheckCircle2, Check, Diamond, Star, Paperclip, AlertTriangle, Camera } from 'lucide-react';
+import { SelfieCameraCapture } from './SelfieCameraCapture';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -256,6 +257,25 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {docs.map((doc) => {
           const file = files[doc.key];
+
+          // Selfie is camera-only — a live front-camera capture, not a file
+          // picker. Uploading an existing photo would defeat the point of
+          // the check (nothing stops it from being a photo of a photo).
+          if (doc.key === 'selfie') {
+            return (
+              <div key={doc.key} style={{ background: file ? 'var(--color-primary-bg)' : C.cardBg, border: `2px dashed ${file ? 'var(--color-primary-muted)' : C.border}`, borderRadius: 12, padding: '16px 20px', transition: 'all 0.15s' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <p style={{ color: C.text, fontWeight: 600, fontSize: 14, margin: 0, flex: 1 }}>{doc.label}</p>
+                  {file && <CheckCircle2 size={20} style={{ color: 'var(--color-success)' }} />}
+                </div>
+                <SelfieCameraCapture
+                  capturedFile={file ?? null}
+                  onCapture={(f) => setFiles(prev => ({ ...prev, selfie: f }))}
+                />
+              </div>
+            );
+          }
+
           const isPhoto = doc.accept.includes('image/');
           function onFile(e: React.ChangeEvent<HTMLInputElement>) {
             const f = e.target.files?.[0] ?? null;
