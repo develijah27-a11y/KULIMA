@@ -121,26 +121,6 @@ export function NotificationBell({ initialUnreadCount = 0, currentRole }: Notifi
     });
   }, []);
 
-  // Broadcast our unread count so the sidebar/mobile-nav "Notifications"
-  // badge — a static number baked in at server-render time — stays in sync.
-  // Tagged with source: 'bell' so our own listener below (which exists for
-  // *other* surfaces, e.g. a /*/notifications page marking everything read
-  // server-side) can ignore echoes of its own broadcasts.
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent(UNREAD_COUNT_EVENT, { detail: { count: unreadCount, source: 'bell' } }));
-  }, [unreadCount]);
-
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const { count, source } = (e as CustomEvent<{ count: number; source?: string }>).detail;
-      if (source === 'bell') return;
-      setUnreadCount(count);
-      setLoaded(false);
-    };
-    window.addEventListener(UNREAD_COUNT_EVENT, handler);
-    return () => window.removeEventListener(UNREAD_COUNT_EVENT, handler);
-  }, []);
-
   const ensureLoaded = useCallback(async () => {
     if (loaded) return;
     try {
@@ -161,6 +141,39 @@ export function NotificationBell({ initialUnreadCount = 0, currentRole }: Notifi
       setLoaded(true);
     } catch {}
   }, [loaded, currentRole]);
+
+  // Sync initial unread count
+  useEffect(() => {
+    setUnreadCount(initialUnreadCount);
+  }, [initialUnreadCount]);
+
+  // Load notifications eagerly in the background
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      ensureLoaded();
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [ensureLoaded]);
+
+  // Broadcast our unread count so the sidebar/mobile-nav "Notifications"
+  // badge stays in sync.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(UNREAD_COUNT_EVENT, { detail: { count: unreadCount, source: 'bell' } }));
+  }, [unreadCount]);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { count, source } = (e as CustomEvent<{ count: number; source?: string }>).detail;
+      if (source === 'bell') return;
+      setUnreadCount(count);
+      // If count dropped to 0, mark all local items as read
+      if (count === 0) {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      }
+    };
+    window.addEventListener(UNREAD_COUNT_EVENT, handler);
+    return () => window.removeEventListener(UNREAD_COUNT_EVENT, handler);
+  }, []);
 
   const handleMarkRead = useCallback(async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));

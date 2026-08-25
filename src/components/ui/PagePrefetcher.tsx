@@ -3,6 +3,19 @@
 import { useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
+const PUBLIC_ROUTES = [
+  '/how-it-works',
+  '/about',
+  '/news',
+  '/premium',
+  '/faq',
+  '/help',
+  '/contact',
+  '/auth/signin',
+  '/auth/signup',
+  '/dashboard',
+];
+
 const ROUTES_BY_ROLE: Record<string, string[]> = {
   farmer: [
     '/farmer/dashboard',
@@ -124,10 +137,7 @@ const ROUTES_BY_ROLE: Record<string, string[]> = {
   ],
 };
 
-const SHARED_ROUTES = [
-  '/dashboard',
-];
-
+const SHARED_ROUTES = ['/dashboard'];
 const ALL_ROLES = Object.keys(ROUTES_BY_ROLE);
 
 function detectRole(pathname: string): string | null {
@@ -137,87 +147,105 @@ function detectRole(pathname: string): string | null {
   return null;
 }
 
-// requestIdleCallback with a setTimeout fallback for browsers that don't support it
+// requestIdleCallback with a setTimeout fallback
 const scheduleIdle: (cb: () => void, timeout?: number) => void =
   typeof window !== 'undefined' && 'requestIdleCallback' in window
-    ? (cb, timeout = 6000) => (window as any).requestIdleCallback(cb, { timeout })
-    : (cb) => setTimeout(cb, 0);
+    ? (cb, timeout = 2500) => (window as any).requestIdleCallback(cb, { timeout })
+    : (cb) => setTimeout(cb, 10);
 
-// Prefetch `routes` in chunks of 6, spaced `gapMs` apart, after `delayMs` initial delay.
-// Each chunk is wrapped in requestIdleCallback so we never block user interaction.
-function prefetchChunked(
+function prefetchBatch(
   routes: string[],
   router: { prefetch: (href: string) => void },
-  delayMs: number,
-  gapMs = 120,
-  chunkSize = 6,
+  initialDelayMs = 50,
+  gapMs = 80,
+  chunkSize = 4,
 ): ReturnType<typeof setTimeout>[] {
   const timers: ReturnType<typeof setTimeout>[] = [];
   for (let i = 0; i < routes.length; i += chunkSize) {
     const chunk = routes.slice(i, i + chunkSize);
-    const delay = delayMs + (i / chunkSize) * gapMs;
+    const delay = initialDelayMs + (i / chunkSize) * gapMs;
     timers.push(
-      setTimeout(
-        () => scheduleIdle(() => chunk.forEach(r => { try { router.prefetch(r); } catch { /* ignore */ } })),
-        delay,
-      ),
+      setTimeout(() => {
+        scheduleIdle(() => {
+          chunk.forEach((r) => {
+            try {
+              router.prefetch(r);
+            } catch {
+              /* ignore */
+            }
+          });
+        });
+      }, delay),
     );
   }
   return timers;
 }
 
 export function PagePrefetcher() {
-  const router  = useRouter();
+  const router = useRouter();
   const pathname = usePathname();
   const prefetchedRole = useRef<string | null>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const prefetchedUrls = useRef<Set<string>>(new Set());
+
+  // Global hover / touch listener: prefetch any clicked/hovered link at 0ms latency
+  useEffect(() => {
+    const handlePointerOver = (e: MouseEvent | TouchEvent) => {
+      const target = (e.target as HTMLElement)?.closest('a');
+      if (!target) return;
+      const href = target.getAttribute('href');
+      if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+      if (prefetchedUrls.current.has(href)) return;
+      prefetchedUrls.current.add(href);
+      try {
+        router.prefetch(href);
+      } catch {}
+    };
+
+    document.addEventListener('mouseover', handlePointerOver, { passive: true });
+    document.addEventListener('touchstart', handlePointerOver, { passive: true });
+
+    return () => {
+      document.removeEventListener('mouseover', handlePointerOver);
+      document.removeEventListener('touchstart', handlePointerOver);
+    };
+  }, [router]);
 
   useEffect(() => {
-    // Skip on metered / slow connections
+    // Skip on explicit data-saver mode
     const conn = (navigator as Navigator & {
       connection?: { saveData?: boolean; effectiveType?: string };
     }).connection;
-    if (conn?.saveData || conn?.effectiveType === 'slow-2g' || conn?.effectiveType === '2g') return;
+    if (conn?.saveData || conn?.effectiveType === 'slow-2g') return;
 
     const currentRole = detectRole(pathname);
+
+    // Cancel pending timers from previous route transitions
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+
+    // On landing & public marketing pages: immediately warm up all key public routes & auth entry points
+    if (!currentRole) {
+      timers.current.push(...prefetchBatch(PUBLIC_ROUTES, router, 40, 70, 3));
+      return;
+    }
 
     // Skip if role hasn't changed
     if (currentRole === prefetchedRole.current) return;
     prefetchedRole.current = currentRole;
 
-    // Cancel any still-pending timers from the previous role
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-
-    // On landing / public pages: only prefetch signin & signup after the initial page has settled
-    if (!currentRole) {
-      timers.current.push(
-        setTimeout(() => {
-          scheduleIdle(() => {
-            try { router.prefetch('/auth/signin'); } catch {}
-            try { router.prefetch('/auth/signup'); } catch {}
-          });
-        }, 1500)
-      );
-      return;
-    }
-
-    // Inside a specific role (e.g. /farmer): prefetch that role's key routes.
-    // Route-level RSC payloads are small and this only ever runs staggered
-    // through idle callbacks (never blocking real navigation), so widening
-    // past the previous top-5 is cheap even on a slower connection — the
-    // goal is that by the time someone actually taps into a section, its
-    // page is already warm instead of loading cold on first tap.
+    // Inside a role hub: immediately warm up the primary and top navigation routes for that role
     const primaryRoutes = [
       ...SHARED_ROUTES,
-      ...(ROUTES_BY_ROLE[currentRole]?.slice(0, 10) ?? []),
+      ...(ROUTES_BY_ROLE[currentRole] ?? []),
     ];
 
-    timers.current.push(...prefetchChunked(primaryRoutes, router, 600, 150, 3));
+    timers.current.push(...prefetchBatch(primaryRoutes, router, 50, 90, 4));
 
-    return () => { timers.current.forEach(clearTimeout); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+    return () => {
+      timers.current.forEach(clearTimeout);
+    };
+  }, [pathname, router]);
 
   return null;
 }
