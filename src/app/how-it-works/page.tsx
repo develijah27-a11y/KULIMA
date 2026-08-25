@@ -70,7 +70,7 @@ export default function HowItWorksPage() {
 
       <h2>Paying and getting paid</h2>
       <p>
-        Every role has a wallet. Deposits and withdrawals move through Nylon Pay via MTN Mobile
+        Every role has a wallet. Deposits and withdrawals move through PrimePay via MTN Mobile
         Money and Airtel Money. Cropify never asks for your mobile money PIN. See the{' '}
         <a href="/faq">FAQ</a> for more on deposits, withdrawals, and commission.
       </p>

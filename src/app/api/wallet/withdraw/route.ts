@@ -4,7 +4,7 @@ import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
 import { verifyPin, isValidPinFormat } from '@/lib/wallet-pin';
 import { logSystemEvent } from '@/lib/system-log';
-import { nylonpay } from '@/lib/nylon-pay';
+import { primepay } from '@/lib/prime-pay';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -17,13 +17,12 @@ export async function POST(req: Request) {
 
   const { amount, phone, provider, pin } = await req.json();
 
-  if (!amount || amount < 500) return NextResponse.json({ error: 'Minimum withdrawal is UGX 500' }, { status: 400 });
+  if (!amount || Number(amount) < 500) return NextResponse.json({ error: 'Minimum withdrawal is UGX 500' }, { status: 400 });
   if (!phone) return NextResponse.json({ error: 'Phone number required' }, { status: 400 });
-  if (!['mtn', 'airtel'].includes(provider)) return NextResponse.json({ error: 'Invalid provider' }, { status: 400 });
+  if (!['mtn', 'airtel'].includes(provider?.toLowerCase())) return NextResponse.json({ error: 'Invalid provider. Choose MTN or Airtel Money.' }, { status: 400 });
 
   const serviceUrl  = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  if (!nylonpay) return NextResponse.json({ error: 'Payment service not configured' }, { status: 503 });
 
   // Use service role to check + deduct balance atomically
   const admin = createServiceClient(serviceUrl, serviceKey);
@@ -36,10 +35,6 @@ export async function POST(req: Request) {
   if (walletErr || !wallet) return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
   if (wallet.is_frozen) return NextResponse.json({ error: 'This wallet is frozen pending review. Contact support for assistance.' }, { status: 403 });
 
-  // A PIN separate from the account password is what actually stops someone
-  // who's picked up an unlocked, already-signed-in phone from emptying the
-  // wallet — rate-limited independently since a 4-digit PIN has few enough
-  // combinations that unlimited guessing would matter.
   if (!wallet.pin_hash) {
     return NextResponse.json({ error: 'Set up your wallet PIN before withdrawing.', code: 'PIN_NOT_SET' }, { status: 403 });
   }
@@ -58,59 +53,59 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Incorrect PIN', code: 'PIN_INCORRECT' }, { status: 403 });
   }
 
-  if (wallet.balance < amount) return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
-
-  // Atomic conditional debit (UPDATE ... WHERE balance >= amount, single row
-  // lock) — closes the race where two concurrent withdrawal requests both
-  // pass the soft balance check above and both trigger a real payout.
-  const { data: debited, error: debitErr } = await (admin as any).rpc('claim_wallet_debit', {
-    p_wallet_id: wallet.id,
-    p_amount: amount,
-  });
-  if (debitErr || !debited) {
+  if (wallet.balance < Number(amount)) {
     return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
   }
+
+  // Deduct balance upfront
+  const { error: deductErr } = await (admin as any).rpc('debit_wallet', {
+    p_wallet_id: wallet.id,
+    p_amount: Number(amount),
+  });
+  if (deductErr) {
+    return NextResponse.json({ error: 'Failed to process balance deduction' }, { status: 500 });
+  }
+
+  const cleanDigits = phone.replace(/\D/g, '');
+  const normalizedPhone = cleanDigits.startsWith('256')
+    ? `+${cleanDigits}`
+    : cleanDigits.startsWith('0')
+    ? `+256${cleanDigits.slice(1)}`
+    : `+256${cleanDigits}`;
 
   const [momoInsert, txnInsert] = await Promise.all([
     (admin.from as any)('mobile_money_requests').insert({
       user_id: user.id,
       type: 'withdrawal',
-      amount,
-      phone,
-      provider,
+      amount: Number(amount),
+      phone: normalizedPhone,
+      provider: provider.toLowerCase(),
       status: 'pending',
     }).select('id').single(),
     (admin.from as any)('wallet_transactions').insert({
       wallet_id: wallet.id,
       user_id: user.id,
       type: 'withdrawal',
-      amount,
+      amount: Number(amount),
       status: 'pending',
-      description: `Withdrawal to ${provider.toUpperCase()} ${phone}`,
+      description: `Mobile money withdrawal via ${provider.toUpperCase()} — ${phone}`,
     }).select('id').single(),
   ]);
 
   if (momoInsert.error || txnInsert.error) {
-    await (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: amount });
+    await (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: Number(amount) });
     return NextResponse.json({ error: 'Failed to create withdrawal request' }, { status: 500 });
   }
 
-  const normalizedPhone = phone.startsWith('+') ? phone : phone.startsWith('0') ? `+256${phone.slice(1)}` : `+256${phone}`;
-
   try {
-    const payout = await nylonpay.makePayout({
-      amount,
+    const payout = await primepay.makePayout({
+      amount: Number(amount),
       currency: 'UGX',
       description: 'Cropify Pay withdrawal',
       customer: { name: user.email ?? 'Cropify user', phoneNumber: normalizedPhone },
       destination: { accountHolderName: user.email ?? 'Cropify user', accountNumber: normalizedPhone },
     });
 
-    // Nylon Pay auto-generates the reference — store it, and leave the final
-    // completed/failed transition (plus refund-on-failure) to the webhook,
-    // since a payout can take longer than this request should stay open for.
-    // wallet_transactions.status has no 'processing' value (pending/completed/
-    // failed only), so it stays 'pending' until the webhook resolves it.
     await Promise.all([
       (admin.from as any)('mobile_money_requests').update({
         status: 'processing',
@@ -121,16 +116,18 @@ export async function POST(req: Request) {
       }).eq('id', txnInsert.data.id),
     ]);
 
-    return NextResponse.json({ success: true, message: 'Withdrawal initiated' });
+    return NextResponse.json({
+      success: true,
+      reference: payout.reference,
+      message: payout.message || `Withdrawal of UGX ${Number(amount).toLocaleString()} initiated to ${normalizedPhone}. Funds will arrive shortly.`,
+    });
   } catch (err) {
-    // makePayout() only throws on client-side validation errors — a
-    // provider-side rejection instead arrives later via webhook.
     await Promise.all([
-      (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: amount }),
+      (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: Number(amount) }),
       (admin.from as any)('wallet_transactions').update({ status: 'failed' }).eq('id', txnInsert.data.id),
       (admin.from as any)('mobile_money_requests').update({
         status: 'failed',
-        failure_reason: err instanceof Error ? err.message : 'Nylon Pay rejected the withdrawal request',
+        failure_reason: err instanceof Error ? err.message : 'PrimePay rejected the withdrawal request',
       }).eq('id', momoInsert.data.id),
     ]);
     logSystemEvent({

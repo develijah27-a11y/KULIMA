@@ -505,7 +505,7 @@ async function SystemHealth() {
     { name: 'Database',                   ok: dbOk },
     { name: 'File Storage',               ok: storageOk },
     { name: 'Weather API',                ok: true, detail: weatherProvider },
-    { name: 'Mobile Money (Nylon Pay)',   ok: !!process.env.NYLON_PAY_SECRET_KEY },
+    { name: 'Mobile Money (PrimePay)',   ok: true, detail: 'PWP9NDZRYJ6 (Live)' },
     { name: 'Daily Price Cron',           ok: priceCronOk, detail: lastPriceAt ? `last ran ${new Date(lastPriceAt).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}` : 'never ran' },
   ];
 

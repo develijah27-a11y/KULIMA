@@ -38,7 +38,7 @@ export default function AboutPage() {
 
       <h2>How money moves safely</h2>
       <p>
-        Deposits and withdrawals run through Nylon Pay via MTN Mobile Money and Airtel Money. When a
+        Deposits and withdrawals run through PrimePay via MTN Mobile Money and Airtel Money. When a
         buyer pays for an order, the money moves into <strong>escrow</strong> — held by Cropify, not
         the seller — until delivery is confirmed. This protects both sides: a buyer isn't paying into
         thin air, and a farmer, supplier, or transporter knows the money is already committed before

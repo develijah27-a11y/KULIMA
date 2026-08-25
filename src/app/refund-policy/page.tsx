@@ -16,7 +16,7 @@ export default function RefundPolicyPage() {
 
       <h2>1. How payments work</h2>
       <ul>
-        <li>Deposits and withdrawals are processed through Nylon Pay via MTN Mobile Money and Airtel Money. Cropify does not have access to, and never asks for, your mobile money PIN.</li>
+        <li>Deposits and withdrawals are processed through PrimePay via MTN Mobile Money and Airtel Money. Cropify does not have access to, and never asks for, your mobile money PIN.</li>
         <li>You top up your Cropify wallet before paying for an order, and withdraw earnings from your wallet back to mobile money.</li>
         <li>Cropify deducts a commission from each completed transaction, calculated as a percentage of the transaction value. The exact fee is shown to you before you confirm any payment — nothing is deducted silently.</li>
       </ul>
@@ -75,8 +75,7 @@ export default function RefundPolicyPage() {
         If a withdrawal to mobile money fails on the network side, the funds are <strong>not
         lost</strong> — they remain in your Cropify wallet, and you can retry the withdrawal. If a
         withdrawal keeps failing, contact <a href="/contact">support</a> with the transaction
-        details (amount, date, and mobile money number used) so we can check the status with Nylon
-        Pay.
+        details (amount, date, and mobile money number used) so we can check the status with PrimePay.
       </p>
 
       <h2>7. What this policy doesn't cover</h2>
