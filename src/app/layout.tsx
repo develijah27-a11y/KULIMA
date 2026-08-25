@@ -127,15 +127,11 @@ export default function RootLayout({
       <head>
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* ?v=11 cache-busts the final approved Cropify logo — these paths
-            aren't content-hashed, and the old files were served with a
-            1-year immutable Cache-Control, so browsers/CDN need a new URL
-            to notice the change. Bump this version any time icon.svg's
-            content changes. */}
-        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=11" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=11" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=11" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=11" />
+        {/* ?v=12 cache-busts the updated Cropify logo & app icon assets */}
+        <link rel="icon" type="image/svg+xml" href="/icons/icon.svg?v=12" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32.png?v=12" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16.png?v=12" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=12" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
@@ -160,32 +156,16 @@ export default function RootLayout({
             (plain CSS, no JS needed to appear); splashScript below decides
             when to dismiss it. */}
         <div id="app-splash" className="app-splash" aria-hidden="true">
-          <svg className="app-splash-mark" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="256" height="256" rx="57" fill="#FFFFFF" />
-            {/* Thick green "C" ring wrapping a rising sun over field mounds,
-                with a leaf overlapping the ring's lower terminus — matches
-                public/icons/icon.svg; keep both in sync. */}
-            <defs>
-              <linearGradient id="splashRingGrad" x1="128" y1="40" x2="195" y2="185" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#0A5C36" />
-                <stop offset="0.55" stopColor="#34A853" />
-                <stop offset="1" stopColor="#8BC34A" />
-              </linearGradient>
-            </defs>
-            <path d="M195.4,184.6 A88,88 0 1 1 195.4,71.4" stroke="url(#splashRingGrad)" strokeWidth="46" strokeLinecap="round" />
-            <circle cx="115" cy="110" r="30" fill="#FFB300" />
-            <path d="M115,74 L120.7,96.1 L140.5,84.5 L128.9,104.3 L151,110 L128.9,115.7 L140.5,135.5 L120.7,123.9 L115,146 L109.3,123.9 L89.5,135.5 L101.1,115.7 L79,110 L101.1,104.3 L89.5,84.5 L109.3,96.1 Z" fill="#FFFFFF" />
-            <path d="M45,170 Q88,142 128,158 Q152,146 178,157 Q186,161 183,170 L183,202 L45,202 Z" fill="#0A5C36" />
-            <path d="M45,180 Q90,150 130,167 Q155,153 180,166 Q188,170 185,180 L185,204 L45,204 Z" fill="#34A853" />
-            <path d="M45,190 Q85,165 125,180 Q150,168 175,179 Q184,184 180,192 L180,208 L45,208 Z" fill="#8BC34A" />
-            <path d="M192,183 Q177,119.3 215,66 Q203.5,124.5 192,183 Z" fill="#0A5C36" />
-            <path d="M192,183 Q203.5,124.5 215,66 Q230,129.7 192,183 Z" fill="#8BC34A" />
-            <path d="M192,183 Q203.5,124.5 215,66" stroke="#F4FBF6" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity={0.95} />
-            <path d="M199,143 L188,132" stroke="#F4FBF6" strokeWidth="1.5" strokeLinecap="round" opacity={0.75} />
-            <path d="M208,105 L218,113" stroke="#F4FBF6" strokeWidth="1.5" strokeLinecap="round" opacity={0.75} />
-          </svg>
+          <img
+            className="app-splash-mark"
+            src="/icons/icon-192.png?v=12"
+            alt="Cropify"
+            width={120}
+            height={120}
+            style={{ borderRadius: '22%', background: '#FFFFFF', padding: '6px' }}
+          />
           <span className="app-splash-word"><Wordmark color="#FFFFFF" leafColor="#8BE9A8" style={{ fontSize: 'inherit' }} /></span>
-          <span className="app-splash-tagline">Grow smart. Farm better.</span>
+          <span className="app-splash-tagline">Inform • Connect • Grow</span>
           <div className="app-splash-dots"><span /><span /><span /></div>
         </div>
         <script dangerouslySetInnerHTML={{ __html: splashScript }} />

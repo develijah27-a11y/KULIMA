@@ -1,5 +1,5 @@
-﻿import Link from 'next/link';
-import { Leaf } from 'lucide-react';
+import Link from 'next/link';
+import { AppIcon } from '@/components/ui/AppIcon';
 
 export default function NotFound() {
   return (
@@ -16,14 +16,8 @@ export default function NotFound() {
       }}
     >
       {/* Logo mark */}
-      <div
-        style={{
-          width: 72, height: 72, borderRadius: 20, background: 'var(--color-primary)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginBottom: 24, boxShadow: '0 8px 32px rgba(22,163,74,0.25)',
-        }}
-      >
-        <Leaf size={36} style={{ color: '#fff' }} />
+      <div style={{ marginBottom: 24, filter: 'drop-shadow(0 8px 24px rgba(22,163,74,0.25))' }}>
+        <AppIcon size={80} rounded={20} priority />
       </div>
 
       <p

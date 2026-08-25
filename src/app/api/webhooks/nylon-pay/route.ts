@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
-import { verifyWebhookSignature } from '@nile-squad/nylonpay-ts';
+import { verifyWebhookSignature } from '@/lib/nylon-pay';
 import { logSystemEvent } from '@/lib/system-log';
 
 export async function POST(req: Request) {
   // Signature verification needs the raw bytes, not parsed JSON — parsing
   // first and re-serializing could change the signed content.
   const rawBody = await req.text();
-  const signature = req.headers.get('x-nylon-signature') ?? '';
+  const signature =
+    req.headers.get('x-nylon-signature') ??
+    req.headers.get('x-webhook-signature') ??
+    req.headers.get('x-signature') ??
+    '';
   const secret = process.env.NYLON_PAY_WEBHOOK_SECRET;
 
   if (!secret || !verifyWebhookSignature({ payload: rawBody, signature, secret })) {

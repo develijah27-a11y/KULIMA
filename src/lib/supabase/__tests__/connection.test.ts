@@ -106,7 +106,11 @@ describe('Supabase Setup Verification', () => {
     const isConfigured =
       process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_URL.startsWith('http') &&
-      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('REDACTED');
+      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('REDACTED') &&
+      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder') &&
+      !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('cropify-uganda') &&
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY &&
+      !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.includes('REDACTED');
 
     const supabaseUrl = isConfigured
       ? process.env.NEXT_PUBLIC_SUPABASE_URL!

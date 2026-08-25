@@ -267,7 +267,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     // Standard path — email confirmation required
-    setSuccess(`Account created! We sent a 6-digit code to ${email} — enter it below to activate your account.`);
+    setSuccess(`Account created! We've sent a 6-digit Cropify verification code to ${email} — enter it below to activate your account.`);
     setNeedsConfirmation(true);
     setCodeSentAt(Date.now());
   }, [email, password, fullName, phoneNumber, location, agreedToTerms, exchangeSessionAndRedirect]);
@@ -438,7 +438,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         <div>
           <label className="block text-sm mb-1.5 text-center"
             style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>
-            Enter the 6-digit code
+            Enter the 6-digit Cropify code
           </label>
           <OtpInput
             length={6}
@@ -457,7 +457,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                   </span>
                 </p>
               : <p style={{ fontSize: 12, color: '#FCA5A5', textAlign: 'center', marginTop: 8, fontWeight: 700 }}>
-                  This code has expired — request a new one below.
+                  This verification code has expired — request a new one below.
                 </p>
           )}
         </div>
@@ -475,12 +475,12 @@ export function AuthForm({ mode }: AuthFormProps) {
               cursor: resending || resendCooldown > 0 ? 'default' : 'pointer',
               textDecoration: resending || resendCooldown > 0 ? 'none' : 'underline' }}>
             {resending
-              ? 'Sending…'
+              ? 'Sending code…'
               : resendCooldown > 0
               ? `Resend code in ${resendCooldown}s`
               : resent
-              ? 'Email sent — check your inbox'
-              : "Didn't get it? Resend code"}
+              ? 'Code sent — check your inbox'
+              : "Didn't receive it? Resend Cropify code"}
           </button>
         </div>
 
