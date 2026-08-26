@@ -6,6 +6,8 @@ import { logSystemEvent } from '@/lib/system-log';
 export async function POST(req: Request) {
   const rawBody = await req.text();
   const signature =
+    req.headers.get('primepay-signature') ??
+    req.headers.get('PrimePay-Signature') ??
     req.headers.get('x-primepay-signature') ??
     req.headers.get('x-signature') ??
     req.headers.get('x-nylon-signature') ??
@@ -36,11 +38,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
   }
 
-  const event = body.event || body.type || (body.status === 'successful' ? 'transaction.successful' : 'unknown');
   const payload = body.payload || body.data || body;
-  const reference = payload.reference || body.reference;
+  const transactionId = body.transaction_id || body.transactionId || payload.transaction_id || payload.transactionId;
+  const reference = payload.reference || body.reference || transactionId;
 
-  if (!reference) return NextResponse.json({ received: true });
+  if (!reference && !transactionId) return NextResponse.json({ received: true });
 
   const admin = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -49,16 +51,20 @@ export async function POST(req: Request) {
 
   const { data: momoReq } = await (admin.from as any)('mobile_money_requests')
     .select('id, user_id, amount, status, type')
-    .eq('provider_ref', reference)
+    .or(`provider_ref.eq.${transactionId || reference},provider_ref.eq.${reference},id.eq.${reference}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!momoReq || momoReq.status === 'completed') return NextResponse.json({ received: true });
 
+  const statusStr = (body.status || payload.status || event || '').toLowerCase();
   const isSuccess =
-    event === 'transaction.successful' ||
-    event === 'charge.success' ||
-    payload.status === 'successful' ||
-    payload.status === 'completed';
+    statusStr === 'success' ||
+    statusStr === 'successful' ||
+    statusStr === 'completed' ||
+    statusStr === 'transaction.successful' ||
+    statusStr === 'charge.success';
 
   if (isSuccess && momoReq.type === 'deposit') {
     const amount = Number(payload.amount ?? momoReq.amount);

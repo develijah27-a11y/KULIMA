@@ -19,7 +19,9 @@ export async function GET(req: Request) {
   const { data: momoReq } = await (admin.from as any)('mobile_money_requests')
     .select('id, amount, status, provider_ref, provider, phone, failure_reason, created_at')
     .eq('user_id', user.id)
-    .eq('provider_ref', reference)
+    .or(`provider_ref.eq.${reference},id.eq.${reference}`)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!momoReq) {

@@ -61,13 +61,14 @@ export async function POST(req: Request) {
     // Store the payment provider reference
     await (admin.from as any)('mobile_money_requests').update({
       status: 'processing',
-      provider_ref: payment.reference,
+      provider_ref: payment.transactionId || payment.reference,
     }).eq('id', momoReq.id);
 
     return NextResponse.json({
       success: true,
       reference: payment.reference,
-      message: payment.message || `Payment prompt sent to ${normalizedPhone}. Please check your phone and enter your Mobile Money PIN to approve the deposit of UGX ${Number(amount).toLocaleString()}.`,
+      transaction_id: payment.transactionId,
+      message: payment.message || `Payment prompt sent to ${normalizedPhone}. Please enter your Mobile Money PIN on your handset to approve the deposit of UGX ${Number(amount).toLocaleString()}.`,
     });
   } catch (err) {
     await (admin.from as any)('mobile_money_requests').update({
