@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Lock, Smartphone, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Lock, Smartphone, RefreshCw, Check, ArrowRight } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -27,14 +27,17 @@ export function WalletActions({ balance, escrowBalance }: Props) {
   const [mode, setMode]       = useState<Mode>(null);
   const [amount, setAmount]   = useState('');
   const [phone, setPhone]     = useState('');
-  const [provider, setProvider] = useState<'mtn' | 'airtel'>('mtn');
+  const [provider, setProvider] = useState<'mtn' | 'airtel'>('airtel');
   const [toAccount, setToAccount] = useState('');
   const [note, setNote]       = useState('');
   const [pin, setPin]         = useState('');
   const [loading, setLoading] = useState(false);
+  const [confirming, setConfirming] = useState(false);
   const [error, setError]     = useState('');
   const [success, setSuccess] = useState('');
+  const [activeReference, setActiveReference] = useState('');
   const [isAwaitingPin, setIsAwaitingPin] = useState(false);
+  const [isDepositConfirmed, setIsDepositConfirmed] = useState(false);
 
   const [hasPin, setHasPin]   = useState<boolean | null>(null);
   const [pinCheckDone, setPinCheckDone] = useState(false);
@@ -51,25 +54,59 @@ export function WalletActions({ balance, escrowBalance }: Props) {
       .catch(() => setPinCheckDone(true));
   }, [needsPinCheck, pinCheckDone]);
 
-  // Auto-refresh balance in the background while awaiting PIN approval
+  // Background status check when awaiting PIN approval
   useEffect(() => {
-    if (!isAwaitingPin) return;
-    const interval = setInterval(() => {
-      router.refresh();
-    }, 3000);
+    if (!isAwaitingPin || !activeReference || isDepositConfirmed) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/wallet/deposit/status?ref=${encodeURIComponent(activeReference)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'completed') {
+            setIsDepositConfirmed(true);
+            setIsAwaitingPin(false);
+            router.refresh();
+          }
+        }
+      } catch {}
+    }, 2000);
+
     const timeout = setTimeout(() => {
       setIsAwaitingPin(false);
-    }, 35000);
+    }, 45000);
+
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [isAwaitingPin, router]);
+  }, [isAwaitingPin, activeReference, isDepositConfirmed, router]);
 
   function reset() {
     setMode(null); setAmount(''); setPhone(''); setToAccount(''); setNote('');
     setPin(''); setSetupPin(''); setSetupPinConfirm(''); setError(''); setSuccess('');
-    setIsAwaitingPin(false);
+    setActiveReference(''); setIsAwaitingPin(false); setIsDepositConfirmed(false);
+  }
+
+  async function handleInstantConfirm() {
+    if (!activeReference) return;
+    setConfirming(true);
+    try {
+      const res = await fetch('/api/wallet/deposit/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: activeReference }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsDepositConfirmed(true);
+        setIsAwaitingPin(false);
+        setSuccess(`UGX ${parseFloat(amount).toLocaleString()} deposit confirmed and credited to your wallet.`);
+        router.refresh();
+      }
+    } catch {} finally {
+      setConfirming(false);
+    }
   }
 
   async function submitPinSetup(e: FormEvent) {
@@ -122,22 +159,27 @@ export function WalletActions({ balance, escrowBalance }: Props) {
       return;
     }
 
-    if (!phone.match(/^(0|\+?256)[0-9]{9}$/)) { setError('Enter a valid Uganda phone number (e.g. 0772000000 or 0752000000)'); return; }
+    const cleanPhone = phone.trim().replace(/\s+/g, '');
+    if (!cleanPhone.match(/^(0|\+?256)[0-9]{9}$/)) {
+      setError('Enter a valid Uganda phone number (e.g. 0772123456 or 0752123456)');
+      return;
+    }
 
     setLoading(true); setError('');
     try {
       const res = await fetch(`/api/wallet/${mode}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: n, phone, provider, pin: mode === 'withdraw' ? pin : undefined }),
+        body: JSON.stringify({ amount: n, phone: cleanPhone, provider, pin: mode === 'withdraw' ? pin : undefined }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Request failed');
       if (mode === 'deposit') {
-        setSuccess(json.message || `A payment prompt has been sent to ${phone}. Please check your phone screen and enter your Mobile Money PIN to approve the deposit.`);
+        setActiveReference(json.reference || `PWP-${Date.now()}`);
+        setSuccess(json.message || `Payment prompt sent to ${cleanPhone}. Please check your phone and enter your Mobile Money PIN.`);
         setIsAwaitingPin(true);
       } else {
-        setSuccess(json.message || 'Withdrawal initiated. Funds will arrive on your mobile phone shortly.');
+        setSuccess(json.message || 'Withdrawal initiated. Funds will arrive on your phone shortly.');
       }
       router.refresh();
     } catch (err: any) {
@@ -150,33 +192,86 @@ export function WalletActions({ balance, escrowBalance }: Props) {
   if (success) {
     return (
       <div style={{ textAlign: 'center', padding: '16px 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10, color: 'var(--color-success)' }}>
-          {mode === 'deposit' ? <Smartphone size={44} className="animate-pulse" /> : <CheckCircle2 size={44} />}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: isDepositConfirmed ? 'var(--color-success)' : '#10B981' }}>
+          {isDepositConfirmed ? (
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Check size={32} color="#10B981" />
+            </div>
+          ) : mode === 'deposit' ? (
+            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Smartphone size={30} className="animate-pulse" color="#10B981" />
+            </div>
+          ) : (
+            <CheckCircle2 size={46} color="#10B981" />
+          )}
         </div>
-        <p style={{ color: C.text, fontWeight: 800, fontSize: 15, marginBottom: 6 }}>
-          {mode === 'deposit' ? 'Prompt Sent to Your Phone' : mode === 'send' ? 'Money Sent' : 'Withdrawal Initiated'}
-        </p>
-        <p style={{ color: C.muted, fontSize: 13, lineHeight: 1.5, maxWidth: 360, margin: '4px auto 16px' }}>{success}</p>
 
-        {isAwaitingPin && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: C.greenMed, fontSize: 12, fontWeight: 600, marginBottom: 16 }}>
-            <RefreshCw size={14} className="animate-spin" />
-            <span>Waiting for PIN confirmation on your handset...</span>
+        <p style={{ color: C.text, fontWeight: 800, fontSize: 16, marginBottom: 6 }}>
+          {isDepositConfirmed
+            ? 'Deposit Confirmed & Added!'
+            : mode === 'deposit'
+            ? 'Payment Prompt Dispatched'
+            : mode === 'send'
+            ? 'Money Sent'
+            : 'Withdrawal Initiated'}
+        </p>
+
+        <p style={{ color: C.muted, fontSize: 13, lineHeight: 1.5, maxWidth: 360, margin: '4px auto 16px' }}>
+          {isDepositConfirmed
+            ? `Your wallet balance has been updated with UGX ${parseFloat(amount || '0').toLocaleString()}.`
+            : success}
+        </p>
+
+        {mode === 'deposit' && !isDepositConfirmed && (
+          <div style={{ background: 'var(--color-surface-2)', borderRadius: 12, padding: '12px 14px', maxWidth: 360, margin: '0 auto 16px', textAlign: 'left', border: `1px solid ${C.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }} className="animate-ping" />
+              <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>Handset Instructions:</span>
+            </div>
+            <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.4 }}>
+              1. Look at your phone for the <strong>{provider === 'airtel' ? 'Airtel Money' : 'MTN MoMo'}</strong> PIN prompt.<br />
+              2. Enter your PIN to approve the transaction.<br />
+              3. Once entered, tap <strong>Confirm Deposit</strong> below.
+            </p>
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+        {isAwaitingPin && !isDepositConfirmed && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, color: C.greenMed, fontSize: 12, fontWeight: 600, marginBottom: 16 }}>
+            <RefreshCw size={13} className="animate-spin" />
+            <span>Listening for PIN confirmation...</span>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          {mode === 'deposit' && !isDepositConfirmed && (
+            <button
+              type="button"
+              disabled={confirming}
+              onClick={handleInstantConfirm}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '10px 20px', background: C.green, color: '#fff', border: 'none',
+                borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: confirming ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {confirming ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} />}
+              <span>{confirming ? 'Verifying...' : 'I Have Approved (Confirm)'}</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => { router.refresh(); }}
-            style={{ padding: '9px 18px', background: 'var(--color-surface-2)', color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+            style={{ padding: '10px 16px', background: 'var(--color-surface-2)', color: C.text, border: `1px solid ${C.border}`, borderRadius: 8, fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
           >
-            Refresh Balance
+            Refresh
           </button>
+
           <button
             type="button"
             onClick={reset}
-            style={{ padding: '9px 22px', background: C.green, color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+            style={{ padding: '10px 20px', background: isDepositConfirmed ? C.green : 'transparent', color: isDepositConfirmed ? '#fff' : C.muted, border: isDepositConfirmed ? 'none' : `1px solid ${C.border}`, borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
           >
             Done
           </button>
@@ -305,39 +400,39 @@ export function WalletActions({ balance, escrowBalance }: Props) {
         </p>
         <p style={{ color: C.muted, fontSize: 12, margin: '-4px 0 0' }}>
           {isDeposit
-            ? 'A prompt will be sent directly to your phone. Enter your Mobile Money PIN on your handset to approve.'
+            ? 'Select your network and phone number. An instant PIN prompt will be sent to your handset.'
             : `Available balance: UGX ${balance.toLocaleString()}`}
         </p>
 
         <div style={{ display: 'flex', gap: 8 }}>
-          {(['mtn', 'airtel'] as const).map(p => (
+          {(['airtel', 'mtn'] as const).map(p => (
             <button
               key={p} type="button" onClick={() => setProvider(p)}
               style={{
                 flex: 1, padding: '10px 8px', borderRadius: 8,
-                border: `2px solid ${provider === p ? (p === 'mtn' ? '#F59E0B' : '#EF4444') : C.border}`,
+                border: `2px solid ${provider === p ? (p === 'airtel' ? '#EF4444' : '#F59E0B') : C.border}`,
                 background: provider === p
-                  ? (p === 'mtn' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)')
+                  ? (p === 'airtel' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)')
                   : 'var(--d-input-bg)',
                 fontWeight: 700, fontSize: 12,
-                color: provider === p ? (p === 'mtn' ? '#D97706' : '#DC2626') : C.muted,
+                color: provider === p ? (p === 'airtel' ? '#DC2626' : '#D97706') : C.muted,
                 cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}
             >
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: p === 'mtn' ? '#F59E0B' : '#EF4444' }} />
-              {p === 'mtn' ? 'MTN Mobile Money' : 'Airtel Money'}
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: p === 'airtel' ? '#EF4444' : '#F59E0B' }} />
+              {p === 'airtel' ? 'Airtel Money' : 'MTN Mobile Money'}
             </button>
           ))}
         </div>
 
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: C.text, display: 'block', marginBottom: 4 }}>
-            {provider === 'mtn' ? 'MTN Phone Number' : 'Airtel Phone Number'}
+            {provider === 'airtel' ? 'Airtel Phone Number' : 'MTN Phone Number'}
           </label>
           <input
             type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-            placeholder={provider === 'mtn' ? 'e.g. 0772123456' : 'e.g. 0752123456'}
+            placeholder={provider === 'airtel' ? 'e.g. 0752123456 or 0702123456' : 'e.g. 0772123456 or 0782123456'}
             style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: 'var(--d-input-bg)' }}
           />
         </div>
@@ -374,8 +469,9 @@ export function WalletActions({ balance, escrowBalance }: Props) {
             Cancel
           </button>
           <button type="submit" disabled={loading}
-            style={{ flex: 2, padding: '10px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer' }}>
-            {loading ? 'Sending Prompt...' : isDeposit ? 'Send Payment Prompt' : 'Withdraw Now'}
+            style={{ flex: 2, padding: '10px', background: loading ? 'var(--color-surface-2)' : C.green, color: loading ? C.muted : '#fff', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            {loading ? <RefreshCw size={14} className="animate-spin" /> : null}
+            <span>{loading ? 'Sending Prompt...' : isDeposit ? 'Send Payment Prompt' : 'Withdraw Now'}</span>
           </button>
         </div>
       </form>

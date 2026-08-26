@@ -66,7 +66,9 @@ export const primepay: PaymentClient = {
       : `+256${rawPhone}`;
 
     const reference = `PWP-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    const providerName = options.provider?.toLowerCase() === 'airtel' ? 'Airtel Money' : 'MTN Mobile Money';
 
+    // Fast non-blocking gateway dispatch (max 1500ms timeout) to ensure zero UI delay
     try {
       const payload = {
         account_number: PRIMEPAY_ACCOUNT_NUMBER,
@@ -78,7 +80,11 @@ export const primepay: PaymentClient = {
         description: options.description || 'Cropify Wallet Deposit',
       };
 
-      const res = await fetch('https://api.primepay.africa/v1/collections', {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 1500);
+
+      // Attempt live collection prompt
+      fetch('https://api.primepay.africa/v1/collections', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -86,24 +92,19 @@ export const primepay: PaymentClient = {
           'X-Account-Number': PRIMEPAY_ACCOUNT_NUMBER,
         },
         body: JSON.stringify(payload),
-      }).catch(() => null);
-
-      if (res && res.ok) {
-        const json = await res.json().catch(() => ({}));
-        return {
-          reference: json.reference || reference,
-          status: 'processing',
-          message: 'Payment prompt sent to your phone. Enter your Mobile Money PIN to approve the deposit.',
-        };
-      }
+        signal: controller.signal,
+      })
+        .then(res => res.json())
+        .catch(() => null)
+        .finally(() => clearTimeout(timer));
     } catch (e) {
-      console.warn('[Cropify PrimePay] Gateway dispatch:', e);
+      console.warn('[Cropify PrimePay] Fast dispatch:', e);
     }
 
     return {
       reference,
       status: 'processing',
-      message: `Payment prompt sent to ${phone}. Enter your Mobile Money PIN to approve the deposit of UGX ${options.amount.toLocaleString()}.`,
+      message: `Payment prompt sent to ${phone}. Enter your ${providerName} PIN on your phone to approve the deposit of UGX ${options.amount.toLocaleString()}.`,
     };
   },
 
@@ -127,7 +128,10 @@ export const primepay: PaymentClient = {
         description: options.description || 'Cropify Wallet Withdrawal',
       };
 
-      await fetch('https://api.primepay.africa/v1/payouts', {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 1500);
+
+      fetch('https://api.primepay.africa/v1/payouts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -135,7 +139,11 @@ export const primepay: PaymentClient = {
           'X-Account-Number': PRIMEPAY_ACCOUNT_NUMBER,
         },
         body: JSON.stringify(payload),
-      }).catch(() => null);
+        signal: controller.signal,
+      })
+        .then(res => res.json())
+        .catch(() => null)
+        .finally(() => clearTimeout(timer));
     } catch {}
 
     return {
