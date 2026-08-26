@@ -32,6 +32,7 @@ export interface PaymentClient {
   webhookSecret: string;
   collectPayment(options: CollectPaymentOptions): Promise<{ reference: string; status: string; message?: string }>;
   makePayout(options: MakePayoutOptions): Promise<{ reference: string; status: string; message?: string }>;
+  checkPaymentStatus(reference: string): Promise<{ status: 'completed' | 'processing' | 'failed'; amount?: number; message?: string }>;
 }
 
 const PRIMEPAY_ACCOUNT_NUMBER =
@@ -59,32 +60,34 @@ export const primepay: PaymentClient = {
 
   async collectPayment(options: CollectPaymentOptions) {
     const rawPhone = options.customer.phoneNumber;
-    const phone = rawPhone.startsWith('+')
-      ? rawPhone
-      : rawPhone.startsWith('0')
-      ? `+256${rawPhone.slice(1)}`
-      : `+256${rawPhone}`;
+    const cleanDigits = rawPhone.replace(/\D/g, '');
+    const phone256 = cleanDigits.startsWith('256')
+      ? cleanDigits
+      : cleanDigits.startsWith('0')
+      ? `256${cleanDigits.slice(1)}`
+      : `256${cleanDigits}`;
+    const phoneFormatted = `+${phone256}`;
 
     const reference = `PWP-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
-    const providerName = options.provider?.toLowerCase() === 'airtel' ? 'Airtel Money' : 'MTN Mobile Money';
+    const providerKey = options.provider?.toLowerCase() || (phone256.startsWith('25675') || phone256.startsWith('25670') || phone256.startsWith('25674') || phone256.startsWith('25620') ? 'airtel' : 'mtn');
+    const providerName = providerKey === 'airtel' ? 'Airtel Money' : 'MTN Mobile Money';
 
-    // Fast non-blocking gateway dispatch (max 1500ms timeout) to ensure zero UI delay
     try {
       const payload = {
         account_number: PRIMEPAY_ACCOUNT_NUMBER,
         amount: options.amount,
         currency: options.currency || 'UGX',
-        phone_number: phone,
-        provider: options.provider || (phone.includes('75') || phone.includes('70') || phone.includes('74') ? 'airtel' : 'mtn'),
+        phone_number: phone256,
+        phone: phoneFormatted,
+        provider: providerKey,
         reference,
         description: options.description || 'Cropify Wallet Deposit',
       };
 
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 1500);
+      const timer = setTimeout(() => controller.abort(), 8000);
 
-      // Attempt live collection prompt
-      fetch('https://api.primepay.africa/v1/collections', {
+      const res = await fetch('https://api.primepay.africa/v1/collections', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,28 +96,50 @@ export const primepay: PaymentClient = {
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
-      })
-        .then(res => res.json())
-        .catch(() => null)
-        .finally(() => clearTimeout(timer));
-    } catch (e) {
-      console.warn('[Cropify PrimePay] Fast dispatch:', e);
+      }).catch((err) => {
+        if (err.name === 'AbortError') {
+          console.warn('[Cropify PrimePay] Collection request timed out after 8s, proceeding with reference:', reference);
+        } else {
+          console.warn('[Cropify PrimePay] Gateway dispatch warning:', err.message);
+        }
+        return null;
+      });
+
+      clearTimeout(timer);
+
+      if (res && !res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        if (errBody && (errBody.message || errBody.error)) {
+          const errMsg = errBody.message || errBody.error;
+          console.warn('[Cropify PrimePay] Gateway collection response error:', errMsg);
+          if (res.status >= 400 && res.status < 500 && !errMsg.toLowerCase().includes('duplicate')) {
+            throw new Error(errMsg);
+          }
+        }
+      }
+    } catch (e: any) {
+      if (e instanceof Error && e.message && !e.message.includes('fetch failed')) {
+        throw e;
+      }
+      console.warn('[Cropify PrimePay] Collection dispatch:', e);
     }
 
     return {
       reference,
       status: 'processing',
-      message: `Payment prompt sent to ${phone}. Enter your ${providerName} PIN on your phone to approve the deposit of UGX ${options.amount.toLocaleString()}.`,
+      message: `Payment prompt dispatched to ${phoneFormatted}. Enter your ${providerName} PIN on your handset to approve the deposit of UGX ${options.amount.toLocaleString()}.`,
     };
   },
 
   async makePayout(options: MakePayoutOptions) {
     const rawPhone = options.destination?.accountNumber || options.customer?.phoneNumber || '';
-    const phone = rawPhone.startsWith('+')
-      ? rawPhone
-      : rawPhone.startsWith('0')
-      ? `+256${rawPhone.slice(1)}`
-      : `+256${rawPhone}`;
+    const cleanDigits = rawPhone.replace(/\D/g, '');
+    const phone256 = cleanDigits.startsWith('256')
+      ? cleanDigits
+      : cleanDigits.startsWith('0')
+      ? `256${cleanDigits.slice(1)}`
+      : `256${cleanDigits}`;
+    const phoneFormatted = `+${phone256}`;
 
     const reference = `PWP-WD-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 
@@ -123,15 +148,16 @@ export const primepay: PaymentClient = {
         account_number: PRIMEPAY_ACCOUNT_NUMBER,
         amount: options.amount,
         currency: options.currency || 'UGX',
-        phone_number: phone,
+        phone_number: phone256,
+        phone: phoneFormatted,
         reference,
         description: options.description || 'Cropify Wallet Withdrawal',
       };
 
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 1500);
+      const timer = setTimeout(() => controller.abort(), 8000);
 
-      fetch('https://api.primepay.africa/v1/payouts', {
+      const res = await fetch('https://api.primepay.africa/v1/payouts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -140,16 +166,81 @@ export const primepay: PaymentClient = {
         },
         body: JSON.stringify(payload),
         signal: controller.signal,
-      })
-        .then(res => res.json())
-        .catch(() => null)
-        .finally(() => clearTimeout(timer));
-    } catch {}
+      }).catch((err) => {
+        if (err.name === 'AbortError') {
+          console.warn('[Cropify PrimePay] Payout request timed out after 8s, reference:', reference);
+        } else {
+          console.warn('[Cropify PrimePay] Payout gateway warning:', err.message);
+        }
+        return null;
+      });
+
+      clearTimeout(timer);
+
+      if (res && !res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        if (errBody && (errBody.message || errBody.error)) {
+          const errMsg = errBody.message || errBody.error;
+          console.warn('[Cropify PrimePay] Gateway payout response error:', errMsg);
+          if (res.status >= 400 && res.status < 500) {
+            throw new Error(errMsg);
+          }
+        }
+      }
+    } catch (err: any) {
+      if (err instanceof Error && err.message && !err.message.includes('fetch failed')) {
+        throw err;
+      }
+      console.warn('[Cropify PrimePay] Payout dispatch:', err);
+    }
 
     return {
       reference,
       status: 'processing',
-      message: `Withdrawal of UGX ${options.amount.toLocaleString()} sent to ${phone}.`,
+      message: `Withdrawal of UGX ${options.amount.toLocaleString()} initiated to ${phoneFormatted}. Funds will arrive shortly.`,
+    };
+  },
+
+  async checkPaymentStatus(reference: string): Promise<{ status: 'completed' | 'processing' | 'failed'; amount?: number; message?: string }> {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+
+      const res = await fetch(`https://api.primepay.africa/v1/collections/${encodeURIComponent(reference)}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${PRIMEPAY_API_KEY}`,
+          'X-Account-Number': PRIMEPAY_ACCOUNT_NUMBER,
+        },
+        signal: controller.signal,
+      }).catch(() => null);
+
+      clearTimeout(timer);
+
+      if (res && res.ok) {
+        const data = await res.json();
+        const rawStatus = (data.status || data.data?.status || '').toLowerCase();
+        if (rawStatus === 'successful' || rawStatus === 'completed' || rawStatus === 'success') {
+          return {
+            status: 'completed',
+            amount: Number(data.amount || data.data?.amount),
+            message: 'Payment confirmed successfully by mobile money network.',
+          };
+        }
+        if (rawStatus === 'failed' || rawStatus === 'cancelled' || rawStatus === 'expired' || rawStatus === 'declined') {
+          return {
+            status: 'failed',
+            message: data.message || data.data?.message || 'Payment prompt was cancelled or declined on your handset.',
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('[Cropify PrimePay] Status inquiry:', e);
+    }
+
+    return {
+      status: 'processing',
+      message: 'Awaiting your Mobile Money PIN confirmation on your phone.',
     };
   },
 };

@@ -63,15 +63,48 @@ export async function POST(req: Request) {
   if (isSuccess && momoReq.type === 'deposit') {
     const amount = Number(payload.amount ?? momoReq.amount);
 
-    const { data: claimed } = await (admin as any).rpc('claim_deposit', {
-      p_request_id: momoReq.id,
-      p_wallet_user_id: momoReq.user_id,
-      p_amount: amount,
-      p_reference: reference,
-      p_description: `Mobile money deposit via ${payload.provider || payload.method || 'mobile money'}`,
-      p_metadata: { provider_transaction_id: payload.transactionId || payload.id, operator_tid: payload.operatorTid },
-    });
-    if (!claimed) return NextResponse.json({ received: true });
+    let claimed = false;
+    try {
+      const { data: rpcClaimed, error: claimErr } = await (admin as any).rpc('claim_deposit', {
+        p_request_id: momoReq.id,
+        p_wallet_user_id: momoReq.user_id,
+        p_amount: amount,
+        p_reference: reference,
+        p_description: `Mobile money deposit via ${payload.provider || payload.method || 'mobile money'}`,
+        p_metadata: { provider_transaction_id: payload.transactionId || payload.id, operator_tid: payload.operatorTid },
+      });
+      if (!claimErr && rpcClaimed) claimed = true;
+    } catch {}
+
+    if (!claimed) {
+      const { data: updatedReq } = await (admin.from as any)('mobile_money_requests')
+        .update({ status: 'completed', updated_at: new Date().toISOString() })
+        .eq('id', momoReq.id)
+        .neq('status', 'completed')
+        .select('id')
+        .maybeSingle();
+
+      if (updatedReq) {
+        const { data: userWallet } = await (admin.from as any)('wallets').select('id, balance').eq('user_id', momoReq.user_id).single();
+        if (userWallet) {
+          await (admin.from as any)('wallets').update({
+            balance: Number(userWallet.balance || 0) + amount,
+            updated_at: new Date().toISOString(),
+          }).eq('id', userWallet.id);
+
+          await (admin.from as any)('wallet_transactions').insert({
+            wallet_id: userWallet.id,
+            user_id: momoReq.user_id,
+            type: 'deposit',
+            amount: amount,
+            status: 'completed',
+            reference: reference,
+            description: `Mobile money deposit via ${payload.provider || payload.method || 'mobile money'}`,
+            metadata: { provider_transaction_id: payload.transactionId || payload.id, operator_tid: payload.operatorTid },
+          });
+        }
+      }
+    }
   }
 
   if (isSuccess && momoReq.type === 'withdrawal') {

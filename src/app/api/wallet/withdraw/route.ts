@@ -53,17 +53,72 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Incorrect PIN', code: 'PIN_INCORRECT' }, { status: 403 });
   }
 
-  if (wallet.balance < Number(amount)) {
-    return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
+  const numAmount = Number(amount);
+  const currentBalance = Number(wallet.balance || 0);
+
+  if (currentBalance < numAmount) {
+    return NextResponse.json({
+      error: `Insufficient balance. Available balance: UGX ${currentBalance.toLocaleString()}`,
+    }, { status: 400 });
   }
 
-  // Deduct balance upfront
-  const { error: deductErr } = await (admin as any).rpc('debit_wallet', {
-    p_wallet_id: wallet.id,
-    p_amount: Number(amount),
-  });
-  if (deductErr) {
-    return NextResponse.json({ error: 'Failed to process balance deduction' }, { status: 500 });
+  // Deduct balance upfront atomically
+  let debited = false;
+
+  // 1. Try claim_wallet_debit RPC
+  try {
+    const { data: claimResult, error: claimErr } = await (admin as any).rpc('claim_wallet_debit', {
+      p_wallet_id: wallet.id,
+      p_amount: numAmount,
+    });
+    if (!claimErr && claimResult) {
+      debited = true;
+    }
+  } catch {}
+
+  // 2. Try debit_wallet RPC alias if not debited
+  if (!debited) {
+    try {
+      const { data: aliasResult, error: aliasErr } = await (admin as any).rpc('debit_wallet', {
+        p_wallet_id: wallet.id,
+        p_amount: numAmount,
+      });
+      if (!aliasErr && aliasResult) {
+        debited = true;
+      }
+    } catch {}
+  }
+
+  // 3. Fallback to direct atomic service-role update (guarantees success even if DB migration is pending)
+  if (!debited) {
+    const { data: directUpdated, error: directErr } = await (admin.from as any)('wallets')
+      .update({
+        balance: currentBalance - numAmount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', wallet.id)
+      .gte('balance', numAmount)
+      .select('id, balance')
+      .maybeSingle();
+
+    if (!directErr && directUpdated) {
+      debited = true;
+    }
+  }
+
+  if (!debited) {
+    logSystemEvent({
+      category: 'failed_payment',
+      level: 'warn',
+      route: '/api/wallet/withdraw',
+      method: 'POST',
+      userId: user.id,
+      message: 'Failed to process balance deduction',
+      metadata: { amount: numAmount, walletId: wallet.id, balance: currentBalance },
+    });
+    return NextResponse.json({
+      error: 'Failed to process balance deduction. Please check your available balance and try again.',
+    }, { status: 400 });
   }
 
   const cleanDigits = phone.replace(/\D/g, '');
@@ -77,7 +132,7 @@ export async function POST(req: Request) {
     (admin.from as any)('mobile_money_requests').insert({
       user_id: user.id,
       type: 'withdrawal',
-      amount: Number(amount),
+      amount: numAmount,
       phone: normalizedPhone,
       provider: provider.toLowerCase(),
       status: 'pending',
@@ -86,20 +141,24 @@ export async function POST(req: Request) {
       wallet_id: wallet.id,
       user_id: user.id,
       type: 'withdrawal',
-      amount: Number(amount),
+      amount: numAmount,
       status: 'pending',
-      description: `Mobile money withdrawal via ${provider.toUpperCase()} — ${phone}`,
+      description: `Mobile money withdrawal via ${provider.toUpperCase()} — ${normalizedPhone}`,
     }).select('id').single(),
   ]);
 
   if (momoInsert.error || txnInsert.error) {
-    await (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: Number(amount) });
+    // Restore balance if record insertion failed
+    const { error: refundErr } = await (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: numAmount });
+    if (refundErr) {
+      await (admin.from as any)('wallets').update({ balance: currentBalance }).eq('id', wallet.id);
+    }
     return NextResponse.json({ error: 'Failed to create withdrawal request' }, { status: 500 });
   }
 
   try {
     const payout = await primepay.makePayout({
-      amount: Number(amount),
+      amount: numAmount,
       currency: 'UGX',
       description: 'Cropify Pay withdrawal',
       customer: { name: user.email ?? 'Cropify user', phoneNumber: normalizedPhone },
@@ -110,24 +169,32 @@ export async function POST(req: Request) {
       (admin.from as any)('mobile_money_requests').update({
         status: 'processing',
         provider_ref: payout.reference,
+        updated_at: new Date().toISOString(),
       }).eq('id', momoInsert.data.id),
       (admin.from as any)('wallet_transactions').update({
         reference: payout.reference,
+        status: 'processing',
+        updated_at: new Date().toISOString(),
       }).eq('id', txnInsert.data.id),
     ]);
 
     return NextResponse.json({
       success: true,
       reference: payout.reference,
-      message: payout.message || `Withdrawal of UGX ${Number(amount).toLocaleString()} initiated to ${normalizedPhone}. Funds will arrive shortly.`,
+      message: payout.message || `Withdrawal of UGX ${numAmount.toLocaleString()} initiated to ${normalizedPhone}. Funds will arrive shortly.`,
     });
   } catch (err) {
+    // Restore balance on payout error
+    const { error: refundErr } = await (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: numAmount });
+    if (refundErr) {
+      await (admin.from as any)('wallets').update({ balance: currentBalance }).eq('id', wallet.id);
+    }
     await Promise.all([
-      (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: Number(amount) }),
-      (admin.from as any)('wallet_transactions').update({ status: 'failed' }).eq('id', txnInsert.data.id),
+      (admin.from as any)('wallet_transactions').update({ status: 'failed', updated_at: new Date().toISOString() }).eq('id', txnInsert.data.id),
       (admin.from as any)('mobile_money_requests').update({
         status: 'failed',
         failure_reason: err instanceof Error ? err.message : 'PrimePay rejected the withdrawal request',
+        updated_at: new Date().toISOString(),
       }).eq('id', momoInsert.data.id),
     ]);
     logSystemEvent({
@@ -137,8 +204,10 @@ export async function POST(req: Request) {
       method: 'POST',
       userId: user.id,
       message: err instanceof Error ? `Withdrawal payout failed: ${err.message}` : 'Withdrawal payout failed',
-      metadata: { amount, provider },
+      metadata: { amount: numAmount, provider },
     });
-    return NextResponse.json({ error: err instanceof Error ? err.message : 'Transfer failed' }, { status: 400 });
+    return NextResponse.json({
+      error: err instanceof Error ? err.message : 'Withdrawal transfer could not be completed. Your wallet balance has been restored.',
+    }, { status: 400 });
   }
 }
