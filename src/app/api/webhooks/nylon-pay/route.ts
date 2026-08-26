@@ -124,10 +124,11 @@ export async function POST(req: Request) {
   }
 
   const isFailure =
-    event === 'transaction.failed' ||
-    event === 'transaction.cancelled' ||
-    payload.status === 'failed' ||
-    payload.status === 'cancelled';
+    statusStr === 'failed' ||
+    statusStr === 'cancelled' ||
+    statusStr === 'expired' ||
+    statusStr === 'transaction.failed' ||
+    statusStr === 'transaction.cancelled';
 
   if (isFailure && momoReq.type === 'withdrawal') {
     const { data: wallet } = await (admin.from as any)('wallets').select('id').eq('user_id', momoReq.user_id).single();
