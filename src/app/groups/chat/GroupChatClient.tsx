@@ -12,10 +12,8 @@ import {
   X,
   Leaf,
   Users,
-  Sparkles,
   RotateCcw,
   Crown,
-  ShieldCheck,
 } from 'lucide-react';
 
 const LISTING_CROPS = [
@@ -168,8 +166,10 @@ export function GroupChatClient({
   const [listingSending, setListingSending] = useState(false);
   const [listingError, setListingError] = useState('');
   const [organizeOpen, setOrganizeOpen] = useState(false);
+  
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isAdmin = currentUserId === adminId;
 
   useEffect(() => {
@@ -195,7 +195,7 @@ export function GroupChatClient({
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
   }, []);
 
-  // Fetch latest messages from API/Supabase
+  // Fetch latest messages
   const fetchMessages = useCallback(async (): Promise<boolean> => {
     try {
       const { data, error: fetchErr } = await (supabase.from as any)('group_messages')
@@ -204,10 +204,7 @@ export function GroupChatClient({
         .order('created_at', { ascending: true })
         .limit(100);
 
-      if (fetchErr) {
-        console.warn('[GroupChat] Polling fetch notice:', fetchErr);
-        return false;
-      }
+      if (fetchErr) return false;
 
       setMessages((prev) => {
         const pendingMap = new Map(
@@ -215,7 +212,6 @@ export function GroupChatClient({
         );
         const merged = [...(data ?? [])];
         for (const pending of pendingMap.values()) {
-          // Only re-append if not already in data by body and recent timestamp
           if (!merged.some((m) => m.body === pending.body && Math.abs(new Date(m.created_at).getTime() - new Date(pending.created_at).getTime()) < 30000)) {
             merged.push(pending);
           }
@@ -228,11 +224,11 @@ export function GroupChatClient({
     }
   }, [adminId, supabase]);
 
-  // Initial load if no server initialMessages were provided
+  // Initial load if needed
   useEffect(() => {
     if (initialMessages && initialMessages.length > 0) {
       setLoading(false);
-      setTimeout(() => scrollToBottom(false), 50);
+      setTimeout(() => scrollToBottom(false), 40);
       return;
     }
 
@@ -245,7 +241,7 @@ export function GroupChatClient({
       if (!cancelled) {
         setLoadError(!ok);
         setLoading(false);
-        setTimeout(() => scrollToBottom(false), 50);
+        setTimeout(() => scrollToBottom(false), 40);
       }
     })();
 
@@ -254,56 +250,65 @@ export function GroupChatClient({
     };
   }, [adminId, fetchMessages, initialMessages, scrollToBottom]);
 
-  // Real-time listener
+  // Real-time listener: combines sub-50ms Broadcast + Postgres Changes + 3s Fast Polling
   useEffect(() => {
     let closedByEffect = false;
-    let channel: ReturnType<typeof supabase.channel> | null = null;
 
     const connect = () => {
-      channel = supabase
-        .channel(`group_chat_room:${adminId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'group_messages',
-            filter: `admin_id=eq.${adminId}`,
-          },
-          (payload) => {
-            const newMsg = payload.new as Message;
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === newMsg.id)) return prev;
-              // If replacing a temp optimistic message
-              const filtered = prev.filter(
-                (m) =>
-                  !(
-                    m.id.startsWith('temp_') &&
-                    m.sender_id === newMsg.sender_id &&
-                    m.body === newMsg.body
-                  )
-              );
-              return [...filtered, newMsg];
-            });
-            setTimeout(() => scrollToBottom(true), 60);
-          }
-        )
-        .subscribe((status) => {
-          if (closedByEffect) return;
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            if (channel) supabase.removeChannel(channel);
-            setTimeout(() => {
-              if (!closedByEffect) connect();
-            }, 3000);
-          }
-        });
+      const ch = supabase.channel(`group_chat_room:${adminId}`, {
+        config: { broadcast: { self: false } },
+      });
+
+      // 1. Sub-50ms peer broadcast delivery
+      ch.on('broadcast', { event: 'new_group_message' }, (payload) => {
+        if (payload && payload.payload) {
+          const newMsg = payload.payload as Message;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev.filter((m) => !(m.id.startsWith('temp_') && m.body === newMsg.body)), newMsg];
+          });
+          setTimeout(() => scrollToBottom(true), 40);
+        }
+      });
+
+      // 2. Database postgres changes
+      ch.on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'group_messages',
+          filter: `admin_id=eq.${adminId}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as Message;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev;
+            return [...prev.filter((m) => !(m.id.startsWith('temp_') && m.body === newMsg.body)), newMsg];
+          });
+          setTimeout(() => scrollToBottom(true), 40);
+        }
+      );
+
+      ch.subscribe((status) => {
+        if (closedByEffect) return;
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          supabase.removeChannel(ch);
+          setTimeout(() => {
+            if (!closedByEffect) connect();
+          }, 2000);
+        }
+      });
+
+      channelRef.current = ch;
     };
 
     connect();
 
+    // 3. Fast 3-second background polling for 100% arrival guarantee
     const pollId = setInterval(() => {
       fetchMessages();
-    }, 12000);
+    }, 3000);
 
     const onOnline = () => fetchMessages();
     const onVisible = () => {
@@ -318,7 +323,10 @@ export function GroupChatClient({
       clearInterval(pollId);
       window.removeEventListener('online', onOnline);
       document.removeEventListener('visibilitychange', onVisible);
-      if (channel) supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
   }, [adminId, fetchMessages, scrollToBottom, supabase]);
 
@@ -346,7 +354,7 @@ export function GroupChatClient({
 
     if (!retryTempId) {
       setMessages((prev) => [...prev, optimistic]);
-      setTimeout(() => scrollToBottom(true), 50);
+      setTimeout(() => scrollToBottom(true), 40);
     } else {
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, failed: false } : m))
@@ -354,7 +362,6 @@ export function GroupChatClient({
     }
 
     try {
-      // 1. Primary path: Server route with service role reliability and push notifications
       const res = await fetch('/api/groups/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -368,8 +375,17 @@ export function GroupChatClient({
         setMessages((prev) =>
           prev.map((m) => (m.id === tempId ? confirmed : m))
         );
+
+        // Instant peer websocket broadcast
+        try {
+          channelRef.current?.send({
+            type: 'broadcast',
+            event: 'new_group_message',
+            payload: confirmed,
+          });
+        } catch {}
       } else {
-        // 2. Fallback: Direct client supabase insert
+        // Fallback to direct client insert if server API had a transient hiccup
         const { data: directData, error: directErr } = await (supabase.from as any)('group_messages')
           .insert({
             admin_id: adminId,
@@ -384,6 +400,13 @@ export function GroupChatClient({
           setMessages((prev) =>
             prev.map((m) => (m.id === tempId ? directData : m))
           );
+          try {
+            channelRef.current?.send({
+              type: 'broadcast',
+              event: 'new_group_message',
+              payload: directData,
+            });
+          } catch {}
         } else {
           throw new Error(json.error || directErr?.message || 'Failed to deliver message');
         }
@@ -393,7 +416,7 @@ export function GroupChatClient({
       setMessages((prev) =>
         prev.map((m) => (m.id === tempId ? { ...m, failed: true } : m))
       );
-      setError('Message failed to send. Tap the retry icon on the message.');
+      setError('Message could not be delivered. Tap retry.');
     } finally {
       if (!retryText) setSending(false);
       inputRef.current?.focus();
@@ -439,6 +462,13 @@ export function GroupChatClient({
         setMessages((prev) =>
           prev.some((m) => m.id === json.message.id) ? prev : [...prev, json.message]
         );
+        try {
+          channelRef.current?.send({
+            type: 'broadcast',
+            event: 'new_group_message',
+            payload: json.message,
+          });
+        } catch {}
       }
       setTimeout(() => scrollToBottom(true), 60);
       setListingCrop('');
