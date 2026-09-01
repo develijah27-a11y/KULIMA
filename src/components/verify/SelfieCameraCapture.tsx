@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { RotateCcw, AlertTriangle, Camera, Upload, CheckCircle2, Sun, Eye } from 'lucide-react';
+import { RotateCcw, AlertTriangle, Camera, Upload, CheckCircle2, Sun, Eye, RefreshCw } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -14,80 +14,153 @@ interface Props {
 }
 
 export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
-  const videoRef  = useRef<HTMLVideoElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [active, setActive] = useState(false);
-  const [error, setError]   = useState('');
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState('');
   const [showUploadFallback, setShowUploadFallback] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const stopCamera = useCallback(() => {
-    streamRef.current?.getTracks().forEach(t => t.stop());
-    streamRef.current = null;
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setActive(false);
+    setStarting(false);
   }, []);
 
-  useEffect(() => () => stopCamera(), [stopCamera]);
-
+  // Cleanup on unmount
   useEffect(() => {
-    if (!capturedFile) { setPreviewUrl(null); return; }
+    return () => {
+      stopCamera();
+    };
+  }, [stopCamera]);
+
+  // Sync preview url when capturedFile changes
+  useEffect(() => {
+    if (!capturedFile) {
+      setPreviewUrl(null);
+      return;
+    }
     const url = URL.createObjectURL(capturedFile);
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [capturedFile]);
 
+  // CRITICAL FIX: Ensure the video element attaches the media stream when mounted in DOM
+  useEffect(() => {
+    if (active && streamRef.current && videoRef.current) {
+      const video = videoRef.current;
+      video.srcObject = streamRef.current;
+      video.play().catch(err => {
+        console.warn('[Cropify Selfie] Autoplay error, waiting for user touch:', err);
+      });
+    }
+  }, [active]);
+
   async function startCamera() {
     setError('');
     setShowUploadFallback(false);
+    setStarting(true);
+
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setShowUploadFallback(true);
+      setStarting(false);
+      setError('Live camera streaming is not supported on this browser or insecure connection. Please upload a selfie photo below.');
+      return;
+    }
+
     try {
-      // Primary: request front-facing selfie camera
-      let stream: MediaStream;
+      let stream: MediaStream | null = null;
+
+      // Tier 1: Front camera with ideal resolution
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 960 } },
           audio: false,
         });
-      } catch {
-        // Fallback for browsers with strict facingMode matching
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
+      } catch (err1) {
+        console.warn('[Cropify Selfie] High-res facingMode constraint failed, trying basic user constraint:', err1);
+        // Tier 2: Basic front camera
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user' },
+            audio: false,
+          });
+        } catch (err2) {
+          console.warn('[Cropify Selfie] Basic user constraint failed, falling back to any available video:', err2);
+          // Tier 3: Any available camera
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+        }
       }
 
+      if (!stream) throw new Error('Could not acquire video stream.');
+
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-      }
       setActive(true);
+      setStarting(false);
     } catch (err: any) {
+      console.error('[Cropify Selfie] Camera initialization error:', err);
       setShowUploadFallback(true);
+      setStarting(false);
+      const isDenied = err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError';
       setError(
-        err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError'
-          ? 'Camera access was denied. You can allow permissions in your browser settings or upload a selfie photo below.'
-          : 'Could not access your front camera. You can try again or upload a photo below.'
+        isDenied
+          ? 'Camera permission was denied. You can enable camera access in your browser settings or tap "Upload photo instead" below.'
+          : 'Could not access your camera. Make sure no other application is using it, or upload a selfie photo below.'
       );
     }
   }
 
   function capture() {
     const video = videoRef.current;
-    if (!video || !video.videoWidth) return;
+    if (!video) return;
+
+    const width = video.videoWidth || video.clientWidth || 640;
+    const height = video.videoHeight || video.clientHeight || 480;
+
     const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    // Mirror the frame so the saved photo matches what the person saw in preview
+
+    // Mirror image so selfie matches the preview screen
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
     canvas.toBlob(blob => {
-      if (!blob) return;
-      onCapture(new File([blob], 'selfie.jpg', { type: 'image/jpeg' }));
-      stopCamera();
+      if (blob) {
+        onCapture(new File([blob], 'selfie.jpg', { type: 'image/jpeg' }));
+        stopCamera();
+      } else {
+        // Fallback for older browsers
+        try {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          const arr = dataUrl.split(',');
+          const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+          const bstr = atob(arr[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) u8arr[n] = bstr.charCodeAt(n);
+          onCapture(new File([u8arr], 'selfie.jpg', { type: mime }));
+          stopCamera();
+        } catch (dataUrlErr) {
+          console.error('[Cropify Selfie] Blob creation failed:', dataUrlErr);
+          setError('Failed to capture frame. Please try again or upload a photo.');
+          setShowUploadFallback(true);
+        }
+      }
     }, 'image/jpeg', 0.9);
   }
 
@@ -103,6 +176,7 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
     startCamera();
   }
 
+  // 1. Captured photo preview state
   if (previewUrl) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -125,12 +199,19 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
     );
   }
 
+  // 2. Live camera streaming state
   if (active) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-        <div style={{ position: 'relative', width: '100%', maxWidth: 240, aspectRatio: '3/4', borderRadius: 18, overflow: 'hidden', background: '#0F172A', boxShadow: '0 8px 24px rgba(0,0,0,0.25)' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: 260, aspectRatio: '3/4', borderRadius: 18, overflow: 'hidden', background: '#0F172A', boxShadow: '0 8px 24px rgba(0,0,0,0.25)' }}>
           <video
-            ref={videoRef} playsInline muted autoPlay
+            ref={videoRef}
+            playsInline
+            muted
+            autoPlay
+            onLoadedMetadata={() => {
+              videoRef.current?.play().catch(() => {});
+            }}
             style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
           />
           {/* Face oval guide */}
@@ -146,9 +227,9 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <button
             type="button" onClick={capture} aria-label="Take selfie photo"
-            style={{ width: 60, height: 60, borderRadius: '50%', background: '#FFFFFF', border: `3.5px solid ${C.green}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }}
+            style={{ width: 62, height: 62, borderRadius: '50%', background: '#FFFFFF', border: `3.5px solid ${C.green}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }}
           >
-            <span style={{ width: 44, height: 44, borderRadius: '50%', background: C.green, display: 'block' }} />
+            <span style={{ width: 46, height: 46, borderRadius: '50%', background: C.green, display: 'block' }} />
           </button>
           <button
             type="button" onClick={stopCamera}
@@ -161,11 +242,12 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
     );
   }
 
+  // 3. Initial start camera / fallback state
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '20px 16px', background: 'var(--color-primary-bg)', borderRadius: 14, border: `1.5px dashed var(--color-primary-muted)` }}>
       <Camera size={28} style={{ color: C.green }} />
       <div style={{ textAlign: 'center', maxWidth: 280 }}>
-        <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: '0 0 4px' }}>
+        <p style={{ fontSize: 13.5, fontWeight: 800, color: C.text, margin: '0 0 4px' }}>
           Take a selfie with your front camera
         </p>
         <p style={{ fontSize: 11.5, color: C.muted, margin: 0, lineHeight: 1.45 }}>
@@ -192,31 +274,29 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
 
       <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap', justifyContent: 'center' }}>
         <button
-          type="button" onClick={startCamera}
-          style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: C.green, color: '#FFFFFF', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          type="button" onClick={startCamera} disabled={starting}
+          style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: C.green, color: '#FFFFFF', cursor: starting ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
         >
-          <Camera size={15} /> Start front camera
+          {starting ? <RefreshCw size={15} className="animate-spin" /> : <Camera size={15} />}
+          {starting ? 'Opening camera…' : 'Start front camera'}
         </button>
 
-        {showUploadFallback && (
-          <>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="user"
-              onChange={handleFileUpload}
-              style={{ display: 'none' }}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              style={{ padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.cardBg, color: C.text, cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
-            >
-              <Upload size={14} /> Upload photo instead
-            </button>
-          </>
-        )}
+        {/* File upload fallback */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="user"
+          onChange={handleFileUpload}
+          style={{ display: 'none' }}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          style={{ padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.cardBg, color: C.text, cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+        >
+          <Upload size={14} /> Upload photo instead
+        </button>
       </div>
     </div>
   );
