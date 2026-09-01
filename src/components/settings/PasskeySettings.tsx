@@ -213,7 +213,7 @@ export function PasskeySettings() {
                 {registering ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
               </span>
               <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-primary)' }}>
-                {registering ? 'Follow the prompt on your device…' : passkeys.length > 0 ? 'Add another device' : 'Set up biometric sign-in'}
+                {registering ? 'Setting up biometrics…' : passkeys.length > 0 ? 'Add another device' : 'Set up biometric sign-in'}
               </p>
             </button>
 

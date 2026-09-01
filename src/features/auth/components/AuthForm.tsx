@@ -183,6 +183,21 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
   }, [email, password, exchangeSessionAndRedirect]);
 
+  interface BiometricFeedback {
+    type: 'cancelled' | 'failed' | 'not_enrolled' | 'unavailable';
+    message: string;
+    subtitle?: string;
+  }
+
+  const [biometricFeedback, setBiometricFeedback] = useState<BiometricFeedback | null>(null);
+  const passwordInputRef = useRef<HTMLInputElement | null>(null);
+
+  const focusPassword = useCallback(() => {
+    setBiometricFeedback(null);
+    passwordInputRef.current?.focus();
+    passwordInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, []);
+
   // ── Sign in with biometrics/device passcode (WebAuthn passkey) ───────────
   const signInWithBiometrics = useCallback(async () => {
     const { data, error: passkeyError } = await supabase.auth.signInWithPasskey();
@@ -196,25 +211,54 @@ export function AuthForm({ mode }: AuthFormProps) {
     if (biometricLoading || loading) return;
     setBiometricLoading(true);
     setError(null);
-    setBiometricHint(null);
+    setBiometricFeedback(null);
+
     try {
       await signInWithBiometrics();
     } catch (err: unknown) {
-      // WebAuthn deliberately returns the same NotAllowedError whether the user
-      // cancelled the prompt or there was no passkey registered for this
-      // site/device to offer in the first place — browsers don't let sites
-      // distinguish the two (that'd let a site enumerate who has an account).
-      // So rather than staying silent (a dead end for the very common "never
-      // set this up" case) or crying wolf with a red error, show one hint that
-      // makes sense either way and points at the actual fix: sign in with a
-      // password once, then registration is offered right on the dashboard.
       const name = (err as any)?.name;
-      const msg  = err instanceof Error ? err.message : '';
-      const isCancelOrUnavailable = name === 'NotAllowedError' || /cancel|not allowed/i.test(msg);
-      if (isCancelOrUnavailable) {
-        setBiometricHint('No biometric sign-in set up on this device yet. Sign in with your password below — we’ll offer to turn it on right after.');
+      const msg  = (err instanceof Error ? err.message : '').toLowerCase();
+
+      // Check for user cancellation (not an application error)
+      const isCancellation =
+        name === 'AbortError' ||
+        msg.includes('cancel') ||
+        msg.includes('abort') ||
+        msg.includes('dismissed') ||
+        msg.includes('user cancelled') ||
+        msg.includes('operation was cancelled');
+
+      // Check for unsupported hardware/browser
+      const isUnavailable =
+        name === 'NotSupportedError' ||
+        msg.includes('not supported') ||
+        msg.includes('unavailable') ||
+        msg.includes('no authenticator');
+
+      if (isCancellation) {
+        setBiometricFeedback({
+          type: 'cancelled',
+          message: 'Biometric sign-in was cancelled.',
+        });
+      } else if (isUnavailable) {
+        setBiometricFeedback({
+          type: 'unavailable',
+          message: "Biometric sign-in isn't available on this device.",
+          subtitle: 'Please sign in using your password.',
+        });
+      } else if (name === 'NotFoundError' || msg.includes('not found') || msg.includes('no credentials') || msg.includes('no passkey')) {
+        setBiometricFeedback({
+          type: 'not_enrolled',
+          message: 'No biometric sign-in set up on this device yet.',
+          subtitle: 'Sign in with your password below — you can turn on biometric sign-in right after.',
+        });
       } else {
-        setError('Biometric sign-in didn’t work. Please try again or sign in with your password.');
+        // Generic / verification failure
+        setBiometricFeedback({
+          type: 'failed',
+          message: 'Biometric verification failed.',
+          subtitle: 'Please try again or sign in with your password.',
+        });
       }
     } finally {
       setBiometricLoading(false);
@@ -590,12 +634,13 @@ export function AuthForm({ mode }: AuthFormProps) {
         </label>
         <div style={{ position: 'relative' }}>
           <input id="password"
+            ref={passwordInputRef}
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={e => {
               setPassword(e.target.value);
               if (error) setError(null);
-              if (biometricHint) setBiometricHint(null);
+              if (biometricFeedback) setBiometricFeedback(null);
             }}
             placeholder={showPassword ? 'Enter your password' : '••••••••'}
             autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
@@ -723,13 +768,60 @@ export function AuthForm({ mode }: AuthFormProps) {
             }}
           >
             {biometricLoading
-              ? <><Loader2 size={16} className="animate-spin" /> Follow the prompt on your device…</>
+              ? <><Loader2 size={16} className="animate-spin" /> Authenticating…</>
               : <><Fingerprint size={17} /> Sign in with biometrics</>}
           </button>
-          {biometricHint && (
-            <p style={{ fontSize: 12, color: 'rgba(240,253,244,0.65)', margin: '2px 2px 0', lineHeight: 1.5, textAlign: 'center' }}>
-              {biometricHint}
-            </p>
+
+          {biometricFeedback && (
+            <div
+              className="rounded-xl px-4 py-3 text-sm mt-2"
+              style={{
+                background: biometricFeedback.type === 'cancelled'
+                  ? 'rgba(240,253,244,0.06)'
+                  : biometricFeedback.type === 'failed'
+                  ? 'rgba(239,68,68,0.10)'
+                  : 'rgba(240,253,244,0.08)',
+                border: biometricFeedback.type === 'failed'
+                  ? '1px solid rgba(239,68,68,0.25)'
+                  : '1px solid rgba(240,253,244,0.15)',
+                color: biometricFeedback.type === 'failed' ? '#FCA5A5' : 'var(--color-text-on-dark)',
+              }}
+            >
+              <p style={{ margin: 0, fontWeight: 700, fontSize: 13 }}>
+                {biometricFeedback.message}
+              </p>
+              {biometricFeedback.subtitle && (
+                <p style={{ margin: '3px 0 0', fontSize: 12, opacity: 0.85, lineHeight: 1.45 }}>
+                  {biometricFeedback.subtitle}
+                </p>
+              )}
+              <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                {(biometricFeedback.type === 'cancelled' || biometricFeedback.type === 'failed') && (
+                  <button
+                    type="button"
+                    onClick={handleBiometricClick}
+                    style={{
+                      background: 'rgba(240,253,244,0.15)', border: '1px solid rgba(240,253,244,0.25)',
+                      color: '#FFFFFF', padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Try again
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={focusPassword}
+                  style={{
+                    background: 'none', border: '1px solid rgba(240,253,244,0.2)',
+                    color: 'var(--color-primary-muted)', padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Use password
+                </button>
+              </div>
+            </div>
           )}
         </>
       )}

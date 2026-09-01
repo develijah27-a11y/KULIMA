@@ -82,13 +82,14 @@
 - **Regression Test**: Verified message optimistic insertion, confirmed replacement, failure retry state, and auto-scroll behavior.
 - **Notes**: High responsiveness on mobile and desktop.
 
-### [2026-09-01] — Phase 8: Admin Verification & KYC Review Console
-- **Screen/Component**: `src/app/admin/verification/ViewDocsButton.tsx`
-- **Change**: Upgraded KYC review modal to display National ID and live Selfie side-by-side as prioritized comparison tiles; added 90-degree rotation controls for sideways phone photos, inline image zoom inspection, and secure signed-URL token refresh.
-- **Reason**: Fulfill Requirements 11, 13, and 27 — empower operations admins to perform instant, rigorous visual identity comparisons without broken signed URLs or popup blockers.
-- **Files Modified**: `src/app/admin/verification/ViewDocsButton.tsx`
-- **Functionality Affected?**: KYC review console (private bucket signed URL security retained).
-- **Regression Test**: Verified document fetch, rotation transformations, zoom toggle, and token refresh.
-- **Notes**: Efficient operator workflow.
+### [2026-09-01] — Phase 9: Native Biometric Sign-in Experience
+- **Screen/Component**: `src/features/auth/components/AuthForm.tsx` & `src/components/settings/PasskeySettings.tsx`
+- **Change**: Eliminated intermediate instruction strings ("Follow prompt on your device…"). Implemented immediate WebAuthn native biometric invocation with seamless status handling: non-error user cancellation banner (`Biometric sign-in was cancelled.`), clear failure handling (`Biometric verification failed.`), non-enrolled device guidance, and direct action buttons (`[ Try again ]` and `[ Use password ]`).
+- **Reason**: Fulfill Requirement 53 — native biometric authentication experience with zero artificial friction and robust fallback handling.
+- **Files Modified**: `src/features/auth/components/AuthForm.tsx`, `src/components/settings/PasskeySettings.tsx`
+- **Functionality Affected?**: Biometric sign-in UX (WebAuthn/Passkey cryptography and session security preserved).
+- **Regression Test**: Verified native WebAuthn invocation, cancellation dismissal, password focus fallback, and TypeScript compilation.
+- **Notes**: Native mobile-first authentication flow.
 
 ---
+
