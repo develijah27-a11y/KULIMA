@@ -395,31 +395,58 @@ a.press-link:active { opacity: 0.65; transform: scale(0.97) translateZ(0); }
   }
 }
 
-.skeleton {
-  background: #E9EDF0;
+.skeleton, .dash-skeleton {
+  background: var(--d-input-bg, #E9EDF0);
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
-.skeleton::after {
+.skeleton::after, .dash-skeleton::after {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
   animation: shimmer 1.6s ease-in-out infinite;
   will-change: transform;
 }
 
-.dark .skeleton {
-  background: #131417;
+.orange-skeleton {
+  background: rgba(245, 158, 11, 0.08);
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
-.dark .skeleton::after {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+.orange-skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.2), transparent);
+  animation: shimmer 1.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+.dark .skeleton, .dark .dash-skeleton {
+  background: var(--d-card, #14141B);
+}
+
+.dark .skeleton::after, .dark .dash-skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+}
+
+.dark .orange-skeleton {
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.dark .orange-skeleton::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
 }
 
 /* Form control baseline — every input/select/textarea across the app is

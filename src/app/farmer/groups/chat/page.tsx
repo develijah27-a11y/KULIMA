@@ -50,10 +50,19 @@ export default async function FarmerGroupChatPage({ searchParams }: { searchPara
   const { room: roomParam } = await searchParams;
   const activeRoom = rooms.find(r => r.adminId === roomParam) ?? rooms[0];
 
-  const { count: memberCount } = await (supabase.from as any)('group_members')
-    .select('id', { count: 'exact', head: true })
-    .eq('admin_id', activeRoom.adminId)
-    .eq('status', 'active');
+  const [{ count: memberCount }, { data: messagesData }] = await Promise.all([
+    (supabase.from as any)('group_members')
+      .select('id', { count: 'exact', head: true })
+      .eq('admin_id', activeRoom.adminId)
+      .eq('status', 'active'),
+    (supabase.from as any)('group_messages')
+      .select('id, admin_id, sender_id, sender_name, body, created_at')
+      .eq('admin_id', activeRoom.adminId)
+      .order('created_at', { ascending: true })
+      .limit(100),
+  ]);
+
+  const initialMessages = messagesData ?? [];
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -87,6 +96,7 @@ export default async function FarmerGroupChatPage({ searchParams }: { searchPara
         currentUserId={user.id}
         currentUserName={(myProfile as any).full_name ?? 'Member'}
         memberCount={memberCount ?? 0}
+        initialMessages={initialMessages}
       />
     </div>
   );
