@@ -1,8 +1,9 @@
-﻿import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { WalletActions } from '@/app/farmer/wallet/WalletActions';
 import { EscrowFundButton } from './EscrowFund';
 import { AccountNumberBadge } from '@/components/wallet/AccountNumberBadge';
+import { syncPendingTransactions } from '@/lib/wallet/sync-pending';
 import { Banknote } from 'lucide-react';
 
 const C = {
@@ -29,6 +30,9 @@ export default async function BuyerWalletPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
+
+  // Automatically reconcile any pending deposits/withdrawals with PrimePay
+  await syncPendingTransactions(user.id);
 
   const [walletRes, txnsRes, escrowRes, acceptedOffersRes] = await Promise.all([
     (supabase.from as any)('wallets').select('*').eq('user_id', user.id).maybeSingle(),

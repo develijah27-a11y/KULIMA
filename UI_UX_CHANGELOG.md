@@ -82,15 +82,20 @@
 - **Regression Test**: Verified message optimistic insertion, confirmed replacement, failure retry state, and auto-scroll behavior.
 - **Notes**: High responsiveness on mobile and desktop.
 
-### [2026-09-01] — Phase 10: Admin KYC Verification Exemption
-- **Screen/Component**: `src/components/trust/VerificationBanner.tsx`, `src/components/trust/VerificationStatusCard.tsx`, `src/components/verify/VerifyPageContent.tsx`, `src/app/api/auth/verification-check/route.ts`, and role dashboards (`farmer`, `buyer`, `transporter`, `supplier`, `pathologist`, `offtaker`, `groups`).
-- **Change**: Permanently exempted System Administrator accounts from KYC document upload prompts, notification nudges, and verification banners. Configured role dashboards and Account overview to display a verified "Administrator (KYC Exempt)" status badge with direct access to the KYC Review Queue and Admin Console.
-- **Reason**: System administrators manage and approve verifications across the platform and should never be prompted for user-level verification documents or receive reminder notifications.
-- **Files Modified**: `src/components/trust/VerificationBanner.tsx`, `src/components/trust/VerificationStatusCard.tsx`, `src/components/verify/VerifyPageContent.tsx`, `src/app/api/auth/verification-check/route.ts`, `src/app/farmer/dashboard/page.tsx`, `src/app/buyer/dashboard/page.tsx`, `src/app/transporter/dashboard/page.tsx`, `src/app/supplier/dashboard/page.tsx`, `src/app/pathologist/dashboard/page.tsx`, `src/app/offtaker/dashboard/page.tsx`, `src/app/groups/dashboard/page.tsx`.
-- **Functionality Affected?**: Administrator UX across all dashboards and verify routes.
-- **Regression Test**: Verified admin account role checks, verification banner suppression, and TypeScript compilation.
-- **Notes**: Zero verification friction for platform administrators.
+### [2026-09-01] — Phase 11: PrimePay Live Prompt & Withdrawal Reconciliation
+- **Screen/Component**: `src/lib/prime-pay.ts`, `src/lib/wallet/sync-pending.ts`, `src/app/api/wallet/deposit/status/route.ts`, `src/app/api/wallet/withdraw/route.ts`, `src/app/api/webhooks/nylon-pay/route.ts`, `src/app/farmer/wallet/page.tsx`, `src/app/buyer/wallet/page.tsx`.
+- **Change**: 
+  1. Fixed API key resolution priority in `prime-pay.ts` to guarantee `PRIMEPAY_API_KEY` is dynamically read on each request before any legacy environment variable fallbacks.
+  2. Enforced strict MSISDN formatting (`256XXXXXXXXX`) and explicit error throwing on non-200 / failed gateway responses so UI displays true rejection reasons instead of false "prompt sent" messages.
+  3. Resolved "withdrawals always pending" by saving PrimePay's internal `transaction_id` (`pp_s_...`) alongside references, upgrading status polling to query PrimePay by `transaction_id`, and updating `wallet_transactions` across all reference variations.
+  4. Added automatic background reconciliation (`syncPendingTransactions`) on wallet page loads to instantly resolve pending withdrawals and deposits directly with PrimePay.
+- **Reason**: Ensure real-time USSD push prompt delivery on MTN and Airtel handsets and eliminate stuck pending withdrawals.
+- **Files Modified**: `src/lib/prime-pay.ts`, `src/lib/wallet/sync-pending.ts`, `src/app/api/wallet/deposit/status/route.ts`, `src/app/api/wallet/withdraw/route.ts`, `src/app/api/webhooks/nylon-pay/route.ts`, `src/app/farmer/wallet/page.tsx`, `src/app/buyer/wallet/page.tsx`.
+- **Functionality Affected?**: Mobile Money deposit collection, payout withdrawals, and wallet transaction state management.
+- **Regression Test**: Verified type safety, MSISDN normalization, status inquiry mapping, and balance refunds on payout failure.
+- **Notes**: Full live integration with PrimePay API.
 
 ---
+
 
 

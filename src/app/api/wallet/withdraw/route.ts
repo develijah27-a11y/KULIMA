@@ -168,12 +168,17 @@ export async function POST(req: Request) {
     await Promise.all([
       (admin.from as any)('mobile_money_requests').update({
         status: 'processing',
-        provider_ref: payout.reference,
+        provider_ref: payout.transactionId || payout.reference,
         updated_at: new Date().toISOString(),
       }).eq('id', momoInsert.data.id),
       (admin.from as any)('wallet_transactions').update({
         reference: payout.reference,
         status: 'processing',
+        metadata: {
+          transaction_id: payout.transactionId,
+          provider_ref: payout.transactionId || payout.reference,
+          operator_reference: payout.reference,
+        },
         updated_at: new Date().toISOString(),
       }).eq('id', txnInsert.data.id),
     ]);

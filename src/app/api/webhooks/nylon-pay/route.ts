@@ -50,7 +50,7 @@ export async function POST(req: Request) {
   );
 
   const { data: momoReq } = await (admin.from as any)('mobile_money_requests')
-    .select('id, user_id, amount, status, type')
+    .select('id, user_id, amount, status, type, provider_ref')
     .or(`provider_ref.eq.${transactionId || reference},provider_ref.eq.${reference},id.eq.${reference}`)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
 
   if (!momoReq || momoReq.status === 'completed') return NextResponse.json({ received: true });
 
-  const statusStr = (body.status || payload.status || event || '').toLowerCase();
+  const statusStr = (body.status || payload.status || '').toLowerCase();
   const isSuccess =
     statusStr === 'success' ||
     statusStr === 'successful' ||
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
         p_amount: amount,
         p_reference: reference,
         p_description: `Mobile money deposit via ${payload.provider || payload.method || 'mobile money'}`,
-        p_metadata: { provider_transaction_id: payload.transactionId || payload.id, operator_tid: payload.operatorTid },
+        p_metadata: { provider_transaction_id: transactionId || payload.id, operator_tid: payload.operatorTid },
       });
       if (!claimErr && rpcClaimed) claimed = true;
     } catch {}
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
             status: 'completed',
             reference: reference,
             description: `Mobile money deposit via ${payload.provider || payload.method || 'mobile money'}`,
-            metadata: { provider_transaction_id: payload.transactionId || payload.id, operator_tid: payload.operatorTid },
+            metadata: { provider_transaction_id: transactionId || payload.id, operator_tid: payload.operatorTid },
           });
         }
       }
@@ -119,7 +119,10 @@ export async function POST(req: Request) {
         status: 'completed',
         updated_at: new Date().toISOString(),
       }).eq('id', momoReq.id),
-      (admin.from as any)('wallet_transactions').update({ status: 'completed' }).eq('reference', reference),
+      (admin.from as any)('wallet_transactions').update({
+        status: 'completed',
+        updated_at: new Date().toISOString(),
+      }).or(`reference.eq.${reference},reference.eq.${transactionId},reference.eq.${momoReq.provider_ref}`),
     ]);
   }
 
@@ -138,10 +141,13 @@ export async function POST(req: Request) {
     await Promise.all([
       (admin.from as any)('mobile_money_requests').update({
         status: 'failed',
-        failure_reason: payload.failureReason ?? 'Payout failed',
+        failure_reason: payload.message || body.message || 'Payout failed at network operator',
         updated_at: new Date().toISOString(),
       }).eq('id', momoReq.id),
-      (admin.from as any)('wallet_transactions').update({ status: 'failed' }).eq('reference', reference),
+      (admin.from as any)('wallet_transactions').update({
+        status: 'failed',
+        updated_at: new Date().toISOString(),
+      }).or(`reference.eq.${reference},reference.eq.${transactionId},reference.eq.${momoReq.provider_ref}`),
     ]);
 
     logSystemEvent({
@@ -149,15 +155,15 @@ export async function POST(req: Request) {
       level: 'error',
       route: '/api/webhooks/prime-pay',
       method: 'POST',
-      message: `Withdrawal payout failed: ${payload.failureReason ?? event}`,
-      metadata: { reference },
+      message: `Withdrawal payout failed: ${payload.message || body.message || 'Unknown network failure'}`,
+      metadata: { reference, transactionId },
     });
   }
 
   if (isFailure && momoReq.type === 'deposit') {
     await (admin.from as any)('mobile_money_requests').update({
       status: 'failed',
-      failure_reason: payload.failureReason ?? 'Deposit failed',
+      failure_reason: payload.message || body.message || 'Deposit prompt was cancelled or declined',
       updated_at: new Date().toISOString(),
     }).eq('id', momoReq.id);
   }
