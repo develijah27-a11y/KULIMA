@@ -1,4 +1,4 @@
-﻿import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
@@ -152,9 +152,27 @@ export default async function BuyerListingsPage({
       {/* Listings grid */}
       {listings.length === 0 ? (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Leaf size={48} style={{ color: C.muted }} /></div>
-          <p style={{ color: C.text, fontWeight: 700, fontSize: 16 }}>No listings found</p>
-          <p style={{ color: C.muted, fontSize: 14, marginTop: 4 }}>Try adjusting your filters or check back later.</p>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}><Leaf size={44} style={{ color: C.muted }} /></div>
+          <p style={{ color: C.text, fontWeight: 800, fontSize: 16, margin: '0 0 4px' }}>
+            {crop || district || q ? 'No produce matches your filters' : 'No produce listed yet'}
+          </p>
+          <p style={{ color: C.muted, fontSize: 13, margin: '0 0 16px' }}>
+            {crop || district || q
+              ? 'Try removing one or more search filters to see all available harvest batches.'
+              : 'Farmers will list new produce batches here as harvesting progresses.'}
+          </p>
+          {(crop || district || q) && (
+            <a
+              href="/buyer/listings"
+              style={{
+                display: 'inline-block', padding: '9px 18px', borderRadius: 10,
+                background: C.green, color: '#FFFFFF', fontWeight: 700, fontSize: 13,
+                textDecoration: 'none',
+              }}
+            >
+              Clear all filters
+            </a>
+          )}
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

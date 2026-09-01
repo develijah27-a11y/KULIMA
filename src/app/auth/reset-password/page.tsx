@@ -11,24 +11,30 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [targetEmail, setTargetEmail] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
 
-  // /auth/confirm already verified the recovery token and set the session
-  // cookie before redirecting here — just confirm a session actually exists
-  // (e.g. guards against someone opening this URL directly with no token).
+  // /auth/confirm verified the recovery token and set the session cookie
+  // before redirecting here — confirm user exists and capture their email
+  // so the user explicitly sees which account is being updated.
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error || !user || !user.email) {
         router.replace('/auth/forgot-password');
         return;
       }
+      setTargetEmail(user.email);
       setReady(true);
     });
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords don't match. Please re-type them.");
       return;
@@ -39,11 +45,9 @@ export default function ResetPasswordPage() {
       const supabase = createClient();
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      // Sign out and send the user to sign in fresh with the new password,
-      // rather than dropping them straight into the dashboard still on the
-      // session /auth/confirm created from the recovery link — a password
-      // reset should end with an explicit login, not a silent auto-login.
+      // Invalidate all tokens & sessions on both client and server
       await supabase.auth.signOut();
+      await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
       router.push('/auth/signin?reason=password_reset');
       router.refresh();
     } catch (err: unknown) {
@@ -63,7 +67,10 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <AuthLayout title="Set a new password" subtitle="Choose a password you haven't used before">
+    <AuthLayout
+      title="Set a new password"
+      subtitle={targetEmail ? `Choose a new password for ${targetEmail}` : "Choose a password you haven't used before"}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="password" className="block text-sm mb-1.5" style={{ color: 'var(--color-text-on-dark)', fontWeight: 800 }}>

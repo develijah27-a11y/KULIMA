@@ -922,16 +922,18 @@ export default async function FarmerDashboardPage() {
         <CropPrompt userId={userId} />
       </Suspense>
 
-      {/* 0c · Biometric sign-in nudge — client-side, renders nothing unless
-          this device supports it and no passkey is registered yet */}
+      {/* 0c · Biometric sign-in nudge */}
       <BiometricSetupBanner />
 
-      {/* 1 · Weather card */}
+      {/* 1 · Actionable Weather & Field conditions */}
       <Suspense fallback={<div className="dash-skeleton h-[420px] sm:h-36 rounded-xl" />}>
         <WeatherCard userId={userId} />
       </Suspense>
 
-      {/* 2 · Quick stats */}
+      {/* 2 · Quick actions (immediate single-tap task access) */}
+      <QuickActions />
+
+      {/* 3 · Key farm metrics */}
       <Suspense fallback={
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}
@@ -940,22 +942,32 @@ export default async function FarmerDashboardPage() {
         <QuickStats userId={userId} />
       </Suspense>
 
-      {/* 3 · AI recommendation */}
+      {/* 4 · AI Recommendation Banner */}
       <Suspense fallback={<div className="dash-skeleton h-20 rounded-xl" />}>
         <AIBanner userId={userId} />
       </Suspense>
 
-      {/* 4 · Delivery history */}
-      <Suspense fallback={<div className="dash-skeleton h-[420px] rounded-xl" />}>
-        <DeliveryHistory userId={userId} />
-      </Suspense>
+      {/* 5 · Commercial & Field Operations (2-col grid) */}
+      <div className="grid lg:grid-cols-2 gap-5 items-start">
+        <div className="space-y-5">
+          <Suspense fallback={<div className="dash-skeleton h-64 rounded-xl" />}>
+            <RecentOffers userId={userId} />
+          </Suspense>
+          <Suspense fallback={<div className="dash-skeleton h-[360px] rounded-xl" />}>
+            <DeliveryHistory userId={userId} />
+          </Suspense>
+        </div>
+        <div className="space-y-5">
+          <Suspense fallback={<div className="dash-skeleton h-64 rounded-xl" />}>
+            <DiseasePanel userId={userId} />
+          </Suspense>
+          <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
+            <PlantingAlertsWidget userId={userId} />
+          </Suspense>
+        </div>
+      </div>
 
-      {/* 4b · Nearby drivers map */}
-      <Suspense fallback={<div className="dash-skeleton h-[340px] rounded-xl" />}>
-        <NearbyDriversWidget userId={userId} />
-      </Suspense>
-
-      {/* 5 · Market prices + Weather forecast (2-col) */}
+      {/* 6 · Market Prices + 5-Day Weather Forecast (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
         <Suspense fallback={<div className="dash-skeleton h-[440px] rounded-xl" />}>
           <MarketPricesTable userId={userId} />
@@ -965,33 +977,20 @@ export default async function FarmerDashboardPage() {
         </Suspense>
       </div>
 
-      {/* 5 · Recent offers + Disease alerts (2-col) */}
+      {/* 7 · Nearby Drivers Map */}
+      <Suspense fallback={<div className="dash-skeleton h-[340px] rounded-xl" />}>
+        <NearbyDriversWidget userId={userId} />
+      </Suspense>
+
+      {/* 8 · Financial Health & Agricultural News (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-64 rounded-xl" />}>
-          <RecentOffers userId={userId} />
+        <Suspense fallback={<div className="dash-skeleton h-40 rounded-xl" />}>
+          <FinanceOverview userId={userId} />
         </Suspense>
-        <Suspense fallback={<div className="dash-skeleton h-64 rounded-xl" />}>
-          <DiseasePanel userId={userId} />
+        <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
+          <NewsWidget />
         </Suspense>
       </div>
-
-      {/* 5b · Planting alerts */}
-      <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
-        <PlantingAlertsWidget userId={userId} />
-      </Suspense>
-
-      {/* 6 · Finance overview */}
-      <Suspense fallback={<div className="dash-skeleton h-40 rounded-xl" />}>
-        <FinanceOverview userId={userId} />
-      </Suspense>
-
-      {/* 6b · Agricultural news */}
-      <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>
-        <NewsWidget />
-      </Suspense>
-
-      {/* 7 · Quick actions */}
-      <QuickActions />
 
     </div>
   );

@@ -1,4 +1,4 @@
-﻿import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { WalletActions } from './WalletActions';
 import { WalletCard } from '@/components/wallet/WalletCard';
@@ -144,20 +144,33 @@ export default async function FarmerWalletPage() {
           <div>
             {txns.map((t: any) => {
               const cfg = TXN_TYPE_CFG[t.type] ?? { label: t.type, color: C.muted, sign: '+' as const };
-              const pending = t.status === 'pending';
-              const failed  = t.status === 'failed';
+              const isPending = t.status === 'pending' || t.status === 'processing';
+              const isFailed  = t.status === 'failed';
+              const isSuccess = t.status === 'completed' || t.status === 'successful';
+
+              const statusBadge = isPending
+                ? { label: 'PENDING', bg: 'var(--color-warning-bg)', color: 'var(--color-warning)', border: 'var(--color-warning-border)' }
+                : isFailed
+                ? { label: 'FAILED', bg: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: 'var(--color-danger-border)' }
+                : { label: 'SUCCESSFUL', bg: 'var(--color-success-bg)', color: 'var(--color-success)', border: 'var(--color-success-border)' };
+
               return (
                 <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 20px', borderBottom: `1px solid ${C.border}` }}>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: failed ? 'var(--color-danger)' : C.text, margin: 0 }}>
-                      {cfg.label}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: isFailed ? 'var(--color-danger)' : C.text, margin: 0 }}>
+                        {cfg.label}
+                      </p>
+                      <span style={{ fontSize: 9.5, fontWeight: 800, padding: '1.5px 6px', borderRadius: 4, background: statusBadge.bg, color: statusBadge.color, border: `1px solid ${statusBadge.border}`, letterSpacing: '0.04em' }}>
+                        {statusBadge.label}
+                      </span>
+                    </div>
                     {t.description && <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>{t.description}</p>}
-                    <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>
-                      {fmtDate(t.created_at)} · {pending ? 'Pending' : failed ? 'Failed' : 'Successful'}
+                    <p style={{ fontSize: 10.5, color: C.muted, margin: '2px 0 0' }}>
+                      {fmtDate(t.created_at)}
                     </p>
                   </div>
-                  <p style={{ fontSize: 14, fontWeight: 800, color: failed ? C.muted : cfg.color, margin: 0, opacity: pending ? 0.6 : 1, fontFamily: 'var(--font-mono)' }}>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: isFailed ? C.muted : cfg.color, margin: 0, opacity: isPending ? 0.75 : 1, fontFamily: 'var(--font-mono)' }}>
                     {cfg.sign}UGX {Math.round(t.amount).toLocaleString()}
                   </p>
                 </div>

@@ -281,6 +281,13 @@ export function AuthForm({ mode }: AuthFormProps) {
     submitLockRef.current = true;
     submittingRef.current = true;
 
+    if (mode === 'signup' && password.length < 8) {
+      setError('Password must be at least 8 characters long.');
+      submitLockRef.current = false;
+      submittingRef.current = false;
+      return;
+    }
+
     if (mode === 'signup' && password !== confirmPassword) {
       setError("Passwords don't match. Please re-type them.");
       submitLockRef.current = false;
@@ -318,16 +325,21 @@ export function AuthForm({ mode }: AuthFormProps) {
       } else if (lower.includes('invalid login credentials') || lower.includes('invalid credentials')) {
         setError('Wrong email or password. Please check and try again.');
       } else if (lower.includes('email not confirmed')) {
-        setError('Email not confirmed yet — check your inbox for the link, then sign in.');
+        setError('Email not confirmed yet — check your inbox for the verification link or code, then sign in.');
         setNeedsConfirmation(true);
-      } else if (lower.includes('too many') || lower.includes('rate limit')) {
-        setError('Too many attempts. Please wait a minute then try again.');
-      } else if (lower.includes('user already registered') || lower.includes('already exists')) {
-        setError('An account with this email already exists. Sign in instead.');
-      } else if (lower.includes('password') && (lower.includes('weak') || lower.includes('strength'))) {
-        setError('Password is too weak — use at least 8 characters.');
+      } else if (lower.includes('too many') || lower.includes('rate limit') || lower.includes('over_email_send_rate_limit')) {
+        setError('Too many attempts. Please wait a couple minutes before trying again.');
+      } else if (lower.includes('user already registered') || lower.includes('already exists') || lower.includes('email_exists')) {
+        setError('An account with this email already exists. Please sign in instead.');
+      } else if (lower.includes('phone') && (lower.includes('exists') || lower.includes('unique') || lower.includes('duplicate'))) {
+        setError('This phone number is already registered to another account. Please use a different number.');
+      } else if (lower.includes('password') && (lower.includes('weak') || lower.includes('strength') || lower.includes('least'))) {
+        setError('Password is too weak — please use at least 8 characters with letters and numbers.');
       } else if (lower.includes('invalid email') || lower.includes('unable to validate email')) {
-        setError("That email address doesn't look right. Please check it.");
+        setError("That email address doesn't look right. Please check the spelling and try again.");
+      } else if (lower.includes('violates') || lower.includes('postgres') || lower.includes('sql') || lower.includes('database')) {
+        console.error('[Cropify Auth] Internal database error:', err);
+        setError("We couldn't complete your registration right now. Please try again in a moment.");
       } else {
         console.error('[Cropify Auth] Unexpected error:', mode, err);
         setError(msg);
@@ -337,10 +349,6 @@ export function AuthForm({ mode }: AuthFormProps) {
     } finally {
       submitLockRef.current = false;
       submittingRef.current = false;
-      // Always reset loading — a successful sign-in navigates away via
-      // window.location in signIn(), not via a state update here, so we
-      // must clear loading regardless (harmless on the success path since
-      // the page is about to unload anyway).
       setLoading(false);
     }
   }, [mode, password, confirmPassword, signIn, signUp]);

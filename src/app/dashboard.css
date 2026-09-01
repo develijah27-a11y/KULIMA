@@ -52,11 +52,14 @@
    local `Card` components across the admin/farmer/buyer/etc. dashboards —
    with no risk of fighting or breaking their own inline styling. */
 .dash-card-modern {
-  transition: transform var(--transition-base), box-shadow var(--transition-base);
+  border: 1px solid var(--color-border);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base);
 }
-.dash-card-modern:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--d-shadow-card-hover, var(--shadow-card-hover));
+a.dash-card-modern:hover,
+button.dash-card-modern:hover,
+.dash-card-interactive:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .dash-skeleton {
@@ -104,43 +107,27 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 .card {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  background: var(--color-surface);
   border-radius: var(--radius-card);
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.04),
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.70);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
 }
 .dark .card {
-  background: rgba(22, 24, 30, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 2px 8px rgba(0, 0, 0, 0.40),
-    0 8px 24px rgba(0, 0, 0, 0.30);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 6px 16px -4px rgba(0, 0, 0, 0.3);
 }
 
 .dash-card {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  background: var(--color-surface);
   border-radius: var(--radius-md);
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.04),
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.70);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
 }
 .dark .dash-card {
-  background: rgba(22, 24, 30, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 2px 8px rgba(0, 0, 0, 0.40),
-    0 8px 24px rgba(0, 0, 0, 0.30);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 6px 16px -4px rgba(0, 0, 0, 0.3);
 }
 
 /* Stat cards with coloured top border */

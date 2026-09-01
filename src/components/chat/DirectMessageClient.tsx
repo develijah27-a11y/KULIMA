@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Check, CheckCheck } from 'lucide-react';
+import { Check, CheckCheck, Clock, AlertCircle, RotateCcw, Send, ShieldCheck } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export interface DmMessage {
@@ -12,6 +12,7 @@ export interface DmMessage {
   body: string;
   read: boolean;
   created_at: string;
+  failed?: boolean;
 }
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
   themName: string;
   /** Optional label shown below header e.g. "Plant Pathologist · Kampala" */
   themSubtitle?: string;
+  isVerified?: boolean;
 }
 
 /** Stable, deterministic conversation ID for any two user IDs */
@@ -32,7 +34,7 @@ function timeLabel(iso: string) {
   const d = new Date(iso);
   const diffH = (Date.now() - d.getTime()) / 3600000;
   if (diffH < 24) return d.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', hour12: true });
-  if (diffH < 48) return `Yesterday`;
+  if (diffH < 48) return 'Yesterday';
   return d.toLocaleDateString('en-UG', { day: 'numeric', month: 'short' });
 }
 
@@ -42,10 +44,11 @@ const C = {
   border:  'var(--d-border)',
   card:    'var(--d-card)',
   green:   'var(--color-primary)',
+  greenDark: 'var(--color-primary-dark)',
   shadow:  'var(--d-shadow-card)',
 };
 
-export function DirectMessageClient({ meId, meName, themId, themName, themSubtitle }: Props) {
+export function DirectMessageClient({ meId, meName, themId, themName, themSubtitle, isVerified }: Props) {
   const supabase = createClient();
   const convId   = conversationId(meId, themId);
 
@@ -53,12 +56,11 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
   const [draft, setDraft]       = useState('');
   const [sending, setSending]   = useState(false);
   const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<string | null>(null);
   const bottomRef               = useRef<HTMLDivElement>(null);
   const inputRef                = useRef<HTMLTextAreaElement>(null);
 
-  const scrollBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    bottomRef.current?.scrollIntoView({ behavior });
   }, []);
 
   // Initial load + mark messages as read
@@ -73,7 +75,7 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
       if (!cancelled) {
         setMessages(data ?? []);
         setLoading(false);
-        setTimeout(scrollBottom, 80);
+        setTimeout(() => scrollBottom('auto'), 50);
 
         // Mark unread messages from the other person as read
         await (supabase.from as any)('direct_messages')
@@ -103,7 +105,7 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
             if (prev.find(m => m.id === payload.new.id)) return prev;
             return [...prev, payload.new as DmMessage];
           });
-          setTimeout(scrollBottom, 60);
+          setTimeout(() => scrollBottom('smooth'), 60);
 
           // Auto-mark as read if the new message is for me
           if ((payload.new as DmMessage).recipient_id === meId) {
@@ -119,21 +121,25 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
     return () => { supabase.removeChannel(channel); };
   }, [convId, meId, scrollBottom]);
 
-  const send = async () => {
-    const text = draft.trim();
-    if (!text || sending) return;
-    setSending(true);
-    setError(null);
+  const sendMessageText = async (text: string, existingTempId?: string) => {
+    if (!text.trim()) return;
+    const tempId = existingTempId ?? `temp_${Date.now()}`;
 
-    const tempId = `temp_${Date.now()}`;
-    const optimistic: DmMessage = {
-      id: tempId, conversation_id: convId,
-      sender_id: meId, recipient_id: themId,
-      body: text, read: false, created_at: new Date().toISOString(),
-    };
-    setMessages(p => [...p, optimistic]);
-    setDraft('');
-    setTimeout(scrollBottom, 60);
+    if (!existingTempId) {
+      const optimistic: DmMessage = {
+        id: tempId, conversation_id: convId,
+        sender_id: meId, recipient_id: themId,
+        body: text, read: false, created_at: new Date().toISOString(),
+        failed: false,
+      };
+      setMessages(p => [...p, optimistic]);
+      setDraft('');
+      setTimeout(() => scrollBottom('smooth'), 60);
+    } else {
+      setMessages(p => p.map(m => m.id === tempId ? { ...m, failed: false } : m));
+    }
+
+    setSending(true);
 
     const { data: insertedRows, error: err } = await (supabase.from as any)('direct_messages')
       .insert({
@@ -145,14 +151,8 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
       .select('id, conversation_id, sender_id, recipient_id, body, read, created_at');
 
     if (err) {
-      setMessages(p => p.filter(m => m.id !== tempId));
-      setError('Failed to send. Check your connection.');
-      setDraft(text);
+      setMessages(p => p.map(m => m.id === tempId ? { ...m, failed: true } : m));
     } else {
-      // Swap the optimistic placeholder for the confirmed row so the bubble
-      // stops looking like it's still sending — otherwise this exact message
-      // stays stuck at 65% opacity forever, since its temp_ id never matches
-      // the row the realtime channel delivers.
       const confirmed = insertedRows?.[0];
       if (confirmed) {
         setMessages(p => p.map(m => (m.id === tempId ? confirmed : m)));
@@ -162,74 +162,130 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
     inputRef.current?.focus();
   };
 
+  const handleSend = () => {
+    sendMessageText(draft);
+  };
+
+  const retryMessage = (msg: DmMessage) => {
+    sendMessageText(msg.body, msg.id);
+  };
+
   const onKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 150px)', minHeight: 400, borderRadius: 14, overflow: 'hidden', boxShadow: C.shadow, background: C.card }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 160px)', minHeight: 480, maxHeight: 720, borderRadius: 16, overflow: 'hidden', boxShadow: C.shadow, background: C.card, border: `1px solid ${C.border}` }}>
+      
       {/* Header */}
-      <div style={{ padding: '13px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.card }}>
-        <div style={{ display: 'flex', gap: 11, alignItems: 'center' }}>
-          <div style={{ width: 38, height: 38, borderRadius: '50%', background: C.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flexShrink: 0 }}>
-            {themName[0]?.toUpperCase() ?? '?'}
+      <div style={{ padding: '12px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: C.card, zIndex: 10 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div style={{ position: 'relative' }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg, #166B3A 0%, #2FA34F 100%)', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, flexShrink: 0 }}>
+              {themName[0]?.toUpperCase() ?? '?'}
+            </div>
+            <div style={{ position: 'absolute', bottom: 0, right: 0, width: 11, height: 11, borderRadius: '50%', background: '#22C55E', border: '2px solid #FFFFFF' }} />
           </div>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>{themName}</p>
-            {themSubtitle && <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>{themSubtitle}</p>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <p style={{ fontSize: 14.5, fontWeight: 800, color: C.text, margin: 0 }}>{themName}</p>
+              {isVerified && <ShieldCheck size={14} style={{ color: 'var(--color-primary)' }} />}
+            </div>
+            {themSubtitle && <p style={{ fontSize: 11.5, color: C.muted, margin: '1px 0 0' }}>{themSubtitle}</p>}
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
-          <span style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>Live</span>
-        </div>
+        <span style={{ fontSize: 11, color: 'var(--color-success)', fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: 'var(--color-success-bg)' }}>
+          Direct Chat
+        </span>
       </div>
 
-      {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--d-page)' }}>
+      {/* Messages Feed */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--color-bg)' }}>
         {loading && (
           <div style={{ textAlign: 'center', padding: 32 }}>
-            <div className="dash-skeleton" style={{ height: 44, borderRadius: 10, marginBottom: 8 }} />
-            <div className="dash-skeleton" style={{ height: 44, borderRadius: 10, width: '60%', marginBottom: 8 }} />
-            <div className="dash-skeleton" style={{ height: 44, borderRadius: 10, width: '80%' }} />
+            <div className="dash-skeleton" style={{ height: 42, borderRadius: 12, marginBottom: 10, maxWidth: '60%' }} />
+            <div className="dash-skeleton" style={{ height: 42, borderRadius: 12, width: '45%', alignSelf: 'flex-end', marginBottom: 10 }} />
+            <div className="dash-skeleton" style={{ height: 42, borderRadius: 12, width: '70%' }} />
           </div>
         )}
+
         {!loading && messages.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-            <p style={{ fontSize: 40, marginBottom: 10 }}>💬</p>
-            <p style={{ fontWeight: 700, fontSize: 15, color: C.text, marginBottom: 4 }}>Start the conversation</p>
-            <p style={{ fontSize: 13, color: C.muted }}>Messages are private and end-to-end delivered securely.</p>
+          <div style={{ textAlign: 'center', padding: '56px 20px', maxWidth: 320, margin: 'auto' }}>
+            <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--color-primary-bg)', color: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+              <Send size={22} />
+            </div>
+            <p style={{ fontWeight: 800, fontSize: 15, color: C.text, margin: '0 0 4px' }}>Start the conversation</p>
+            <p style={{ fontSize: 12.5, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+              Messages with {themName} are private and delivered in real time.
+            </p>
           </div>
         )}
+
         {messages.map((msg) => {
           const isOwn = msg.sender_id === meId;
+          const isTemp = msg.id.startsWith('temp_') && !msg.failed;
+          const isFailed = Boolean(msg.failed);
+
           return (
-            <div key={msg.id} style={{ display: 'flex', flexDirection: isOwn ? 'row-reverse' : 'row', gap: 8, alignItems: 'flex-end' }}>
+            <div
+              key={msg.id}
+              style={{
+                display: 'flex',
+                flexDirection: isOwn ? 'row-reverse' : 'row',
+                gap: 8,
+                alignItems: 'flex-end',
+              }}
+            >
               {!isOwn && (
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: C.green, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>
+                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--color-primary-bg)', color: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>
                   {themName[0]?.toUpperCase() ?? '?'}
                 </div>
               )}
-              <div style={{ maxWidth: '72%' }}>
-                <div style={{
-                  padding: '9px 13px',
-                  borderRadius: isOwn ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                  background: isOwn ? C.green : C.card,
-                  boxShadow: C.shadow,
-                  opacity: msg.id.startsWith('temp_') ? 0.65 : 1,
-                }}>
-                  <p style={{ fontSize: 13, color: isOwn ? '#fff' : C.text, margin: 0, lineHeight: 1.55, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+
+              <div style={{ maxWidth: '75%', minWidth: 100 }}>
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                    background: isOwn ? (isFailed ? 'var(--color-danger-bg)' : C.green) : C.card,
+                    color: isOwn ? (isFailed ? 'var(--color-danger)' : '#FFFFFF') : C.text,
+                    border: isOwn ? (isFailed ? '1px solid var(--color-danger)' : 'none') : `1px solid ${C.border}`,
+                    boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
+                  }}
+                >
+                  <p style={{ fontSize: 13.5, margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
                     {msg.body}
                   </p>
                 </div>
-                <p style={{ fontSize: 10, color: C.muted, margin: '3px 4px 0', textAlign: isOwn ? 'right' : 'left' }}>
-                  {timeLabel(msg.created_at)}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 3, padding: '0 4px', justifyContent: isOwn ? 'flex-end' : 'flex-start' }}>
+                  <span style={{ fontSize: 10, color: C.muted }}>
+                    {timeLabel(msg.created_at)}
+                  </span>
+
                   {isOwn && (
-                    <span style={{ marginLeft: 4, color: msg.read ? C.green : C.muted, display: 'inline-flex', verticalAlign: 'middle' }}>
-                      {msg.read ? <CheckCheck size={10} /> : <Check size={10} />}
+                    <span>
+                      {isFailed ? (
+                        <button
+                          type="button"
+                          onClick={() => retryMessage(msg)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 3, border: 'none', background: 'none', color: 'var(--color-danger)', fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                        >
+                          <AlertCircle size={11} /> Failed · Tap to retry
+                        </button>
+                      ) : isTemp ? (
+                        <Clock size={11} style={{ color: C.muted, display: 'inline-block' }} />
+                      ) : msg.read ? (
+                        <CheckCheck size={12} style={{ color: '#22C55E', display: 'inline-block' }} />
+                      ) : (
+                        <Check size={12} style={{ color: C.muted, display: 'inline-block' }} />
+                      )}
                     </span>
                   )}
-                </p>
+                </div>
               </div>
             </div>
           );
@@ -237,43 +293,39 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
         <div ref={bottomRef} />
       </div>
 
-      {error && (
-        <div style={{ padding: '7px 16px', background: 'var(--color-danger-bg)', borderTop: `1px solid var(--color-danger)` }}>
-          <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: 0 }}>{error}</p>
-        </div>
-      )}
-
-      {/* Input */}
-      <div style={{ padding: '10px 13px', borderTop: `1px solid ${C.border}`, background: C.card, display: 'flex', gap: 9, alignItems: 'flex-end' }}>
+      {/* Message Composer */}
+      <div style={{ padding: '12px 16px', borderTop: `1px solid ${C.border}`, background: C.card, display: 'flex', gap: 10, alignItems: 'flex-end' }}>
         <textarea
           ref={inputRef}
           value={draft}
           onChange={e => setDraft(e.target.value)}
           onKeyDown={onKey}
-          placeholder="Type a message… (Enter to send)"
+          placeholder="Type your message… (Press Enter to send)"
           rows={1}
           maxLength={2000}
           disabled={sending}
           style={{
             flex: 1, resize: 'none', border: `1.5px solid ${C.border}`,
-            borderRadius: 12, padding: '10px 13px', fontSize: 13,
-            fontFamily: "'Poppins', 'Inter', system-ui, sans-serif", color: C.text,
-            background: 'var(--d-page)', outline: 'none',
-            minHeight: 44, maxHeight: 120, lineHeight: 1.5,
+            borderRadius: 12, padding: '10px 14px', fontSize: 13.5,
+            fontFamily: "'Inter', system-ui, sans-serif", color: C.text,
+            background: 'var(--color-bg)', outline: 'none',
+            minHeight: 44, maxHeight: 110, lineHeight: 1.45,
           }}
         />
         <button
-          onClick={send}
+          type="button"
+          onClick={handleSend}
           disabled={!draft.trim() || sending}
           style={{
             padding: '10px 18px', borderRadius: 12, minHeight: 44,
-            background: draft.trim() && !sending ? C.green : 'var(--d-border)',
-            color: '#fff', border: 'none', fontWeight: 700, fontSize: 13,
+            background: draft.trim() && !sending ? C.green : 'var(--color-border)',
+            color: '#FFFFFF', border: 'none', fontWeight: 700, fontSize: 13,
             cursor: draft.trim() && !sending ? 'pointer' : 'not-allowed',
-            flexShrink: 0, transition: 'background 0.15s',
+            flexShrink: 0, transition: 'background 0.15s, transform 0.1s',
+            display: 'inline-flex', alignItems: 'center', gap: 6,
           }}
         >
-          {sending ? '…' : 'Send'}
+          <Send size={15} /> Send
         </button>
       </div>
     </div>
