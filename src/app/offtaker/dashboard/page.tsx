@@ -380,6 +380,7 @@ export default async function OfftakerDashboardPage() {
         headline="Get verified — source with confidence"
         benefit="Sign escrow-backed contracts and access bulk group harvests"
         requiredDocsLabel="national ID and a selfie"
+        isAdmin={profile?.role === 'admin' || (profile?.roles ?? []).includes('admin')}
       />
 
       <BiometricSetupBanner />

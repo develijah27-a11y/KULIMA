@@ -348,6 +348,7 @@ export default async function PathologistDashboardPage() {
         headline="Get certified — start consulting"
         benefit="Get matched to paid consultations and unlock higher fees"
         requiredDocsLabel="national ID, a selfie, and your professional qualifications"
+        isAdmin={profile?.role === 'admin' || (profile?.roles ?? []).includes('admin')}
       />
 
       <BiometricSetupBanner />

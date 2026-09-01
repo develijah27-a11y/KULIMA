@@ -29,9 +29,18 @@ export async function POST() {
   );
 
   const { data: profile } = await (admin.from as any)('profiles')
-    .select('verification_level, role')
+    .select('verification_level, role, roles')
     .eq('user_id', user.id)
     .single();
+
+  const userRole: string = (profile as any)?.role ?? '';
+  const userRoles: string[] = (profile as any)?.roles ?? [];
+  const isAdmin = userRole === 'admin' || userRoles.includes('admin');
+
+  // Admins are system administrators and are never asked for KYC/verification
+  if (isAdmin) {
+    return NextResponse.json({ notified: false, reason: 'admin_exempt' });
+  }
 
   const level = profile?.verification_level ?? 'none';
   if (level === 'green' || level === 'blue' || level === 'gold') {

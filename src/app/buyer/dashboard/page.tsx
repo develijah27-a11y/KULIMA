@@ -494,6 +494,10 @@ async function WelcomeHeader({ userId }: { userId: string }) {
 
 async function VerifyPrompt({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
+  const userRoles: string[] = (profile as any)?.roles ?? [];
+  const primaryRole: string = (profile as any)?.role ?? '';
+  if (primaryRole === 'admin' || userRoles.includes('admin')) return null;
+
   return (
     <VerificationBanner
       level={(profile?.role_verification_levels?.buyer ?? (profile?.role === 'buyer' ? profile?.verification_level : null) ?? 'none') as VerificationLevel}
@@ -501,6 +505,7 @@ async function VerifyPrompt({ userId }: { userId: string }) {
       headline="Get verified — buy with confidence"
       benefit="Faster order approval and access to bulk sourcing"
       requiredDocsLabel="national ID, a selfie, and business registration"
+      isAdmin={primaryRole === 'admin' || userRoles.includes('admin')}
     />
   );
 }

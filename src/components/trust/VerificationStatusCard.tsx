@@ -15,9 +15,54 @@ export async function VerificationStatusCard({ role }: Props) {
   // Fetch profile verification data
   const { data: profile } = await supabase
     .from('profiles')
-    .select('verification_level, role_verification_levels, phone_number, phone_verified')
+    .select('role, roles, verification_level, role_verification_levels, phone_number, phone_verified')
     .eq('user_id', user.id)
     .single();
+
+  const userRole = (profile as any)?.role ?? '';
+  const userRoles: string[] = (profile as any)?.roles ?? [];
+  const isAdmin = userRole === 'admin' || userRoles.includes('admin');
+
+  const C = {
+    text: 'var(--d-text)',
+    muted: 'var(--d-muted)',
+    border: 'var(--d-border)',
+    card: 'var(--d-card)',
+    shadow: 'var(--d-shadow-card)',
+  };
+
+  if (isAdmin) {
+    return (
+      <div style={{ background: C.card, borderRadius: 16, boxShadow: C.shadow, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
+        <div style={{
+          padding: '16px 20px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'linear-gradient(135deg, var(--color-primary-bg) 0%, var(--color-sky-bg) 100%)',
+          borderBottom: `1px solid ${C.border}`,
+        }}>
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-primary)', margin: 0 }}>
+              Account Verification
+            </p>
+            <p style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: '2px 0 0' }}>
+              Administrator (KYC Exempt)
+            </p>
+          </div>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 20,
+            fontSize: 12, fontWeight: 800, background: '#D1FAE5', color: '#059669', border: '1px solid #A7F3D0',
+          }}>
+            <ShieldCheck size={14} /> Full Access
+          </span>
+        </div>
+        <div style={{ padding: '16px 20px' }}>
+          <p style={{ fontSize: 13, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+            This account is registered as a Cropify System Administrator and has unrestricted platform permissions across all modules.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Email confirmed from auth metadata
   const emailConfirmed = !!user.email_confirmed_at;
@@ -31,14 +76,6 @@ export async function VerificationStatusCard({ role }: Props) {
 
   const badge = BADGE_CONFIG[kycLevel] ?? BADGE_CONFIG.none;
   const verifyHref = `/${role}/verify`;
-
-  const C = {
-    text: 'var(--d-text)',
-    muted: 'var(--d-muted)',
-    border: 'var(--d-border)',
-    card: 'var(--d-card)',
-    shadow: 'var(--d-shadow-card)',
-  };
 
   const items = [
     {

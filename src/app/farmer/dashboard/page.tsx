@@ -852,6 +852,10 @@ function QuickActions() {
 
 async function VerifyPrompt({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
+  const userRoles: string[] = (profile as any)?.roles ?? [];
+  const primaryRole: string = (profile as any)?.role ?? '';
+  if (primaryRole === 'admin' || userRoles.includes('admin')) return null;
+
   return (
     <VerificationBanner
       level={(profile?.role_verification_levels?.farmer ?? (profile?.role === 'farmer' ? profile?.verification_level : null) ?? 'none') as VerificationLevel}
@@ -859,6 +863,7 @@ async function VerifyPrompt({ userId }: { userId: string }) {
       headline="Get verified — sell with confidence"
       benefit="Buyers see you first and you unlock escrow-protected sales"
       requiredDocsLabel="national ID and a selfie"
+      isAdmin={primaryRole === 'admin' || userRoles.includes('admin')}
     />
   );
 }

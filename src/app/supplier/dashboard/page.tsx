@@ -366,6 +366,7 @@ export default async function SupplierDashboardPage() {
         headline="Get verified — reach more farmers"
         benefit="Rank higher in search and unlock flash deals"
         requiredDocsLabel="national ID, a selfie, and business registration"
+        isAdmin={profile?.role === 'admin' || (profile?.roles ?? []).includes('admin')}
       />
 
       <BiometricSetupBanner />

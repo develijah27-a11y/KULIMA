@@ -532,6 +532,7 @@ export default async function TransporterDashboard() {
         headline="Get verified — start earning today"
         benefit="Unlock paid delivery jobs and protected fare payouts"
         requiredDocsLabel="national ID, driving permit, and a photo"
+        isAdmin={profile?.role === 'admin' || (profile?.roles ?? []).includes('admin')}
       />
 
       <BiometricSetupBanner />

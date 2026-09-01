@@ -40,12 +40,53 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
   if (!user) redirect('/auth/signin');
 
   const { data: profile } = await (supabase.from as any)('profiles')
-    .select('id, role, verification_level, role_verification_levels, trust_score, reliability_score, completed_deals, phone_number, phone_verified')
+    .select('id, role, roles, verification_level, role_verification_levels, trust_score, reliability_score, completed_deals, phone_number, phone_verified')
     .eq('user_id', user.id)
     .single();
 
   const primaryRole = (profile as any)?.role ?? '';
+  const userRoles: string[] = (profile as any)?.roles ?? [];
+  const isAdmin = primaryRole === 'admin' || userRoles.includes('admin');
   const role = roleProp || primaryRole;
+
+  if (isAdmin) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '32px 24px', textAlign: 'center', border: `1px solid ${C.border}` }}>
+          <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-primary-bg)', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <Gem size={32} />
+          </div>
+          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+            Administrator Account
+          </h1>
+          <p style={{ color: C.muted, fontSize: 14, maxWidth: 460, margin: '8px auto 24px', lineHeight: 1.5 }}>
+            As a Cropify System Administrator, your account has full administrative privileges and is permanently exempt from user KYC document submission.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a
+              href="/admin/verification"
+              style={{
+                background: 'var(--color-primary)', color: '#ffffff', padding: '10px 20px',
+                borderRadius: 10, fontSize: 13.5, fontWeight: 700, textDecoration: 'none',
+              }}
+            >
+              Go to KYC Review Queue →
+            </a>
+            <a
+              href="/admin/dashboard"
+              style={{
+                background: 'var(--color-surface-2)', color: C.text, padding: '10px 20px',
+                borderRadius: 10, fontSize: 13.5, fontWeight: 700, textDecoration: 'none',
+                border: `1px solid ${C.border}`,
+              }}
+            >
+              Admin Overview
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const [{ data: pending }, { data: latest }] = await Promise.all([
     (supabase.from as any)('verifications')

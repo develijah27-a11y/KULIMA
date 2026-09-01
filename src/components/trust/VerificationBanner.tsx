@@ -11,6 +11,8 @@ interface Props {
   benefit: string;
   /** Extra context on what's needed, e.g. "national ID, driving permit, and a photo" */
   requiredDocsLabel?: string;
+  /** Whether the user has an admin role — admins are fully verified/exempt */
+  isAdmin?: boolean;
 }
 
 // Below 'green' this is a hard nudge to get minimally verified at all (a
@@ -19,8 +21,10 @@ interface Props {
 // table" upgrade prompt using the same per-role benefit copy from
 // getLevelDetails — previously this banner just vanished once verified at
 // all, so a green-tier user never learned blue/gold existed or why it'd be
-// worth the extra documents. Only hides once at the true max tier (gold).
-export function VerificationBanner({ level, verifyHref, headline, benefit, requiredDocsLabel }: Props) {
+// worth the extra documents. Only hides once at the true max tier (gold)
+// or when the user is an admin.
+export function VerificationBanner({ level, verifyHref, headline, benefit, requiredDocsLabel, isAdmin }: Props) {
+  if (isAdmin) return null;
   const nextLevel = NEXT_LEVEL[level];
   if (!nextLevel) return null;
 

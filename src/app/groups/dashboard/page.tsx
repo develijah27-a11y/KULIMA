@@ -391,6 +391,7 @@ export default async function GroupsDashboardPage() {
         headline="Get verified — sell with confidence"
         benefit="Unlock escrow-protected group sales and loans"
         requiredDocsLabel="national ID and a selfie"
+        isAdmin={profile?.role === 'admin' || (profile?.roles ?? []).includes('admin')}
       />
 
       <BiometricSetupBanner />
