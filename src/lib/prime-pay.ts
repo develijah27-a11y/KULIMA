@@ -138,6 +138,9 @@ export const primepay: PaymentClient = {
       if (err.name === 'AbortError') {
         throw new Error('Payment gateway connection timed out. Please verify your internet connection and try again.');
       }
+      if (err.message && (err.message.includes('ENOTFOUND') || err.message.includes('getaddrinfo'))) {
+        throw new Error(`PrimePay gateway server (${baseUrl}) is currently unreachable or DNS lookup failed. Please ensure the PrimePay Supabase project is active.`);
+      }
       throw new Error(`Payment gateway connection failed: ${err.message}`);
     }
     clearTimeout(timer);
@@ -201,6 +204,9 @@ export const primepay: PaymentClient = {
       clearTimeout(timer);
       if (err.name === 'AbortError') {
         throw new Error('Payout gateway connection timed out. Please try again.');
+      }
+      if (err.message && (err.message.includes('ENOTFOUND') || err.message.includes('getaddrinfo'))) {
+        throw new Error(`PrimePay gateway server (${baseUrl}) is currently unreachable or DNS lookup failed. Please ensure the PrimePay Supabase project is active.`);
       }
       throw new Error(`Payout gateway connection failed: ${err.message}`);
     }
