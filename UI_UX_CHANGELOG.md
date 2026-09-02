@@ -109,3 +109,17 @@
 
 ---
 
+### [2026-09-02] — Phase 14: Unified Cropify Wallet Appearance Across All Account Roles
+- **Screen/Component**: `src/app/buyer/wallet/page.tsx`, `src/app/supplier/wallet/page.tsx`, `src/app/pathologist/wallet/page.tsx`, `src/app/offtaker/wallet/page.tsx`, `src/app/transporter/wallet/page.tsx`, `src/app/groups/wallet/page.tsx`.
+- **Change**: 
+  1. Standardized all role wallet pages to use the official premium `WalletCard` component featuring the Cropify logo, wordmark, agricultural watermark, animated balance numbers, escrow status, and click-to-copy masked account number (`AGN-•••-•••-1234`).
+  2. Unified period statistics grids (`Total Received/Deposited` vs `Total Paid Out/Spent`) with modern cards and mono currency fonts.
+  3. Integrated interactive `WalletActions` (MTN/Airtel USSD Deposit, Withdrawal with PIN, Account Transfer) and unified transaction history items across all user account types.
+  4. Embedded automatic `syncPendingTransactions` reconciliation on all role wallet pages to guarantee live PrimePay balance accuracy.
+- **Reason**: Eliminate visual and functional inconsistencies where the wallet appearance differed between farmer, buyer, transporter, supplier, pathologist, offtaker, and group accounts.
+- **Files Modified**: `src/app/buyer/wallet/page.tsx`, `src/app/supplier/wallet/page.tsx`, `src/app/pathologist/wallet/page.tsx`, `src/app/offtaker/wallet/page.tsx`, `src/app/transporter/wallet/page.tsx`, `src/app/groups/wallet/page.tsx`.
+- **Functionality Affected?**: Wallet display, transaction feeds, and role-based balance cards.
+- **Regression Test**: Verified layout alignment, typography, card aspect ratio, and type safety across all roles.
+- **Notes**: Consistent, high-fidelity Cropify Pay experience app-wide.
+
+---

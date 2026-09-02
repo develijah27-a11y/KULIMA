@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { WalletActions } from '@/app/farmer/wallet/WalletActions';
-import { AccountNumberBadge } from '@/components/wallet/AccountNumberBadge';
+import { WalletCard } from '@/components/wallet/WalletCard';
+import { syncPendingTransactions } from '@/lib/wallet/sync-pending';
 import { Banknote } from 'lucide-react';
 
 const C = {
@@ -17,43 +18,75 @@ const TXN_TYPE_CFG: Record<string, { label: string; color: string; sign: '+' | '
   transfer_out:   { label: 'Transfer Out',        color: 'var(--color-danger)',  sign: '-' },
 };
 
+function fmtDate(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  const isYesterday = d.toDateString() === yesterday.toDateString();
+  const day = isToday ? 'Today' : isYesterday ? 'Yesterday' : d.toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' });
+  const time = d.toLocaleTimeString('en-UG', { hour: 'numeric', minute: '2-digit', hour12: true });
+  return `${day} • ${time}`;
+}
+
 export default async function PathologistWalletPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const [walletRes, txnsRes] = await Promise.all([
+  // Automatically reconcile any pending deposits/withdrawals with PrimePay
+  await syncPendingTransactions(user.id);
+
+  const [walletRes, txnsRes, profileRes] = await Promise.all([
     (supabase.from as any)('wallets').select('*').eq('user_id', user.id).maybeSingle(),
     (supabase.from as any)('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(30),
+    supabase.from('profiles').select('full_name').eq('user_id', user.id).single(),
   ]);
 
   const wallet = walletRes.data;
   const txns = txnsRes.data ?? [];
+  const holderName = (profileRes.data as any)?.full_name ?? 'Cropify Specialist';
+
   const balance = wallet?.balance ?? 0;
   const escrowBalance = wallet?.escrow_balance ?? 0;
-  const totalIn = txns.filter((t: any) => ['deposit','escrow_release','transfer_in'].includes(t.type) && t.status === 'completed').reduce((s: number, t: any) => s + Number(t.amount), 0);
+  const totalIn  = txns.filter((t: any) => ['deposit','escrow_release','transfer_in'].includes(t.type) && t.status === 'completed').reduce((s: number, t: any) => s + Number(t.amount), 0);
+  const totalOut = txns.filter((t: any) => ['withdrawal','transfer_out'].includes(t.type) && t.status === 'completed').reduce((s: number, t: any) => s + Number(t.amount), 0);
 
   return (
     <div className="max-w-xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Wallet & Earnings</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+          Wallet & Earnings
+        </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>Consultation fees and payouts — Cropify Pay</p>
       </div>
 
-      <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 20, padding: '24px 24px 20px', color: '#fff' }}>
-        <p style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Available Balance</p>
-        <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px' }}>UGX {Math.round(balance).toLocaleString()}</p>
-        <div style={{ marginBottom: 16 }}><AccountNumberBadge accountNumber={wallet?.account_number} dark /></div>
-        <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 14px', display: 'inline-block' }}>
-          <p style={{ fontSize: 9, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', margin: '0 0 3px' }}>Total Earned</p>
-          <p style={{ fontSize: 15, fontWeight: 800, margin: 0 }}>UGX {Math.round(totalIn).toLocaleString()}</p>
+      {/* Unified Wallet Card */}
+      <WalletCard
+        balance={balance}
+        accountNumber={wallet?.account_number}
+        holderName={holderName}
+        escrowBalance={escrowBalance}
+      />
+
+      {/* Period totals */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Total Earned</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0, fontFamily: 'var(--font-mono)' }}>UGX {Math.round(totalIn).toLocaleString()}</p>
+        </div>
+        <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Total Withdrawn</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0, fontFamily: 'var(--font-mono)' }}>UGX {Math.round(totalOut).toLocaleString()}</p>
         </div>
       </div>
 
+      {/* Actions */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 20 }}>
         <WalletActions balance={balance} escrowBalance={escrowBalance} />
       </div>
 
+      {/* Transaction history */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}` }}>
           <p className="text-sm font-bold" style={{ color: C.text }}>Earnings History</p>
@@ -67,13 +100,21 @@ export default async function PathologistWalletPage() {
           <div>
             {txns.map((t: any) => {
               const cfg = TXN_TYPE_CFG[t.type] ?? { label: t.type, color: C.muted, sign: '+' as const };
+              const pending = t.status === 'pending';
+              const failed = t.status === 'failed';
               return (
                 <div key={t.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 20px', borderBottom: `1px solid ${C.border}` }}>
                   <div>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: C.text, margin: 0 }}>{cfg.label}</p>
-                    <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>{new Date(t.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: failed ? 'var(--color-danger)' : C.text, margin: 0 }}>
+                      {cfg.label}
+                      {pending && <span style={{ fontSize: 10, color: 'var(--color-harvest)', fontWeight: 700, marginLeft: 6 }}>PENDING</span>}
+                      {failed && <span style={{ fontSize: 10, color: 'var(--color-danger)', fontWeight: 700, marginLeft: 6 }}>FAILED</span>}
+                    </p>
+                    <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>{fmtDate(t.created_at)}</p>
                   </div>
-                  <p style={{ fontSize: 14, fontWeight: 800, color: cfg.color, margin: 0 }}>{cfg.sign}UGX {Math.round(t.amount).toLocaleString()}</p>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: failed ? C.muted : cfg.color, margin: 0, fontFamily: 'var(--font-mono)' }}>
+                    {cfg.sign}UGX {Math.round(t.amount).toLocaleString()}
+                  </p>
                 </div>
               );
             })}

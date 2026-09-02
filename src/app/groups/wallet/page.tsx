@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { Banknote, Plus, ArrowUpRight, Settings, ClipboardList, Wallet } from 'lucide-react';
-import { AccountNumberBadge } from '@/components/wallet/AccountNumberBadge';
+import { WalletCard } from '@/components/wallet/WalletCard';
 import type { JSX } from 'react';
 
 const C = {
@@ -53,42 +53,36 @@ export default async function GroupsWalletPage() {
 
   const walletBalance  = Number(group?.wallet_balance ?? 0);
   const totalContribs  = contribs.reduce((s: number, c: any) => s + Number(c.amount), 0);
-  // Only 'sale_payout' actually lands in the pooled wallet_balance above —
-  // 'sale_payout_split' pays each contributing member's own wallet directly,
-  // so it must be excluded here or this figure would overstate the pool.
   const totalSales     = txns.filter((t: any) => t.type === 'sale_payout').reduce((s: number, t: any) => s + Number(t.amount), 0);
+  const holderName     = group?.name ? `${group.name}` : 'Cropify Community Group';
 
   return (
     <div className="max-w-xl mx-auto space-y-5">
       <div>
-        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em' }}>Group Wallet</h1>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+          Group Wallet
+        </h1>
         <p className="text-sm mt-1" style={{ color: C.muted }}>
           {group?.name ? `${group.name} — ` : ''}Pooled funds from sales and contributions
         </p>
       </div>
 
-      {/* Balance card */}
-      <div style={{ background: 'linear-gradient(135deg, #1B4332 0%, #2D6A4F 100%)', borderRadius: 20, padding: '24px 24px 20px', color: '#fff' }}>
-        <p style={{ fontSize: 11, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>
-          Group Wallet Balance
-        </p>
-        <p style={{ fontSize: 34, fontWeight: 900, letterSpacing: '-0.03em', margin: '0 0 4px' }}>
-          UGX {Math.round(walletBalance).toLocaleString()}
-        </p>
-        <div style={{ marginBottom: 16 }}><AccountNumberBadge accountNumber={group?.wallet_account_number} dark /></div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 14px' }}>
-            <p style={{ fontSize: 9, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', margin: '0 0 3px' }}>
-              From Sales
-            </p>
-            <p style={{ fontSize: 15, fontWeight: 800, margin: 0 }}>UGX {Math.round(totalSales).toLocaleString()}</p>
-          </div>
-          <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 10, padding: '10px 14px' }}>
-            <p style={{ fontSize: 9, fontWeight: 600, opacity: 0.6, textTransform: 'uppercase', margin: '0 0 3px' }}>
-              Contributions
-            </p>
-            <p style={{ fontSize: 15, fontWeight: 800, margin: 0 }}>UGX {Math.round(totalContribs).toLocaleString()}</p>
-          </div>
+      {/* Unified Wallet Card */}
+      <WalletCard
+        balance={walletBalance}
+        accountNumber={group?.wallet_account_number}
+        holderName={holderName}
+      />
+
+      {/* Period totals */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>From Sales</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0, fontFamily: 'var(--font-mono)' }}>UGX {Math.round(totalSales).toLocaleString()}</p>
+        </div>
+        <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: '14px 16px' }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>Contributions</p>
+          <p style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0, fontFamily: 'var(--font-mono)' }}>UGX {Math.round(totalContribs).toLocaleString()}</p>
         </div>
       </div>
 
@@ -150,7 +144,7 @@ export default async function GroupsWalletPage() {
                       </p>
                     </div>
                   </div>
-                  <p style={{ fontSize: 14, fontWeight: 800, color: isSplit ? C.muted : C.green, margin: 0, flexShrink: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: isSplit ? C.muted : C.green, margin: 0, flexShrink: 0, fontFamily: 'var(--font-mono)' }}>
                     {isSplit ? 'UGX' : '+UGX'} {Math.round(t.amount).toLocaleString()}
                   </p>
                 </div>
@@ -180,7 +174,7 @@ export default async function GroupsWalletPage() {
                     {new Date(c.contributed_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}
                   </p>
                 </div>
-                <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-success)', margin: 0 }}>
+                <p style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-success)', margin: 0, fontFamily: 'var(--font-mono)' }}>
                   +UGX {Math.round(c.amount).toLocaleString()}
                 </p>
               </div>
