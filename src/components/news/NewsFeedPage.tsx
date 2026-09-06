@@ -38,7 +38,7 @@ export async function NewsFeedPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {items.map(item => (
             <a
-              key={item.link}
+              key={item.id || item.link}
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"

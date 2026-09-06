@@ -1,10 +1,11 @@
-﻿import { Suspense } from 'react';
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import { DISTRICT_NAMES } from '@/lib/districts';
 import { Leaf, Flame, AlertTriangle, BarChart3, Lightbulb } from 'lucide-react';
 import { getCropColor } from '@/lib/crop-photos';
+import { generateDynamicMarketPrices } from '@/lib/prices';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -145,7 +146,10 @@ async function UgandaLocalPrices({
   ]);
 
   const primaryCrop = profileRes.data?.primary_crop ?? 'maize';
-  const allPrices = pricesRes.data ?? [];
+  let allPrices = pricesRes.data ?? [];
+  if (!allPrices || allPrices.length === 0) {
+    allPrices = generateDynamicMarketPrices();
+  }
   const demand = demandRes.data ?? [];
   const cashPrices: any[] = cashPricesRes.data ?? [];
 

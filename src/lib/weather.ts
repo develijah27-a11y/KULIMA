@@ -24,10 +24,50 @@ export async function getWeatherForLocation(
 ): Promise<WeatherData | null> {
   try {
     const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`, {
-      next: { revalidate: 1800 },
+      next: { revalidate: 900 },
     });
     if (!res.ok) return null;
-    return await res.json();
+    const json = await res.json();
+    if (json.temp != null) {
+      return {
+        temp: json.temp,
+        feelsLike: json.feelsLike ?? json.temp,
+        humidity: json.humidity ?? 65,
+        windSpeed: json.windSpeed ?? 2.5,
+        description: json.description ?? 'clear sky',
+        icon: json.icon ?? '02d',
+        rainfall: json.rainfall ?? 0,
+        forecast: (json.daily ?? json.forecast ?? []).map((d: any) => ({
+          date: d.dayLabel ?? d.date ?? 'Tomorrow',
+          high: d.high ?? d.main?.temp_max ?? 27,
+          low: d.low ?? d.main?.temp_min ?? 18,
+          description: d.description ?? d.weather?.[0]?.description ?? 'partly cloudy',
+          rainfall: d.precipMm ?? d.rain?.['3h'] ?? 0,
+          icon: d.icon ?? d.weather?.[0]?.icon ?? '02d',
+        })),
+      };
+    }
+    if (json.data?.now) {
+      const now = json.data.now;
+      return {
+        temp: now.temp,
+        feelsLike: now.feelsLike,
+        humidity: now.humidity,
+        windSpeed: now.wind,
+        description: now.description,
+        icon: now.icon,
+        rainfall: now.precipitation,
+        forecast: (json.data.daily ?? []).map((d: any) => ({
+          date: d.dayLabel,
+          high: d.high,
+          low: d.low,
+          description: d.description,
+          rainfall: d.precipMm,
+          icon: d.icon,
+        })),
+      };
+    }
+    return null;
   } catch {
     return null;
   }

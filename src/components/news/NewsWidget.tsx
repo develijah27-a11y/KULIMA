@@ -45,7 +45,7 @@ export async function NewsWidget() {
         <div>
           {items.map((item, i) => (
             <a
-              key={item.link}
+              key={item.id || item.link}
               href={item.link}
               target="_blank"
               rel="noopener noreferrer"

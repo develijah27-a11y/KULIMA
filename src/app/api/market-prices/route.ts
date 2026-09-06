@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { generateDynamicMarketPrices } from '@/lib/prices';
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -18,13 +19,29 @@ export async function GET(req: Request) {
   if (district) priceQuery = priceQuery.eq('district', district);
   if (crop)     priceQuery = priceQuery.eq('crop_type', crop);
 
-  const [pricesRes, demandRes] = await Promise.all([
-    priceQuery,
-    (supabase.from as any)('crop_demand_signals').select('crop_type, request_count').limit(50),
-  ]);
+  let pricesRes: any = { data: [] };
+  let demandRes: any = { data: [] };
 
-  const prices = pricesRes.data ?? [];
-  const demand = demandRes.data ?? [];
+  try {
+    [pricesRes, demandRes] = await Promise.all([
+      priceQuery,
+      (supabase.from as any)('crop_demand_signals').select('crop_type, request_count').limit(50),
+    ]);
+  } catch (err) {
+    console.warn('[/api/market-prices] Supabase query failed, will use dynamic prices:', err);
+  }
+
+  let prices = pricesRes?.data ?? [];
+  const demand = demandRes?.data ?? [];
+
+  if (!prices || prices.length === 0) {
+    const dynamicAll = generateDynamicMarketPrices();
+    prices = dynamicAll.filter(p => {
+      if (crop && p.crop_type !== crop.toLowerCase()) return false;
+      if (district && !p.district.toLowerCase().includes(district.toLowerCase())) return false;
+      return true;
+    });
+  }
 
   // Build demand map
   const demandMap: Record<string, { offer_count: number }> = {};

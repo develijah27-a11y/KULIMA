@@ -1,5 +1,18 @@
 import { unstable_cache } from 'next/cache';
-import { getDistrict, getDefaultDistrict } from '@/lib/districts';
+import { getDistrict, getDefaultDistrict, UGANDA_DISTRICTS } from '@/lib/districts';
+
+export function findClosestDistrict(lat: number, lon: number): string {
+  let closest = 'Kampala';
+  let minDist = Infinity;
+  for (const [name, info] of Object.entries(UGANDA_DISTRICTS)) {
+    const dist = Math.hypot(lat - info.lat, lon - info.lng);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = name;
+    }
+  }
+  return closest;
+}
 
 export interface WeatherNow {
   temp: number;
@@ -263,14 +276,21 @@ const fetchWeatherCached = unstable_cache(
     let data: ServerWeatherData | null = null;
     if (apiKey) data = await fetchOpenWeatherMap(lat, lon, apiKey);
     if (!data)  data = await fetchOpenMeteo(lat, lon);
-    return data ?? ugandaFallbackWeather();
+    const closest = findClosestDistrict(lat, lon);
+    const result = data ?? ugandaFallbackWeather(closest);
+    if (!result.district) result.district = closest;
+    return result;
   },
   ['weather-location'],
-  { revalidate: 1800, tags: ['weather'] }
+  { revalidate: 900, tags: ['weather'] }
 );
 
 export async function fetchWeatherForFarmer(lat: number, lon: number): Promise<ServerWeatherData> {
-  return fetchWeatherCached(lat, lon);
+  const data = await fetchWeatherCached(lat, lon);
+  if (!data.district) {
+    data.district = findClosestDistrict(lat, lon);
+  }
+  return data;
 }
 
 export async function fetchWeatherForDistrict(districtName: string): Promise<ServerWeatherData> {
