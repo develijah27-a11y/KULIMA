@@ -6,37 +6,22 @@ module.exports = {
   rootDir: __dirname,
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  resolver: '<rootDir>/jest-resolver.js',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testMatch: [
-    '**/__tests__/**/*.test.ts',
-    '**/__tests__/**/*.test.tsx',
+    '<rootDir>/src/**/__tests__/**/*.{test,spec}.ts',
+    '<rootDir>/src/**/__tests__/**/*.{test,spec}.tsx',
   ],
   testPathIgnorePatterns: [
-    '/node_modules/',
-    '/.next/',
-    '/frontend/',
+    '[\\\\/]node_modules[\\\\/]',
+    '[\\\\/]\\.next[\\\\/]',
+    '[\\\\/]\\.kilo[\\\\/]',
+    '[\\\\/]frontend[\\\\/]',
   ],
   transform: {
-    '^.+\\.tsx?$': [
-      'ts-jest',
-      {
-        isolatedModules: true,
-        tsconfig: {
-          rootDir: __dirname,
-          target: 'ES2022',
-          module: 'commonjs',
-          moduleResolution: 'node',
-          esModuleInterop: true,
-          jsx: 'react-jsx',
-          ignoreDeprecations: '6.0',
-          paths: {
-            '@/*': ['./src/*'],
-          },
-        },
-      },
-    ],
+    '^.+\\.tsx?$': '<rootDir>/jest-transformer.js',
   },
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',

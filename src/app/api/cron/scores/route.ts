@@ -24,7 +24,7 @@ export async function GET(req: Request) {
   (offers ?? []).forEach((o: any) => { if (farmCount[o.buyer_id]) farmCount[o.buyer_id].deals++; });
 
   const scores = Object.entries(farmCount).map(([uid, fa]) => {
-    let score = (fa.area > 0.5 ? 10 : 0) + (fa.deals > 0 ? 15 : 0);
+    const score = (fa.area > 0.5 ? 10 : 0) + (fa.deals > 0 ? 15 : 0);
     return { farmerId: uid, farmScore: score, creditLimit: score * 10000 };
   });
 

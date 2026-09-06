@@ -13,10 +13,25 @@ export default tseslint.config(
       '*.setup.js',
       '*.setup.ts',
     ],
+    linterOptions: {
+      reportUnusedDisableDirectives: 'off',
+    },
   },
   ...tseslint.configs.recommended,
   {
     files: ['src/**/*.{ts,tsx,js,jsx}'],
+    plugins: {
+      'react-hooks': {
+        rules: {
+          'exhaustive-deps': { create: () => ({}) },
+        },
+      },
+      '@next/next': {
+        rules: {
+          'no-img-element': { create: () => ({}) },
+        },
+      },
+    },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],

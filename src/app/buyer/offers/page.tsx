@@ -1,4 +1,4 @@
-﻿import { Suspense } from 'react';
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
@@ -43,7 +43,7 @@ async function OffersContent({ tab, userId }: { tab: string; userId: string }) {
 
   // Get farmer names for listings
   const farmerIds = [...new Set(rows.map((o: any) => o.listing?.farmer_id).filter(Boolean))] as string[];
-  let farmerMap: Record<string, string> = {};
+  const farmerMap: Record<string, string> = {};
   if (farmerIds.length > 0) {
     const { data: farmers } = await (supabase.from as any)('profiles').select('id, full_name').in('id', farmerIds);
     (farmers ?? []).forEach((f: any) => { farmerMap[f.id] = f.full_name; });

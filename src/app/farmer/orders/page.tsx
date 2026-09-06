@@ -27,7 +27,7 @@ export default async function FarmerOrdersPage() {
 
   // Enrich with buyer names
   const buyerIds = [...new Set(rows.map((o: any) => o.buyer_id))] as string[];
-  let buyerMap: Record<string, { full_name: string; location: string }> = {};
+  const buyerMap: Record<string, { full_name: string; location: string }> = {};
   if (buyerIds.length > 0) {
     const { data: buyers } = await supabase
       .from('profiles').select('user_id, full_name, location').in('user_id', buyerIds);

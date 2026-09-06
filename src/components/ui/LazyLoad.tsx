@@ -1,10 +1,10 @@
+'use client';
+
 /**
  * LazyLoad Component
  * Only renders children when they enter the viewport
  * Reduces initial bundle size and improves TTI (Time to Interactive)
  */
-
-'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import { createIntersectionObserver } from '@/lib/performance';

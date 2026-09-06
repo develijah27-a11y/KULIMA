@@ -23,7 +23,7 @@ export default async function FarmerContractOffersPage() {
 
   // Look up each offtaker's display name — offtaker_id is a raw auth uid.
   const offtakerIds = [...new Set(rows.map(r => r.contract?.offtaker_id).filter(Boolean))];
-  let offtakerNames: Record<string, string> = {};
+  const offtakerNames: Record<string, string> = {};
   if (offtakerIds.length > 0) {
     const { data: profiles } = await supabase.from('profiles').select('user_id, full_name, business_name').in('user_id', offtakerIds);
     (profiles ?? []).forEach((p: any) => { offtakerNames[p.user_id] = p.business_name || p.full_name || 'Bulk Buyer'; });

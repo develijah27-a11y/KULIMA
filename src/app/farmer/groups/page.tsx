@@ -41,7 +41,7 @@ export default async function FarmerGroupsPage() {
 
   // Attach member counts
   const allGroupIds = allGroups.map((g: any) => g.id);
-  let memberCounts: Record<string, number> = {};
+  const memberCounts: Record<string, number> = {};
   if (allGroupIds.length > 0) {
     const { data: counts } = await (supabase.from as any)('farmer_group_members')
       .select('group_id')

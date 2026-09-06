@@ -120,6 +120,8 @@ describe('Supabase Setup Verification', () => {
         ? process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
         : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2MDAwMDAwMDAsImV4cCI6MTkwMDAwMDAwMH0.placeholder';
 
+    let supabase: ReturnType<typeof createClient>;
+
     beforeAll(() => {
       // Create a browser client for testing
       supabase = createClient(supabaseUrl, supabaseKey);

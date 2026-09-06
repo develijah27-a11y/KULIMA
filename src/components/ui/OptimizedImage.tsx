@@ -1,9 +1,9 @@
+'use client';
+
 /**
  * Optimized Image Component
  * Wrapper around Next.js Image with smart defaults for performance
  */
-
-'use client';
 
 import Image from 'next/image';
 import { useState } from 'react';

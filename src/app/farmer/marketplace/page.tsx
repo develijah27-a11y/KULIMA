@@ -1,4 +1,4 @@
-﻿import { Suspense } from 'react';
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
@@ -39,7 +39,7 @@ async function MyListings({ profileId, filter }: { profileId: string; filter: st
 
   // Get pending offer counts per listing
   const ids = rows.map((l: any) => l.id);
-  let offerMap: Record<string, number> = {};
+  const offerMap: Record<string, number> = {};
   if (ids.length > 0) {
     const { data: counts } = await (supabase.from as any)('offers')
       .select('listing_id')
