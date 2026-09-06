@@ -97,7 +97,15 @@ export function NotificationDrawer({
       {/* Backdrop */}
       {open && (
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 9998, background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(2px)' }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9998,
+            background: 'rgba(0,0,0,0.35)',
+            backdropFilter: 'blur(3px)',
+            WebkitBackdropFilter: 'blur(3px)',
+            animation: 'modalBackdropIn 0.2s ease forwards',
+          }}
           onClick={() => setOpen(false)}
           aria-hidden="true"
         />
@@ -123,7 +131,9 @@ export function NotificationDrawer({
           display: 'flex',
           flexDirection: 'column',
           transform: open ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 260ms cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1), visibility 260ms',
+          visibility: open ? 'visible' : 'hidden',
+          pointerEvents: open ? 'auto' : 'none',
         }}
       >
         {/* Header */}

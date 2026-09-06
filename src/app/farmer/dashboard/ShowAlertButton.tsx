@@ -36,15 +36,39 @@ export function ShowAlertButton() {
       </Button>
       {/* modal */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-soil/80 backdrop-blur-sm" onClick={() => setOpen(false)}>
-          <div className="bg-surface border border-surface2 rounded-2xl p-5 w-[92vw] max-w-sm space-y-3" onClick={e => e.stopPropagation()}>
-            <h3 className="font-semibold text-cream">Send Quick Alert</h3>
-            <select value={type} onChange={e => setType(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-surface2 border border-surface2 text-cream text-sm">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-soil/75 backdrop-blur-sm"
+          style={{ animation: 'modalBackdropIn 0.2s ease forwards' }}
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="bg-surface border border-surface2 rounded-2xl p-5 w-[92vw] max-w-sm space-y-3 shadow-[var(--shadow-modal)]"
+            style={{ animation: 'modalSheetIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="font-semibold text-[var(--color-text)]">Send Quick Alert</h3>
+            <select
+              value={type}
+              onChange={e => setType(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-surface border border-[var(--color-border-mid)] text-[var(--color-text)] text-sm focus:ring-2 focus:ring-sprout"
+            >
               <option value="rain">Rain</option>
-              <option value="price">Price</option><option value="pest">Pest</option>
+              <option value="price">Price</option>
+              <option value="pest">Pest</option>
             </select>
-            <input placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} className="w-full px-3 py-2 rounded-xl bg-surface2 border border-surface2 text-cream text-sm placeholder:text-cream/25" />
-            <textarea placeholder="Message…" value={body} onChange={e => setBody(e.target.value)} rows={2} className="w-full px-3 py-2 rounded-xl bg-surface2 border border-surface2 text-cream text-sm placeholder:text-cream/25" />
+            <input
+              placeholder="Title"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-surface border border-[var(--color-border-mid)] text-[var(--color-text)] text-sm focus:ring-2 focus:ring-sprout placeholder:text-[var(--color-text-hint)]"
+            />
+            <textarea
+              placeholder="Message…"
+              value={body}
+              onChange={e => setBody(e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 rounded-xl bg-surface border border-[var(--color-border-mid)] text-[var(--color-text)] text-sm focus:ring-2 focus:ring-sprout placeholder:text-[var(--color-text-hint)]"
+            />
             <Button onClick={send} isLoading={loading} className="w-full">Send</Button>
           </div>
         </div>

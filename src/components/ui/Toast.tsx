@@ -88,18 +88,21 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: () => void }
         background: s.bg,
         border: `1px solid ${s.border}`,
         boxShadow: 'var(--shadow-card)',
+        animation: 'toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       }}
     >
       <Icon size={16} style={{ color: s.icon, flexShrink: 0, marginTop: 1 }} />
-      <p style={{ flex: 1, fontSize: 13, color: 'var(--color-text)', lineHeight: 1.4 }}>
+      <p style={{ flex: 1, fontSize: 13, color: 'var(--color-text)', lineHeight: 1.4, fontWeight: 500 }}>
         {toast.message}
       </p>
       <button
         onClick={onDismiss}
         aria-label="Dismiss"
+        className="no-min-touch"
         style={{
           background: 'none', border: 'none', cursor: 'pointer', padding: 2,
           color: 'var(--color-text-muted)', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
         <X size={14} />

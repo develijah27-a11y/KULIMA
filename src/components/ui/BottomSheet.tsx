@@ -39,7 +39,8 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       {/* backdrop */}
       <div
-        className="absolute inset-0 bg-soil/80 backdrop-blur-sm animate-in fade-in duration-200"
+        className="absolute inset-0 bg-soil/75 backdrop-blur-sm"
+        style={{ animation: 'modalBackdropIn 0.2s ease forwards' }}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -51,14 +52,15 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
         aria-label={title ?? 'Dialog'}
         className={cn(
           'relative z-10 w-full max-w-[92vw] rounded-t-2xl bg-surface border-t border-surface2',
-          'shadow-shadow-modal p-5 animate-in slide-up-from-bottom duration-250'
+          'shadow-[var(--shadow-modal)] p-5'
         )}
+        style={{ animation: 'modalSheetIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
       >
-        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-surface2" />
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--color-border-strong)] opacity-60" />
         {title && (
           <h2
-            className="font-headline text-lg font-bold text-cream mb-4"
-            style={{ fontFamily: 'var(--font-headline)' }}
+            className="text-lg font-bold text-[var(--color-text)] mb-4"
+            style={{ fontFamily: 'var(--font-display)' }}
           >
             {title}
           </h2>

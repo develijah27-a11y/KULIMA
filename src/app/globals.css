@@ -467,6 +467,19 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
+/* Modern Form Validation States (modern-web-guidance: forms)
+   Only style valid/invalid fields AFTER user has interacted with them.
+   Avoids premature red borders on page load. */
+input:user-invalid, select:user-invalid, textarea:user-invalid {
+  border-color: var(--color-danger) !important;
+  box-shadow: 0 0 0 3px var(--color-danger-border) !important;
+}
+
+input:user-valid:not(:placeholder-shown):not([type="checkbox"]):not([type="radio"]) {
+  border-color: var(--color-primary-muted);
+}
+
+
 
 /* ═══════════════════════════════════════════════════════════════════
    INPUTS
@@ -1013,8 +1026,24 @@ input.auth-input:-webkit-autofill:active {
 }
 .fab-white:hover:not(:disabled) { background: var(--color-surface-2); }
 
-/* ── Toast notification slide-in ── */
+/* ── Toast & Sheet transitions ── */
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(24px) scale(0.96); }
   to   { opacity: 1; transform: translateX(0)    scale(1); }
 }
+
+@keyframes toastSlideUp {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modalSheetIn {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes modalBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+

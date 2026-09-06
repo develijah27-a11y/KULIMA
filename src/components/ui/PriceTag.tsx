@@ -51,7 +51,7 @@ export function PriceTag({
             'inline-flex items-center gap-0.5 text-xs font-semibold',
             isUp && 'text-sprout',
             isDown && 'text-clay',
-            computedChange === 0 && 'text-cream/40'
+            computedChange === 0 && 'text-[var(--color-text-muted)]'
           )}
         >
           {isUp && <ArrowUp className="w-3 h-3" />}

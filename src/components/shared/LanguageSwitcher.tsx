@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
 const LANGUAGES = [
@@ -36,8 +35,8 @@ export function LanguageSwitcher({
           className={cn(
             'px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors',
             current === lang.code
-              ? 'bg-sprout text-soil'
-              : 'text-cream/50 hover:text-cream'
+              ? 'bg-sprout text-white dark:text-soil'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
           )}
           title={lang.full}
         >

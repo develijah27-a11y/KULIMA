@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { PriceTag } from '@/components/ui/PriceTag';
 
 const CROP_TYPES = [
   'maize', 'beans', 'tomatoes', 'cassava', 'rice',
@@ -52,12 +51,12 @@ export function CreateListingForm({ farmerDistrict }: { farmerDistrict?: string 
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">
         <div>
-          <label className="block text-xs font-semibold text-cream/60 mb-1">Crop *</label>
+          <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Crop *</label>
           <select
             value={crop}
             onChange={(e) => setCrop(e.target.value)}
             required
-            className="w-full px-3 py-2.5 rounded-xl bg-surface2 border border-surface2 text-cream text-sm focus:ring-2 focus:ring-sprout"
+            className="w-full px-3 py-2.5 rounded-xl bg-surface border border-[var(--color-border-mid)] text-[var(--color-text)] text-sm focus:ring-2 focus:ring-sprout"
           >
             <option value="" disabled>Select crop</option>
             {CROP_TYPES.map((c) => (
@@ -70,7 +69,7 @@ export function CreateListingForm({ farmerDistrict }: { farmerDistrict?: string 
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold text-cream/60 mb-1">Quantity (kg) *</label>
+            <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Quantity (kg) *</label>
             <input
               type="number"
               value={qty}
@@ -78,11 +77,11 @@ export function CreateListingForm({ farmerDistrict }: { farmerDistrict?: string 
               required
               min="1"
               placeholder="100"
-              className="w-full px-3 py-2.5 rounded-xl bg-surface2 border border-surface2 text-cream text-sm focus:ring-2 focus:ring-sprout placeholder:text-cream/25"
+              className="w-full px-3 py-2.5 rounded-xl bg-surface border border-[var(--color-border-mid)] text-[var(--color-text)] text-sm focus:ring-2 focus:ring-sprout placeholder:text-[var(--color-text-hint)]"
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-cream/60 mb-1">Asking price/kg (UGX) *</label>
+            <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Asking price/kg (UGX) *</label>
             <input
               type="number"
               value={price}
@@ -90,28 +89,28 @@ export function CreateListingForm({ farmerDistrict }: { farmerDistrict?: string 
               required
               min="0"
               placeholder="1400"
-              className="w-full px-3 py-2.5 rounded-xl bg-surface2 border border-surface2 text-cream text-sm focus:ring-2 focus:ring-sprout placeholder:text-cream/25"
+              className="w-full px-3 py-2.5 rounded-xl bg-surface border border-[var(--color-border-mid)] text-[var(--color-text)] text-sm focus:ring-2 focus:ring-sprout placeholder:text-[var(--color-text-hint)]"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-cream/60 mb-1">Available from</label>
+          <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Available from</label>
           <input
             type="date"
             value={availableFrom}
             onChange={(e) => setAvailableFrom(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl bg-surface2 border border-surface2 text-cream text-sm focus:ring-2 focus:ring-sprout"
+            className="w-full px-3 py-2.5 rounded-xl bg-surface border border-[var(--color-border-mid)] text-[var(--color-text)] text-sm focus:ring-2 focus:ring-sprout"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-cream/60 mb-1">Notes (optional)</label>
+          <label className="block text-xs font-semibold text-[var(--color-text-muted)] mb-1">Notes (optional)</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={2}
-            className="w-full px-3 py-2.5 rounded-xl bg-surface2 border border-surface2 text-cream text-sm focus:ring-2 focus:ring-sprout resize-none placeholder:text-cream/25"
+            className="w-full px-3 py-2.5 rounded-xl bg-surface border border-[var(--color-border-mid)] text-[var(--color-text)] text-sm focus:ring-2 focus:ring-sprout resize-none placeholder:text-[var(--color-text-hint)]"
             placeholder="Quality, organic, delivery options…"
           />
         </div>

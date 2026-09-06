@@ -17,12 +17,12 @@ export function PageHeader({
     <div className={cn('flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5', className)}>
       <div>
         <h1
-          className="text-xl font-bold text-cream"
-          style={{ fontFamily: 'var(--font-headline)' }}
+          className="text-xl font-bold text-[var(--color-text)]"
+          style={{ fontFamily: 'var(--font-display)' }}
         >
           {title}
         </h1>
-        {subtitle && <p className="text-sm text-cream/50 mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-[var(--color-text-muted)] mt-0.5">{subtitle}</p>}
       </div>
       {action}
     </div>

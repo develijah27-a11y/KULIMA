@@ -4,7 +4,15 @@ import type { Database } from '../database.types';
 import { env } from '@/config/env';
 
 export const createClient = async () => {
-  const cookieStore = await cookies();
+  let cookieStore: { getAll: () => { name: string; value: string }[]; set: (name: string, value: string, options?: any) => void };
+  try {
+    cookieStore = await cookies();
+  } catch {
+    cookieStore = {
+      getAll: () => [],
+      set: () => {},
+    };
+  }
 
   const anonKey =
     env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??

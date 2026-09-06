@@ -23,18 +23,18 @@ export function PriceTicker({
 
   return (
     <Card>
-      <p className="text-xs text-cream/40 font-semibold tracking-wider uppercase mb-3">
+      <p className="text-xs text-[var(--color-text-muted)] font-semibold tracking-wider uppercase mb-3">
         Live Price Changes
       </p>
       <div className="space-y-1.5">
         {sorted.slice(0, 4).map((p) => (
           <div
             key={p.cropType}
-            className="flex items-center justify-between py-2 px-1 rounded-lg hover:bg-soil/40 transition-colors"
+            className="flex items-center justify-between py-2 px-1 rounded-lg hover:bg-[var(--color-surface-2)] transition-colors"
           >
             <div>
-              <p className="text-sm font-semibold text-cream">{p.cropType}</p>
-              <p className="text-[10px] text-cream/35">{p.marketName}</p>
+              <p className="text-sm font-semibold text-[var(--color-text)]">{p.cropType}</p>
+              <p className="text-[10px] text-[var(--color-text-muted)]">{p.marketName}</p>
             </div>
             <PriceTag
               value={p.pricePerKg}

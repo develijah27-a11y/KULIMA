@@ -1,9 +1,6 @@
 'use client';
 
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { PriceTag } from '@/components/ui/PriceTag';
-import type { MarketPrice } from '@/types/domain';
 
 export const weatherEmoji: Record<string, string> = {
   '01d': '☀️', '01n': '🌙',
@@ -49,14 +46,14 @@ export function WeatherCard({
         </span>
         <div>
           <p
-            className="text-4xl font-extrabold text-cream font-mono"
+            className="text-4xl font-extrabold text-[var(--color-text)] font-mono"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             {Math.round(currentTemp)}°
           </p>
-          <p className="text-xs text-cream/50 capitalize">{description}</p>
+          <p className="text-xs text-[var(--color-text-muted)] capitalize">{description}</p>
           {locationName && (
-            <p className="text-[11px] text-cream/30 mt-0.5">{locationName}</p>
+            <p className="text-[11px] text-[var(--color-text-hint)] mt-0.5">{locationName}</p>
           )}
         </div>
       </div>
@@ -65,9 +62,9 @@ export function WeatherCard({
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1" aria-label="6-day forecast">
           {forecast.map((d) => (
             <div key={d.label} className="flex flex-col items-center gap-1 min-w-[44px]">
-              <span className="text-[10px] text-cream/40 font-medium">{d.label}</span>
+              <span className="text-[10px] text-[var(--color-text-muted)] font-medium">{d.label}</span>
               <span className="text-lg">{d.emoji}</span>
-              <span className="text-[11px] text-cream/60 font-mono">{d.temp}°</span>
+              <span className="text-[11px] text-[var(--color-text)] font-mono">{d.temp}°</span>
             </div>
           ))}
         </div>
