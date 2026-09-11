@@ -1,14 +1,15 @@
-﻿'use client';
+'use client';
 
 import { useState, useCallback, useMemo, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { Check, AlertTriangle, CloudOff } from 'lucide-react';
+import { Check, AlertTriangle, CloudOff, Sprout, ArrowRight } from 'lucide-react';
 import { queueFarm, isNetworkFailure } from '@/lib/offline-farm-queue';
 
 const GPSWalkMap = dynamic(() => import('./GPSWalkMap').then(m => m.GPSWalkMap), {
   ssr: false,
-  loading: () => <div style={{ height: 300, background: 'var(--color-primary-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: 'var(--color-primary-hover)', fontSize: 13, fontWeight: 600 }}>Loading map...</p></div>,
+  loading: () => <div style={{ height: 320, background: 'var(--color-primary-bg)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: 'var(--color-primary-hover)', fontSize: 13, fontWeight: 600 }}>Loading map...</p></div>,
 });
 
 const C = {
@@ -21,6 +22,9 @@ const DISTRICTS = ['Kampala','Wakiso','Mukono','Jinja','Mbale','Gulu','Lira','Ma
 
 export function NewFarmForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isWelcomeOnboarding = searchParams?.get('welcome') === '1' || searchParams?.get('onboarding') === '1';
+
   const [name, setName]         = useState('');
   const [district, setDistrict] = useState('');
   const [sizeHa, setSizeHa]     = useState('');
@@ -132,6 +136,50 @@ export function NewFarmForm() {
   return (
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
+      {/* Onboarding Welcome Callout (when routed after signup/role selection) */}
+      {isWelcomeOnboarding && (
+        <div
+          style={{
+            padding: '16px 18px',
+            borderRadius: 14,
+            background: 'linear-gradient(135deg, var(--color-primary-bg) 0%, rgba(14,165,233,0.06) 100%)',
+            border: '1.5px solid var(--color-primary-muted)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <span
+              style={{
+                fontSize: 10.5,
+                fontWeight: 800,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                color: 'var(--color-primary)',
+                background: 'var(--color-surface)',
+                padding: '2px 8px',
+                borderRadius: 4,
+              }}
+            >
+              First Step For Farmers
+            </span>
+            <Link
+              href="/farmer/dashboard"
+              style={{ fontSize: 12, fontWeight: 700, color: C.muted, textDecoration: 'none' }}
+            >
+              Skip to dashboard →
+            </Link>
+          </div>
+          <h2 style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: 0 }}>
+            Register Your Farm
+          </h2>
+          <p style={{ fontSize: 12.5, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+            To start taking field records, assigning worker roles, and getting localized crop advice, register your first farm plot below.
+          </p>
+        </div>
+      )}
+
       {/* Name */}
       <div>
         <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>Farm Name *</label>
@@ -171,7 +219,7 @@ export function NewFarmForm() {
         </div>
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
-            Size (ha){areaHa > 0 && <span style={{ color: 'var(--color-success)', fontSize: 11, marginLeft: 6 }}>from GPS walk</span>}
+            Size (ha){areaHa > 0 && <span style={{ color: 'var(--color-success)', fontSize: 11, marginLeft: 6 }}>from map boundary</span>}
           </label>
           <input
             type="number" value={sizeHa} onChange={e => setSizeHa(e.target.value)} placeholder="e.g. 2.5" step="0.01" min="0"
@@ -201,14 +249,14 @@ export function NewFarmForm() {
         </div>
       </div>
 
-      {/* GPS Walk Map */}
+      {/* Farm Location & Boundary Map */}
       <div>
         <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 8 }}>
-          Farm Boundary
-          {boundary.length < 3 && <span style={{ color: C.muted, fontWeight: 400, fontSize: 12, marginLeft: 6 }}>(optional — walk your farm with GPS)</span>}
-          {boundary.length >= 3 && <span style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: 12, marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={11} />{boundary.length} points captured</span>}
+          Farm Location & Field Boundary
+          {boundary.length < 3 && <span style={{ color: C.muted, fontWeight: 400, fontSize: 12, marginLeft: 6 }}>(optional — tap corners on map or use device GPS)</span>}
+          {boundary.length >= 3 && <span style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: 12, marginLeft: 6, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Check size={11} />{boundary.length} corners plotted ({areaHa.toFixed(2)} ha)</span>}
         </label>
-        <GPSWalkMap onBoundaryChange={onBoundaryChange} />
+        <GPSWalkMap onBoundaryChange={onBoundaryChange} initialSizeHa={sizeHa ? parseFloat(sizeHa) : undefined} />
       </div>
 
       {/* Notes */}

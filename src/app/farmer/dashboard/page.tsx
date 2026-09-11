@@ -41,6 +41,15 @@ const getListingsCount = cache(async (profileId: string) => {
   return count ?? 0;
 });
 
+const getFarmsCount = cache(async (userId: string) => {
+  const supabase = await createClient();
+  const { count } = await (supabase.from as any)('farms')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_active', true);
+  return count ?? 0;
+});
+
 function computeAgriScore(profile: any, listingsCount: number): number {
   let s = 300;
   if (profile?.full_name)   s += 50;
@@ -816,11 +825,12 @@ async function NearbyDriversWidget({ userId }: { userId: string }) {
 
 function QuickActions() {
   const actions = [
-    { label: 'Sell Produce',     href: '/farmer/marketplace/new',  icon: <Pencil size={20} />,      bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
-    { label: 'Farm Records',     href: '/farmer/farm',             icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
-    { label: 'Check Weather',    href: '/farmer/weather',          icon: <Cloud size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
-    { label: 'Crop Doctor',      href: '/farmer/doctor',           icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
-    { label: 'My Deliveries',    href: '/farmer/deliveries',        icon: <Truck size={20} />,         bg: 'var(--color-purple-bg)',   color: 'var(--color-purple)' },
+    { label: 'Register Farm',  href: '/farmer/farm/new',         icon: <Sprout size={20} />,        bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
+    { label: 'Farm Records',   href: '/farmer/farm',             icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
+    { label: 'Sell Produce',   href: '/farmer/marketplace/new',  icon: <Pencil size={20} />,        bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
+    { label: 'Check Weather',  href: '/farmer/weather',          icon: <Cloud size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
+    { label: 'Crop Doctor',    href: '/farmer/doctor',           icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
+    { label: 'My Deliveries',  href: '/farmer/deliveries',        icon: <Truck size={20} />,         bg: 'var(--color-purple-bg)',   color: 'var(--color-purple)' },
   ];
 
   return (
@@ -913,7 +923,10 @@ export default async function FarmerDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
   const userId = user.id;
-  const profile = await getProfile(userId);
+  const [profile, farmsCount] = await Promise.all([
+    getProfile(userId),
+    getFarmsCount(userId),
+  ]);
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Farmer';
 
   return (
@@ -938,6 +951,51 @@ export default async function FarmerDashboardPage() {
           <span>New Crop Listing</span>
         </Link>
       </div>
+
+      {/* 0. Top-Tier Farm Registration Reminder (Shown prominently when 0 farms are registered) */}
+      {farmsCount === 0 && (
+        <div
+          className="rounded-2xl p-5 sm:p-6 border-2 transition-all"
+          style={{
+            background: 'linear-gradient(135deg, var(--color-primary-bg) 0%, rgba(14,165,233,0.06) 100%)',
+            borderColor: 'var(--color-primary-muted)',
+            boxShadow: 'var(--d-shadow-card)',
+          }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'var(--color-surface)', color: 'var(--color-primary)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+              >
+                <Sprout size={24} />
+              </div>
+              <div>
+                <div
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider mb-1"
+                  style={{ background: 'var(--color-surface)', color: 'var(--color-primary)' }}
+                >
+                  Essential Setup · First Step
+                </div>
+                <h2 className="text-base sm:text-lg font-black" style={{ color: C.text, letterSpacing: '-0.02em' }}>
+                  Register Your First Farm
+                </h2>
+                <p className="text-xs sm:text-sm mt-1" style={{ color: C.muted, maxWidth: 540, lineHeight: 1.5 }}>
+                  To keep field records, assign worker roles, monitor localized weather, and track harvests, register your farm plot now.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/farmer/farm/new"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-black text-white shrink-0 shadow-md transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              style={{ background: C.green, textDecoration: 'none' }}
+            >
+              <span>Register Farm Now</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* 0 · Verification prompt */}
       <Suspense fallback={<div className="dash-skeleton h-16 rounded-xl" />}>

@@ -31,6 +31,16 @@ export default async function DashboardPage() {
   if (!role || role === 'pending') redirect('/onboarding/role');
 
   // Route to the dashboard for the primary role
+  if (role === 'farmer') {
+    const { count } = await (supabase.from as any)('farms')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_active', true);
+    if (!count || count === 0) {
+      redirect('/farmer/farm/new?welcome=1');
+    }
+  }
+
   const dest = ROLE_DASHBOARDS[role];
   redirect(dest ?? '/farmer/dashboard');
 }

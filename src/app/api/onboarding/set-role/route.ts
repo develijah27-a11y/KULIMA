@@ -57,5 +57,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to set your role. Please try again.' }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, redirect: ROLE_DASHBOARD[primaryRole] });
+  let redirectUrl = ROLE_DASHBOARD[primaryRole] ?? '/dashboard';
+  if (primaryRole === 'farmer') {
+    const { count } = await (supabase.from as any)('farms')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_active', true);
+    if (!count || count === 0) {
+      redirectUrl = '/farmer/farm/new?welcome=1';
+    }
+  }
+
+  return NextResponse.json({ ok: true, redirect: redirectUrl });
 }
