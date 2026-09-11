@@ -1,0 +1,180 @@
+/* WhatsApp Chat Theme & Component Styling */
+
+.wa-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 140px);
+  min-height: 580px;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--d-card);
+  border: 1px solid var(--d-border);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .wa-chat-container {
+    height: calc(100dvh - 110px);
+    min-height: 480px;
+    border-radius: 12px;
+  }
+}
+
+/* WhatsApp Doodle Background Wallpaper */
+.wa-wallpaper {
+  background-color: #efeae2;
+  background-image: radial-gradient(#d5cdc4 0.75px, transparent 0.75px), radial-gradient(#d5cdc4 0.75px, #efeae2 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+.dark .wa-wallpaper {
+  background-color: #0b141a;
+  background-image: radial-gradient(#1f2c34 0.75px, transparent 0.75px), radial-gradient(#1f2c34 0.75px, #0b141a 0.75px);
+  background-size: 30px 30px;
+  background-position: 0 0, 15px 15px;
+}
+
+/* Chat Message Bubbles */
+.wa-bubble-incoming {
+  background-color: #ffffff;
+  color: #111b21;
+  border-radius: 12px 12px 12px 2px;
+  box-shadow: 0 1px 2.5px rgba(11, 20, 26, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.dark .wa-bubble-incoming {
+  background-color: #202c33;
+  color: #e9edef;
+  border-radius: 12px 12px 12px 2px;
+  box-shadow: 0 1px 2.5px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.wa-bubble-outgoing {
+  background-color: #d9fdd3;
+  color: #111b21;
+  border-radius: 12px 12px 2px 12px;
+  box-shadow: 0 1px 2.5px rgba(11, 20, 26, 0.12);
+  border: 1px solid rgba(18, 140, 126, 0.12);
+}
+
+.dark .wa-bubble-outgoing {
+  background-color: #005c4b;
+  color: #e9edef;
+  border-radius: 12px 12px 2px 12px;
+  box-shadow: 0 1px 2.5px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Date Divider Pill */
+.wa-date-pill {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  color: #54656f;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 4px 14px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(11, 20, 26, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.dark .wa-date-pill {
+  background: rgba(30, 41, 59, 0.85);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* WhatsApp Quoted Reply Block */
+.wa-quote-block {
+  border-left: 4px solid #00a884;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+  padding: 5px 8px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dark .wa-quote-block {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.wa-quote-block:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.dark .wa-quote-block:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Action hover pill on message */
+.wa-action-trigger {
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform: scale(0.92);
+}
+
+.wa-message-row:hover .wa-action-trigger,
+.wa-message-row:focus-within .wa-action-trigger {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Voice note waveform animation */
+@keyframes wa-pulse-bar {
+  0%, 100% { height: 6px; }
+  50% { height: 18px; }
+}
+
+.wa-waveform-bar-active {
+  animation: wa-pulse-bar 0.8s ease-in-out infinite;
+}
+
+/* Reaction pill on message */
+.wa-reaction-badge {
+  position: absolute;
+  bottom: -10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  z-index: 2;
+  user-select: none;
+}
+
+.dark .wa-reaction-badge {
+  background: #202c33;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* WhatsApp Smooth Custom Scrollbar */
+.wa-scroll-stream::-webkit-scrollbar {
+  width: 6px;
+}
+.wa-scroll-stream::-webkit-scrollbar-track {
+  background: transparent;
+}
+.wa-scroll-stream::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 99px;
+}
+.dark .wa-scroll-stream::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+}

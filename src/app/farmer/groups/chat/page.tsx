@@ -50,7 +50,7 @@ export default async function FarmerGroupChatPage({ searchParams }: { searchPara
   const { room: roomParam } = await searchParams;
   const activeRoom = rooms.find(r => r.adminId === roomParam) ?? rooms[0];
 
-  const [{ count: memberCount }, { data: messagesData }] = await Promise.all([
+  const [{ count: memberCount }, { data: messagesData }, { data: membersData }] = await Promise.all([
     (supabase.from as any)('group_members')
       .select('id', { count: 'exact', head: true })
       .eq('admin_id', activeRoom.adminId)
@@ -60,43 +60,51 @@ export default async function FarmerGroupChatPage({ searchParams }: { searchPara
       .eq('admin_id', activeRoom.adminId)
       .order('created_at', { ascending: true })
       .limit(100),
+    (supabase.from as any)('group_members')
+      .select('id, name, phone_number, role, status')
+      .eq('admin_id', activeRoom.adminId)
+      .eq('status', 'active')
+      .limit(25),
   ]);
 
   const initialMessages = messagesData ?? [];
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-4">
-        <h1 className="text-xl font-black" style={{ color: 'var(--d-text)', letterSpacing: '-0.03em' }}>
-          {rooms.length > 1 ? activeRoom.adminName + "'s Group" : 'Group Chat'}
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--d-muted)' }}>
-          Real-time messaging · {memberCount ?? 0} members
-        </p>
-        {rooms.length > 1 && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+      {rooms.length > 1 && (
+        <div className="mb-3">
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {rooms.map(r => (
               <Link
                 key={r.adminId}
                 href={`/farmer/groups/chat?room=${r.adminId}`}
                 style={{
-                  padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                  padding: '6px 14px', borderRadius: 999, fontSize: 12, fontWeight: 700, textDecoration: 'none',
                   background: r.adminId === activeRoom.adminId ? 'var(--color-primary)' : 'var(--color-surface-2)',
                   color: r.adminId === activeRoom.adminId ? '#fff' : 'var(--d-muted)',
+                  border: '1px solid var(--d-border)',
                 }}
               >
                 {r.adminName}
               </Link>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
       <GroupChatClient
         adminId={activeRoom.adminId}
         currentUserId={user.id}
         currentUserName={(myProfile as any).full_name ?? 'Member'}
         memberCount={memberCount ?? 0}
         initialMessages={initialMessages}
+        groupName={activeRoom.adminName + "'s Group"}
+        membersList={(membersData ?? []).map((m: any) => ({
+          id: m.id,
+          name: m.name || 'Member',
+          phone_number: m.phone_number,
+          role: m.role || 'member',
+          status: m.status,
+        }))}
       />
     </div>
   );
