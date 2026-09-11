@@ -48,11 +48,11 @@ const LISTING_CROPS = [
 ];
 const LISTING_PREFIX = '📦 LISTING · ';
 
-// Preset Themes for Group Chat
+// Preset Themes for Group Chat (Cropify Themes)
 const CHAT_THEMES = [
   {
-    id: 'whatsapp-green',
-    name: 'WhatsApp Classic',
+    id: 'cropify-emerald',
+    name: 'Cropify Emerald',
     gradient: 'linear-gradient(135deg, #008069 0%, #005C4B 100%)',
     bubbleOwn: '#D9FDD3',
     bubbleOwnDark: '#005C4B',
@@ -63,7 +63,7 @@ const CHAT_THEMES = [
   },
   {
     id: 'forest',
-    name: 'Forest Emerald',
+    name: 'Agri Green',
     gradient: 'linear-gradient(135deg, #16A34A 0%, #14532D 100%)',
     bubbleOwn: '#DCFCE7',
     bubbleOwnDark: '#14532D',
@@ -74,7 +74,7 @@ const CHAT_THEMES = [
   },
   {
     id: 'ocean',
-    name: 'Ocean Blue',
+    name: 'Victoria Blue',
     gradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
     bubbleOwn: '#E0F2FE',
     bubbleOwnDark: '#075985',
@@ -85,7 +85,7 @@ const CHAT_THEMES = [
   },
   {
     id: 'harvest',
-    name: 'Harvest Gold',
+    name: 'Savanna Gold',
     gradient: 'linear-gradient(135deg, #D97706 0%, #92400E 100%)',
     bubbleOwn: '#FEF3C7',
     bubbleOwnDark: '#78350F',
@@ -265,8 +265,8 @@ export function GroupChatClient({
   // Restore saved theme
   useEffect(() => {
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
-    const match = CHAT_THEMES.find((t) => t.id === saved);
-    if (match) setTheme(match);
+    const match = CHAT_THEMES.find((t) => t.id === saved) ?? CHAT_THEMES[0];
+    setTheme(match);
   }, []);
 
   // Lock outer dashboard main padding & scroll so chat header and bottom toolbar stay pinned
@@ -904,7 +904,7 @@ export function GroupChatClient({
         }}
       >
         {/* Left: Mobile Back Button + Group Avatar & Info */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0, overflow: 'hidden' }}>
           <button
             type="button"
             onClick={() => {
@@ -919,8 +919,8 @@ export function GroupChatClient({
             aria-label="Back"
             className="md:hidden"
             style={{
-              width: 36,
-              height: 36,
+              width: 32,
+              height: 32,
               borderRadius: '50%',
               border: 'none',
               background: 'transparent',
@@ -933,7 +933,7 @@ export function GroupChatClient({
               flexShrink: 0,
             }}
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={19} />
           </button>
 
           <div
@@ -941,19 +941,20 @@ export function GroupChatClient({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 10,
+              gap: 8,
               cursor: 'pointer',
               userSelect: 'none',
               flex: 1,
               minWidth: 0,
+              overflow: 'hidden',
             }}
             title="Click to view Group Info & Roster"
           >
             <div style={{ position: 'relative', flexShrink: 0 }}>
               <div
                 style={{
-                  width: 42,
-                  height: 42,
+                  width: 38,
+                  height: 38,
                   borderRadius: '50%',
                   background: theme.gradient,
                   display: 'flex',
@@ -963,16 +964,16 @@ export function GroupChatClient({
                   boxShadow: `0 2px 8px ${theme.shadow}`,
                 }}
               >
-                <Users size={20} />
+                <Users size={18} />
               </div>
-              {/* WhatsApp Live Online indicator dot */}
+              {/* Online indicator dot */}
               <span
                 style={{
                   position: 'absolute',
-                  bottom: 1,
-                  right: 1,
-                  width: 11,
-                  height: 11,
+                  bottom: 0,
+                  right: 0,
+                  width: 10,
+                  height: 10,
                   borderRadius: '50%',
                   background: '#22C55E',
                   border: '2px solid var(--d-card)',
@@ -980,18 +981,20 @@ export function GroupChatClient({
               />
             </div>
 
-            <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
                 <h2
                   style={{
                     margin: 0,
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: 800,
                     color: 'var(--d-text)',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     letterSpacing: '-0.02em',
+                    flex: '0 1 auto',
+                    minWidth: 0,
                   }}
                 >
                   {groupName}
@@ -999,26 +1002,28 @@ export function GroupChatClient({
                 {isAdmin && (
                   <span
                     style={{
-                      fontSize: 10,
+                      fontSize: 9.5,
                       fontWeight: 800,
-                      padding: '1px 6px',
+                      padding: '1px 5px',
                       borderRadius: 4,
                       background: 'rgba(234, 179, 8, 0.15)',
                       color: '#CA8A04',
                       border: '1px solid rgba(234, 179, 8, 0.3)',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 3,
+                      gap: 2,
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    <Crown size={11} /> Admin
+                    <Crown size={10} /> Admin
                   </span>
                 )}
               </div>
               <p
                 style={{
-                  margin: '2px 0 0',
-                  fontSize: 11.5,
+                  margin: '1px 0 0',
+                  fontSize: 11,
                   color: 'var(--d-muted)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
@@ -1032,7 +1037,7 @@ export function GroupChatClient({
         </div>
 
         {/* Right: Header Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 8 }}>
           {/* In-Chat Search Button */}
           <button
             onClick={() => {
@@ -1042,8 +1047,8 @@ export function GroupChatClient({
             aria-label="Search Messages"
             title="Search in this chat"
             style={{
-              width: 38,
-              height: 38,
+              width: 36,
+              height: 36,
               borderRadius: '50%',
               border: 'none',
               background: searchOpen ? 'rgba(0,0,0,0.08)' : 'transparent',
@@ -1052,67 +1057,70 @@ export function GroupChatClient({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
             <Search size={18} />
           </button>
 
-          {/* Group Listings Aggregation shortcut for Admin */}
+          {/* Group Listings Aggregation shortcut - hidden on mobile to avoid overcrowding */}
           {isAdmin && (
             <button
               onClick={() => setOrganizeOpen(true)}
               aria-label="Group Crop Aggregations"
               title="Organize Group Crop Lots"
+              className="hidden md:flex"
               style={{
-                height: 34,
-                padding: '0 12px',
-                borderRadius: 20,
+                height: 32,
+                padding: '0 10px',
+                borderRadius: 16,
                 border: '1px solid var(--d-border)',
                 cursor: 'pointer',
                 background: 'var(--color-surface-2)',
                 color: 'var(--d-text)',
-                display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                fontSize: 12,
+                gap: 5,
+                fontSize: 11.5,
                 fontWeight: 700,
+                flexShrink: 0,
               }}
             >
-              <ClipboardList size={14} color="#16A34A" />
-              <span className="hidden sm:inline">Aggregate Lots</span>
+              <ClipboardList size={13} color="#16A34A" />
+              <span>Aggregate Lots</span>
             </button>
           )}
 
-          {/* Group Info Drawer Toggle */}
+          {/* Group Info Drawer Toggle (hidden on mobile since tapping header opens it) */}
           <button
             onClick={() => setGroupInfoOpen(true)}
             aria-label="Group Info"
             title="Group Information"
+            className="hidden sm:flex"
             style={{
-              width: 38,
-              height: 38,
+              width: 36,
+              height: 36,
               borderRadius: '50%',
               border: 'none',
               background: 'transparent',
               color: 'var(--d-text)',
               cursor: 'pointer',
-              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              flexShrink: 0,
             }}
           >
-            <Info size={19} />
+            <Info size={18} />
           </button>
 
-          {/* WhatsApp Theme Switcher */}
+          {/* Theme Switcher */}
           <div style={{ position: 'relative' }}>
             <button
               onClick={() => setThemePickerOpen((v) => !v)}
               aria-label="Customize Theme"
               title="Chat Wallpaper & Accent"
               style={{
-                width: 38,
-                height: 38,
+                width: 36,
+                height: 36,
                 borderRadius: '50%',
                 border: 'none',
                 background: 'transparent',
@@ -1121,6 +1129,7 @@ export function GroupChatClient({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                flexShrink: 0,
               }}
             >
               <Palette size={18} />
@@ -1294,40 +1303,81 @@ export function GroupChatClient({
           position: 'relative',
         }}
       >
-        {/* Skeleton loading when waiting for initial load */}
+        {/* Realistic Skeleton Loading matching actual chat anatomy */}
         {loading && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 12 }}>
-            {[
-              { w: '48%', own: false, h: 48 },
-              { w: '40%', own: true, h: 44 },
-              { w: '64%', own: false, h: 56 },
-              { w: '35%', own: true, h: 42 },
-            ].map((s, i) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 10 }}>
+            {/* Date separator skeleton */}
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '6px 0 10px' }}>
+              <div className="dash-skeleton" style={{ width: 72, height: 22, borderRadius: 8 }} />
+            </div>
+
+            {/* Incoming message skeleton */}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+              <div className="dash-skeleton" style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0 }} />
               <div
-                key={i}
                 style={{
-                  display: 'flex',
-                  flexDirection: s.own ? 'row-reverse' : 'row',
-                  gap: 8,
-                  alignItems: 'flex-end',
+                  background: 'var(--d-card)',
+                  borderRadius: '12px 12px 12px 2px',
+                  padding: '10px 14px',
+                  width: '68%',
+                  maxWidth: 320,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                  border: '1px solid var(--d-border)',
                 }}
               >
-                {!s.own && (
-                  <div
-                    className="dash-skeleton"
-                    style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0 }}
-                  />
-                )}
-                <div
-                  className="dash-skeleton"
-                  style={{
-                    width: s.w,
-                    height: s.h,
-                    borderRadius: s.own ? '14px 14px 2px 14px' : '14px 14px 14px 2px',
-                  }}
-                />
+                <div className="dash-skeleton" style={{ width: 80, height: 11, borderRadius: 4, marginBottom: 8 }} />
+                <div className="dash-skeleton" style={{ width: '92%', height: 13, borderRadius: 4, marginBottom: 6 }} />
+                <div className="dash-skeleton" style={{ width: '60%', height: 13, borderRadius: 4, marginBottom: 6 }} />
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <div className="dash-skeleton" style={{ width: 42, height: 10, borderRadius: 3 }} />
+                </div>
               </div>
-            ))}
+            </div>
+
+            {/* Outgoing harvest lot card skeleton */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div
+                style={{
+                  background: 'var(--color-surface-2)',
+                  borderRadius: '12px 12px 2px 12px',
+                  padding: '12px 14px',
+                  width: '74%',
+                  maxWidth: 340,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                  border: '1.5px solid var(--color-primary-muted)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <div className="dash-skeleton" style={{ width: 110, height: 13, borderRadius: 4 }} />
+                  <div className="dash-skeleton" style={{ width: 48, height: 16, borderRadius: 10 }} />
+                </div>
+                <div className="dash-skeleton" style={{ width: '85%', height: 15, borderRadius: 4, marginBottom: 10 }} />
+                <div className="dash-skeleton" style={{ width: '100%', height: 32, borderRadius: 8, marginBottom: 6 }} />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4 }}>
+                  <div className="dash-skeleton" style={{ width: 44, height: 10, borderRadius: 3 }} />
+                </div>
+              </div>
+            </div>
+
+            {/* Outgoing short message skeleton */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div
+                style={{
+                  background: 'var(--color-surface-2)',
+                  borderRadius: '12px 12px 2px 12px',
+                  padding: '8px 12px',
+                  width: '45%',
+                  maxWidth: 220,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                  border: '1px solid var(--d-border)',
+                }}
+              >
+                <div className="dash-skeleton" style={{ width: '80%', height: 13, borderRadius: 4, marginBottom: 6 }} />
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <div className="dash-skeleton" style={{ width: 40, height: 10, borderRadius: 3 }} />
+                </div>
+              </div>
+            </div>
           </div>
         )}
 

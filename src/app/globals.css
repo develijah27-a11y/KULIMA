@@ -462,7 +462,7 @@ input, select, textarea {
   transition: border-color var(--transition-base), box-shadow var(--transition-base);
   accent-color: var(--color-primary);
 }
-input:focus-visible, select:focus-visible, textarea:focus-visible {
+input:focus-visible, select:focus-visible, textarea:not(.wa-pill-textarea):focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
@@ -512,7 +512,7 @@ input[type="password"], select, textarea {
   background: var(--color-surface);
 }
 input::placeholder, textarea::placeholder { color: var(--color-text-hint); }
-input:focus, select:focus, textarea:focus {
+input:focus, select:focus, textarea:not(.wa-pill-textarea):focus {
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 3px var(--color-primary-bg);
   outline: none;

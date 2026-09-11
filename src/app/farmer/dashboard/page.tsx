@@ -913,9 +913,31 @@ export default async function FarmerDashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
   const userId = user.id;
+  const profile = await getProfile(userId);
+  const firstName = profile?.full_name?.split(' ')[0] ?? 'Farmer';
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
+
+      {/* 0a · Welcome Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+            Welcome, {firstName}
+          </h1>
+          <p className="text-xs sm:text-sm mt-0.5" style={{ color: C.muted }}>
+            Farmer Dashboard · {profile?.location ?? 'Uganda'}
+          </p>
+        </div>
+        <Link
+          href="/farmer/marketplace/new"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white self-start sm:self-auto"
+          style={{ background: C.green, textDecoration: 'none' }}
+        >
+          <Pencil size={15} />
+          <span>New Crop Listing</span>
+        </Link>
+      </div>
 
       {/* 0 · Verification prompt */}
       <Suspense fallback={<div className="dash-skeleton h-16 rounded-xl" />}>
@@ -931,7 +953,7 @@ export default async function FarmerDashboardPage() {
       <BiometricSetupBanner />
 
       {/* 1 · Actionable Weather & Field conditions */}
-      <Suspense fallback={<div className="dash-skeleton h-[420px] sm:h-36 rounded-xl" />}>
+      <Suspense fallback={<div className="dash-skeleton h-[280px] sm:h-36 rounded-xl" />}>
         <WeatherCard userId={userId} />
       </Suspense>
 
@@ -941,7 +963,25 @@ export default async function FarmerDashboardPage() {
       {/* 3 · Key farm metrics */}
       <Suspense fallback={
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}
+          {[
+            { title: 'Active Listings', icon: Package },
+            { title: 'Harvest Lots', icon: Leaf },
+            { title: 'Escrow Sales', icon: DollarSign },
+            { title: 'Deliveries', icon: Truck },
+          ].map((item, i) => (
+            <Card key={i}>
+              <div className="p-4 sm:p-5 flex items-start justify-between">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-widest mb-1.5" style={{ color: C.muted }}>{item.title}</p>
+                  <div className="dash-skeleton h-8 w-16 rounded-md mb-1" />
+                  <div className="dash-skeleton h-3 w-24 rounded" />
+                </div>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--color-surface-2)', color: C.muted }}>
+                  <item.icon size={18} />
+                </div>
+              </div>
+            </Card>
+          ))}
         </div>
       }>
         <QuickStats userId={userId} />
@@ -955,10 +995,52 @@ export default async function FarmerDashboardPage() {
       {/* 5 · Commercial & Field Operations (2-col grid) */}
       <div className="grid lg:grid-cols-2 gap-5 items-start">
         <div className="space-y-5">
-          <Suspense fallback={<div className="dash-skeleton h-64 rounded-xl" />}>
+          <Suspense fallback={
+            <Card>
+              <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+                <p className="text-sm font-bold" style={{ color: C.text }}>Recent Offers</p>
+                <div className="dash-skeleton h-4 w-16 rounded" />
+              </div>
+              <div className="divide-y" style={{ borderColor: C.border }}>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="px-5 py-3.5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="dash-skeleton w-8 h-8 rounded-xl shrink-0" />
+                      <div className="space-y-1.5 flex-1">
+                        <div className="dash-skeleton h-3.5 w-36 rounded" />
+                        <div className="dash-skeleton h-2.5 w-20 rounded" />
+                      </div>
+                    </div>
+                    <div className="dash-skeleton h-5 w-24 rounded-full shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+          }>
             <RecentOffers userId={userId} />
           </Suspense>
-          <Suspense fallback={<div className="dash-skeleton h-[360px] rounded-xl" />}>
+          <Suspense fallback={
+            <Card>
+              <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+                <p className="text-sm font-bold" style={{ color: C.text }}>My Deliveries</p>
+                <div className="dash-skeleton h-4 w-16 rounded" />
+              </div>
+              <div className="divide-y" style={{ borderColor: C.border }}>
+                {[1, 2].map((i) => (
+                  <div key={i} className="px-5 py-3.5 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="dash-skeleton w-8 h-8 rounded-xl shrink-0" />
+                      <div className="space-y-1.5 flex-1">
+                        <div className="dash-skeleton h-3.5 w-44 rounded" />
+                        <div className="dash-skeleton h-2.5 w-28 rounded" />
+                      </div>
+                    </div>
+                    <div className="dash-skeleton h-5 w-20 rounded-full shrink-0" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+          }>
             <DeliveryHistory userId={userId} />
           </Suspense>
         </div>
@@ -974,10 +1056,46 @@ export default async function FarmerDashboardPage() {
 
       {/* 6 · Market Prices + 5-Day Weather Forecast (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-[440px] rounded-xl" />}>
+        <Suspense fallback={
+          <Card>
+            <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
+              <p className="text-sm font-bold" style={{ color: C.text }}>Market Prices</p>
+              <div className="dash-skeleton h-4 w-24 rounded" />
+            </div>
+            <div className="divide-y" style={{ borderColor: C.border }}>
+              {['Maize', 'Beans', 'Coffee', 'Rice', 'Soybeans'].map((crop) => (
+                <div key={crop} className="px-5 py-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="dash-skeleton w-7 h-7 rounded-lg" />
+                    <span className="text-xs font-semibold" style={{ color: C.text }}>{crop}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="dash-skeleton h-4 w-20 rounded" />
+                    <div className="dash-skeleton h-5 w-14 rounded-full" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        }>
           <MarketPricesTable userId={userId} />
         </Suspense>
-        <Suspense fallback={<div className="dash-skeleton h-72 rounded-xl" />}>
+        <Suspense fallback={
+          <Card>
+            <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+              <p className="text-sm font-bold" style={{ color: C.text }}>5-Day Weather Forecast</p>
+            </div>
+            <div className="grid grid-cols-5 gap-2 p-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex flex-col items-center gap-2 p-2 rounded-xl" style={{ background: 'var(--color-surface-2)' }}>
+                  <div className="dash-skeleton h-3 w-8 rounded" />
+                  <div className="dash-skeleton w-8 h-8 rounded-full" />
+                  <div className="dash-skeleton h-3.5 w-12 rounded" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        }>
           <WeatherForecast userId={userId} />
         </Suspense>
       </div>
@@ -989,7 +1107,18 @@ export default async function FarmerDashboardPage() {
 
       {/* 8 · Financial Health & Agricultural News (2-col) */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <Suspense fallback={<div className="dash-skeleton h-40 rounded-xl" />}>
+        <Suspense fallback={
+          <Card>
+            <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
+              <p className="text-sm font-bold" style={{ color: C.text }}>Farm Score</p>
+            </div>
+            <div className="p-5 space-y-3">
+              <div className="dash-skeleton h-9 w-20 rounded-md" />
+              <div className="dash-skeleton h-2 w-full rounded-full" />
+              <div className="dash-skeleton h-3 w-32 rounded" />
+            </div>
+          </Card>
+        }>
           <FinanceOverview userId={userId} />
         </Suspense>
         <Suspense fallback={<div className="dash-skeleton h-48 rounded-xl" />}>

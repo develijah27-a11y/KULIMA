@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, MapPin } from 'lucide-react';
+import { ChevronDown, MapPin, Calendar } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { OfflineStatusPill } from '@/components/ui/OfflineStatusPill';
 import { ROLE_META } from '@/components/layout/RoleSwitcher';
@@ -29,10 +29,24 @@ export function TopBar({
   currentRole,
   allRoles,
 }: TopBarProps) {
-  const shortGreeting = greeting.replace(/^Good (morning|afternoon|evening), /, '');
   const router = useRouter();
   const [roleOpen, setRoleOpen] = useState(false);
   const [addingRole, setAddingRole] = useState<string | null>(null);
+  const [dateString, setDateString] = useState('');
+
+  useEffect(() => {
+    try {
+      const d = new Date();
+      setDateString(
+        d.toLocaleDateString('en-GB', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      );
+    } catch {}
+  }, []);
 
   const currentMeta = currentRole ? ROLE_META[currentRole] : null;
   // Every self-addable role is listed here, not just ones the account
@@ -71,32 +85,36 @@ export function TopBar({
     <header
       className="sticky top-0 z-20 flex items-center justify-between shrink-0 glass-topbar"
       style={{
-        height: '56px',
+        minHeight: '56px',
+        paddingTop: '6px',
+        paddingBottom: '6px',
         paddingLeft: 'clamp(12px, 4vw, 24px)',
         paddingRight: 'clamp(12px, 4vw, 24px)',
       }}
     >
-      {/* Greeting */}
+      {/* Welcome Greeting, Current Date & Location */}
       <div className="min-w-0 flex-1 mr-3">
         <p
-          className="font-bold truncate hidden sm:block"
-          style={{ fontSize: '14px', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
+          className="font-bold truncate"
+          style={{ fontSize: '13.5px', color: 'var(--color-text)', fontFamily: 'var(--font-body)', lineHeight: 1.25 }}
         >
           {greeting}
         </p>
-        <p
-          className="font-bold truncate sm:hidden"
-          style={{ fontSize: '14px', color: 'var(--color-text)', fontFamily: 'var(--font-body)' }}
-        >
-          {shortGreeting}
-        </p>
-        {location && (
-          <p className="text-xs mt-0.5 truncate hidden sm:block" style={{ color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 3 }}>
-            <MapPin size={11} style={{ flexShrink: 0 }} /> {location}, Uganda
-          </p>
-        )}
-        <div className="hidden sm:block mt-0.5">
-          <Breadcrumb />
+
+        <div className="flex items-center gap-2 text-[11px] mt-0.5 flex-wrap" style={{ color: 'var(--color-text-muted)', lineHeight: 1.2 }}>
+          {dateString && (
+            <span className="flex items-center gap-1 shrink-0 font-medium">
+              <Calendar size={11} className="shrink-0" />
+              {dateString}
+            </span>
+          )}
+          {dateString && location && <span className="opacity-30">·</span>}
+          {location && (
+            <span className="flex items-center gap-1 truncate font-medium">
+              <MapPin size={11} className="shrink-0" />
+              {location}, Uganda
+            </span>
+          )}
         </div>
       </div>
 
