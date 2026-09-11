@@ -1,25 +1,168 @@
 /* WhatsApp Chat Theme & Component Styling */
 
+/* Lock main dashboard container while in chat to guarantee pinned bars and smooth stream scrolling */
+body.wa-chat-active main {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.wa-chat-page-root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 767px) {
+  .wa-chat-page-root {
+    height: calc(100dvh - 56px - clamp(56px, 9vh, 68px) - env(safe-area-inset-bottom, 0px));
+    height: calc(100svh - 56px - clamp(56px, 9vh, 68px) - env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (min-width: 768px) {
+  .wa-chat-page-root {
+    height: calc(100vh - 120px);
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 10px 0;
+  }
+}
+
 .wa-chat-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 140px);
-  min-height: 580px;
-  border-radius: 18px;
+  height: 100%;
+  width: 100%;
   overflow: hidden;
   background: var(--d-card);
-  border: 1px solid var(--d-border);
-  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.08);
   position: relative;
+  overscroll-behavior: contain;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .wa-chat-container {
-    height: calc(100dvh - 110px);
-    min-height: 480px;
-    border-radius: 12px;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 }
+
+@media (min-width: 768px) {
+  .wa-chat-container {
+    border-radius: 18px;
+    border: 1px solid var(--d-border);
+    box-shadow: 0 10px 36px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* WhatsApp Pinned Header & Bottom Bar */
+.wa-chat-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex-shrink: 0;
+}
+
+.wa-bottom-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  flex-shrink: 0;
+}
+
+/* WhatsApp Mobile Input Pill & Circular Action Button */
+.wa-input-pill {
+  display: flex;
+  align-items: flex-end;
+  background: #ffffff;
+  border-radius: 26px;
+  box-shadow: 0 1px 3px rgba(11, 20, 26, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 4px 6px;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.dark .wa-input-pill {
+  background: #202c33;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.wa-pill-btn {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #8696a0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+  margin-bottom: 3px;
+}
+
+.wa-pill-btn:hover {
+  color: #111b21;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dark .wa-pill-btn:hover {
+  color: #e9edef;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.wa-pill-textarea {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #111b21;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: none;
+  padding: 8px 6px 6px;
+  min-height: 36px;
+  max-height: 120px;
+  box-sizing: border-box;
+}
+
+.dark .wa-pill-textarea {
+  color: #e9edef;
+}
+
+.wa-pill-textarea::placeholder {
+  color: #8696a0;
+}
+
+.wa-circle-btn {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: #008069;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 128, 105, 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.wa-circle-btn:active {
+  transform: scale(0.92);
+}
+
 
 /* WhatsApp Doodle Background Wallpaper */
 .wa-wallpaper {

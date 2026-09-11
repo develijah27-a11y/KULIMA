@@ -70,7 +70,7 @@ export default async function FarmerGroupChatPage({ searchParams }: { searchPara
   const initialMessages = messagesData ?? [];
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="wa-chat-page-root">
       {rooms.length > 1 && (
         <div className="mb-3">
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

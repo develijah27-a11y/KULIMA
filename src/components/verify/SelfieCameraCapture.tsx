@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { RotateCcw, AlertTriangle, Camera, Upload, CheckCircle2, Sun, Eye, RefreshCw, SwitchCamera } from 'lucide-react';
+import { RotateCcw, AlertTriangle, Camera, Upload, CheckCircle2, Sun, Eye, RefreshCw, SwitchCamera, ShieldCheck } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)',
@@ -327,15 +327,150 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
             }}
           />
 
-          {/* Face guide oval */}
-          <svg
-            width="70%"
-            height="70%"
-            viewBox="0 0 180 230"
-            style={{ position: 'absolute', top: '48%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none' }}
+          {/* Biometric Head & Vest / Shoulders Viewfinder Overlay */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <ellipse cx="90" cy="115" rx="72" ry="96" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeDasharray="8 6" />
-          </svg>
+            <svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 240 320"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                filter: 'drop-shadow(0 0 4px rgba(34, 197, 94, 0.4))',
+              }}
+            >
+              {/* Viewfinder 4 Corner Brackets */}
+              <path
+                d="M 18 42 L 18 18 L 42 18"
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M 198 18 L 222 18 L 222 42"
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M 18 278 L 18 302 L 42 302"
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M 198 302 L 222 302 L 222 278"
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="3.5"
+                strokeLinecap="round"
+              />
+
+              {/* Head & Face Contour Oval */}
+              <ellipse
+                cx="120"
+                cy="92"
+                rx="44"
+                ry="56"
+                fill="rgba(34, 197, 94, 0.04)"
+                stroke="#22C55E"
+                strokeWidth="2.5"
+                strokeDasharray="6 4"
+              />
+
+              {/* Eye Alignment Crosshairs */}
+              <line x1="90" y1="88" x2="106" y2="88" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+              <line x1="134" y1="88" x2="150" y2="88" stroke="#22C55E" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+
+              {/* Neck Guide Lines */}
+              <path d="M 104 144 L 102 165" fill="none" stroke="#22C55E" strokeWidth="2" opacity="0.8" />
+              <path d="M 136 144 L 138 165" fill="none" stroke="#22C55E" strokeWidth="2" opacity="0.8" />
+
+              {/* Vest / Shoulders / Torso Silhouette Outline */}
+              {/* Vest V-Neck Collar */}
+              <path
+                d="M 102 165 Q 120 200 138 165"
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="2.5"
+              />
+
+              {/* Left Shoulder & Outer Vest Arm */}
+              <path
+                d="M 102 165 C 80 170 50 188 26 220 L 20 315"
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="2.5"
+                strokeDasharray="7 5"
+              />
+
+              {/* Right Shoulder & Outer Vest Arm */}
+              <path
+                d="M 138 165 C 160 170 190 188 214 220 L 220 315"
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="2.5"
+                strokeDasharray="7 5"
+              />
+
+              {/* Central Vest Zipper / Button Placket Seam */}
+              <line
+                x1="120"
+                y1="200"
+                x2="120"
+                y2="315"
+                stroke="#22C55E"
+                strokeWidth="2"
+                strokeDasharray="5 4"
+                opacity="0.75"
+              />
+
+              {/* Vest Armhole / Lapel Cut Contours */}
+              <path
+                d="M 44 235 C 56 260 58 285 60 315"
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="1.8"
+                opacity="0.6"
+              />
+              <path
+                d="M 196 235 C 184 260 182 285 180 315"
+                fill="none"
+                stroke="#22C55E"
+                strokeWidth="1.8"
+                opacity="0.6"
+              />
+            </svg>
+
+            {/* Subtle animated scanning laser line */}
+            <div
+              style={{
+                position: 'absolute',
+                left: '12%',
+                right: '12%',
+                height: 2,
+                background: 'linear-gradient(90deg, transparent 0%, #22C55E 50%, transparent 100%)',
+                boxShadow: '0 0 8px #22C55E',
+                animation: 'pulse 1.8s ease-in-out infinite',
+                top: '42%',
+              }}
+            />
+          </div>
 
           {/* Camera switch toggle button */}
           <button
@@ -357,6 +492,7 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
               alignItems: 'center',
               justifyContent: 'center',
               backdropFilter: 'blur(6px)',
+              zIndex: 5,
             }}
           >
             <SwitchCamera size={18} />
@@ -369,15 +505,22 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
               bottom: 10,
               left: '50%',
               transform: 'translateX(-50%)',
-              background: 'rgba(15,23,42,0.85)',
+              background: 'rgba(15,23,42,0.88)',
               backdropFilter: 'blur(8px)',
-              padding: '5px 12px',
+              padding: '6px 14px',
               borderRadius: 999,
               whiteSpace: 'nowrap',
-              border: '1px solid rgba(255,255,255,0.15)',
+              border: '1px solid rgba(34,197,94,0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              zIndex: 5,
             }}
           >
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#FFFFFF' }}>Look directly at camera</span>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#22C55E', animation: 'pulse 1s infinite' }} />
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#FFFFFF' }}>
+              Align face & shoulders (vest) in frame
+            </span>
           </div>
         </div>
 
@@ -448,18 +591,59 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
         border: `1.5px dashed var(--color-primary-muted)`,
       }}
     >
-      <Camera size={30} style={{ color: C.green }} />
-      <div style={{ textAlign: 'center', maxWidth: 300 }}>
+      {/* Biometric Vest & Head Silhouette Preview Badge */}
+      <div
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: '50%',
+          background: 'rgba(34, 197, 94, 0.12)',
+          border: '1.5px solid rgba(34, 197, 94, 0.35)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <svg width="38" height="38" viewBox="0 0 40 40" fill="none">
+          {/* Head */}
+          <ellipse cx="20" cy="13" rx="6.5" ry="8.5" stroke="#16A34A" strokeWidth="1.8" />
+          {/* Vest Collar */}
+          <path d="M 16 23 Q 20 28 24 23" stroke="#16A34A" strokeWidth="1.8" />
+          {/* Vest Shoulders */}
+          <path d="M 16 23 C 12 24 7 27 4 32" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M 24 23 C 28 24 33 27 36 32" stroke="#16A34A" strokeWidth="1.8" strokeLinecap="round" />
+          {/* Vest Seam */}
+          <line x1="20" y1="28" x2="20" y2="36" stroke="#16A34A" strokeWidth="1.5" strokeDasharray="2 2" />
+        </svg>
+      </div>
+
+      <div style={{ textAlign: 'center', maxWidth: 320 }}>
         <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: '0 0 4px' }}>
           Take a selfie for identity verification
         </p>
         <p style={{ fontSize: 12, color: C.muted, margin: 0, lineHeight: 1.45 }}>
-          Make sure your face is well-lit and clearly visible.
+          Align your face and shoulders (vest) inside the biometric outline.
         </p>
       </div>
 
-      {/* Lighting guidance chips */}
+      {/* Guidance chips */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            fontSize: 11,
+            fontWeight: 600,
+            color: 'var(--color-primary-dark)',
+            background: '#FFFFFF',
+            padding: '3px 8px',
+            borderRadius: 6,
+            border: '1px solid var(--color-border)',
+          }}
+        >
+          <ShieldCheck size={12} /> Biometric vest guide
+        </span>
         <span
           style={{
             display: 'inline-flex',

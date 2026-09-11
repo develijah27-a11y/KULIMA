@@ -30,6 +30,8 @@ import {
   Info,
   Clock,
   CheckCircle2,
+  ArrowLeft,
+  Camera,
 } from 'lucide-react';
 
 const LISTING_CROPS = [
@@ -265,6 +267,14 @@ export function GroupChatClient({
     const saved = localStorage.getItem(THEME_STORAGE_KEY);
     const match = CHAT_THEMES.find((t) => t.id === saved);
     if (match) setTheme(match);
+  }, []);
+
+  // Lock outer dashboard main padding & scroll so chat header and bottom toolbar stay pinned
+  useEffect(() => {
+    document.body.classList.add('wa-chat-active');
+    return () => {
+      document.body.classList.remove('wa-chat-active');
+    };
   }, []);
 
   function pickTheme(t: ChatTheme) {
@@ -881,111 +891,143 @@ export function GroupChatClient({
 
       {/* ── WhatsApp Topbar / Header ── */}
       <div
+        className="wa-chat-header"
         style={{
-          height: 64,
-          flexShrink: 0,
+          height: 60,
           background: 'var(--d-card)',
           borderBottom: '1px solid var(--d-border)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 16px',
-          zIndex: 10,
+          padding: '0 12px',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
         }}
       >
-        {/* Left: Group Avatar & Info (clickable to open Group Info) */}
-        <div
-          onClick={() => setGroupInfoOpen(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            cursor: 'pointer',
-            userSelect: 'none',
-            flex: 1,
-            minWidth: 0,
-          }}
-          title="Click to view Group Info & Roster"
-        >
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: '50%',
-                background: theme.gradient,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#FFFFFF',
-                boxShadow: `0 2px 8px ${theme.shadow}`,
-              }}
-            >
-              <Users size={22} />
-            </div>
-            {/* WhatsApp Live Online indicator dot */}
-            <span
-              style={{
-                position: 'absolute',
-                bottom: 1,
-                right: 1,
-                width: 12,
-                height: 12,
-                borderRadius: '50%',
-                background: '#22C55E',
-                border: '2px solid var(--d-card)',
-              }}
-            />
-          </div>
+        {/* Left: Mobile Back Button + Group Avatar & Info */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                if (window.history.length > 1) {
+                  window.history.back();
+                } else {
+                  window.location.href = isAdmin ? '/groups/dashboard' : '/farmer/dashboard';
+                }
+              }
+            }}
+            aria-label="Back"
+            className="md:hidden"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--d-text)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0,
+              flexShrink: 0,
+            }}
+          >
+            <ArrowLeft size={20} />
+          </button>
 
-          <div style={{ minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <h2
+          <div
+            onClick={() => setGroupInfoOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              cursor: 'pointer',
+              userSelect: 'none',
+              flex: 1,
+              minWidth: 0,
+            }}
+            title="Click to view Group Info & Roster"
+          >
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div
                 style={{
-                  margin: 0,
-                  fontSize: 15,
-                  fontWeight: 800,
-                  color: 'var(--d-text)',
+                  width: 42,
+                  height: 42,
+                  borderRadius: '50%',
+                  background: theme.gradient,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#FFFFFF',
+                  boxShadow: `0 2px 8px ${theme.shadow}`,
+                }}
+              >
+                <Users size={20} />
+              </div>
+              {/* WhatsApp Live Online indicator dot */}
+              <span
+                style={{
+                  position: 'absolute',
+                  bottom: 1,
+                  right: 1,
+                  width: 11,
+                  height: 11,
+                  borderRadius: '50%',
+                  background: '#22C55E',
+                  border: '2px solid var(--d-card)',
+                }}
+              />
+            </div>
+
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <h2
+                  style={{
+                    margin: 0,
+                    fontSize: 15,
+                    fontWeight: 800,
+                    color: 'var(--d-text)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {groupName}
+                </h2>
+                {isAdmin && (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      padding: '1px 6px',
+                      borderRadius: 4,
+                      background: 'rgba(234, 179, 8, 0.15)',
+                      color: '#CA8A04',
+                      border: '1px solid rgba(234, 179, 8, 0.3)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 3,
+                    }}
+                  >
+                    <Crown size={11} /> Admin
+                  </span>
+                )}
+              </div>
+              <p
+                style={{
+                  margin: '2px 0 0',
+                  fontSize: 11.5,
+                  color: 'var(--d-muted)',
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
-                  letterSpacing: '-0.02em',
                 }}
               >
-                {groupName}
-              </h2>
-              {isAdmin && (
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 800,
-                    padding: '1px 6px',
-                    borderRadius: 4,
-                    background: 'rgba(234, 179, 8, 0.15)',
-                    color: '#CA8A04',
-                    border: '1px solid rgba(234, 179, 8, 0.3)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 3,
-                  }}
-                >
-                  <Crown size={11} /> Admin
-                </span>
-              )}
+                {memberSubtitle} · <span style={{ color: theme.accent, fontWeight: 600 }}>tap for info</span>
+              </p>
             </div>
-            <p
-              style={{
-                margin: '2px 0 0',
-                fontSize: 11.5,
-                color: 'var(--d-muted)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {memberSubtitle} · <span style={{ color: theme.accent, fontWeight: 600 }}>tap for info</span>
-            </p>
           </div>
         </div>
 
@@ -1242,7 +1284,9 @@ export function GroupChatClient({
         className="wa-wallpaper wa-scroll-stream"
         style={{
           flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
+          overscrollBehavior: 'contain',
           padding: '16px 14px',
           display: 'flex',
           flexDirection: 'column',
@@ -2229,73 +2273,23 @@ export function GroupChatClient({
 
       {/* ── WhatsApp Modern Input Toolbar ── */}
       <div
+        className="wa-bottom-bar"
         style={{
-          padding: '10px 14px',
-          flexShrink: 0,
-          borderTop: '1px solid var(--d-border)',
+          padding: '8px 10px 10px',
           background: 'var(--d-card)',
+          borderTop: '1px solid var(--d-border)',
           display: 'flex',
           gap: 8,
           alignItems: 'flex-end',
         }}
       >
-        {/* WhatsApp Emoji Trigger */}
-        <button
-          onClick={() => {
-            setEmojiPickerOpen((v) => !v);
-            setAttachmentMenuOpen(false);
-          }}
-          aria-label="Toggle Emojis"
-          title="Emojis & Stickers"
-          style={{
-            width: 40,
-            height: 40,
-            flexShrink: 0,
-            borderRadius: '50%',
-            border: 'none',
-            cursor: 'pointer',
-            background: emojiPickerOpen ? 'var(--color-surface-2)' : 'transparent',
-            color: 'var(--d-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Smile size={21} />
-        </button>
-
-        {/* WhatsApp Paperclip Attachment Trigger */}
-        <button
-          onClick={() => {
-            setAttachmentMenuOpen((v) => !v);
-            setEmojiPickerOpen(false);
-          }}
-          aria-label="Attachments"
-          title="Share crop lots, photos or polls"
-          style={{
-            width: 40,
-            height: 40,
-            flexShrink: 0,
-            borderRadius: '50%',
-            border: 'none',
-            cursor: 'pointer',
-            background: attachmentMenuOpen ? 'var(--color-surface-2)' : 'transparent',
-            color: 'var(--d-muted)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Paperclip size={20} />
-        </button>
-
-        {/* Text Input or Voice Recording Bar */}
+        {/* Text Input Capsule or Voice Recording Bar */}
         {isRecording ? (
           <div
             style={{
               flex: 1,
-              height: 42,
-              borderRadius: 22,
+              minHeight: 46,
+              borderRadius: 24,
               background: 'var(--color-surface-2)',
               border: '1px solid #EF4444',
               display: 'flex',
@@ -2307,8 +2301,8 @@ export function GroupChatClient({
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span
                 style={{
-                  width: 8,
-                  height: 8,
+                  width: 9,
+                  height: 9,
                   borderRadius: '50%',
                   background: '#EF4444',
                   boxShadow: '0 0 8px #EF4444',
@@ -2321,6 +2315,7 @@ export function GroupChatClient({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <button
+                type="button"
                 onClick={() => setIsRecording(false)}
                 style={{
                   border: 'none',
@@ -2334,10 +2329,11 @@ export function GroupChatClient({
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={finishVoiceRecording}
                 style={{
-                  padding: '4px 12px',
-                  borderRadius: 14,
+                  padding: '6px 14px',
+                  borderRadius: 16,
                   border: 'none',
                   background: '#16A34A',
                   color: '#FFFFFF',
@@ -2351,7 +2347,25 @@ export function GroupChatClient({
             </div>
           </div>
         ) : (
-          <div style={{ flex: 1, position: 'relative' }}>
+          <div className="wa-input-pill">
+            {/* WhatsApp Emoji Trigger (inside capsule) */}
+            <button
+              type="button"
+              onClick={() => {
+                setEmojiPickerOpen((v) => !v);
+                setAttachmentMenuOpen(false);
+              }}
+              aria-label="Toggle Emojis"
+              title="Emojis & Stickers"
+              className="wa-pill-btn"
+              style={{
+                color: emojiPickerOpen ? theme.accent : undefined,
+              }}
+            >
+              <Smile size={22} />
+            </button>
+
+            {/* Auto-growing Textarea (inside capsule) */}
             <textarea
               ref={inputRef}
               value={draft}
@@ -2360,51 +2374,52 @@ export function GroupChatClient({
                 autoGrow();
               }}
               onKeyDown={handleKeyDown}
-              placeholder="Type a message to the group…"
+              placeholder="Message"
               rows={1}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                resize: 'none',
-                outline: 'none',
-                border: '1px solid var(--d-border)',
-                borderRadius: 22,
-                padding: '10px 16px',
-                fontSize: 13.5,
-                fontFamily: 'inherit',
-                color: 'var(--d-text)',
-                background: 'var(--d-input-bg, var(--color-surface))',
-                minHeight: 42,
-                maxHeight: 120,
-                lineHeight: 1.45,
-              }}
+              className="wa-pill-textarea"
               maxLength={3000}
               disabled={sending}
             />
+
+            {/* WhatsApp Paperclip Attachment Trigger (inside capsule) */}
+            <button
+              type="button"
+              onClick={() => {
+                setAttachmentMenuOpen((v) => !v);
+                setEmojiPickerOpen(false);
+              }}
+              aria-label="Attachments"
+              title="Share crop lots, photos or polls"
+              className="wa-pill-btn"
+              style={{
+                color: attachmentMenuOpen ? theme.accent : undefined,
+              }}
+            >
+              <Paperclip size={20} />
+            </button>
+
+            {/* WhatsApp Camera Photo Trigger (inside capsule) */}
+            <button
+              type="button"
+              onClick={() => setPhotoModalOpen(true)}
+              aria-label="Share Photo"
+              title="Take or upload photo"
+              className="wa-pill-btn"
+            >
+              <Camera size={20} />
+            </button>
           </div>
         )}
 
-        {/* WhatsApp Voice Note Mic or Send Button Morph */}
-        {canSend ? (
+        {/* WhatsApp Standalone Circular Mic or Send Button */}
+        {isRecording ? null : canSend ? (
           <button
+            type="button"
             onClick={() => sendMessage()}
             disabled={sending}
             aria-label="Send Message"
-            style={{
-              width: 42,
-              height: 42,
-              flexShrink: 0,
-              borderRadius: '50%',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#008069',
-              color: '#FFFFFF',
-              boxShadow: '0 3px 10px rgba(0, 128, 105, 0.3)',
-              transition: 'transform 0.15s ease',
-            }}
+            className="wa-circle-btn"
+            style={{ background: theme.accent }}
           >
             {sending ? (
               <div
@@ -2423,25 +2438,14 @@ export function GroupChatClient({
           </button>
         ) : (
           <button
+            type="button"
             onClick={() => setIsRecording(true)}
             aria-label="Record Voice Note"
             title="Press to record voice note"
-            style={{
-              width: 42,
-              height: 42,
-              flexShrink: 0,
-              borderRadius: '50%',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#008069',
-              color: '#FFFFFF',
-              boxShadow: '0 3px 10px rgba(0, 128, 105, 0.3)',
-            }}
+            className="wa-circle-btn"
+            style={{ background: theme.accent }}
           >
-            <Mic size={20} />
+            <Mic size={21} />
           </button>
         )}
       </div>

@@ -31,7 +31,7 @@ export default async function GroupChatPage() {
   const membersData = membersRes.data ?? [];
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="wa-chat-page-root">
       <GroupChatClient
         adminId={user.id}
         currentUserId={user.id}
