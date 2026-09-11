@@ -78,11 +78,31 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
         const file = files[doc.key]!;
         const ext = file.name.split('.').pop() ?? 'jpg';
         const path = `${userId}/${target}/${doc.key}.${ext}`;
+
+        // 1. Attempt direct storage upload
         const { error: upErr } = await supabase.storage
           .from('kyc-documents')
           .upload(path, file, { upsert: true });
+
+        if (upErr) {
+          // 2. Fall back to secure server-side upload if direct client upload encountered an issue
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('target', target);
+          formData.append('docKey', doc.key);
+
+          const serverRes = await fetch('/api/verify/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!serverRes.ok) {
+            const errJson = await serverRes.json().catch(() => ({}));
+            throw new Error(`Upload failed for ${doc.label}: ${errJson.error || upErr.message}`);
+          }
+        }
+
         setUploadProgress(p => ({ ...p, done: p.done + 1 }));
-        if (upErr) throw new Error(`Upload failed for ${doc.label}: ${upErr.message}`);
         return { key: doc.key, path };
       }));
       for (const { key, path } of results) urls[key] = path;

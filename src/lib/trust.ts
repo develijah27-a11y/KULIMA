@@ -1,4 +1,4 @@
-﻿export type VerificationLevel = 'none' | 'grey' | 'green' | 'blue' | 'gold';
+export type VerificationLevel = 'none' | 'grey' | 'green' | 'blue' | 'gold';
 export type VerificationStatus = 'pending' | 'approved' | 'rejected';
 
 export const BADGE_CONFIG = {
@@ -43,12 +43,12 @@ interface DocRequirement {
 
 export function getRequiredDocs(level: 'green' | 'blue' | 'gold', role: string): DocRequirement[] {
   if (level === 'green') {
-    return [{ key: 'national_id', label: 'National ID (front)', accept: 'image/*,application/pdf' }];
+    return [{ key: 'national_id', label: 'National ID / Passport / Permit (front)', accept: 'image/*,application/pdf' }];
   }
   if (level === 'blue') {
     const base: DocRequirement[] = [
-      { key: 'national_id', label: 'National ID (front)', accept: 'image/*,application/pdf' },
-      { key: 'selfie',      label: 'Selfie with ID',      accept: 'image/*' },
+      { key: 'national_id', label: 'National ID / Passport / Permit (front)', accept: 'image/*,application/pdf' },
+      { key: 'selfie',      label: 'Selfie Photo (with ID)',                 accept: 'image/*' },
     ];
     if (role === 'buyer' || role === 'supplier')
       base.push({ key: 'business_reg', label: 'Business Registration', accept: 'image/*,application/pdf' });
@@ -64,9 +64,9 @@ export function getRequiredDocs(level: 'green' | 'blue' | 'gold', role: string):
   }
   // gold - enterprise
   return [
-    { key: 'national_id',   label: 'National ID (front)',     accept: 'image/*,application/pdf' },
-    { key: 'selfie',        label: 'Selfie with ID',           accept: 'image/*' },
-    { key: 'business_reg',  label: 'Business Registration',   accept: 'image/*,application/pdf' },
+    { key: 'national_id',   label: 'National ID / Passport / Permit (front)', accept: 'image/*,application/pdf' },
+    { key: 'selfie',        label: 'Selfie Photo (with ID)',                 accept: 'image/*' },
+    { key: 'business_reg',  label: 'Business Registration',                  accept: 'image/*,application/pdf' },
   ];
 }
 
