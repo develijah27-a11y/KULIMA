@@ -12,6 +12,16 @@ export interface AgriInsight {
   icon: string;
 }
 
+export type ClimateZone = 'tropical_africa' | 'temperate_north' | 'temperate_south' | 'tropical_general';
+
+export interface LocationContext {
+  latitude?: number | null;
+  longitude?: number | null;
+  location?: string | null;
+  district?: string | null;
+  country?: string | null;
+}
+
 export interface SeasonalPlan {
   season: string;
   phase: string;
@@ -20,45 +30,373 @@ export interface SeasonalPlan {
   currentTask: string;
   nextTask: string;
   urgency: InsightSeverity;
+  climateZone?: ClimateZone;
+  zoneName?: string;
 }
 
-// ─── Uganda Seasons ──────────────────────────────────────────────────────────
+// ─── Climate & Continental Detection ──────────────────────────────────────────
+
+export function detectClimateZone(loc?: LocationContext): ClimateZone {
+  if (!loc) return 'tropical_africa';
+
+  const lat = loc.latitude !== null && loc.latitude !== undefined ? Number(loc.latitude) : null;
+  const lon = loc.longitude !== null && loc.longitude !== undefined ? Number(loc.longitude) : null;
+
+  // Coordinate-based detection (most accurate)
+  if (lat !== null && !isNaN(lat) && (lat !== 0 || (lon !== null && lon !== 0))) {
+    if (lat > 23.5) return 'temperate_north'; // Above Tropic of Cancer (Europe, North America, Northern Asia)
+    if (lat < -23.5) return 'temperate_south'; // Below Tropic of Capricorn (Southern South America, Australia, New Zealand, South Africa)
+    
+    // Within tropics (-23.5 to 23.5)
+    if (lon !== null && !isNaN(lon)) {
+      if (lon >= -20 && lon <= 55) {
+        return 'tropical_africa'; // African tropical belt
+      }
+      return 'tropical_general'; // Other equatorial/tropical zones
+    }
+  }
+
+  // Text-based heuristics
+  const rawText = [loc.location, loc.district, loc.country].filter(Boolean).join(' ').toLowerCase();
+  if (rawText) {
+    // Temperate North: Europe, UK, US, Canada, etc.
+    const temperateNorthKeywords = [
+      'europe', 'united kingdom', 'uk', 'england', 'scotland', 'wales', 'ireland',
+      'france', 'germany', 'spain', 'italy', 'netherlands', 'holland', 'belgium',
+      'austria', 'switzerland', 'poland', 'sweden', 'norway', 'denmark', 'finland',
+      'portugal', 'greece', 'czech', 'hungary', 'romania', 'bulgaria', 'ukraine',
+      'russia', 'united states', 'usa', 'america', 'canada', 'london', 'paris',
+      'berlin', 'madrid', 'rome', 'amsterdam', 'brussels', 'vienna', 'warsaw',
+      'stockholm', 'oslo', 'copenhagen', 'helsinki', 'dublin', 'lisbon', 'athens',
+      'new york', 'chicago', 'toronto', 'vancouver', 'montreal', 'texas', 'california'
+    ];
+    if (temperateNorthKeywords.some(kw => rawText.includes(kw))) {
+      return 'temperate_north';
+    }
+
+    // Temperate South: Australia, New Zealand, Argentina, Chile, Southern Africa
+    const temperateSouthKeywords = [
+      'australia', 'new zealand', 'argentina', 'chile', 'uruguay', 'south africa',
+      'melbourne', 'sydney', 'brisbane', 'adelaide', 'perth', 'auckland', 'wellington',
+      'buenos aires', 'santiago', 'cape town', 'johannesburg', 'durban'
+    ];
+    if (temperateSouthKeywords.some(kw => rawText.includes(kw))) {
+      return 'temperate_south';
+    }
+
+    // Tropical General: Latin America / South & Southeast Asia
+    const tropicalGeneralKeywords = [
+      'brazil', 'colombia', 'ecuador', 'peru', 'venezuela', 'india', 'pakistan',
+      'bangladesh', 'vietnam', 'thailand', 'indonesia', 'philippines', 'malaysia',
+      'singapore', 'sri lanka', 'mexico'
+    ];
+    if (tropicalGeneralKeywords.some(kw => rawText.includes(kw))) {
+      return 'tropical_general';
+    }
+  }
+
+  // Default to tropical Africa (Uganda, Kenya, Rwanda, Tanzania, etc.)
+  return 'tropical_africa';
+}
+
+// ─── Multi-Continental Seasons ────────────────────────────────────────────────
+
+export function getContinentalSeason(month: number, loc?: LocationContext): {
+  name: string;
+  code: string;
+  daysLeft: number;
+  climateZone: ClimateZone;
+  zoneName: string;
+} {
+  const climateZone = detectClimateZone(loc);
+
+  if (climateZone === 'temperate_north') {
+    // 4 astronomical/meteorological seasons (Europe, UK, North America)
+    const ends: Record<string, number[]> = {
+      spring: [2, 3, 4],     // Mar–May
+      summer: [5, 6, 7],     // Jun–Aug
+      autumn: [8, 9, 10],    // Sep–Nov (Autumn / Fall)
+      winter: [11, 0, 1],    // Dec–Feb
+    };
+
+    const NAMES: Record<string, string> = {
+      spring: 'Spring (March–May)',
+      summer: 'Summer (June–August)',
+      autumn: 'Autumn / Fall (September–November)',
+      winter: 'Winter (December–February)',
+    };
+
+    let code = 'autumn';
+    for (const [k, months] of Object.entries(ends)) {
+      if (months.includes(month)) { code = k; break; }
+    }
+
+    const endMonth = ends[code][ends[code].length - 1];
+    const now = new Date();
+    let targetYear = now.getFullYear();
+    if (code === 'winter' && month === 11) {
+      targetYear += 1;
+    }
+    const endDay = new Date(targetYear, endMonth + 1, 0);
+    const daysLeft = Math.max(0, Math.round((endDay.getTime() - Date.now()) / 86400000));
+
+    return {
+      name: NAMES[code],
+      code,
+      daysLeft,
+      climateZone,
+      zoneName: 'Europe & Northern Temperate',
+    };
+  }
+
+  if (climateZone === 'temperate_south') {
+    // 4 seasons inverted (Australia, NZ, Southern South America, South Africa)
+    const ends: Record<string, number[]> = {
+      autumn: [2, 3, 4],     // Mar–May
+      winter: [5, 6, 7],     // Jun–Aug
+      spring: [8, 9, 10],    // Sep–Nov
+      summer: [11, 0, 1],    // Dec–Feb
+    };
+
+    const NAMES: Record<string, string> = {
+      spring: 'Spring (September–November)',
+      summer: 'Summer (December–February)',
+      autumn: 'Autumn / Fall (March–May)',
+      winter: 'Winter (June–August)',
+    };
+
+    let code = 'spring';
+    for (const [k, months] of Object.entries(ends)) {
+      if (months.includes(month)) { code = k; break; }
+    }
+
+    const endMonth = ends[code][ends[code].length - 1];
+    const now = new Date();
+    let targetYear = now.getFullYear();
+    if (code === 'summer' && month === 11) {
+      targetYear += 1;
+    }
+    const endDay = new Date(targetYear, endMonth + 1, 0);
+    const daysLeft = Math.max(0, Math.round((endDay.getTime() - Date.now()) / 86400000));
+
+    return {
+      name: NAMES[code],
+      code,
+      daysLeft,
+      climateZone,
+      zoneName: 'Southern Hemisphere Temperate',
+    };
+  }
+
+  if (climateZone === 'tropical_general') {
+    // Monsoon / Wet-Dry cycle
+    const isWet = month >= 5 && month <= 9; // Jun–Oct
+    const code = isWet ? 'wet' : 'dry';
+    const endMonth = isWet ? 9 : 4;
+    const now = new Date();
+    let targetYear = now.getFullYear();
+    if (!isWet && month >= 10) targetYear += 1;
+    const endDay = new Date(targetYear, endMonth + 1, 0);
+    const daysLeft = Math.max(0, Math.round((endDay.getTime() - Date.now()) / 86400000));
+
+    return {
+      name: isWet ? 'Monsoon / Wet Season (June–October)' : 'Dry Season (November–May)',
+      code,
+      daysLeft,
+      climateZone,
+      zoneName: 'Tropical Monsoon Region',
+    };
+  }
+
+  // Tropical Africa (Uganda, Kenya, Rwanda, Tanzania bimodal cycle)
+  const ends: Record<'A' | 'B' | 'dry1' | 'dry2', number[]> = {
+    A:    [2, 3, 4],       // Mar–May (Season A)
+    dry1: [5, 6, 7],       // Jun–Aug (Dry 1)
+    B:    [8, 9, 10],      // Sep–Nov (Season B)
+    dry2: [11, 0, 1],      // Dec–Feb (Dry 2)
+  };
+
+  const NAMES: Record<'A' | 'B' | 'dry1' | 'dry2', string> = {
+    A: 'Season A (March–May Main Rains)',
+    dry1: 'Dry Season 1 (June–August)',
+    B: 'Season B (September–November Second Rains)',
+    dry2: 'Dry Season 2 (December–February)',
+  };
+
+  const codes: ('A' | 'B' | 'dry1' | 'dry2')[] = ['A', 'dry1', 'B', 'dry2'];
+  let code: 'A' | 'B' | 'dry1' | 'dry2' = 'B';
+  for (const c of codes) {
+    if (ends[c].includes(month)) { code = c; break; }
+  }
+
+  const endMonth = ends[code][ends[code].length - 1];
+  const now = new Date();
+  let targetYear = now.getFullYear();
+  if (code === 'dry2' && month === 11) {
+    targetYear += 1;
+  }
+  const endDay = new Date(targetYear, endMonth + 1, 0);
+  const daysLeft = Math.max(0, Math.round((endDay.getTime() - Date.now()) / 86400000));
+
+  return {
+    name: NAMES[code],
+    code,
+    daysLeft,
+    climateZone: 'tropical_africa',
+    zoneName: 'East Africa / Equatorial Belt',
+  };
+}
 
 export function getUgandaSeason(month: number): {
   name: string;
   code: 'A' | 'B' | 'dry1' | 'dry2';
   daysLeft: number;
 } {
-  // month: 0-indexed
-  const ends: Record<string, number[]> = {
-    A:    [2, 3, 4],       // Mar–May
-    B:    [9, 10],         // Oct–Nov
-    dry1: [11, 0, 1],      // Dec–Feb
-    dry2: [5, 6, 7, 8],    // Jun–Sep
+  const res = getContinentalSeason(month, { location: 'Uganda' });
+  return {
+    name: res.name,
+    code: (res.code as 'A' | 'B' | 'dry1' | 'dry2'),
+    daysLeft: res.daysLeft,
   };
-
-  const NAMES: Record<string, string> = {
-    A: 'Rainy Season (March–May)',
-    B: 'Rainy Season (September–November)',
-    dry1: 'Dry Season (Dec–Feb)',
-    dry2: 'Dry Season (Jun–Sep)',
-  };
-
-  let code: 'A' | 'B' | 'dry1' | 'dry2' = 'dry1';
-  for (const [k, months] of Object.entries(ends)) {
-    if (months.includes(month)) { code = k as typeof code; break; }
-  }
-
-  const endMonth = ends[code][ends[code].length - 1];
-  const endDay = new Date(new Date().getFullYear(), endMonth + 1, 0);
-  const daysLeft = Math.max(0, Math.round((endDay.getTime() - Date.now()) / 86400000));
-
-  return { name: NAMES[code], code, daysLeft };
 }
 
-export function buildSeasonalPlan(month: number, primaryCrop?: string): SeasonalPlan {
-  const season = getUgandaSeason(month);
+export function buildSeasonalPlan(
+  month: number,
+  primaryCrop?: string,
+  loc?: LocationContext
+): SeasonalPlan {
+  const seasonInfo = getContinentalSeason(month, loc);
 
+  if (seasonInfo.climateZone === 'temperate_north') {
+    const plans: Record<string, {
+      recommendedCrops: string[];
+      currentTask: string;
+      nextTask: string;
+      urgency: InsightSeverity;
+    }> = {
+      autumn: {
+        recommendedCrops: ['Winter Wheat', 'Winter Barley', 'Oilseed Rape', 'Cover Crops', 'Maize / Corn', 'Sugar Beet'],
+        currentTask: 'Autumn drilling and late harvest. Drill winter cereals, combine corn, lift sugar beets, and establish green cover crops.',
+        nextTask: 'Clean and service combine harvesters. Apply pre-emergence herbicides on winter cereals before first ground frosts.',
+        urgency: 'positive',
+      },
+      winter: {
+        recommendedCrops: ['Winter Cereals (in dormancy)', 'Winter Rye', 'Overwintering Brassicas', 'Garlic'],
+        currentTask: 'Winter dormancy and soil rest. Maintain machinery, test stored grain moisture and temperatures, and frost-proof water lines.',
+        nextTask: 'Finalize spring crop rotations, review seed orders, and plan early nitrogen applications ahead of spring thaw.',
+        urgency: 'info',
+      },
+      spring: {
+        recommendedCrops: ['Spring Barley', 'Sugar Beet', 'Potatoes', 'Oats', 'Peas', 'Sunflowers', 'Maize'],
+        currentTask: 'Spring cultivation and seedbed preparation once soils reach 6-8°C. Top-dress winter crops with early nitrogen.',
+        nextTask: 'Monitor emergence, manage broadleaf weeds, and calibrate boom sprayers for targeted plant protection.',
+        urgency: 'positive',
+      },
+      summer: {
+        recommendedCrops: ['Wheat (ripening)', 'Winter Barley', 'Oilseed Rape', 'Vegetables', 'Berries', 'Silage Maize'],
+        currentTask: 'Summer grain ripening and combining. Harvest winter barley and oilseed rape. Monitor soil moisture and heat stress.',
+        nextTask: 'Bale and store straw. Prepare stubbles for post-harvest min-till cultivation.',
+        urgency: 'warning',
+      },
+    };
+
+    const plan = plans[seasonInfo.code] || plans.autumn;
+    return {
+      season: seasonInfo.name,
+      phase: seasonInfo.code,
+      daysLeft: seasonInfo.daysLeft,
+      recommendedCrops: plan.recommendedCrops,
+      currentTask: plan.currentTask,
+      nextTask: plan.nextTask,
+      urgency: plan.urgency,
+      climateZone: seasonInfo.climateZone,
+      zoneName: seasonInfo.zoneName,
+    };
+  }
+
+  if (seasonInfo.climateZone === 'temperate_south') {
+    const plans: Record<string, {
+      recommendedCrops: string[];
+      currentTask: string;
+      nextTask: string;
+      urgency: InsightSeverity;
+    }> = {
+      spring: {
+        recommendedCrops: ['Spring Cereals', 'Corn / Maize', 'Sunflower', 'Soybeans', 'Pasture'],
+        currentTask: 'Spring sowing and pasture management. Drill summer crops as soil temperature rises.',
+        nextTask: 'Fertilizer side-dressing, irrigation scheduling, and early in-crop weed control.',
+        urgency: 'positive',
+      },
+      summer: {
+        recommendedCrops: ['Winter Grains Harvest', 'Sorghum', 'Cotton', 'Grapes', 'Stone Fruit'],
+        currentTask: 'Summer grain harvesting and intensive irrigation monitoring during peak evapotranspiration.',
+        nextTask: 'Stubble management, grain storage aeration, and farm fire break maintenance.',
+        urgency: 'warning',
+      },
+      autumn: {
+        recommendedCrops: ['Winter Wheat', 'Winter Barley', 'Canola', 'Lupins', 'Faba Beans'],
+        currentTask: 'Autumn sowing of winter grains and canola following the autumn break rains.',
+        nextTask: 'Monitor seedling emergence and control early pests (slugs, earth mites).',
+        urgency: 'positive',
+      },
+      winter: {
+        recommendedCrops: ['Winter Cereals', 'Winter Pastures'],
+        currentTask: 'Winter crop establishment, selective in-crop spraying, and nitrogen top-dressing.',
+        nextTask: 'Pre-spring fungicide preparation and sprayer calibrations.',
+        urgency: 'info',
+      },
+    };
+
+    const plan = plans[seasonInfo.code] || plans.spring;
+    return {
+      season: seasonInfo.name,
+      phase: seasonInfo.code,
+      daysLeft: seasonInfo.daysLeft,
+      recommendedCrops: plan.recommendedCrops,
+      currentTask: plan.currentTask,
+      nextTask: plan.nextTask,
+      urgency: plan.urgency,
+      climateZone: seasonInfo.climateZone,
+      zoneName: seasonInfo.zoneName,
+    };
+  }
+
+  if (seasonInfo.climateZone === 'tropical_general') {
+    const plans: Record<string, {
+      recommendedCrops: string[];
+      currentTask: string;
+      nextTask: string;
+      urgency: InsightSeverity;
+    }> = {
+      wet: {
+        recommendedCrops: ['Rice / Paddy', 'Maize', 'Soybeans', 'Sugarcane', 'Chili'],
+        currentTask: 'Monsoon planting and water regulation. Maintain bunds and drainage channels.',
+        nextTask: 'Top-dressing and preventive fungicide applications against high humidity blights.',
+        urgency: 'positive',
+      },
+      dry: {
+        recommendedCrops: ['Pulses', 'Irrigated Vegetables', 'Groundnuts', 'Sesame'],
+        currentTask: 'Dry season harvesting, sun-drying, and drip irrigation on high-value cash crops.',
+        nextTask: 'Soil solarization and organic compost incorporation ahead of the next monsoon.',
+        urgency: 'info',
+      },
+    };
+
+    const plan = plans[seasonInfo.code] || plans.wet;
+    return {
+      season: seasonInfo.name,
+      phase: seasonInfo.code,
+      daysLeft: seasonInfo.daysLeft,
+      recommendedCrops: plan.recommendedCrops,
+      currentTask: plan.currentTask,
+      nextTask: plan.nextTask,
+      urgency: plan.urgency,
+      climateZone: seasonInfo.climateZone,
+      zoneName: seasonInfo.zoneName,
+    };
+  }
+
+  // Tropical Africa (Default: Uganda, Kenya, Rwanda, Tanzania)
   const plans: Record<string, {
     recommendedCrops: string[];
     currentTask: string;
@@ -66,49 +404,56 @@ export function buildSeasonalPlan(month: number, primaryCrop?: string): Seasonal
     urgency: InsightSeverity;
   }> = {
     A: {
-      recommendedCrops: ['Maize', 'Beans', 'Groundnuts', 'Sunflower', 'Sorghum'],
-      currentTask: 'Land prep & planting. Apply basal fertilizer before first rains.',
-      nextTask: 'Top-dress with nitrogen at knee height (~3 weeks post-germination).',
+      recommendedCrops: ['Maize', 'Beans', 'Groundnuts', 'Sunflower', 'Sorghum', 'Soybeans'],
+      currentTask: 'Season A land prep and planting. Apply basal fertilizer (DAP/NPK) before first rains.',
+      nextTask: 'Top-dress with nitrogen (CAN/Urea) at knee height (~3 weeks post-germination).',
       urgency: 'positive',
     },
     B: {
-      recommendedCrops: ['Cassava', 'Sweet Potato', 'Sorghum', 'Tomato', 'Cabbage'],
-      currentTask: 'Plant short-cycle crops. Mulch to retain soil moisture.',
-      nextTask: 'Monitor for late blight. Begin harvesting short-cycle vegetables.',
+      recommendedCrops: ['Cassava', 'Sweet Potato', 'Sorghum', 'Tomato', 'Cabbage', 'Beans'],
+      currentTask: 'Season B planting of short-cycle crops. Mulch heavily to retain soil moisture.',
+      nextTask: 'Monitor for late blight and fall armyworm. Begin harvesting short-cycle vegetables.',
       urgency: 'info',
     },
     dry1: {
-      recommendedCrops: ['Onion', 'Tomato (irrigated)', 'Capsicum', 'Watermelon'],
-      currentTask: 'Irrigate if possible. Harvest September–November crops & dry properly.',
-      nextTask: 'Prepare land and inputs for the March rains.',
-      urgency: 'warning',
+      recommendedCrops: ['Sweet Potato', 'Cassava', 'Watermelon (irrigated)', 'Vegetables'],
+      currentTask: 'Harvest Season A crops. Dry and store maize at <13% moisture to prevent aflatoxin.',
+      nextTask: 'Prepare nurseries and field beds for Season B rains arriving in September.',
+      urgency: 'info',
     },
     dry2: {
-      recommendedCrops: ['Sweet Potato', 'Cassava', 'Watermelon (irrigated)'],
-      currentTask: 'Harvest March–May crops. Dry and store maize at <13% moisture.',
-      nextTask: 'Prepare nurseries for the September rains (tomato, cabbage).',
-      urgency: 'info',
+      recommendedCrops: ['Onion', 'Tomato (irrigated)', 'Capsicum', 'Watermelon'],
+      currentTask: 'Dry season irrigation. Harvest September–November Season B crops and dry thoroughly.',
+      nextTask: 'Procure certified inputs and prepare land for the March Season A rains.',
+      urgency: 'warning',
     },
   };
 
-  const plan = plans[season.code];
+  const plan = plans[seasonInfo.code] || plans.B;
 
   return {
-    season: season.name,
-    phase: season.code,
-    daysLeft: season.daysLeft,
+    season: seasonInfo.name,
+    phase: seasonInfo.code,
+    daysLeft: seasonInfo.daysLeft,
     recommendedCrops: plan.recommendedCrops,
     currentTask: plan.currentTask,
     nextTask: plan.nextTask,
     urgency: plan.urgency,
+    climateZone: seasonInfo.climateZone,
+    zoneName: seasonInfo.zoneName,
   };
 }
 
 // ─── Weather Insights ─────────────────────────────────────────────────────────
 
-export function generateWeatherInsights(weather: WeatherData, month: number): AgriInsight[] {
+export function generateWeatherInsights(
+  weather: WeatherData,
+  month: number,
+  loc?: LocationContext
+): AgriInsight[] {
   const insights: AgriInsight[] = [];
-  const season = getUgandaSeason(month);
+  const season = getContinentalSeason(month, loc);
+  const isDry = season.code.startsWith('dry') || season.code === 'winter';
 
   if (weather.rainfall > 8) {
     insights.push({
@@ -120,7 +465,7 @@ export function generateWeatherInsights(weather: WeatherData, month: number): Ag
       body: `${weather.rainfall.toFixed(1)} mm expected. Delay fertilizer application — runoff will reduce effectiveness.`,
       action: 'Inspect drainage channels and protect stored grain from moisture.',
     });
-  } else if (weather.rainfall > 4 && season.code !== 'dry1' && season.code !== 'dry2') {
+  } else if (weather.rainfall > 4 && !isDry) {
     insights.push({
       id: 'good-rain',
       category: 'weather',
@@ -130,14 +475,14 @@ export function generateWeatherInsights(weather: WeatherData, month: number): Ag
       body: `${weather.rainfall.toFixed(1)} mm — ideal soil moisture for germination and top-dressing.`,
       action: 'Window open for planting and fertilizer application.',
     });
-  } else if (weather.rainfall < 1.5 && (season.code === 'A' || season.code === 'B')) {
+  } else if (weather.rainfall < 1.5 && (season.code === 'A' || season.code === 'B' || season.code === 'spring')) {
     insights.push({
       id: 'dry-spell',
       category: 'weather',
       severity: 'critical',
       icon: 'sun',
-      title: 'Dry Spell During Rain Season',
-      body: 'Rainfall below 1.5 mm during planting season — stress risk for seedlings.',
+      title: 'Dry Spell During Active Growing Season',
+      body: 'Rainfall below 1.5 mm during active season — stress risk for seedlings.',
       action: 'Irrigate if possible. Mulch to retain soil moisture.',
     });
   }

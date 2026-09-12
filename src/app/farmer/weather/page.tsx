@@ -32,7 +32,9 @@ const PHASE_COLOR: Record<string, { bg: string; color: string; label: string }> 
   planting: { bg: 'var(--color-success-bg)', color: 'var(--color-success)', label: 'Planting Season' },
   growing:  { bg: 'var(--color-sky-bg)',     color: 'var(--color-sky)',     label: 'Growing Season' },
   harvest:  { bg: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', label: 'Harvest Season' },
+  weeding:  { bg: 'var(--color-lime-bg)',    color: 'var(--color-lime)',    label: 'Weeding Season' },
   dry:      { bg: 'var(--color-surface-2)',  color: 'var(--color-text-muted)', label: 'Dry Season' },
+  dormant:  { bg: 'var(--color-surface-2)',  color: 'var(--color-text-muted)', label: 'Winter Dormancy' },
 };
 
 const URGENCY_COLOR: Record<string, { bg: string; color: string }> = {
@@ -63,18 +65,24 @@ export default async function WeatherPage({
   const supabase = await getSupabase();
   const [weather, profileRes] = await Promise.all([
     fetchWeatherForDistrict(district),
-    supabase.from('profiles').select('primary_crop').eq('user_id', session.user.id).single(),
+    supabase.from('profiles').select('primary_crop, location, latitude, longitude').eq('user_id', session.user.id).single(),
   ]);
 
   const primaryCrop = profileRes.data?.primary_crop ?? '';
   const farmerCrops = primaryCrop ? [primaryCrop] : [];
   const now = new Date();
-  const seasonSummary = getCurrentSeasonSummary(now.getMonth());
+  const locationContext = {
+    district,
+    location: profileRes.data?.location,
+    latitude: profileRes.data?.latitude,
+    longitude: profileRes.data?.longitude,
+  };
+  const seasonSummary = getCurrentSeasonSummary(now.getMonth(), locationContext);
   const plantingAlerts = applyWeatherToPlantingAlerts(
-    generatePlantingAlerts(now.getMonth(), now.getDate(), farmerCrops),
+    generatePlantingAlerts(now.getMonth(), now.getDate(), farmerCrops, locationContext),
     weather.daily,
   );
-  const phaseStyle = PHASE_COLOR[seasonSummary.phase];
+  const phaseStyle = PHASE_COLOR[seasonSummary.phase] || PHASE_COLOR.planting;
 
   return (
     <div style={{ background: C.pageBg, minHeight: '100vh', paddingBottom: '24px' }}>
@@ -87,7 +95,7 @@ export default async function WeatherPage({
               Weather & Forecast
             </h1>
             <p style={{ fontSize: '13px', color: C.muted }}>
-              Live conditions for {district} · {weather.source === 'fallback' ? 'Estimated' : 'Live data'}
+              Live conditions for {district} · {seasonSummary.zoneName || 'Equatorial Zone'} · {weather.source === 'fallback' ? 'Estimated' : 'Live data'}
             </p>
           </div>
           <WeatherDistrictSelector current={district} districts={DISTRICT_NAMES.sort()} />
@@ -291,21 +299,42 @@ export default async function WeatherPage({
             }}
           >
             <p style={{ fontSize: '11px', fontWeight: 700, color: '#BBF7D0', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>
-              Uganda Seasonal Rainfall Outlook
+              {seasonSummary.climateZone === 'temperate_north'
+                ? 'Europe & Northern Temperate Agricultural Outlook'
+                : seasonSummary.climateZone === 'temperate_south'
+                ? 'Southern Hemisphere Agricultural Outlook'
+                : 'Seasonal Rainfall & Agricultural Outlook'}
             </p>
             <p style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', marginBottom: '6px' }}>
-              Bi-Modal Rainfall Pattern
+              {seasonSummary.climateZone === 'temperate_north'
+                ? 'Four-Season Astronomical Cycle'
+                : seasonSummary.climateZone === 'temperate_south'
+                ? 'Southern Four-Season Cycle'
+                : 'Bi-Modal Equatorial Rainfall Pattern'}
             </p>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', lineHeight: '1.5', marginBottom: '16px' }}>
-              Uganda has two main rainy seasons. The March–May rains are long rains ideal for maize and beans.
-              The September–November rains are shorter, suited for beans, sweet potato and tomatoes.
-              Northern Uganda has a single rainy season (April–October).
+              {seasonSummary.climateZone === 'temperate_north'
+                ? 'Temperate northern agriculture follows four distinct seasons: Spring drilling (Mar–May), Summer crop combining (Jun–Aug), Autumn drilling and maize harvesting (Sep–Nov), and Winter dormancy (Dec–Feb).'
+                : seasonSummary.climateZone === 'temperate_south'
+                ? 'Southern temperate regions follow an inverted four-season cycle with spring planting in September–November and winter crop harvesting in December–February.'
+                : 'Equatorial Africa operates on a bimodal cycle: Season A (March–May) main rains for maize and legumes, and Season B (September–November) second rains for short-cycle beans, sweet potatoes, and vegetables.'}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              {[
-                { season: 'Rainy Season · Long Rains', months: 'Mar – May', crops: 'Maize, Beans, Groundnuts' },
-                { season: 'Rainy Season · Short Rains', months: 'Sep – Nov', crops: 'Beans, Sweet Potato, Tomato' },
-              ].map((s) => (
+              {(seasonSummary.climateZone === 'temperate_north'
+                ? [
+                    { season: 'Autumn / Fall · Drilling & Harvest', months: 'Sep – Nov', crops: 'Winter Wheat, Barley, Maize, Sugar Beet' },
+                    { season: 'Spring · Cultivation & Sowing', months: 'Mar – May', crops: 'Spring Barley, Potatoes, Peas, Oats' },
+                  ]
+                : seasonSummary.climateZone === 'temperate_south'
+                ? [
+                    { season: 'Spring · Planting & Pasture', months: 'Sep – Nov', crops: 'Summer Cereals, Corn, Sunflowers' },
+                    { season: 'Autumn · Winter Grains', months: 'Mar – May', crops: 'Winter Wheat, Canola, Barley' },
+                  ]
+                : [
+                    { season: 'Season A · Long Rains', months: 'Mar – May', crops: 'Maize, Beans, Groundnuts, Sunflower' },
+                    { season: 'Season B · Second Rains', months: 'Sep – Nov', crops: 'Beans, Sweet Potato, Tomato, Sorghum' },
+                  ]
+              ).map((s) => (
                 <div key={s.season} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px' }}>
                   <div style={{ display: 'flex', marginBottom: '6px', color: '#BBF7D0' }}><Leaf size={20} /></div>
                   <p style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', marginBottom: '2px' }}>{s.season}</p>

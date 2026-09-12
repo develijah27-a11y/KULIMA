@@ -47,7 +47,9 @@ const PHASE_CFG: Record<string, { bg: string; color: string; icon: JSX.Element }
   planting: { bg: 'var(--color-success-bg)', color: 'var(--color-success)', icon: <Leaf size={28} /> },
   weeding:  { bg: 'var(--color-lime-bg)',    color: 'var(--color-lime)',    icon: <Wrench size={28} /> },
   harvest:  { bg: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', icon: <Leaf size={28} /> },
+  growing:  { bg: 'var(--color-sky-bg)',     color: 'var(--color-sky)',     icon: <Leaf size={28} /> },
   dry:      { bg: 'var(--color-surface-2)',  color: 'var(--d-muted)',       icon: <Sun size={28} /> },
+  dormant:  { bg: 'var(--color-surface-2)',  color: 'var(--d-muted)',       icon: <Sun size={28} /> },
 };
 
 function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
@@ -122,7 +124,7 @@ export default async function PlantingPage() {
 
   const supabase = await getSupabase();
   const [profileRes, farmsRes] = await Promise.all([
-    supabase.from('profiles').select('primary_crop, full_name, location').eq('user_id', session.user.id).single(),
+    supabase.from('profiles').select('primary_crop, full_name, location, latitude, longitude').eq('user_id', session.user.id).single(),
     (supabase.from as any)('farms').select('crop_types').eq('user_id', session.user.id).eq('is_active', true),
   ]);
 
@@ -133,13 +135,18 @@ export default async function PlantingPage() {
 
   const now = new Date();
   const currentMonth = now.getMonth();
+  const locationContext = {
+    location: profileRes.data?.location,
+    latitude: profileRes.data?.latitude,
+    longitude: profileRes.data?.longitude,
+  };
   const weather = await fetchWeatherForDistrict((profileRes.data as any)?.location || 'Kampala');
   const alerts = applyWeatherToPlantingAlerts(
-    generatePlantingAlerts(currentMonth, now.getDate(), farmerCrops),
+    generatePlantingAlerts(currentMonth, now.getDate(), farmerCrops, locationContext),
     weather.daily,
   );
-  const season = getCurrentSeasonSummary(currentMonth);
-  const phaseCfg = PHASE_CFG[season.phase];
+  const season = getCurrentSeasonSummary(currentMonth, locationContext);
+  const phaseCfg = PHASE_CFG[season.phase] || PHASE_CFG.planting;
 
   // Separate farmer's crops from others
   const myCrops = PLANTING_CALENDAR.filter((c) => farmerCrops.includes(c.crop));
@@ -155,7 +162,7 @@ export default async function PlantingPage() {
             Planting Calendar
           </h1>
           <p style={{ fontSize: '13px', color: C.muted }}>
-            Seasonal planting guide for Uganda · {MONTHS[currentMonth]} {now.getFullYear()}
+            Seasonal planting guide · {season.zoneName || 'Equatorial Belt'} · {MONTHS[currentMonth]} {now.getFullYear()}
           </p>
         </div>
 
@@ -172,7 +179,7 @@ export default async function PlantingPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <span style={{ display: 'flex', color: '#fff' }}>{phaseCfg.icon}</span>
                 <span style={{ fontSize: '12px', fontWeight: 700, color: '#BBF7D0', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  {phaseCfg.bg && 'Current Season'}
+                  Current Season · {season.zoneName || 'Equatorial Belt'}
                 </span>
               </div>
               <p style={{ fontSize: '20px', fontWeight: 800, color: '#FFFFFF', marginBottom: '8px' }}>{season.name}</p>

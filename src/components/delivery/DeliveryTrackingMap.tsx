@@ -145,6 +145,7 @@ export function DeliveryTrackingMap({
       // Zoom in close when we have a real pin to show; stay wide/district-
       // level when all we have is a centroid, since anything closer would
       // just be zooming into empty space with false precision.
+      const initialZoom = pickup ? 13 : 7;
       const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView(center, initialZoom);
       mapRef.current = map;
 

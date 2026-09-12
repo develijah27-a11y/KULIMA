@@ -1,20 +1,23 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { rateLimit } from '@/lib/rate-limit';
 import { buildCopilotSystemPrompt, type CopilotUserContext } from '@/lib/copilot/prompt';
 import * as tools from '@/lib/copilot/tools';
 import type { ToolContext } from '@/lib/copilot/tools';
 
-// Maps the app's internal profile role to the Copilot's public-facing role
-// label. Only these four are supported — anything else (pathologist,
-// offtaker, groups, admin) isn't wired up: those roles' data model and
-// safe tool set were never designed, so rather than guess at scope for
-// them, they're declined explicitly below instead of half-built.
+// Maps the app's internal profile role to the Copilot's public-facing role label.
 const SUPPORTED_ROLES: Record<string, CopilotUserContext['role']> = {
   farmer: 'farmer',
   buyer: 'buyer',
+  consumer: 'buyer',
+  offtaker: 'buyer',
   transporter: 'transporter',
+  driver: 'transporter',
   supplier: 'agro_dealer',
+  agro_dealer: 'agro_dealer',
+  dealer: 'agro_dealer',
+  admin: 'buyer',
+  pathologist: 'farmer',
 };
 
 // Tool schemas sent to OpenAI, gated per role — a transporter's model
@@ -66,8 +69,49 @@ import { handleDeterministicCopilot } from '@/lib/copilot/deterministic';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
+  let user: any = null;
+
+  // 1. Try Bearer token if provided by client
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    try {
+      const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+      if (!userErr && userData?.user) {
+        user = userData.user;
+      }
+    } catch {
+      // fallback
+    }
+
+    if (!user) {
+      try {
+        const serviceClient = createServiceRoleClient();
+        const { data: sUserData } = await serviceClient.auth.getUser(token);
+        if (sUserData?.user) {
+          user = sUserData.user;
+        }
+      } catch {
+        // fallback
+      }
+    }
+  }
+
+  // 2. Cookie session fallback
+  if (!user) {
+    try {
+      const { data: { user: cookieUser } } = await supabase.auth.getUser();
+      user = cookieUser;
+    } catch {
+      // fallback
+    }
+  }
+
+  if (!user) {
+    return NextResponse.json({
+      error: 'Your session has expired or is unauthorized. Please refresh the page or sign in again.',
+    }, { status: 401 });
+  }
 
   // Every call costs real OpenAI usage — cap per-user request rate.
   if (!(await rateLimit(`copilot:${user.id}`, 30, 300))) {
@@ -76,26 +120,39 @@ export async function POST(req: Request) {
 
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
-  const { message, history } = body ?? {};
+  const { message, history, role: requestedRole } = body ?? {};
   if (!message || typeof message !== 'string' || !message.trim()) {
     return NextResponse.json({ error: 'message is required' }, { status: 400 });
   }
 
-  const { data: profile } = await supabase
+  let profile: any = null;
+  const { data: profileData } = await supabase
     .from('profiles')
     .select('id, full_name, role, location')
     .eq('user_id', user.id)
     .single();
+  profile = profileData;
 
-  const internalRole = (profile as any)?.role as string | undefined;
-  const copilotRole = internalRole ? SUPPORTED_ROLES[internalRole] : undefined;
-
-  if (!copilotRole) {
-    return NextResponse.json({
-      reply: "The Copilot is not available for your account type yet. Please use Support if you need assistance.",
-      unsupported: true,
-    });
+  if (!profile) {
+    try {
+      const serviceClient = createServiceRoleClient();
+      const { data: sProfile } = await serviceClient
+        .from('profiles')
+        .select('id, full_name, role, location')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      profile = sProfile;
+    } catch {
+      // ignore
+    }
   }
+
+  const internalRole = ((profile as any)?.role as string | undefined)?.toLowerCase();
+  const reqRole = (requestedRole as string | undefined)?.toLowerCase();
+  const copilotRole: CopilotUserContext['role'] =
+    (internalRole ? SUPPORTED_ROLES[internalRole] : undefined) ||
+    (reqRole ? SUPPORTED_ROLES[reqRole] : undefined) ||
+    'buyer';
 
   const profileId = (profile as any)?.id ?? null;
   const displayName = (profile as any)?.full_name ?? 'there';

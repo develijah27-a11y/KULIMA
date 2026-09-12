@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Sparkles, AlertCircle } from 'lucide-react';
+import { Send, Loader2, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -43,10 +44,23 @@ export function CopilotChat({ role }: { role: string }) {
     setDraft('');
     setSending(true);
     try {
+      const supabase = createClient();
+      let { data: { session } } = await supabase.auth.getSession();
+      if (!session || (session.expires_at && session.expires_at * 1000 < Date.now() + 30000)) {
+        const { data: refData } = await supabase.auth.refreshSession();
+        session = refData?.session ?? session;
+      }
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
       const res = await fetch('/api/copilot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: trimmed, history: next.slice(0, -1) }),
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ message: trimmed, history: next.slice(0, -1), role }),
       });
       let json: any = null;
       try {
@@ -56,7 +70,11 @@ export function CopilotChat({ role }: { role: string }) {
       }
 
       if (!res.ok) {
-        setError(json?.error ?? 'Service is momentarily busy. Please tap retry.');
+        if (res.status === 401) {
+          setError('Session expired or unauthorized. Please refresh the page or sign in again.');
+        } else {
+          setError(json?.error ?? 'Service is momentarily busy. Please tap retry.');
+        }
         return;
       }
       if (json?.reply) {
