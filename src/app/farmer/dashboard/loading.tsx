@@ -1,15 +1,11 @@
+import { DashboardWelcomeHeroSkeleton } from '@/components/layout/DashboardWelcomeHeroSkeleton';
+
 export default function FarmerDashboardLoading() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* 0 · Welcome Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-        <div className="space-y-2">
-          <div className="dash-skeleton h-7 w-48 rounded-lg" />
-          <div className="dash-skeleton h-4 w-36 rounded" />
-        </div>
-        <div className="dash-skeleton h-9 w-36 rounded-xl self-start sm:self-auto" />
-      </div>
+      {/* 0 · Welcome Header Skeleton */}
+      <DashboardWelcomeHeroSkeleton />
 
       {/* 1 · Weather Card (3-col layout matching actual WeatherCard) */}
       <div

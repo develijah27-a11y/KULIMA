@@ -14,19 +14,29 @@ export interface ToastItem {
 // (e.g. NotificationBell) without prop-drilling.
 let _listeners: Array<(t: ToastItem) => void> = [];
 
+let _lastNotifTime = 0;
 export function showToast(toast: Omit<ToastItem, 'id'>) {
   const item: ToastItem = { ...toast, id: Math.random().toString(36).slice(2) };
   _listeners.forEach(fn => fn(item));
 
-  // OS-level browser notification when the tab is in background
-  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+  // OS-level browser notification only when tab is genuinely in the background, with throttle
+  const now = Date.now();
+  if (
+    typeof window !== 'undefined' &&
+    typeof document !== 'undefined' &&
+    document.hidden &&
+    'Notification' in window &&
+    Notification.permission === 'granted' &&
+    now - _lastNotifTime > 3000
+  ) {
+    _lastNotifTime = now;
     try {
-      new Notification(`Cropify — ${toast.title}`, {
+      new Notification(`Cropify · ${toast.title}`, {
         body: toast.body,
         icon: '/icon-192.png',
         tag: item.id,
       });
-    } catch { /* silently ignored — some browsers block Notification outside SW */ }
+    } catch { /* silently ignored — browser may disallow outside service worker */ }
   }
 }
 

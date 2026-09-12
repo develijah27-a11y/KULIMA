@@ -122,7 +122,7 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
   }, [convId, meId, scrollBottom]);
 
   const sendMessageText = async (text: string, existingTempId?: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() || sending) return;
     const tempId = existingTempId ?? `temp_${Date.now()}`;
 
     if (!existingTempId) {
@@ -245,18 +245,19 @@ export function DirectMessageClient({ meId, meName, themId, themName, themSubtit
                 </div>
               )}
 
-              <div style={{ maxWidth: '75%', minWidth: 100 }}>
+              <div style={{ maxWidth: 'min(78%, 540px)', minWidth: 80, width: 'fit-content', display: 'inline-flex', flexDirection: 'column' }}>
                 <div
                   style={{
-                    padding: '10px 14px',
+                    padding: '9px 14px',
                     borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                     background: isOwn ? (isFailed ? 'var(--color-danger-bg)' : C.green) : C.card,
                     color: isOwn ? (isFailed ? 'var(--color-danger)' : '#FFFFFF') : C.text,
                     border: isOwn ? (isFailed ? '1px solid var(--color-danger)' : 'none') : `1px solid ${C.border}`,
                     boxShadow: '0 1px 2px rgba(15,23,42,0.04)',
+                    boxSizing: 'border-box',
                   }}
                 >
-                  <p style={{ fontSize: 13.5, margin: 0, lineHeight: 1.5, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  <p style={{ fontSize: 13.5, margin: 0, lineHeight: 1.48, whiteSpace: 'pre-wrap', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                     {msg.body}
                   </p>
                 </div>

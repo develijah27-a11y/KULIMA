@@ -25,7 +25,7 @@ export function FarmMapClient({ farms }: Props) {
   const mapRef = useRef<LMap | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const tileLayerRef = useRef<any>(null);
-  const [layerType, setLayerType] = useState<'streets' | 'satellite'>('streets');
+  const [layerType, setLayerType] = useState<'streets' | 'satellite'>('satellite');
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -42,10 +42,14 @@ export function FarmMapClient({ farms }: Props) {
         shadowUrl: '/leaflet/images/marker-shadow.png',
       });
 
-      const map = L.map(containerRef.current!, { zoomControl: false }).setView([1.3733, 32.2903], 7);
+      const map = L.map(containerRef.current!, {
+        zoomControl: false,
+        scrollWheelZoom: false,
+        attributionControl: false,
+      }).setView([1.3733, 32.2903], 7);
       mapRef.current = map;
 
-      const tile = L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+      const tile = L.tileLayer(GOOGLE_HYBRID_TILE_URL, HYBRID_TILE_OPTIONS).addTo(map);
       tileLayerRef.current = tile;
 
       requestAnimationFrame(() => map.invalidateSize());

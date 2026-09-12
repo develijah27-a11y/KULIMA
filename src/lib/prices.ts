@@ -240,17 +240,18 @@ const CROP_BENCHMARKS: BaseCropSpec[] = [
 ];
 
 /**
- * Deterministic daily pseudorandom float in range [-1, 1] based on seed string and day of year.
- * Ensures prices realistically and smoothly change each day across Uganda markets.
+ * Deterministic daily pseudorandom float in range [-1, 1] based on seed string and date.
+ * Uses FNV-1a hash to guarantee smooth, distinct daily price fluctuations across Uganda markets.
  */
 function getDailyNoise(seed: string, dateStr: string): number {
-  let hash = 0;
-  const str = `${seed}__${dateStr}`;
+  let h = 0x811c9dc5;
+  const str = `${seed}__${dateStr}__v2`;
   for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
   }
-  return (Math.sin(hash) * 10000) % 1;
+  const u = (h >>> 0) / 4294967295;
+  return u * 2 - 1;
 }
 
 /**
@@ -271,15 +272,15 @@ export function generateDynamicMarketPrices(date = new Date()): MarketPriceEntry
       const marketNoise = getDailyNoise(`${cropSpec.crop}__${m.name}`, dateStr);
       const prevMarketNoise = getDailyNoise(`${cropSpec.crop}__${m.name}`, prevDateStr);
 
-      const totalSwingToday = (todayCropNoise * 0.6 + marketNoise * 0.4) * cropSpec.volatility;
-      const totalSwingYesterday = (yesterdayCropNoise * 0.6 + prevMarketNoise * 0.4) * cropSpec.volatility;
+      const totalSwingToday = (todayCropNoise * 0.65 + marketNoise * 0.35) * cropSpec.volatility;
+      const totalSwingYesterday = (yesterdayCropNoise * 0.65 + prevMarketNoise * 0.35) * cropSpec.volatility;
 
       const rawToday = cropSpec.basePrice * m.multiplier * (1 + totalSwingToday);
       const rawYesterday = cropSpec.basePrice * m.multiplier * (1 + totalSwingYesterday);
 
-      // Round to nearest 50 UGX for natural cash transaction granularity
-      const priceToday = Math.max(100, Math.round(rawToday / 50) * 50);
-      const priceYesterday = Math.max(100, Math.round(rawYesterday / 50) * 50);
+      // Round to nearest 25 UGX for realistic agricultural market transaction granularity
+      const priceToday = Math.max(100, Math.round(rawToday / 25) * 25);
+      const priceYesterday = Math.max(100, Math.round(rawYesterday / 25) * 25);
 
       const changePct = parseFloat((((priceToday - priceYesterday) / priceYesterday) * 100).toFixed(1));
 
@@ -303,7 +304,7 @@ export function generateDynamicMarketPrices(date = new Date()): MarketPriceEntry
 
 /**
  * Fetches unified market prices.
- * Queries Supabase first; if no rows exist in the past 7 days, gracefully returns dynamic daily prices.
+ * Queries Supabase for today's fresh survey; if missing or stale, provides dynamic daily prices with realistic fluctuations.
  */
 export async function getUnifiedMarketPrices(filter?: {
   crop?: string;
@@ -316,11 +317,12 @@ export async function getUnifiedMarketPrices(filter?: {
 
   try {
     const supabase = await createClient();
-    const sinceDate = new Date(Date.now() - 7 * 86400000).toISOString();
+    // Only consider database records fresh if updated in the last 24 hours
+    const freshSince = new Date(Date.now() - 24 * 3600000).toISOString();
 
     let query = (supabase.from as any)('market_prices')
       .select('id, crop_type, price_per_kg, market_name, district, recorded_at, source')
-      .gte('recorded_at', sinceDate)
+      .gte('recorded_at', freshSince)
       .order('recorded_at', { ascending: false })
       .limit(300);
 
@@ -329,7 +331,7 @@ export async function getUnifiedMarketPrices(filter?: {
 
     const { data, error } = await query;
 
-    if (!error && Array.isArray(data) && data.length > 0) {
+    if (!error && Array.isArray(data) && data.length >= 5) {
       prices = data.map((d: any) => ({
         id: d.id ?? `mp-${d.crop_type}-${d.district}`,
         crop_type: d.crop_type,
@@ -344,7 +346,7 @@ export async function getUnifiedMarketPrices(filter?: {
     console.warn('[prices] Supabase market_prices query failed, using dynamic dataset:', err);
   }
 
-  // If Supabase returned no rows or fewer than 5 rows, use dynamic daily prices
+  // If Supabase returned no fresh rows for today, use dynamic daily prices
   if (prices.length < 5) {
     const dynamicAll = generateDynamicMarketPrices();
     prices = dynamicAll.filter((p) => {

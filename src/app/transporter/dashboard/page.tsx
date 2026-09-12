@@ -11,6 +11,7 @@ import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
+import { DashboardWelcomeHero } from '@/components/layout/DashboardWelcomeHero';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -511,20 +512,20 @@ export default async function TransporterDashboard() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-            Good to go, {firstName}
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: C.muted }}>Driver Hub · {profile?.location ?? 'Uganda'}</p>
-        </div>
-        <Link href="/transporter/job-queue"
-          className="px-4 py-2 rounded-xl text-sm font-bold text-white"
-          style={{ background: C.green, textDecoration: 'none' }}>
-          Find Jobs →
-        </Link>
-      </div>
+      {/* Executive Welcome Hero */}
+      <DashboardWelcomeHero
+        name={firstName}
+        role="transporter"
+        location={profile?.location}
+        actionHref="/transporter/job-queue"
+        actionLabel="Find Jobs"
+        actionIcon={<Truck size={15} />}
+        secondaryAction={{
+          href: '/transporter/active',
+          label: 'Active Deliveries',
+          icon: <Navigation size={14} className="text-purple-500" />,
+        }}
+      />
 
       <VerificationBanner
         level={(profile?.role_verification_levels?.transporter ?? (profile?.role === 'transporter' ? profile?.verification_level : null) ?? 'none') as VerificationLevel}

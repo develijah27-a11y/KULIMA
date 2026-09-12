@@ -88,7 +88,7 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
         shadowUrl: '/leaflet/images/marker-shadow.png',
       });
 
-      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false }).setView([center.lat, center.lng], 13);
+      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView([center.lat, center.lng], 13);
       mapRef.current = map;
 
       L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);

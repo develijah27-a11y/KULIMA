@@ -107,30 +107,20 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
       }));
       for (const { key, path } of results) urls[key] = path;
 
-      const { error: dbErr } = await supabase.from('verifications' as any).insert({
-        user_id:            userId,
-        profile_id:         profileId,
-        level:              target,
-        role,
-        national_id_url:    urls.national_id    ?? null,
-        selfie_url:         urls.selfie         ?? null,
-        business_reg_url:   urls.business_reg   ?? null,
-        driving_permit_url: urls.driving_permit ?? null,
-        vehicle_reg_url:    urls.vehicle_reg    ?? null,
-        insurance_url:      urls.insurance_cert ?? null,
-        vehicle_photo_url:  urls.vehicle_photo  ?? null,
-        qualifications_url: urls.qualifications ?? null,
-      });
-      if (dbErr) throw new Error(dbErr.message);
-
-      // Admins previously had no way to know a submission was waiting other
-      // than checking the queue themselves — best-effort, never blocks the
-      // "done" state the applicant sees even if this fails.
-      fetch('/api/verify/notify-admins', {
+      const submitRes = await fetch('/api/verify/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ level: target, role }),
-      }).catch(() => {});
+        body: JSON.stringify({
+          level: target,
+          role,
+          urls,
+        }),
+      });
+
+      if (!submitRes.ok) {
+        const errJson = await submitRes.json().catch(() => ({}));
+        throw new Error(errJson.error || 'Verification submission failed. Please try again.');
+      }
 
       setStep('done');
     } catch (e: any) {

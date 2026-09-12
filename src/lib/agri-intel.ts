@@ -115,7 +115,7 @@ export function generateWeatherInsights(weather: WeatherData, month: number): Ag
       id: 'heavy-rain',
       category: 'weather',
       severity: 'warning',
-      icon: '🌧️',
+      icon: 'cloud-rain',
       title: 'Heavy Rain Alert',
       body: `${weather.rainfall.toFixed(1)} mm expected. Delay fertilizer application — runoff will reduce effectiveness.`,
       action: 'Inspect drainage channels and protect stored grain from moisture.',
@@ -125,7 +125,7 @@ export function generateWeatherInsights(weather: WeatherData, month: number): Ag
       id: 'good-rain',
       category: 'weather',
       severity: 'positive',
-      icon: '🌦️',
+      icon: 'cloud-sun',
       title: 'Good Planting Rains',
       body: `${weather.rainfall.toFixed(1)} mm — ideal soil moisture for germination and top-dressing.`,
       action: 'Window open for planting and fertilizer application.',
@@ -135,7 +135,7 @@ export function generateWeatherInsights(weather: WeatherData, month: number): Ag
       id: 'dry-spell',
       category: 'weather',
       severity: 'critical',
-      icon: '☀️',
+      icon: 'sun',
       title: 'Dry Spell During Rain Season',
       body: 'Rainfall below 1.5 mm during planting season — stress risk for seedlings.',
       action: 'Irrigate if possible. Mulch to retain soil moisture.',
@@ -147,7 +147,7 @@ export function generateWeatherInsights(weather: WeatherData, month: number): Ag
       id: 'high-humidity',
       category: 'weather',
       severity: 'warning',
-      icon: '💧',
+      icon: 'droplets',
       title: 'High Humidity Risk',
       body: `Humidity at ${weather.humidity}%. Fungal disease conditions — blight and mildew risk elevated.`,
       action: 'Apply preventive fungicide on beans and tomatoes.',
@@ -159,7 +159,7 @@ export function generateWeatherInsights(weather: WeatherData, month: number): Ag
       id: 'strong-wind',
       category: 'weather',
       severity: 'info',
-      icon: '💨',
+      icon: 'wind',
       title: 'Strong Winds',
       body: `Wind at ${weather.windSpeed.toFixed(1)} m/s. Maize lodging risk for tall varieties.`,
       action: 'Stake tall crops and avoid spraying today.',
@@ -171,7 +171,7 @@ export function generateWeatherInsights(weather: WeatherData, month: number): Ag
       id: 'heat-stress',
       category: 'weather',
       severity: 'warning',
-      icon: '🌡️',
+      icon: 'thermometer',
       title: 'Heat Stress Risk',
       body: `Temperature ${weather.temp}°C. Pollination failure risk in beans and maize.`,
       action: 'Irrigate early morning. Avoid field work midday.',
@@ -217,7 +217,7 @@ export function generateMarketInsights(
         id: `price-surge-${crop}`,
         category: 'market',
         severity: 'positive',
-        icon: '📈',
+        icon: 'trending-up',
         title: `${crop.charAt(0).toUpperCase() + crop.slice(1)} Price Surge`,
         body: `Price up ${change.toFixed(0)}% recently — UGX ${Math.round(latest).toLocaleString()}/kg now.`,
         action: `Good time to sell your ${crop} if ready.`,
@@ -227,7 +227,7 @@ export function generateMarketInsights(
         id: `price-drop-${crop}`,
         category: 'market',
         severity: 'warning',
-        icon: '📉',
+        icon: 'trending-down',
         title: `${crop.charAt(0).toUpperCase() + crop.slice(1)} Price Falling`,
         body: `Price dropped ${Math.abs(change).toFixed(0)}% — hold if storage allows.`,
         action: 'Consider holding stock until market recovers.',
@@ -240,7 +240,7 @@ export function generateMarketInsights(
         id: `price-spread-${crop}`,
         category: 'market',
         severity: 'info',
-        icon: '💡',
+        icon: 'lightbulb',
         title: `${crop.charAt(0).toUpperCase() + crop.slice(1)} Market Arbitrage`,
         body: `Price spread of UGX ${Math.round(sorted[sorted.length - 1] - sorted[0]).toLocaleString()}/kg across districts.`,
         action: 'Compare local vs national buyers to maximize margin.',
@@ -255,70 +255,112 @@ export function generateMarketInsights(
 
 export function generateDiseaseAlerts(month: number, primaryCrop?: string): AgriInsight[] {
   const alerts: AgriInsight[] = [];
-  const crop = primaryCrop?.toLowerCase() ?? '';
+  const crop = (primaryCrop ?? '').toLowerCase();
 
-  // Armyworm: March–June peak
-  if ([2, 3, 4, 5].includes(month)) {
+  // 1. Fall Armyworm: peaks March–June (Season A) and September–November (Season B onset)
+  if ([2, 3, 4, 5, 8, 9, 10].includes(month) && (crop.includes('maize') || crop === '' || crop.includes('sorghum'))) {
+    const isSeasonB = [8, 9, 10].includes(month);
     alerts.push({
-      id: 'armyworm',
+      id: 'armyworm-active',
       category: 'disease',
       severity: 'critical',
-      icon: '🐛',
-      title: 'Armyworm Season Active',
-      body: 'Fall armyworm peaks March–June. Maize fields highly vulnerable.',
-      action: 'Scout fields at dawn. Apply Emamectin benzoate at first sign of damage.',
+      icon: 'bug',
+      title: isSeasonB ? 'Fall Armyworm Season B Alert' : 'Fall Armyworm Active',
+      body: isSeasonB
+        ? 'Second rains emergence: young maize seedlings are highly vulnerable to fall armyworm broods.'
+        : 'Fall armyworm peaks across central and western maize corridors.',
+      action: 'Scout leaf funnels at dawn. Apply Emamectin benzoate or Chlorantraniliprole at first sign of pinholes.',
     });
   }
 
-  // Bean fly: March–April
-  if ([2, 3].includes(month) && (crop.includes('bean') || crop === '')) {
+  // 2. Coffee Berry Borer & Coffee Leaf Rust: peak during maturation/ripening & Second Rains (August–November)
+  if ([7, 8, 9, 10].includes(month) && (crop.includes('coffee') || crop === '')) {
     alerts.push({
-      id: 'bean-fly',
+      id: 'coffee-berry-borer',
       category: 'disease',
       severity: 'warning',
-      icon: '🪲',
-      title: 'Bean Fly Risk',
-      body: 'Bean fly attacks seedlings at cotyledon stage during March–April planting.',
-      action: 'Treat seeds with thiamethoxam before planting.',
+      icon: 'shield-alert',
+      title: 'Coffee Berry Borer & Leaf Rust',
+      body: 'Second rains moisture elevates leaf rust incidence and berry borer beetle activity on ripening cherries.',
+      action: 'Strip-pick and destroy infested cherries. Apply copper hydroxide or systemic fungicide on rust lesions.',
     });
   }
 
-  // Late blight (tomato, potato): high humidity seasons
-  if ([2, 3, 9, 10].includes(month)) {
+  // 3. Late Blight & Bacterial Wilt (Tomato, Potato): damp wet soils (March–May and September–November)
+  if ([2, 3, 4, 8, 9, 10].includes(month) && (crop.includes('tomato') || crop.includes('potato') || crop === '')) {
     alerts.push({
-      id: 'late-blight',
+      id: 'tomato-late-blight',
       category: 'disease',
       severity: 'warning',
-      icon: '🍃',
-      title: 'Late Blight Alert',
-      body: 'Wet conditions increase late blight risk for tomatoes and potatoes.',
-      action: 'Apply copper-based fungicide weekly during heavy rain periods.',
+      icon: 'leaf',
+      title: 'Late Blight & Bacterial Wilt Warning',
+      body: 'Elevated ambient humidity and damp foliage accelerate Phytophthora blight spread in solanaceous crops.',
+      action: 'Maintain proper plant spacing for airflow. Apply preventive Mancozeb or metalaxyl before heavy rains.',
     });
   }
 
-  // Post-harvest storage risk: after harvest dry seasons
-  if ([5, 6, 11].includes(month)) {
+  // 4. Bean Anthracnose & Bean Fly: cotyledon seedling attack during planting months
+  if (([2, 3, 8, 9].includes(month)) && (crop.includes('bean') || crop.includes('legume') || crop === '')) {
     alerts.push({
-      id: 'storage-risk',
+      id: 'bean-anthracnose',
       category: 'disease',
-      severity: 'info',
-      icon: '🏚️',
-      title: 'Post-Harvest Storage Alert',
-      body: 'Maize must be dried to <13% moisture before storage to prevent aflatoxin.',
-      action: 'Use hermetic bags or metal silos. Check moisture with a meter.',
+      severity: 'warning',
+      icon: 'bug',
+      title: 'Bean Seedling Anthracnose & Stem Fly',
+      body: 'Damp seedbeds in early planting windows trigger fungal root rot and bean stem fly wilting.',
+      action: 'Use certified dressed seed (Thiamethoxam + Difenoconazole). Avoid cultivating bean fields while foliage is wet.',
     });
   }
 
-  // Cassava mosaic: year-round but note during dry2
-  if ([5, 6, 7, 8].includes(month) && (crop.includes('cassava') || crop === '')) {
+  // 5. Banana Bacterial Wilt (BXW) & Black Sigatoka: year-round vector transmission, high during pruning
+  if ([0, 1, 6, 7, 8, 9, 10].includes(month) && (crop.includes('banana') || crop.includes('matooke') || crop === '')) {
+    alerts.push({
+      id: 'banana-bxw',
+      category: 'disease',
+      severity: 'critical',
+      icon: 'shield-alert',
+      title: 'Banana Bacterial Wilt (BXW) Surveillance',
+      body: 'Insect vectors and unsterilized pruning knives spread Xanthomonas wilt rapidly between mats.',
+      action: 'De-bud male buds with a forked wooden stick. Disinfect machetes in Jik bleach (1:5 dilution) between plants.',
+    });
+  }
+
+  // 6. Cassava Brown Streak Disease (CBSD) & Mosaic (CMD): whitefly population shifts
+  if ([5, 6, 7, 8, 9].includes(month) && (crop.includes('cassava') || crop === '')) {
     alerts.push({
       id: 'cassava-mosaic',
       category: 'disease',
       severity: 'info',
-      icon: '🌿',
-      title: 'Cassava Mosaic Monitoring',
-      body: 'Dry season can stress cassava and increase mosaic virus susceptibility via whitefly.',
-      action: 'Use virus-free certified cuttings. Remove infected plants immediately.',
+      icon: 'sprout',
+      title: 'Cassava Brown Streak & Mosaic Monitoring',
+      body: 'Whitefly vector activity increases root constriction and necrotic rot in susceptible varieties.',
+      action: 'Rogue out and burn symptomatic yellow-mottled plants. Plant certified clean cuttings (e.g. NASE 14, NAROCAS 1).',
+    });
+  }
+
+  // 7. Post-Harvest Storage & Aflatoxin Risk: dry season storage months (June–August & December–February)
+  if ([0, 1, 5, 6, 7, 11].includes(month)) {
+    alerts.push({
+      id: 'storage-risk',
+      category: 'disease',
+      severity: 'info',
+      icon: 'shield-alert',
+      title: 'Post-Harvest Grain Storage Alert',
+      body: 'Stored maize, beans, and groundnuts risk greater grain borer and Aspergillus flavus aflatoxin contamination.',
+      action: 'Dry grain on clean tarpaulins to <13% moisture. Store in hermetic PICS bags without chemical dust.',
+    });
+  }
+
+  // 8. General fallback alert if crop has no specific condition
+  if (alerts.length === 0) {
+    alerts.push({
+      id: 'seasonal-scouting',
+      category: 'disease',
+      severity: 'info',
+      icon: 'leaf',
+      title: 'Seasonal Crop Scouting Window',
+      body: 'Regular morning field scouting is recommended to identify early foliar spots or stem borers before economic injury levels.',
+      action: 'Inspect 20 random plants across a W-pattern in each field twice weekly.',
     });
   }
 

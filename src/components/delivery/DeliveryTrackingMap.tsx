@@ -145,13 +145,11 @@ export function DeliveryTrackingMap({
       // Zoom in close when we have a real pin to show; stay wide/district-
       // level when all we have is a centroid, since anything closer would
       // just be zooming into empty space with false precision.
-      const initialZoom = pickup && (pickupIsExact || dropoffIsExact) ? 13 : 8;
-      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false }).setView(center, initialZoom);
+      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView(center, initialZoom);
       mapRef.current = map;
 
       const tile = L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
       tileLayerRef.current = tile;
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
 
       // A manual pan/drag (not a programmatic panTo from recenter()) means
       // the user wants to look somewhere else — stop auto-following until

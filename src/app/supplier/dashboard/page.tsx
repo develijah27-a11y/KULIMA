@@ -13,6 +13,7 @@ import { type VerificationLevel } from '@/lib/trust';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import { NewsWidget } from '@/components/news/NewsWidget';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
+import { DashboardWelcomeHero } from '@/components/layout/DashboardWelcomeHero';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -371,19 +372,20 @@ export default async function SupplierDashboardPage() {
 
       <BiometricSetupBanner />
 
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-            Welcome, {firstName}
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: C.muted }}>
-            Input Supplier Hub · {profile?.location ?? 'Uganda'}
-          </p>
-        </div>
-        <Link href="/supplier/catalogue" className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
-          + Add Product
-        </Link>
-      </div>
+      {/* Executive Welcome Hero */}
+      <DashboardWelcomeHero
+        name={firstName}
+        role="supplier"
+        location={profile?.location}
+        actionHref="/supplier/catalogue"
+        actionLabel="Add Product"
+        actionIcon={<Plus size={15} />}
+        secondaryAction={{
+          href: '/supplier/orders',
+          label: 'Pending Orders',
+          icon: <ShoppingCart size={14} className="text-amber-500" />,
+        }}
+      />
 
       <Suspense fallback={<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1,2,3,4].map(i => <div key={i} className="dash-skeleton h-28 rounded-xl" />)}</div>}>
         <SupplierStats profileId={profileId} userId={userId} />

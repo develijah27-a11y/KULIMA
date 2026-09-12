@@ -134,9 +134,10 @@
   --radius-pill: 99px;
 
   /* ── Typography — font faces self-hosted via next/font (see layout.tsx),
-     which injects --font-poppins/--font-inter/--font-dm-mono on <body> ── */
-  --font-display: var(--font-poppins), var(--font-inter), system-ui, sans-serif;
-  --font-body:    var(--font-poppins), var(--font-inter), system-ui, sans-serif;
+     which injects --font-poppins/--font-inter/--font-dm-mono on <html> and <body> ── */
+  --font-heading: var(--font-poppins), var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-poppins), var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body:    var(--font-inter), var(--font-poppins), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono:    var(--font-dm-mono), monospace;
 
   /* ── Backward-compat aliases (used by older components) ── */
@@ -272,7 +273,21 @@
   /* A bright white circle on a dark tinted tile reads as a glaring, washed-out
      blob — swap it for a soft translucent highlight instead, same idea as
      the glass surfaces used elsewhere in dark mode. */
-  --tile-icon-bg:  rgba(255, 255, 255, 0.10);
+}
+
+/* ── Global Typography & Element Defaults ── */
+html, body {
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1046,4 +1061,16 @@ input.auth-input:-webkit-autofill:active {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+/* ── Clean Map Styling: Remove Leaflet attributions, watermarks, and zoom clutter ── */
+.leaflet-control-attribution,
+.leaflet-control-zoom,
+.leaflet-top.leaflet-left .leaflet-control-zoom {
+  display: none !important;
+}
+
+.leaflet-container {
+  font-family: var(--font-body) !important;
+}
+
 

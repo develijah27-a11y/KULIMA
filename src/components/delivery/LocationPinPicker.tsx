@@ -55,7 +55,7 @@ export function LocationPinPicker({
 
     import('leaflet').then(L => {
       if (!mounted || !containerRef.current || mapRef.current) return;
-      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false }).setView([start.lat, start.lng], 14);
+      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView([start.lat, start.lng], 14);
       mapRef.current = map;
 
       const tile = L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS).addTo(map);

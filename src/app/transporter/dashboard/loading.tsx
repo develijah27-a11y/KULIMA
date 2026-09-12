@@ -1,14 +1,10 @@
+import { DashboardWelcomeHeroSkeleton } from '@/components/layout/DashboardWelcomeHeroSkeleton';
+
 export default function TransporterDashboardLoading() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto animate-pulse">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <div className="dash-skeleton h-6 w-52 rounded-md" />
-          <div className="dash-skeleton h-4 w-40 rounded-md" />
-        </div>
-        <div className="dash-skeleton h-9 w-28 rounded-xl" />
-      </div>
+      {/* Executive Welcome Header Skeleton */}
+      <DashboardWelcomeHeroSkeleton />
 
       {/* 4 Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

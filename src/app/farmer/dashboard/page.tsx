@@ -12,6 +12,7 @@ import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 import { NewsWidget } from '@/components/news/NewsWidget';
 import { getUnifiedMarketPrices } from '@/lib/prices';
+import { DashboardWelcomeHero } from '@/components/layout/DashboardWelcomeHero';
 import {
   Package, DollarSign, Home, Bell, CheckCircle2, Sprout,
   Sun, Moon, Cloud, CloudSun, CloudMoon, CloudRain, CloudLightning, Snowflake,
@@ -924,25 +925,20 @@ export default async function FarmerDashboardPage() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
 
-      {/* 0a · Welcome Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-            Welcome, {firstName}
-          </h1>
-          <p className="text-xs sm:text-sm mt-0.5" style={{ color: C.muted }}>
-            Farmer Dashboard · {profile?.location ?? 'Uganda'}
-          </p>
-        </div>
-        <Link
-          href="/farmer/marketplace/new"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white self-start sm:self-auto"
-          style={{ background: C.green, textDecoration: 'none' }}
-        >
-          <Pencil size={15} />
-          <span>New Crop Listing</span>
-        </Link>
-      </div>
+      {/* 0a · Executive Welcome Hero */}
+      <DashboardWelcomeHero
+        name={firstName}
+        role="farmer"
+        location={profile?.location}
+        actionHref="/farmer/marketplace/new"
+        actionLabel="New Crop Listing"
+        actionIcon={<Pencil size={15} />}
+        secondaryAction={farmsCount === 0 ? {
+          href: '/farmer/farm/new',
+          label: 'Register Farm',
+          icon: <Sprout size={14} className="text-emerald-600" />,
+        } : undefined}
+      />
 
       {/* 0. Top-Tier Farm Registration Reminder (Shown prominently when 0 farms are registered) */}
       {farmsCount === 0 && (

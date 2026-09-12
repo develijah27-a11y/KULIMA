@@ -53,13 +53,14 @@
    with no risk of fighting or breaking their own inline styling. */
 .dash-card-modern {
   border: 1px solid var(--color-border);
-  transition: box-shadow var(--transition-base), border-color var(--transition-base);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
 }
 a.dash-card-modern:hover,
 button.dash-card-modern:hover,
 .dash-card-interactive:hover {
   border-color: var(--color-border-strong);
   box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
 .dash-skeleton {

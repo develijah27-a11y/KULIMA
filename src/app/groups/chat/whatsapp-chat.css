@@ -224,6 +224,9 @@ body.wa-chat-active main {
   border-radius: 12px 12px 12px 2px;
   box-shadow: 0 1px 2.5px rgba(11, 20, 26, 0.12);
   border: 1px solid rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .dark .wa-bubble-incoming {
@@ -240,6 +243,9 @@ body.wa-chat-active main {
   border-radius: 12px 12px 2px 12px;
   box-shadow: 0 1px 2.5px rgba(11, 20, 26, 0.12);
   border: 1px solid rgba(18, 140, 126, 0.12);
+  box-sizing: border-box;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .dark .wa-bubble-outgoing {
@@ -298,17 +304,23 @@ body.wa-chat-active main {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Action hover pill on message */
+/* Action hover pill on message: ABSOLUTE position so it never occupies row width or collapses bubbles */
 .wa-action-trigger {
+  position: absolute;
+  top: -24px;
+  right: 8px;
+  z-index: 20;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.15s ease, transform 0.15s ease;
-  transform: scale(0.92);
+  transform: translateY(4px);
 }
 
 .wa-message-row:hover .wa-action-trigger,
 .wa-message-row:focus-within .wa-action-trigger {
   opacity: 1;
-  transform: scale(1);
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 /* Voice note waveform animation */

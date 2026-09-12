@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, MapPin, Calendar } from 'lucide-react';
+import { ChevronDown, MapPin, Calendar, Sun, Moon } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { OfflineStatusPill } from '@/components/ui/OfflineStatusPill';
 import { ROLE_META } from '@/components/layout/RoleSwitcher';
@@ -32,11 +32,24 @@ export function TopBar({
   const router = useRouter();
   const [roleOpen, setRoleOpen] = useState(false);
   const [addingRole, setAddingRole] = useState<string | null>(null);
-  const [dateString, setDateString] = useState('');
+  const [dateString, setDateString] = useState(() => {
+    try {
+      return new Date().toLocaleDateString('en-GB', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return '';
+    }
+  });
+  const [hour, setHour] = useState(() => new Date().getHours());
 
   useEffect(() => {
     try {
       const d = new Date();
+      setHour(d.getHours());
       setDateString(
         d.toLocaleDateString('en-GB', {
           weekday: 'short',
@@ -85,33 +98,48 @@ export function TopBar({
     <header
       className="sticky top-0 z-20 flex items-center justify-between shrink-0 glass-topbar"
       style={{
-        minHeight: '56px',
-        paddingTop: '6px',
-        paddingBottom: '6px',
+        minHeight: '58px',
+        paddingTop: '8px',
+        paddingBottom: '8px',
         paddingLeft: 'clamp(12px, 4vw, 24px)',
         paddingRight: 'clamp(12px, 4vw, 24px)',
       }}
     >
       {/* Welcome Greeting, Current Date & Location */}
       <div className="min-w-0 flex-1 mr-3">
-        <p
-          className="font-bold truncate"
-          style={{ fontSize: '13.5px', color: 'var(--color-text)', fontFamily: 'var(--font-body)', lineHeight: 1.25 }}
-        >
-          {greeting}
-        </p>
+        <div className="flex items-center gap-2">
+          <div
+            className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
+            style={{
+              background: hour >= 5 && hour < 17 ? 'rgba(245, 158, 11, 0.14)' : 'rgba(99, 102, 241, 0.15)',
+              color: hour >= 5 && hour < 17 ? '#F59E0B' : '#818CF8',
+            }}
+          >
+            {hour >= 5 && hour < 17 ? <Sun size={13} /> : <Moon size={13} />}
+          </div>
+          <p
+            className="font-bold truncate"
+            style={{ fontSize: '14px', color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 }}
+          >
+            {greeting}
+          </p>
+        </div>
 
-        <div className="flex items-center gap-2 text-[11px] mt-0.5 flex-wrap" style={{ color: 'var(--color-text-muted)', lineHeight: 1.2 }}>
+        <div className="flex items-center gap-2 text-[11px] mt-1 flex-wrap" style={{ color: 'var(--color-text-muted)', lineHeight: 1.2 }}>
           {dateString && (
-            <span className="flex items-center gap-1 shrink-0 font-medium">
-              <Calendar size={11} className="shrink-0" />
+            <span suppressHydrationWarning className="flex items-center gap-1 shrink-0 font-medium">
+              <Calendar size={11} className="shrink-0 text-sky-500" />
               {dateString}
             </span>
           )}
           {dateString && location && <span className="opacity-30">·</span>}
           {location && (
-            <span className="flex items-center gap-1 truncate font-medium">
-              <MapPin size={11} className="shrink-0" />
+            <span className="flex items-center gap-1.5 truncate font-medium">
+              <span className="relative flex h-1.5 w-1.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
+              <MapPin size={11} className="shrink-0 text-emerald-600" />
               {location}, Uganda
             </span>
           )}
@@ -120,6 +148,20 @@ export function TopBar({
 
       {/* Right actions */}
       <div className="flex items-center gap-2 shrink-0">
+        {currentMeta && (
+          <span
+            className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide"
+            style={{
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text)',
+            }}
+          >
+            <span style={{ display: 'inline-flex', alignItems: 'center' }}>{currentMeta.icon}</span>
+            <span className="capitalize">{currentMeta.label}</span>
+          </span>
+        )}
+
         <div className="hidden sm:block">
           <OfflineStatusPill />
         </div>

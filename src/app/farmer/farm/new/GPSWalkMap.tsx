@@ -87,34 +87,104 @@ export function GPSWalkMap({ onBoundaryChange, initialSizeHa }: Props) {
 
     clearMapLayers();
 
-    // Render small circle markers for corners
+    // Render draggable numbered circle handles for each boundary corner
     pts.forEach((pt, idx) => {
-      const circleMarker = L.circleMarker(pt, {
-        radius: 6,
-        color: '#16A34A',
-        fillColor: '#FFFFFF',
-        fillOpacity: 1,
-        weight: 2,
+      const cornerIcon = L.divIcon({
+        className: 'farm-corner-drag-handle',
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+        html: `
+          <div style="
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #16A34A;
+            border: 2.5px solid #FFFFFF;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.15s ease;
+          " title="Drag to reshape or resize boundary">
+            <span style="font-size: 11px; font-weight: 800; color: #FFFFFF; pointer-events: none;">${idx + 1}</span>
+          </div>
+        `,
+      });
+
+      const marker = L.marker(pt, {
+        draggable: true,
+        icon: cornerIcon,
+        zIndexOffset: 1000 + idx,
       }).addTo(map);
-      circleMarker.bindTooltip(`Corner ${idx + 1}`, { permanent: false, direction: 'top' });
-      pointMarkersRef.current.push(circleMarker as any);
+
+      // Realtime live boundary update while dragging
+      marker.on('drag', (e: any) => {
+        const newPos = e.target.getLatLng();
+        pts[idx] = [
+          Number(newPos.lat.toFixed(6)),
+          Number(newPos.lng.toFixed(6)),
+        ];
+        pointsRef.current = [...pts];
+
+        if (polygonLayerRef.current) {
+          polygonLayerRef.current.setLatLngs(pts);
+        } else if (polylineLayerRef.current) {
+          polylineLayerRef.current.setLatLngs(pts);
+        }
+
+        if (pts.length >= 3) {
+          const liveHa = computeAreaHa(pts);
+          setAreaHa(liveHa);
+          setStatus(`Reshaping corner ${idx + 1} · Live area: ${liveHa.toFixed(2)} ha (${(liveHa * 2.471).toFixed(2)} ac)`);
+        }
+      });
+
+      // Commit boundary upon releasing drag handle
+      marker.on('dragend', () => {
+        setPoints([...pts]);
+        if (pts.length >= 3) {
+          const finalHa = computeAreaHa(pts);
+          setAreaHa(finalHa);
+          setStatus(`Boundary updated: ${pts.length} corners (${finalHa.toFixed(2)} ha · ${(finalHa * 2.471).toFixed(2)} ac)`);
+          onBoundaryChange([...pts], finalHa);
+        }
+      });
+
+      // Tap corner marker to delete if user has > 3 corners
+      marker.on('dblclick', (e: any) => {
+        L.DomEvent.stopPropagation(e);
+        if (pts.length > 3) {
+          const next = pts.filter((_, i) => i !== idx);
+          pointsRef.current = next;
+          setPoints(next);
+          renderShapes(next);
+          const ha = computeAreaHa(next);
+          setAreaHa(ha);
+          setStatus(`Corner ${idx + 1} removed · ${next.length} corners remaining`);
+          onBoundaryChange(next, ha);
+        }
+      });
+
+      pointMarkersRef.current.push(marker);
     });
 
     if (pts.length >= 3) {
       polygonLayerRef.current = L.polygon(pts, {
         color: '#16A34A',
         fillColor: '#22C55E',
-        fillOpacity: 0.28,
-        weight: 2.5,
+        fillOpacity: 0.32,
+        weight: 3,
       }).addTo(map);
     } else if (pts.length === 2) {
       polylineLayerRef.current = L.polyline(pts, {
         color: '#16A34A',
-        weight: 2.5,
+        weight: 3,
         dashArray: '6 4',
       }).addTo(map);
     }
-  }, [clearMapLayers]);
+  }, [clearMapLayers, onBoundaryChange]);
 
   // Initialize Leaflet Map
   useEffect(() => {
@@ -132,8 +202,12 @@ export function GPSWalkMap({ onBoundaryChange, initialSizeHa }: Props) {
         shadowUrl: '/leaflet/images/marker-shadow.png',
       });
 
-      // Default centered on Uganda
-      const map = L.map(containerRef.current!, { zoomControl: true }).setView([1.3733, 32.2903], 12);
+      // Clean satellite map without +/- zoom buttons, without attribution text, and without scroll wheel zoom hijacking
+      const map = L.map(containerRef.current!, {
+        zoomControl: false,
+        scrollWheelZoom: false,
+        attributionControl: false,
+      }).setView([1.3733, 32.2903], 12);
       mapRef.current = map;
 
       L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
@@ -151,7 +225,7 @@ export function GPSWalkMap({ onBoundaryChange, initialSizeHa }: Props) {
         );
       }
 
-      // Map click handler: allows thumb/finger tapping corners directly on map
+      // Map click handler: allows thumb/finger tapping corners directly on map to create irregular boundaries
       map.on('click', (e: any) => {
         const newPt: [number, number] = [
           Number(e.latlng.lat.toFixed(6)),
@@ -165,7 +239,7 @@ export function GPSWalkMap({ onBoundaryChange, initialSizeHa }: Props) {
         if (next.length >= 3) {
           const ha = computeAreaHa(next);
           setAreaHa(ha);
-          setStatus(`Boundary plotted: ${next.length} corners (${ha.toFixed(2)} ha)`);
+          setStatus(`Boundary plotted: ${next.length} corners (${ha.toFixed(2)} ha · ${(ha * 2.471).toFixed(2)} ac)`);
           onBoundaryChange(next, ha);
         } else {
           setAreaHa(0);
@@ -408,7 +482,7 @@ export function GPSWalkMap({ onBoundaryChange, initialSizeHa }: Props) {
               gap: 4,
             }}
           >
-            <Check size={13} /> {areaHa.toFixed(2)} ha
+            <Check size={13} /> {areaHa.toFixed(2)} ha · {(areaHa * 2.471).toFixed(2)} ac
           </span>
         )}
       </div>
@@ -429,7 +503,7 @@ export function GPSWalkMap({ onBoundaryChange, initialSizeHa }: Props) {
       <div
         ref={containerRef}
         style={{
-          height: 320,
+          height: 340,
           borderRadius: 12,
           overflow: 'hidden',
           border: '1px solid var(--d-border)',
@@ -438,7 +512,7 @@ export function GPSWalkMap({ onBoundaryChange, initialSizeHa }: Props) {
       />
 
       <p style={{ fontSize: 11.5, color: 'var(--d-muted)', marginTop: 8, lineHeight: 1.5 }}>
-        Tap corners on the map with your thumb to outline your field, or tap <strong>Use Device GPS</strong> to acquire your location and estimate boundaries. Zero walking required.
+        <strong>Drag any corner handle (1, 2, 3…)</strong> to resize or reshape irregular farm boundaries to match your exact plot. Tap anywhere on the map to add extra corners, or tap <strong>Use Device GPS</strong> to acquire your location.
       </p>
     </div>
   );

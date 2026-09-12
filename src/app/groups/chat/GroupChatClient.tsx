@@ -1510,7 +1510,9 @@ export function GroupChatClient({
                     {/* Bubble Content Container */}
                     <div
                       style={{
-                        maxWidth: '82%',
+                        maxWidth: 'min(82%, 560px)',
+                        minWidth: 80,
+                        width: 'fit-content',
                         position: 'relative',
                         display: 'flex',
                         flexDirection: 'column',
@@ -1823,6 +1825,7 @@ export function GroupChatClient({
                               margin: 0,
                               whiteSpace: 'pre-wrap',
                               wordBreak: 'break-word',
+                              overflowWrap: 'anywhere',
                             }}
                           >
                             {parsedPayload?.text || msg.body}
@@ -1836,9 +1839,9 @@ export function GroupChatClient({
                             justifyContent: 'flex-end',
                             alignItems: 'center',
                             gap: 3.5,
-                            marginTop: 2,
-                            marginLeft: 14,
-                            float: 'right',
+                            marginTop: 4,
+                            marginLeft: 'auto',
+                            alignSelf: 'flex-end',
                           }}
                         >
                           <span

@@ -75,13 +75,10 @@ export function NotificationBell({ initialUnreadCount = 0, currentRole }: Notifi
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [loaded, setLoaded] = useState(false);
 
-  // Ask for browser notification permission + subscribe to realtime inserts
+  // Subscribe to realtime inserts for notifications (permission is requested only upon user action)
   useEffect(() => {
-    requestBrowserNotificationPermission();
-    // If permission was already granted in a past session, this resolves
-    // immediately; if it was just granted above, give the browser a tick
-    // to settle before subscribing.
-    setTimeout(ensurePushSubscription, 300);
+    // Check if push subscription is already active in background
+    setTimeout(ensurePushSubscription, 500);
 
     const supabase = createClient();
     let userId: string | null = null;

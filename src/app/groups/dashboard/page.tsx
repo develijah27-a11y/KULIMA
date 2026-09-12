@@ -11,6 +11,7 @@ import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
+import { DashboardWelcomeHero } from '@/components/layout/DashboardWelcomeHero';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -535,17 +536,20 @@ export default async function GroupsDashboardPage() {
 
       <BiometricSetupBanner />
 
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-            Welcome, {firstName}
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: C.muted }}>Farmer Group Hub · {profile?.location ?? 'Uganda'}</p>
-        </div>
-        <Link href="/groups/members/add" className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: C.greenMed, textDecoration: 'none' }}>
-          + Add Member
-        </Link>
-      </div>
+      {/* Executive Welcome Hero */}
+      <DashboardWelcomeHero
+        name={firstName}
+        role="groups"
+        location={profile?.location}
+        actionHref="/groups/members/add"
+        actionLabel="Add Member"
+        actionIcon={<UserPlus size={15} />}
+        secondaryAction={{
+          href: '/groups/listings/new',
+          label: 'Group Listing',
+          icon: <Package size={14} className="text-emerald-600" />,
+        }}
+      />
 
       <Suspense fallback={<GroupStatsSkeleton />}>
         <GroupStats userId={userId} />
