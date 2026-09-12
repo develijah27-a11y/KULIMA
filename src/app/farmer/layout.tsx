@@ -11,6 +11,7 @@ import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { DashboardFab } from '@/components/layout/DashboardFab';
 import { logSystemEvent } from '@/lib/system-log';
+import { getTimeGreeting } from '@/lib/greeting';
 
 const FARMER_NAV = [
   { href: '/farmer/dashboard',   icon: 'dashboard',    label: 'Dashboard' },
@@ -91,9 +92,8 @@ export default async function FarmerLayout({ children }: { children: React.React
     .eq('farmer_id', (profileRes.data as any).id)
     .eq('status', 'notified');
 
-  const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'there';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
+  const greeting = getTimeGreeting(first);
 
   const navWithBadge = FARMER_NAV.map(item => {
     if (item.href === '/farmer/notifications' && unreadCount > 0) return { ...item, badge: unreadCount };

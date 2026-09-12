@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, MapPin, Calendar, Sun, Moon } from 'lucide-react';
+import { ChevronDown, MapPin, Calendar } from 'lucide-react';
+import { getTimeGreeting } from '@/lib/greeting';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { OfflineStatusPill } from '@/components/ui/OfflineStatusPill';
 import { ROLE_META } from '@/components/layout/RoleSwitcher';
@@ -34,35 +35,36 @@ export function TopBar({
   const [addingRole, setAddingRole] = useState<string | null>(null);
   const [dateString, setDateString] = useState(() => {
     try {
-      return new Date().toLocaleDateString('en-GB', {
+      return new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Africa/Kampala',
         weekday: 'short',
         day: 'numeric',
         month: 'short',
         year: 'numeric',
-      });
+      }).format(new Date());
     } catch {
       return '';
     }
   });
-  const [hour, setHour] = useState(() => new Date().getHours());
-  const [displayGreeting, setDisplayGreeting] = useState(greeting);
+  const [displayGreeting, setDisplayGreeting] = useState(() => {
+    const name = greeting.includes(',') ? greeting.split(',').slice(1).join(',').trim() : '';
+    return getTimeGreeting(name);
+  });
 
   useEffect(() => {
     try {
       const d = new Date();
-      const h = d.getHours();
-      setHour(h);
       setDateString(
-        d.toLocaleDateString('en-GB', {
+        new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Africa/Kampala',
           weekday: 'short',
           day: 'numeric',
           month: 'short',
           year: 'numeric',
-        })
+        }).format(d)
       );
       const name = greeting.includes(',') ? greeting.split(',').slice(1).join(',').trim() : '';
-      const timeGreeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-      setDisplayGreeting(name ? `${timeGreeting}, ${name}` : timeGreeting);
+      setDisplayGreeting(getTimeGreeting(name));
     } catch {}
   }, [greeting]);
 
@@ -112,19 +114,10 @@ export function TopBar({
     >
       {/* Welcome Greeting, Current Date & Location */}
       <div className="min-w-0 flex-1 mr-3">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center shrink-0"
-            style={{
-              background: hour >= 5 && hour < 17 ? 'rgba(245, 158, 11, 0.14)' : 'rgba(99, 102, 241, 0.15)',
-              color: hour >= 5 && hour < 17 ? '#F59E0B' : '#818CF8',
-            }}
-          >
-            {hour >= 5 && hour < 17 ? <Sun size={13} /> : <Moon size={13} />}
-          </div>
+        <div>
           <p
             className="font-bold truncate"
-            style={{ fontSize: '14px', color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 }}
+            style={{ fontSize: '15px', color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 }}
           >
             {displayGreeting}
           </p>

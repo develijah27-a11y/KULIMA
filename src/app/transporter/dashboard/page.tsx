@@ -515,7 +515,7 @@ export default async function TransporterDashboard() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-            Good to go, {firstName}
+            Welcome back, {firstName}
           </h1>
           <p className="text-sm mt-0.5" style={{ color: C.muted }}>Driver Hub · {profile?.location ?? 'Uganda'}</p>
         </div>

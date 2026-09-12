@@ -29,9 +29,9 @@ import { Wordmark } from "@/components/ui/Wordmark";
 // (a rural-3G proxy) showed first paint not happening until ~32s;
 // preload:false stops the eager fetch, the font still loads normally
 // (and instantly, same-origin) once a page that actually uses it renders.
-const poppins   = Poppins({ subsets: ["latin"], weight: ["400","600","700"], variable: "--font-poppins", display: "swap" });
-const inter     = Inter({ subsets: ["latin"], weight: ["400","500","600","700"], variable: "--font-inter", display: "swap" });
-const dmMono    = DM_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-mono", display: "swap" });
+const poppins   = Poppins({ subsets: ["latin"], weight: ["400","600","700"], variable: "--font-poppins", display: "swap", preload: false });
+const inter     = Inter({ subsets: ["latin"], weight: ["400","500","600","700"], variable: "--font-inter", display: "swap", preload: false });
+const dmMono    = DM_Mono({ subsets: ["latin"], weight: ["400"], variable: "--font-dm-mono", display: "swap", preload: false });
 const oswald    = Oswald({ subsets: ["latin"], weight: ["600","700"], variable: "--font-oswald", display: "swap" });
 const plexSans  = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400","600"], variable: "--font-plex-sans", display: "swap" });
 const plexMono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400","500"], variable: "--font-plex-mono", display: "swap" });

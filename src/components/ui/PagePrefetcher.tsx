@@ -212,11 +212,11 @@ export function PagePrefetcher() {
   }, [router]);
 
   useEffect(() => {
-    // Skip on explicit data-saver mode
+    // Skip on explicit data-saver mode or slow 2G/3G constrained connections
     const conn = (navigator as Navigator & {
       connection?: { saveData?: boolean; effectiveType?: string };
     }).connection;
-    if (conn?.saveData || conn?.effectiveType === 'slow-2g') return;
+    if (conn?.saveData || conn?.effectiveType === 'slow-2g' || conn?.effectiveType === '2g') return;
 
     const currentRole = detectRole(pathname);
 

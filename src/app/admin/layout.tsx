@@ -10,6 +10,7 @@ import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { logSystemEvent } from '@/lib/system-log';
 import { isCulpritAdminName } from '@/lib/admin-guard';
+import { getTimeGreeting } from '@/lib/greeting';
 
 const ADMIN_NAV = [
   { href: '/admin/dashboard',    icon: 'dashboard',    label: 'Overview' },
@@ -85,9 +86,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     unreadCount = count ?? 0;
   }
 
-  const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'Admin';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
+  const greeting = getTimeGreeting(first);
 
   const navWithBadge = ADMIN_NAV.map(item =>
     item.href === '/admin/notifications' && unreadCount > 0 ? { ...item, badge: unreadCount } : item,

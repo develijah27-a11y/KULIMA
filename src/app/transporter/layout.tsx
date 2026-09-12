@@ -12,6 +12,7 @@ import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { DashboardFab } from '@/components/layout/DashboardFab';
 import { logSystemEvent } from '@/lib/system-log';
 import { DriverPresenceBroadcaster } from '@/components/transporter/DriverPresenceBroadcaster';
+import { getTimeGreeting } from '@/lib/greeting';
 
 const TRANSPORTER_NAV = [
   { href: '/transporter/dashboard',  icon: 'dashboard',    label: 'Dashboard' },
@@ -65,9 +66,8 @@ export default async function TransporterLayout({ children }: { children: React.
     redirect('/onboarding/role');
   }
 
-  const h = new Date().getHours();
   const first = profile?.name.split(' ')[0] ?? 'there';
-  const greeting = `${h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'}, ${first}`;
+  const greeting = getTimeGreeting(first);
 
   const navWithBadge = TRANSPORTER_NAV.map(item =>
     item.href === '/transporter/notifications' && unreadCount > 0
