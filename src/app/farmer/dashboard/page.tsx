@@ -808,11 +808,23 @@ async function NearbyDriversWidget({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
   return (
     <Card>
-      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
-          Drivers Near You
-        </p>
-        <Link href="/farmer/deliveries/new" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Request delivery →</Link>
+      <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <div>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+            Drivers Near You
+          </p>
+          <p className="text-xs" style={{ color: C.muted, margin: '2px 0 0' }}>
+            Book a vehicle or truck to transport your harvest directly from your farm.
+          </p>
+        </div>
+        <Link
+          href="/farmer/deliveries/new"
+          prefetch={true}
+          className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-lg whitespace-nowrap self-start sm:self-auto transition-colors"
+          style={{ background: 'var(--color-primary)', color: '#fff', textDecoration: 'none' }}
+        >
+          <Truck size={14} /> Request Delivery →
+        </Link>
       </div>
       <div style={{ height: 280, padding: 12 }}>
         <NearbyDriversMap userDistrict={profile?.location} height="100%" />
@@ -828,9 +840,10 @@ function QuickActions() {
     { label: 'Register Farm',  href: '/farmer/farm/new',         icon: <Sprout size={20} />,        bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
     { label: 'Farm Records',   href: '/farmer/farm',             icon: <ClipboardList size={20} />, bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
     { label: 'Sell Produce',   href: '/farmer/marketplace/new',  icon: <Pencil size={20} />,        bg: 'var(--color-primary-bg)',  color: 'var(--color-primary)' },
-    { label: 'Check Weather',  href: '/farmer/weather',          icon: <Cloud size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
+    { label: 'Request Driver', href: '/farmer/deliveries/new',   icon: <Truck size={20} />,         bg: 'var(--color-harvest-bg)',  color: 'var(--color-harvest)' },
+    { label: 'Check Weather',  href: '/farmer/weather',          icon: <Cloud size={20} />,         bg: 'var(--color-sky-bg)',      color: 'var(--color-sky)' },
     { label: 'Crop Doctor',    href: '/farmer/doctor',           icon: <Search size={20} />,        bg: 'var(--color-warning-bg)',  color: 'var(--color-warning)' },
-    { label: 'My Deliveries',  href: '/farmer/deliveries',        icon: <Truck size={20} />,         bg: 'var(--color-purple-bg)',   color: 'var(--color-purple)' },
+    { label: 'My Deliveries',  href: '/farmer/deliveries',        icon: <ClipboardList size={20} />, bg: 'var(--color-purple-bg)',   color: 'var(--color-purple)' },
   ];
 
   return (

@@ -299,9 +299,18 @@ async function NearbyDriversWidget({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
   return (
     <Card>
-      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Drivers Near You</p>
-        <Link href="/offtaker/deliveries/new" className="text-xs font-semibold" style={{ color: C.greenMed }}>Book delivery →</Link>
+      <div className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ borderBottom: `1px solid ${C.border}` }}>
+        <div>
+          <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Drivers Near You</p>
+          <p className="text-xs" style={{ color: C.muted, margin: '2px 0 0' }}>Arrange large-scale haulage directly from farm hubs to your processing facility.</p>
+        </div>
+        <Link
+          href="/offtaker/deliveries/new"
+          className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-lg whitespace-nowrap self-start sm:self-auto transition-colors"
+          style={{ background: C.green, color: '#fff', textDecoration: 'none' }}
+        >
+          <Truck size={14} /> Request Delivery →
+        </Link>
       </div>
       <div style={{ height: 280, padding: 12 }}>
         <NearbyDriversMap userDistrict={profile?.location} height="100%" />
