@@ -233,25 +233,22 @@ async function WeatherCard({ userId }: { userId: string }) {
 async function QuickStats({ userId }: { userId: string }) {
   const supabase = await createClient();
   const profile = await getProfile(userId);
-  const primaryCrop = profile?.primary_crop ?? 'maize';
+  const primaryCrop = (profile?.primary_crop ?? 'maize').toLowerCase();
 
-  const [listingsRes, priceRes, alertCount] = await Promise.all([
+  const [listingsRes, marketData, alertCount] = await Promise.all([
     (supabase.from as any)('listings')
       .select('id', { count: 'exact', head: true })
       .eq('farmer_id', profile?.id)
       .eq('status', 'active'),
-    supabase.from('market_prices').select('price_per_kg')
-      .ilike('crop_type', `%${primaryCrop}%`)
-      .order('recorded_at', { ascending: false }).limit(2),
+    getUnifiedMarketPrices({ crop: primaryCrop, district: profile?.location }),
     (supabase.from as any)('notifications')
       .select('id', { count: 'exact', head: true })
       .eq('read', false),
   ]);
 
-  const priceData = priceRes.data ?? [];
-  const latestPrice = priceData[0]?.price_per_kg;
-  const prevPrice = priceData[1]?.price_per_kg;
-  const priceTrend = latestPrice && prevPrice ? ((latestPrice - prevPrice) / prevPrice * 100) : null;
+  const latestPrice = marketData.averages[primaryCrop] || marketData.prices[0]?.price_per_kg || null;
+  const trendInfo = marketData.dailyTrends[primaryCrop];
+  const priceTrend = trendInfo ? trendInfo.changePercent : null;
   const hasAlerts = !!(alertCount.count);
 
   const stats = [
@@ -267,7 +264,7 @@ async function QuickStats({ userId }: { userId: string }) {
     {
       label: `${primaryCrop.charAt(0).toUpperCase() + primaryCrop.slice(1)} Price`,
       value: latestPrice ? `UGX ${Math.round(latestPrice).toLocaleString()}` : '—',
-      sub: priceTrend !== null ? `${priceTrend >= 0 ? '↑' : '↓'} ${Math.abs(priceTrend).toFixed(1)}% today` : 'per kg',
+      sub: priceTrend !== null ? `${priceTrend >= 0 ? '↑' : '↓'} ${Math.abs(priceTrend).toFixed(1)}% today` : 'per kg (market rate)',
       icon: <DollarSign size={18} />,
       color: priceTrend !== null && priceTrend < 0 ? C.red : C.amber,
       bg: priceTrend !== null && priceTrend < 0 ? 'var(--color-danger-bg)' : 'var(--color-harvest-bg)',
@@ -950,9 +947,6 @@ export default async function FarmerDashboardPage() {
         name={firstName}
         role="farmer"
         location={profile?.location}
-        actionHref="/farmer/marketplace/new"
-        actionLabel="New Crop Listing"
-        actionIcon={<Pencil size={15} />}
         secondaryAction={farmsCount === 0 ? {
           href: '/farmer/farm/new',
           label: 'Register Farm',

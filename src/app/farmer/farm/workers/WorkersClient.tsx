@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 import { Briefcase, HardHat, Droplets, FlaskConical, Leaf, Truck, ShieldCheck, Package, User, Phone, Banknote, Check, X } from 'lucide-react';
@@ -297,7 +297,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
 
             <div>
               <label style={labelStyle}>Full Name *</label>
@@ -306,13 +306,7 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
             </div>
 
             <div>
-              <label style={labelStyle}>Phone Number</label>
-              <input value={form.phone} onChange={e => setF('phone', e.target.value)}
-                placeholder="e.g. 0772000000" type="tel" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Role *</label>
+              <label style={labelStyle}>Worker Role *</label>
               <select value={form.role} onChange={e => setF('role', e.target.value)} style={inputStyle} required>
                 {WORKER_ROLES.map(r => (
                   <option key={r.value} value={r.value}>{r.label}</option>
@@ -320,39 +314,44 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
               </select>
             </div>
 
-            {farms.length > 0 && (
+            <div>
+              <label style={labelStyle}>Phone Number</label>
+              <input value={form.phone} onChange={e => setF('phone', e.target.value)}
+                placeholder="e.g. 0772 000 000" type="tel" style={inputStyle} />
+            </div>
+
+            {farms.length > 0 ? (
               <div>
-                <label style={labelStyle}>Assign to Farm</label>
+                <label style={labelStyle}>Assigned Farm</label>
                 <select value={form.farm_id} onChange={e => setF('farm_id', e.target.value)} style={inputStyle}>
-                  <option value="">— All Farms —</option>
+                  <option value="">— All Farms / Plots —</option>
                   {farms.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>
+              </div>
+            ) : (
+              <div>
+                <label style={labelStyle}>Assigned Farm</label>
+                <input value="Main Farm" disabled style={{ ...inputStyle, opacity: 0.7, cursor: 'not-allowed' }} />
               </div>
             )}
 
             <div>
-              <label style={labelStyle}>Wage (UGX)</label>
+              <label style={labelStyle}>Wage Amount (UGX)</label>
               <input value={form.wage_ugx} onChange={e => setF('wage_ugx', e.target.value)}
-                type="number" min="0" placeholder="e.g. 15000" style={inputStyle} />
+                type="number" min="0" placeholder="e.g. 15,000" style={inputStyle} />
             </div>
 
             <div>
-              <label style={labelStyle}>Wage Period</label>
+              <label style={labelStyle}>Wage Frequency</label>
               <select value={form.wage_period} onChange={e => setF('wage_period', e.target.value)} style={inputStyle}>
                 {WAGE_PERIODS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
               </select>
             </div>
 
-            <div>
-              <label style={labelStyle}>Start Date</label>
-              <input value={form.start_date} onChange={e => setF('start_date', e.target.value)}
-                type="date" style={inputStyle} />
-            </div>
-
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={labelStyle}>Notes</label>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Notes / Farm Tasks Memo <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span></label>
               <input value={form.notes} onChange={e => setF('notes', e.target.value)}
-                placeholder="Any additional details…" style={inputStyle} />
+                placeholder="e.g. In charge of harvesting coffee blocks A and B" style={inputStyle} />
             </div>
 
           </div>
@@ -441,21 +440,25 @@ export function WorkersClient({ initialWorkers, farms }: Props) {
                     )}
                   </div>
 
-                  <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 6 }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8, alignItems: 'center' }}>
                     {w.phone && (
-                      <p style={{ fontSize: 12, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={11} />{w.phone}</p>
+                      <span style={{ fontSize: 12, color: C.text, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, background: 'var(--color-surface-2)', fontWeight: 600 }}>
+                        <Phone size={12} style={{ color: C.green }} /> {w.phone}
+                      </span>
                     )}
                     {w.farms?.name && (
-                      <p style={{ fontSize: 12, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}><Leaf size={11} />{w.farms.name}</p>
+                      <span style={{ fontSize: 12, color: C.text, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, background: 'var(--color-surface-2)', fontWeight: 600 }}>
+                        <Leaf size={12} style={{ color: C.green }} /> {w.farms.name}
+                      </span>
                     )}
                     {w.wage_ugx && (
-                      <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
-                        <Banknote size={11} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />UGX {Number(w.wage_ugx).toLocaleString()} / {w.wage_period === 'daily' ? 'day' : w.wage_period === 'monthly' ? 'month' : 'season'}
-                      </p>
+                      <span style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 8, background: 'var(--color-harvest-bg)', color: 'var(--color-harvest)', fontWeight: 700 }}>
+                        <Banknote size={12} /> UGX {Number(w.wage_ugx).toLocaleString()} / {w.wage_period === 'daily' ? 'day' : w.wage_period === 'monthly' ? 'month' : 'season'}
+                      </span>
                     )}
-                    <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>
-                      Since {new Date(w.start_date).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </p>
+                    <span style={{ fontSize: 11.5, color: C.muted, display: 'inline-flex', alignItems: 'center', padding: '4px 6px' }}>
+                      Started {new Date(w.start_date).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
                   </div>
 
                   {w.tasks && w.tasks.length > 0 && (

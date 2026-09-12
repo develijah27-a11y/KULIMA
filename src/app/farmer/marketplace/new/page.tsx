@@ -1,8 +1,9 @@
-﻿import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { CreateListingForm } from './CreateListingForm';
 import { ShieldCheck } from 'lucide-react';
+import { getUnifiedMarketPrices } from '@/lib/prices';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -14,19 +15,18 @@ export default async function NewListingPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
-  const [profileRes, pricesRes] = await Promise.all([
-    supabase.from('profiles').select('location, primary_crop').eq('user_id', user.id).single(),
-    supabase.from('market_prices').select('crop_type, price_per_kg').order('recorded_at', { ascending: false }).limit(30),
-  ]);
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('location, primary_crop')
+    .eq('user_id', user.id)
+    .single();
 
-  const profile = profileRes.data;
-  const prices  = pricesRes.data ?? [];
-
-  // Get latest price per crop
-  const priceMap: Record<string, number> = {};
-  prices.forEach((p: any) => {
-    if (!priceMap[p.crop_type]) priceMap[p.crop_type] = p.price_per_kg;
-  });
+  const unifiedPrices = await getUnifiedMarketPrices({ district: profile?.location ?? undefined });
+  const priceMap: Record<string, number> = { ...unifiedPrices.averages };
+  for (const p of unifiedPrices.prices) {
+    const k = p.crop_type.toLowerCase();
+    if (!priceMap[k]) priceMap[k] = p.price_per_kg;
+  }
 
   return (
     <div className="max-w-xl mx-auto space-y-5">

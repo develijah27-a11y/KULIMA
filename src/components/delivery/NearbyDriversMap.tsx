@@ -30,7 +30,7 @@ interface Props {
 // polls /api/vehicles/nearby to place a marker per currently-available,
 // recently-active vehicle. Distinct from DeliveryTrackingMap, which only
 // tracks one already-matched driver on an already-created delivery.
-export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }: Props) {
+export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 20_000 }: Props) {
   // Collapsed by default — this card sits on 5 different dashboards, so
   // mounting it used to mean every single dashboard visit silently started
   // continuous GPS tracking (watchPosition), a full Leaflet map, and an

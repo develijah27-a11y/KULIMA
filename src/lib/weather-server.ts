@@ -176,32 +176,53 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
       });
     }
 
-    // Determine accurate upcoming rain notice for the next 24 hours
-    let rainNotice = { expected: false, summary: 'No rain expected today', label: 'Good for fieldwork', time: '', mm: 0 };
+    // Determine accurate upcoming rain notice for the day
+    const todayRainProb = daily[0]?.precipProbability ?? 0;
+    const todayPrecipMm = daily[0]?.precipMm ?? 0;
     const nowMs = Date.now() - 15 * 60000;
     const upcomingRain = forecast.find(f => {
       const t = new Date(f.dt_txt).getTime();
-      return t >= nowMs && ((f.rain?.['3h'] ?? 0) >= 0.2 || (f.pop ?? 0) >= 0.45);
+      return t >= nowMs && ((f.rain?.['3h'] ?? 0) >= 0.2 || (f.pop ?? 0) >= 0.35);
     });
 
-    if (upcomingRain) {
-      const dt = new Date(upcomingRain.dt_txt);
-      const timeStr = dt.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Kampala' });
-      const mm = upcomingRain.rain?.['3h'] ?? 0;
-      const prob = Math.round((upcomingRain.pop ?? 0) * 100);
+    let rainNotice = { expected: false, summary: 'No rain expected today', label: 'Clear for fieldwork', time: '', mm: 0 };
+    if (todayRainProb >= 40 || todayPrecipMm >= 0.5 || upcomingRain || (c.precipitation && c.precipitation > 0)) {
+      const displayProb = Math.max(todayRainProb, upcomingRain ? Math.round((upcomingRain.pop ?? 0) * 100) : 0);
+      let timeStr = '';
+      if (upcomingRain) {
+        const dt = new Date(upcomingRain.dt_txt);
+        timeStr = dt.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Kampala' });
+      }
+
+      const isRainingNow = (c.precipitation && c.precipitation > 0) || (c.weather_code >= 51 && c.weather_code <= 99);
+      const summaryText = isRainingNow
+        ? 'Rain active in the area'
+        : timeStr
+        ? `Rain expected around ${timeStr}`
+        : 'High chance of rain today';
+
+      const mmVal = todayPrecipMm > 0 ? todayPrecipMm : (upcomingRain?.rain?.['3h'] ?? 0);
+
       rainNotice = {
         expected: true,
-        summary: `Rain likely around ${timeStr}`,
-        label: mm > 0 ? `${mm.toFixed(1)}mm expected (${prob}% chance)` : `${prob}% chance of rain`,
+        summary: summaryText,
+        label: mmVal > 0 ? `~${mmVal.toFixed(1)}mm expected (${displayProb}% chance)` : `${displayProb}% chance of rain`,
         time: timeStr,
-        mm,
+        mm: mmVal,
       };
     }
 
+    // Calibrated temperature: daytime tropical heat index / apparent temperature reflects real feels
+    const apparentTemp = Math.round(c.apparent_temperature ?? c.temperature_2m);
+    const measuredTemp = Math.round(c.temperature_2m);
+    const displayTemp = isDay && apparentTemp > measuredTemp
+      ? Math.round((apparentTemp * 0.7) + (measuredTemp * 0.3)) // calibrated real-feel daytime temp
+      : measuredTemp;
+
     return {
       now: {
-        temp: Math.round(c.temperature_2m),
-        feelsLike: Math.round(c.apparent_temperature),
+        temp: displayTemp,
+        feelsLike: apparentTemp,
         description: nowDesc,
         icon: nowIcon,
         humidity: c.relative_humidity_2m,
@@ -274,7 +295,7 @@ async function fetchOpenWeatherMap(lat: number, lon: number, apiKey: string): Pr
 
 function ugandaFallbackWeather(district = 'Kampala'): ServerWeatherData {
   const month = new Date().getMonth();
-  const rainyMonths = [2, 3, 4, 9, 10];
+  const rainyMonths = [2, 3, 4, 8, 9, 10]; // March, April, May, September, October, November
   const isRainy = rainyMonths.includes(month);
 
   const daily: DailyForecast[] = Array.from({ length: 14 }, (_, i) => {
@@ -284,12 +305,12 @@ function ugandaFallbackWeather(district = 'Kampala'): ServerWeatherData {
     return {
       date: dt.toISOString().split('T')[0],
       dayLabel: dt.toLocaleDateString('en-UG', { weekday: 'short', day: 'numeric', month: 'short' }),
-      high: rain ? 25 : 29,
-      low: 18,
+      high: rain ? 26 : 29,
+      low: 19,
       icon: rain ? '10d' : '02d',
-      description: rain ? 'Light rain' : 'Partly cloudy',
-      precipMm: rain ? 8.4 : 0.5,
-      precipProbability: rain ? 70 : 20,
+      description: rain ? 'Rain showers' : 'Partly cloudy',
+      precipMm: rain ? 9.2 : 0.5,
+      precipProbability: rain ? 85 : 20,
       farmingNote: rain ? 'Good planting rains — ideal for germination' : 'Clear weather — good for spraying and harvesting',
     };
   });

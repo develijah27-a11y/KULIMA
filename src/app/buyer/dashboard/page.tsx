@@ -13,6 +13,7 @@ import { NewsWidget } from '@/components/news/NewsWidget';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 import { DashboardWelcomeHero } from '@/components/layout/DashboardWelcomeHero';
 import { DashboardWelcomeHeroSkeleton } from '@/components/layout/DashboardWelcomeHeroSkeleton';
+import { getUnifiedMarketPrices } from '@/lib/prices';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -346,25 +347,19 @@ async function FreshListings() {
 // ── Market Pulse ──────────────────────────────────────────────────────────────
 
 async function MarketPulse() {
-  const supabase = await createClient();
-  const { data: prices } = await supabase.from('market_prices').select('crop_type, price_per_kg').order('recorded_at', { ascending: false }).limit(40);
-  const rows = prices ?? [];
-
-  const groups: Record<string, number[]> = {};
-  rows.forEach((p: any) => {
-    const k = p.crop_type?.toLowerCase();
-    if (k) { if (!groups[k]) groups[k] = []; groups[k].push(p.price_per_kg); }
-  });
-
+  const unified = await getUnifiedMarketPrices();
   const COLORS: Record<string, string> = {
-    maize: 'var(--color-harvest)', beans: 'var(--color-danger)', coffee: C.purple,
-    rice: C.blue, banana: '#B45309', cassava: 'var(--color-success)',
+    coffee: C.purple, maize: 'var(--color-harvest)', beans: 'var(--color-danger)',
+    rice: C.blue, cassava: 'var(--color-success)', banana: '#B45309',
   };
 
-  const pulse = Object.entries(groups).slice(0, 6).map(([crop, ps]) => ({
-    crop, avg: Math.round(ps.reduce((a, b) => a + b, 0) / ps.length),
-    trend: ps.length > 1 ? ((ps[0] - ps[1]) / ps[1] * 100) : 0,
-  }));
+  const mainCrops = ['coffee', 'maize', 'beans', 'rice', 'cassava', 'banana'];
+  const pulse = mainCrops.map(crop => {
+    const avg = unified.averages[crop] || 0;
+    const trendObj = unified.dailyTrends[crop];
+    const trend = trendObj ? trendObj.changePercent : 0;
+    return { crop, avg, trend };
+  }).filter(p => p.avg > 0);
 
   return (
     <Card>

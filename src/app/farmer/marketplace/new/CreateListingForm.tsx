@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertTriangle, Check } from 'lucide-react';
+import { AlertTriangle, Check, TrendingUp } from 'lucide-react';
 import { CameraCapture } from '@/components/ui/CameraCapture';
 
 const C = {
@@ -125,7 +125,7 @@ export function CreateListingForm({ priceMap, farmerDistrict }: Props) {
           value={form.cropType}
           onChange={e => set('cropType', e.target.value)}
           required
-          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, background: '#fff', outline: 'none' }}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, background: '#fff', outline: 'none' }}
         >
           <option value="">Select crop...</option>
           {CROPS.map(c => (
@@ -135,6 +135,52 @@ export function CreateListingForm({ priceMap, farmerDistrict }: Props) {
           ))}
         </select>
       </div>
+
+      {/* Live Market Price Helper Benchmark Card */}
+      {marketPrice && (
+        <div style={{
+          background: 'var(--color-primary-bg)',
+          border: '1.5px solid var(--color-primary-muted)',
+          borderRadius: 12,
+          padding: '12px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+              <TrendingUp size={18} />
+            </div>
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, margin: 0, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Today's Market Rate ({form.cropType.replace(/_/g, ' ')})
+              </p>
+              <p style={{ fontSize: 16, fontWeight: 900, color: 'var(--color-primary)', margin: '2px 0 0', letterSpacing: '-0.02em' }}>
+                UGX {marketPrice.toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: C.muted }}>/ kg</span>
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setPriceTouched(true); set('askingPrice', String(marketPrice)); }}
+            style={{
+              padding: '7px 14px',
+              borderRadius: 8,
+              border: 'none',
+              background: 'var(--color-primary)',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'opacity 0.15s',
+            }}
+          >
+            Apply Market Price
+          </button>
+        </div>
+      )}
 
       {/* Quantity + Price side by side */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -146,39 +192,54 @@ export function CreateListingForm({ priceMap, farmerDistrict }: Props) {
             onChange={e => set('quantityKg', e.target.value)}
             placeholder="e.g. 500"
             required
-            style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${C.border}`, fontSize: 14, color: C.text, outline: 'none', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '11px 13px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 14, color: C.text, outline: 'none', boxSizing: 'border-box' }}
           />
         </div>
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
-            Price per kg (UGX) *
-            {marketPrice && !priceTouched && (
-              <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 600, color: 'var(--color-primary-hover)' }}>
-                (suggested from today's market)
-              </span>
-            )}
+            Your Price per kg (UGX) *
           </label>
           <input
             type="number" min="1"
             value={form.askingPrice}
             onChange={e => { setPriceTouched(true); set('askingPrice', e.target.value); }}
-            placeholder={marketPrice ? `Market: ${marketPrice.toLocaleString()}` : 'e.g. 1200'}
+            placeholder={marketPrice ? `Suggested: ${marketPrice.toLocaleString()}` : 'e.g. 1200'}
             required
             style={{
-              width: '100%', padding: '10px 12px', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box',
-              border: `1px solid ${low ? '#FCA5A5' : high ? '#FCA5A5' : C.border}`,
+              width: '100%', padding: '11px 13px', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+              border: `1.5px solid ${low ? 'var(--color-danger)' : high ? 'var(--color-harvest)' : marketPrice && price > 0 ? 'var(--color-primary)' : C.border}`,
               color: C.text, background: low ? 'var(--color-danger-bg)' : 'var(--d-input-bg)',
             }}
           />
           {marketPrice && price > 0 && (
-            <p style={{ fontSize: 11, marginTop: 4, color: low ? 'var(--color-danger)' : high ? 'var(--color-harvest)' : 'var(--color-success)', fontWeight: 600 }}>
-              {low  ? <><AlertTriangle size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />{Math.round((price / marketPrice - 1) * 100)}% below market — buyers may hesitate</> :
-               high ? <>↑ {Math.round((price / marketPrice - 1) * 100)}% above market</> :
-               <><Check size={10} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 3 }} />Within market range (UGX {marketPrice.toLocaleString()}/kg)</>}
-            </p>
+            <div style={{ marginTop: 6, fontSize: 11.5, fontWeight: 600, lineHeight: 1.3 }}>
+              {low ? (
+                <p style={{ color: 'var(--color-danger)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <AlertTriangle size={12} /> {Math.round((1 - price / marketPrice) * 100)}% below market — quick sale, but check your profit margin.
+                </p>
+              ) : high ? (
+                <p style={{ color: 'var(--color-harvest)', margin: 0 }}>
+                  ↑ {Math.round((price / marketPrice - 1) * 100)}% above market (UGX {marketPrice.toLocaleString()}/kg) — buyers may compare with other lots.
+                </p>
+              ) : (
+                <p style={{ color: 'var(--color-success)', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <Check size={12} /> Fair market price · Buyers are ready to purchase at this rate.
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>
+
+      {/* Calculated Total Payout Preview */}
+      {price > 0 && parseFloat(form.quantityKg) > 0 && (
+        <div style={{ padding: '10px 14px', background: 'var(--color-surface-2)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>Total Listing Payout:</span>
+          <span style={{ fontSize: 15, fontWeight: 900, color: C.green }}>
+            UGX {Math.round(price * parseFloat(form.quantityKg)).toLocaleString()}
+          </span>
+        </div>
+      )}
 
       {/* District + Available from */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

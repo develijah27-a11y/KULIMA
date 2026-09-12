@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, type FormEvent, type JSX } from 'react';
+import { useState, useEffect, type FormEvent, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Truck, Zap, Snowflake, MapPin, Clock, CheckCircle2, Megaphone, AlertTriangle,
-  History, Loader2, Navigation,
+  Loader2,
 } from 'lucide-react';
-import type { DeliveryType, FareBreakdown } from '@/lib/delivery-pricing';
-import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
+import { calcFare, type DeliveryType, type FareBreakdown } from '@/lib/delivery-pricing';
 import { DISTRICT_NAMES } from '@/lib/districts';
 
 const C = {
@@ -58,56 +57,38 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
   const [notes, setNotes]                     = useState('');
   const [deliveryType, setDeliveryType]       = useState<DeliveryType>('standard');
   const [fare, setFare]                       = useState<FareBreakdown | null>(null);
-  const [fareLoading, setFareLoading]         = useState(false);
   const [loading, setLoading]                 = useState(false);
   const [error, setError]                     = useState('');
   const [submitted, setSubmitted]             = useState(false);
   const [driversNotified, setDriversNotified] = useState<number | null>(null);
-  const [recentDropoff, setRecentDropoff]     = useState<string[]>([]);
-  const [showLiveMap, setShowLiveMap]         = useState(false);
 
+  // Instant client-side fare calculation (Zero 2G network roundtrip delay)
   useEffect(() => {
-    fetch('/api/deliveries/recent-destinations')
-      .then(res => res.json())
-      .then(json => {
-        setRecentDropoff(json.dropoff ?? []);
-        if (!dropoffDistrict && json.dropoff && json.dropoff.length > 0) {
-          // Keep dropoff empty by default so user explicitly chooses, but recent chips are ready
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const fetchFare = useCallback(async () => {
     if (!pickupDistrict || !dropoffDistrict || !cargoKg || parseFloat(cargoKg) <= 0) {
       setFare(null);
       return;
     }
-    setFareLoading(true);
+    const cleanFrom = DISTRICTS.find(d => d.toLowerCase() === pickupDistrict.trim().toLowerCase()) ?? pickupDistrict.trim();
+    const cleanTo = DISTRICTS.find(d => d.toLowerCase() === dropoffDistrict.trim().toLowerCase()) ?? dropoffDistrict.trim();
     try {
-      const res = await fetch(`/api/deliveries/fare?from=${encodeURIComponent(pickupDistrict)}&to=${encodeURIComponent(dropoffDistrict)}&kg=${cargoKg}&type=${deliveryType}`);
-      const json = await res.json();
-      if (json.fare) setFare(json.fare);
+      const computedFare = calcFare(cleanFrom, cleanTo, parseFloat(cargoKg) || 1, deliveryType);
+      setFare(computedFare);
     } catch {
-      /* ignore */
-    } finally {
-      setFareLoading(false);
+      setFare(null);
     }
   }, [pickupDistrict, dropoffDistrict, cargoKg, deliveryType]);
 
-  useEffect(() => {
-    const id = setTimeout(fetchFare, 350);
-    return () => clearTimeout(id);
-  }, [fetchFare]);
-
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!pickupDistrict) {
-      setError('Please select a pickup district');
+    const from = pickupDistrict.trim();
+    const to = dropoffDistrict.trim();
+
+    if (!from) {
+      setError('Please enter or select a pickup district');
       return;
     }
-    if (!dropoffDistrict) {
-      setError('Please select a drop-off district');
+    if (!to) {
+      setError('Please enter or select a drop-off district');
       return;
     }
     if (!cargoKg || parseFloat(cargoKg) <= 0) {
@@ -118,10 +99,9 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
       setError('Please select a pickup date');
       return;
     }
-    if (!fare) {
-      setError('Calculating fare — please wait a moment');
-      return;
-    }
+
+    const cleanFrom = DISTRICTS.find(d => d.toLowerCase() === from.toLowerCase()) ?? from;
+    const cleanTo = DISTRICTS.find(d => d.toLowerCase() === to.toLowerCase()) ?? to;
 
     setLoading(true);
     setError('');
@@ -132,10 +112,10 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           offer_id:         prefilledOffer?.id ?? null,
-          pickup_district:  pickupDistrict,
-          pickup_location:  pickupLocation || pickupDistrict,
-          dropoff_district: dropoffDistrict,
-          dropoff_location: dropoffLocation || dropoffDistrict,
+          pickup_district:  cleanFrom,
+          pickup_location:  pickupLocation || cleanFrom,
+          dropoff_district: cleanTo,
+          dropoff_location: dropoffLocation || cleanTo,
           cargo_kg:         parseFloat(cargoKg),
           cargo_type:       cargoType || null,
           pickup_date:      pickupDate,
@@ -153,7 +133,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
       setTimeout(() => {
         router.push(successRedirect);
         router.refresh();
-      }, 3200);
+      }, 3000);
     } catch (err: any) {
       setError(err.message || 'An error occurred while posting delivery request.');
     } finally {
@@ -173,25 +153,32 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         <h2 style={{ fontWeight: 900, fontSize: 20, color: C.text, margin: '0 0 8px' }}>Delivery Request Posted!</h2>
         {hasDrivers ? (
           <p style={{ fontSize: 14, color: 'var(--color-success)', fontWeight: 600, maxWidth: 460, margin: '0 auto 12px' }}>
-            {driversNotified} driver{driversNotified === 1 ? '' : 's'} operating near {pickupDistrict} have been alerted and can respond immediately.
+            {driversNotified} driver{driversNotified === 1 ? '' : 's'} operating near {pickupDistrict} have been alerted and can accept your delivery.
           </p>
         ) : (
           <>
             <p style={{ fontSize: 14, color: 'var(--color-harvest)', fontWeight: 600, margin: '0 0 6px' }}>
-              Your request is live for all transporters across the platform.
+              Your request is live for all transporters across Uganda.
             </p>
             <p style={{ fontSize: 13, color: C.muted, maxWidth: 440, margin: '0 auto 12px' }}>
-              Drivers browsing the haulage board will see your route from {pickupDistrict} to {dropoffDistrict}.
+              Drivers operating along the route between {pickupDistrict} and {dropoffDistrict} are being matched.
             </p>
           </>
         )}
-        <p style={{ fontSize: 12, color: C.muted }}>Redirecting to your deliveries list...</p>
+        <p style={{ fontSize: 12, color: C.muted }}>Redirecting to your deliveries list…</p>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Hidden Datalist for District Autocomplete & Easy Typing */}
+      <datalist id="uganda-districts-datalist">
+        {DISTRICTS.map(d => (
+          <option key={`dl-${d}`} value={d} />
+        ))}
+      </datalist>
+
       {prefilledOffer && (
         <div style={{ padding: '12px 14px', background: 'var(--color-primary-bg)', borderRadius: 10, border: '1px solid var(--color-primary-muted)' }}>
           <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-success)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -206,32 +193,30 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         {/* Pickup District */}
         <div>
           <label style={{ fontSize: 13, fontWeight: 700, color: C.text, display: 'block', marginBottom: 6 }}>
-            Pickup District *
+            Pickup District (Where to collect) *
           </label>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 9, height: 9, borderRadius: '50%', background: 'var(--color-primary)' }} />
-            <select
+            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: '50%', background: 'var(--color-primary)' }} />
+            <input
+              list="uganda-districts-datalist"
+              type="text"
               value={pickupDistrict}
               onChange={e => setPickupDistrict(e.target.value)}
+              placeholder="Type or select pickup district (e.g. Kampala)"
               required
               style={{
-                width: '100%', padding: '12px 14px 12px 32px', borderRadius: 10,
+                width: '100%', padding: '13px 14px 13px 36px', borderRadius: 12,
                 border: `1.5px solid ${C.border}`, fontSize: 14, fontWeight: 600,
                 background: 'var(--d-input-bg, #fff)', color: C.text, outline: 'none',
-                boxSizing: 'border-box', cursor: 'pointer',
+                boxSizing: 'border-box',
               }}
-            >
-              <option value="">Select pickup district</option>
-              {DISTRICTS.map(d => (
-                <option key={`pickup-${d}`} value={d}>{d}</option>
-              ))}
-            </select>
+            />
           </div>
           <input
             type="text"
             value={pickupLocation}
             onChange={e => setPickupLocation(e.target.value)}
-            placeholder="Specific pickup address / village / landmark (optional)"
+            placeholder="Specific pickup address / village / farm plot (optional)"
             style={{
               width: '100%', padding: '10px 12px', borderRadius: 8,
               border: `1px solid ${C.border}`, fontSize: 13, marginTop: 6,
@@ -244,33 +229,31 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         {/* Dropoff District */}
         <div>
           <label style={{ fontSize: 13, fontWeight: 700, color: C.text, display: 'block', marginBottom: 6 }}>
-            Drop-off District *
+            Drop-off District (Where to deliver) *
           </label>
           <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 9, height: 9, borderRadius: 2, background: 'var(--color-danger)' }} />
-            <select
+            <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 10, height: 10, borderRadius: 2, background: 'var(--color-danger)' }} />
+            <input
+              list="uganda-districts-datalist"
+              type="text"
               value={dropoffDistrict}
               onChange={e => setDropoffDistrict(e.target.value)}
+              placeholder="Type or select destination (e.g. Masaka, Jinja, Gulu)"
               required
               style={{
-                width: '100%', padding: '12px 14px 12px 32px', borderRadius: 10,
+                width: '100%', padding: '13px 14px 13px 36px', borderRadius: 12,
                 border: `1.5px solid ${dropoffDistrict ? 'var(--color-primary)' : C.border}`,
                 fontSize: 14, fontWeight: 600,
                 background: 'var(--d-input-bg, #fff)', color: C.text, outline: 'none',
-                boxSizing: 'border-box', cursor: 'pointer',
+                boxSizing: 'border-box',
               }}
-            >
-              <option value="">Select drop-off district</option>
-              {DISTRICTS.map(d => (
-                <option key={`dropoff-${d}`} value={d}>{d}</option>
-              ))}
-            </select>
+            />
           </div>
           <input
             type="text"
             value={dropoffLocation}
             onChange={e => setDropoffLocation(e.target.value)}
-            placeholder="Specific drop-off address / warehouse / street (optional)"
+            placeholder="Specific warehouse / landmark / contact person (optional)"
             style={{
               width: '100%', padding: '10px 12px', borderRadius: 8,
               border: `1px solid ${C.border}`, fontSize: 13, marginTop: 6,
@@ -278,38 +261,13 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
               boxSizing: 'border-box',
             }}
           />
-
-          {/* Quick Recent Destination Chips */}
-          {recentDropoff.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: 'flex', alignItems: 'center', gap: 3 }}>
-                <History size={11} /> Recent:
-              </span>
-              {recentDropoff.slice(0, 5).map(d => (
-                <button
-                  key={`recent-chip-${d}`}
-                  type="button"
-                  onClick={() => setDropoffDistrict(d)}
-                  style={{
-                    padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700,
-                    background: dropoffDistrict.toLowerCase() === d.toLowerCase() ? 'var(--color-primary-bg)' : 'var(--color-surface-2, #f0f2ee)',
-                    color: dropoffDistrict.toLowerCase() === d.toLowerCase() ? 'var(--color-primary)' : C.text,
-                    border: `1px solid ${dropoffDistrict.toLowerCase() === d.toLowerCase() ? 'var(--color-primary)' : C.border}`,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {d}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
       {/* Delivery Type */}
       <div>
         <label style={{ fontSize: 13, fontWeight: 700, color: C.text, display: 'block', marginBottom: 8 }}>
-          Delivery Type *
+          Delivery Speed & Type *
         </label>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
           {DELIVERY_TYPES.map(dt => {
@@ -371,13 +329,13 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         </div>
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
-            Cargo Description
+            Produce / Cargo Description
           </label>
           <input
             type="text"
             value={cargoType}
             onChange={e => setCargoType(e.target.value)}
-            placeholder="e.g. Maize, Coffee, Irish Potatoes"
+            placeholder="e.g. Coffee, Maize, Potatoes"
             style={{
               width: '100%', padding: '11px 13px', borderRadius: 10,
               border: `1px solid ${C.border}`, fontSize: 13, outline: 'none',
@@ -407,13 +365,13 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         </div>
         <div>
           <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
-            Notes <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span>
+            Instructions <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span>
           </label>
           <input
             type="text"
             value={notes}
             onChange={e => setNotes(e.target.value)}
-            placeholder="Handling instructions..."
+            placeholder="Handling notes..."
             style={{
               width: '100%', padding: '11px 13px', borderRadius: 10,
               border: `1px solid ${C.border}`, fontSize: 13, outline: 'none',
@@ -424,63 +382,36 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
       </div>
 
       {/* Live Route & Fare Calculation Card */}
-      {(fare || fareLoading) && (
+      {fare && (
         <div style={{
           padding: '16px 18px', borderRadius: 14,
-          background: fareLoading ? 'var(--d-input-bg)' : 'var(--color-primary-bg)',
-          border: `1.5px solid ${fareLoading ? C.border : 'var(--color-primary-muted)'}`,
+          background: 'var(--color-primary-bg)',
+          border: '1.5px solid var(--color-primary-muted)',
         }}>
-          {fareLoading ? (
-            <p style={{ fontSize: 13, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Loader2 size={16} className="animate-spin" /> Calculating route fare…
-            </p>
-          ) : fare && (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: 0 }}>Estimated Trip Fare</p>
-                  <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>
-                    {pickupDistrict} → {dropoffDistrict}
-                  </p>
-                </div>
-                <p style={{ fontSize: 22, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
-                  UGX {fare.totalFare.toLocaleString()}
-                </p>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 12, color: C.muted, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <MapPin size={12} /> Distance: ~{fare.distanceKm} km
-                </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <Clock size={12} /> Estimated ETA: {fare.etaLabel}
-                </span>
-              </div>
-              <p style={{ fontSize: 11.5, color: 'var(--color-success)', margin: '8px 0 0', fontWeight: 600 }}>
-                Every driver in the system operating near {pickupDistrict} will be alerted immediately.
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: 0 }}>Estimated Trip Fare</p>
+              <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>
+                {pickupDistrict} → {dropoffDistrict}
               </p>
-            </>
-          )}
+            </div>
+            <p style={{ fontSize: 22, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
+              UGX {fare.totalFare.toLocaleString()}
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 12, color: C.muted, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <MapPin size={12} /> Distance: ~{fare.distanceKm} km
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <Clock size={12} /> Estimated ETA: {fare.etaLabel}
+            </span>
+          </div>
+          <p style={{ fontSize: 11.5, color: 'var(--color-success)', margin: '8px 0 0', fontWeight: 600 }}>
+            Every driver operating near {pickupDistrict} will be alerted immediately.
+          </p>
         </div>
       )}
-
-      {/* Optional Live Driver Map Preview toggle */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setShowLiveMap(prev => !prev)}
-          style={{
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: C.green, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, padding: 0,
-          }}
-        >
-          <Navigation size={13} /> {showLiveMap ? 'Hide nearby drivers map' : 'Preview live drivers near pickup on map'}
-        </button>
-        {showLiveMap && (
-          <div style={{ height: 260, borderRadius: 12, overflow: 'hidden', marginTop: 10, border: `1px solid ${C.border}` }}>
-            <NearbyDriversMap userDistrict={pickupDistrict} height="100%" />
-          </div>
-        )}
-      </div>
 
       {error && (
         <p style={{ color: 'var(--color-danger)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
@@ -493,7 +424,7 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         type="submit"
         disabled={loading || !fare}
         style={{
-          padding: '14px',
+          padding: '15px',
           background: (loading || !fare) ? 'var(--color-surface-2, #ccc)' : C.green,
           color: (loading || !fare) ? C.muted : '#fff',
           border: 'none',
