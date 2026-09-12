@@ -1,18 +1,26 @@
-// Shared high-performance map tiles — Faras / Google Maps clean vector-raster aesthetic.
-// Uses CARTO Voyager multi-CDN (subdomains a,b,c,d) with full CORS & zero rate-limiting.
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-const STADIA_KEY = process.env.NEXT_PUBLIC_STADIA_MAPS_API_KEY;
+// High-density map tiles — Google Maps Street & Satellite Hybrid resolution.
+// Provides dense coverage of rural roads, trading centers, terrain, and village boundaries.
 
-export const MAP_TILE_URL = MAPBOX_TOKEN
-  ? `https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}{r}?access_token=${MAPBOX_TOKEN}`
-  : STADIA_KEY
-  ? `https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=${STADIA_KEY}`
-  : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+export const GOOGLE_STREETS_TILE_URL = 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
+export const GOOGLE_HYBRID_TILE_URL = 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
+export const GOOGLE_TERRAIN_TILE_URL = 'https://mt{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}';
+export const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+// Primary default tile URL across the application
+export const MAP_TILE_URL = GOOGLE_STREETS_TILE_URL;
 
 export const MAP_TILE_OPTIONS = {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank">CARTO</a>',
-  subdomains: 'abcd',
-  maxZoom: 20,
+  attribution: '&copy; <a href="https://maps.google.com" target="_blank" rel="noreferrer">Google Maps</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a>',
+  subdomains: '0123',
+  maxZoom: 21,
+  detectRetina: true,
+  crossOrigin: true,
+};
+
+export const HYBRID_TILE_OPTIONS = {
+  attribution: '&copy; <a href="https://maps.google.com" target="_blank" rel="noreferrer">Google Maps</a> Imagery',
+  subdomains: '0123',
+  maxZoom: 21,
   detectRetina: true,
   crossOrigin: true,
 };

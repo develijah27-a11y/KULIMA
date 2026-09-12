@@ -85,8 +85,8 @@ export async function VerificationStatusCard({ role }: Props) {
       icon: <Mail size={16} />,
       verifiedLabel: 'Verified',
       unverifiedLabel: 'Not confirmed',
-      unverifiedAction: '/auth/signup', // resend flow handled on auth page
-      actionLabel: 'Resend',
+      unverifiedAction: `/${role}/settings`,
+      actionLabel: 'Manage',
     },
     {
       label: 'Phone Number',

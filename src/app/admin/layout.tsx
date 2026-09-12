@@ -9,6 +9,7 @@ import { RoleSwitcher } from '@/components/layout/RoleSwitcher';
 import { PageTransition } from '@/components/ui/PageTransition';
 import { NavCommandPalette } from '@/components/ui/NavCommandPalette';
 import { logSystemEvent } from '@/lib/system-log';
+import { isCulpritAdminName } from '@/lib/admin-guard';
 
 const ADMIN_NAV = [
   { href: '/admin/dashboard',    icon: 'dashboard',    label: 'Overview' },
@@ -53,6 +54,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // a multi-role user who has admin as a secondary role.
   const userRoles: string[] = (data as any)?.roles ?? [];
   const primaryRole: string = (data as any)?.role ?? '';
+  const fullName: string = (data as any)?.full_name ?? '';
+
+  if (isCulpritAdminName(fullName, user.email)) {
+    logSystemEvent({ category: 'auth_failure', level: 'error', route: '/admin', userId: user.id, message: 'Culprit test admin account blocked from /admin' });
+    redirect('/auth/signin');
+  }
+
   if (primaryRole !== 'admin' && !userRoles.includes('admin')) {
     logSystemEvent({ category: 'auth_failure', level: 'error', route: '/admin', userId: user.id, message: 'Non-admin user attempted to access /admin' });
     redirect('/dashboard');

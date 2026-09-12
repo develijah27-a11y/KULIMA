@@ -4,10 +4,15 @@ import { primepay } from '@/lib/prime-pay';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const reference = searchParams.get('ref') || searchParams.get('reference');
+  const rawReference = searchParams.get('ref') || searchParams.get('reference');
 
-  if (!reference) {
+  if (!rawReference) {
     return NextResponse.json({ error: 'Reference required' }, { status: 400 });
+  }
+
+  const reference = String(rawReference).replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+  if (!reference) {
+    return NextResponse.json({ error: 'Invalid reference parameter' }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -180,8 +185,12 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { reference } = await req.json();
-  if (!reference) return NextResponse.json({ error: 'Reference required' }, { status: 400 });
+  const body = await req.json().catch(() => ({}));
+  const rawReference = body.reference;
+  if (!rawReference) return NextResponse.json({ error: 'Reference required' }, { status: 400 });
+
+  const reference = String(rawReference).replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+  if (!reference) return NextResponse.json({ error: 'Invalid reference parameter' }, { status: 400 });
 
   const admin = createServiceRoleClient();
 

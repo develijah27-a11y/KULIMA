@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { verifyCronAuth } from '@/lib/cron-auth';
 
 // Vercel cron — weekly (Sunday midnight)
 export async function GET(req: Request) {
-  const v = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
-  if (v !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!verifyCronAuth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // Service-role client throughout — this cron has no user session to scope
   // a regular client to, so `offers`/`farms` (owner-scoped RLS) would

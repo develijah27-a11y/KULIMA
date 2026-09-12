@@ -8,7 +8,8 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ success: false, error: { message: 'Not authenticated' } }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const role = searchParams.get('role');
+  const rawRole = searchParams.get('role');
+  const role = rawRole ? rawRole.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 32) : null;
 
   let query = supabase.from('notifications').select('*').eq('user_id', user.id);
   if (role) query = query.or(`role.eq.${role},role.is.null`);
@@ -37,8 +38,9 @@ export async function PATCH(req: Request) {
   // dashboard's bell and hitting "mark all read" was clearing every other
   // role's unread notifications too.
   let id: string | undefined;
-  let role: string | undefined;
-  try { ({ id, role } = await req.json()); } catch { /* no body — mark-all path */ }
+  let rawRole: string | undefined;
+  try { ({ id, role: rawRole } = await req.json()); } catch { /* no body — mark-all path */ }
+  const role = rawRole ? String(rawRole).replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 32) : undefined;
 
   const query = supabase.from('notifications').update({ read: true }).eq('user_id', user.id);
   if (id) {

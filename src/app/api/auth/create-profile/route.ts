@@ -3,12 +3,17 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { logSystemEvent, withApiLogging } from '@/lib/system-log';
 import { syncGroupMembershipByPhone } from '@/lib/group-sync';
+import { isCulpritAdminName } from '@/lib/admin-guard';
 
 async function handlePOST(req: Request) {
   const { userId, fullName, phoneNumber, location, termsAccepted } = await req.json().catch(() => ({}));
 
   if (!userId || !fullName) {
     return NextResponse.json({ ok: false, error: 'userId and fullName required' }, { status: 400 });
+  }
+
+  if (isCulpritAdminName(fullName)) {
+    return NextResponse.json({ ok: false, error: 'This name cannot be used. Please provide your real personal or business name.' }, { status: 400 });
   }
 
   // Client-side already blocks submission without the checkbox — this is

@@ -3,11 +3,11 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { sendPushToUsers } from '@/lib/push';
 import { generatePlantingAlerts, applyWeatherToPlantingAlerts } from '@/lib/planting-calendar';
 import { fetchWeatherForDistrict, type ServerWeatherData } from '@/lib/weather-server';
+import { verifyCronAuth } from '@/lib/cron-auth';
 
 // Vercel cron — every 6 hours
 export async function GET(req: Request) {
-  const v = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
-  if (v !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!verifyCronAuth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // Service-role client — a Vercel Cron request has no Supabase session, so
   // the owner-scoped farm_inventory read below (and any RLS-gated table)

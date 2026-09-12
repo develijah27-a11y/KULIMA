@@ -1,4 +1,4 @@
-﻿import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
@@ -55,7 +55,8 @@ export default async function AdminUsersPage({
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
   if (role) query = query.eq('role', role);
-  if (q)    query = query.or(`full_name.ilike.%${q}%,phone_number.ilike.%${q}%,location.ilike.%${q}%`);
+  const cleanQ = q.replace(/[^a-zA-Z0-9\s_\-]/g, '').trim().slice(0, 80);
+  if (cleanQ) query = query.or(`full_name.ilike.%${cleanQ}%,phone_number.ilike.%${cleanQ}%,location.ilike.%${cleanQ}%`);
 
   const [{ data: users, count }, { data: roleCounts }] = await Promise.all([
     query,

@@ -71,6 +71,10 @@ export async function syncPendingTransactions(userId: string): Promise<void> {
             }
           }
         } else if (req.type === 'withdrawal') {
+          const safeStatusId = String(statusId || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+          const safeProvRef = String(req.provider_ref || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+          const safeReqId = String(req.id || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+
           await Promise.all([
             (admin.from as any)('mobile_money_requests').update({
               status: 'completed',
@@ -79,7 +83,7 @@ export async function syncPendingTransactions(userId: string): Promise<void> {
             (admin.from as any)('wallet_transactions').update({
               status: 'completed',
               updated_at: new Date().toISOString(),
-            }).or(`reference.eq.${statusId},reference.eq.${req.provider_ref},reference.eq.${req.id}`),
+            }).or(`reference.eq.${safeStatusId},reference.eq.${safeProvRef},reference.eq.${safeReqId}`),
           ]);
         }
       } else if (inquiry.status === 'failed') {
@@ -88,6 +92,10 @@ export async function syncPendingTransactions(userId: string): Promise<void> {
           if (wallet) {
             await (admin as any).rpc('credit_wallet', { p_wallet_id: wallet.id, p_amount: req.amount });
           }
+          const safeStatusId = String(statusId || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+          const safeProvRef = String(req.provider_ref || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+          const safeReqId = String(req.id || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+
           await Promise.all([
             (admin.from as any)('mobile_money_requests').update({
               status: 'failed',
@@ -97,7 +105,7 @@ export async function syncPendingTransactions(userId: string): Promise<void> {
             (admin.from as any)('wallet_transactions').update({
               status: 'failed',
               updated_at: new Date().toISOString(),
-            }).or(`reference.eq.${statusId},reference.eq.${req.provider_ref},reference.eq.${req.id}`),
+            }).or(`reference.eq.${safeStatusId},reference.eq.${safeProvRef},reference.eq.${safeReqId}`),
           ]);
         } else {
           await (admin.from as any)('mobile_money_requests').update({

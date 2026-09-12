@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { verifyCronAuth } from '@/lib/cron-auth';
 
 // Vercel cron — runs monthly on the 16th at 06:00 EAT (03:00 UTC), a day
 // after this source's own mid-month publication date, so this always picks
@@ -66,8 +67,7 @@ function parseCsvLine(line: string): string[] {
 }
 
 export async function GET(req: Request) {
-  const auth = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verifyCronAuth(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -7,6 +7,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { withApiLogging } from '@/lib/system-log';
+import { isCulpritAdminName } from '@/lib/admin-guard';
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -14,8 +15,13 @@ async function requireAdmin() {
   if (!user) return { user: null, error: 'Unauthorized', status: 401 };
 
   const { data: profile } = await supabase
-    .from('profiles').select('role').eq('user_id', user.id).single();
+    .from('profiles').select('role, full_name').eq('user_id', user.id).single();
   if ((profile as any)?.role !== 'admin') return { user: null, error: 'Admin only', status: 403 };
+
+  // Block culprits from admin access
+  if (isCulpritAdminName((profile as any)?.full_name, user.email)) {
+    return { user: null, error: 'Account unauthorized for administration.', status: 403 };
+  }
 
   return { user, error: null, status: 200 };
 }
@@ -48,16 +54,25 @@ async function handleGET() {
     if (wallet) platformWallet = { balance: Number(wallet.balance), account_number: wallet.account_number, owner_name: owner?.full_name ?? null };
   }
 
-  // Candidate admin accounts the platform wallet can be assigned to
-  const { data: admins } = await (db.from as any)('profiles')
+  // Candidate admin accounts the platform wallet can be assigned to (strictly exclude culprits)
+  const { data: rawAdmins } = await (db.from as any)('profiles')
     .select('user_id, full_name')
     .eq('role', 'admin')
     .order('created_at', { ascending: true });
 
+  const safeAdmins = (rawAdmins ?? []).filter((a: any) => !isCulpritAdminName(a.full_name));
+
+  // If current platform wallet was assigned to a culprit, detach it
+  let activeWalletUserId = data?.platform_wallet_user_id ?? null;
+  if (activeWalletUserId && platformWallet?.owner_name && isCulpritAdminName(platformWallet.owner_name)) {
+    activeWalletUserId = null;
+    platformWallet = null;
+  }
+
   return NextResponse.json({
-    data: data ?? { rate_percent: 2.5, min_fee_ugx: 500, max_fee_ugx: null, platform_wallet_user_id: null },
+    data: data ? { ...data, platform_wallet_user_id: activeWalletUserId } : { rate_percent: 2.5, min_fee_ugx: 500, max_fee_ugx: null, platform_wallet_user_id: null },
     platformWallet,
-    admins: admins ?? [],
+    admins: safeAdmins,
   });
 }
 
@@ -84,12 +99,21 @@ async function handlePUT(req: Request) {
   );
 
   // Carry over the existing platform wallet designation unless the caller
-  // explicitly passed a new one — the previous version of this route always
-  // dropped it here, silently disconnecting commission collection on every
-  // rate change.
+  // explicitly passed a new one
   const { data: current } = await (db.from as any)('platform_commission')
     .select('platform_wallet_user_id').eq('active', true).maybeSingle();
-  const nextWalletUserId = platform_wallet_user_id !== undefined ? platform_wallet_user_id : (current?.platform_wallet_user_id ?? null);
+  let nextWalletUserId = platform_wallet_user_id !== undefined ? platform_wallet_user_id : (current?.platform_wallet_user_id ?? null);
+
+  // Validate that recipient account is not a culprit/test account
+  if (nextWalletUserId) {
+    const { data: candidate } = await (db.from as any)('profiles')
+      .select('full_name, role')
+      .eq('user_id', nextWalletUserId)
+      .maybeSingle();
+    if (!candidate || candidate.role !== 'admin' || isCulpritAdminName(candidate.full_name)) {
+      return NextResponse.json({ error: 'Selected account cannot receive platform commissions.' }, { status: 400 });
+    }
+  }
 
   // Deactivate existing active row, then insert new one (audit trail preserved)
   await (db.from as any)('platform_commission').update({ active: false }).eq('active', true);

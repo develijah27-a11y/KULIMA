@@ -48,12 +48,20 @@ export function getPrimePayApiKey(): string {
 }
 
 export function getPrimePayWebhookSecret(): string {
-  return (
+  const secret = (
     process.env.PRIMEPAY_WEBHOOK_SECRET ||
     process.env.PAYMENT_WEBHOOK_SECRET ||
     process.env.NYLON_PAY_WEBHOOK_SECRET ||
-    '3dddf1cafb39c06eba4b9460582a2cb8fb8881d5863fe4667910ef2d76175f52'
+    ''
   ).trim();
+
+  if (!secret) {
+    if (process.env.NODE_ENV !== 'production') {
+      return '3dddf1cafb39c06eba4b9460582a2cb8fb8881d5863fe4667910ef2d76175f52';
+    }
+    return '';
+  }
+  return secret;
 }
 
 export function getPrimePayBaseUrl(): string {
@@ -418,6 +426,16 @@ export function verifyWebhookSignature({
       const receivedSig = parts['v'];
 
       if (timestamp && receivedSig) {
+        // Replay attack protection: ensure timestamp is within 300 seconds (5 minutes)
+        const tsNum = Number(timestamp);
+        if (Number.isFinite(tsNum)) {
+          const tsSeconds = tsNum > 1e11 ? Math.floor(tsNum / 1000) : Math.floor(tsNum);
+          const currentSeconds = Math.floor(Date.now() / 1000);
+          if (Math.abs(currentSeconds - tsSeconds) > 300) {
+            return false;
+          }
+        }
+
         const signedPayload = `${timestamp}.${raw}`;
         const expected = crypto
           .createHmac('sha256', secret)

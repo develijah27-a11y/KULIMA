@@ -8,9 +8,13 @@ export async function POST(req: Request) {
 
   try {
     const formData = await req.formData();
+    const targetRaw = (formData.get('target') as string) || 'green';
+    const docKeyRaw = (formData.get('docKey') as string) || 'document';
+
+    // Strictly sanitize target and docKey to prevent directory traversal
+    const target = targetRaw.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 32) || 'green';
+    const docKey = docKeyRaw.replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 64) || 'document';
     const file = formData.get('file') as File | null;
-    const target = (formData.get('target') as string) || 'green';
-    const docKey = (formData.get('docKey') as string) || 'document';
 
     if (!file) {
       return NextResponse.json({ error: 'File is required' }, { status: 400 });
@@ -20,7 +24,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'File exceeds 10 MB limit' }, { status: 400 });
     }
 
-    const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    // Whitelist allowed file extensions and MIME types
+    const rawExt = (file.name.split('.').pop() || '').toLowerCase();
+    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'pdf'];
+    const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
+    if (!ALLOWED_EXTENSIONS.includes(rawExt) && !ALLOWED_MIMES.includes(file.type)) {
+      return NextResponse.json({ error: 'Invalid file format. Only JPG, PNG, WEBP, and PDF documents are allowed.' }, { status: 400 });
+    }
+
+    const ext = ALLOWED_EXTENSIONS.includes(rawExt) ? rawExt : 'jpg';
+    const contentType = ALLOWED_MIMES.includes(file.type) ? file.type : (ext === 'pdf' ? 'application/pdf' : 'image/jpeg');
     const path = `${user.id}/${target}/${docKey}.${ext}`;
 
     const admin = createServiceRoleClient();
@@ -29,7 +43,7 @@ export async function POST(req: Request) {
     const { error: uploadError } = await admin.storage
       .from('kyc-documents')
       .upload(path, buffer, {
-        contentType: file.type || 'image/jpeg',
+        contentType,
         upsert: true,
       });
 

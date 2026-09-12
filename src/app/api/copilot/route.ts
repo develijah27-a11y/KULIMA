@@ -62,18 +62,17 @@ const TOOL_IMPL: Record<string, (ctx: ToolContext, args: any) => Promise<any>> =
 const MAX_TOOL_ROUNDS = 4;
 const MAX_HISTORY_MESSAGES = 12;
 
+import { handleDeterministicCopilot } from '@/lib/copilot/deterministic';
+
 export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // Every call costs real OpenAI usage — cap per-user request rate.
-  if (!(await rateLimit(`copilot:${user.id}`, 20, 300))) {
+  if (!(await rateLimit(`copilot:${user.id}`, 30, 300))) {
     return NextResponse.json({ error: 'Too many messages. Please wait a moment and try again.' }, { status: 429 });
   }
-
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: 'Copilot is not configured yet.' }, { status: 503 });
 
   let body: any;
   try { body = await req.json(); } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
@@ -93,7 +92,7 @@ export async function POST(req: Request) {
 
   if (!copilotRole) {
     return NextResponse.json({
-      reply: "The Copilot isn't available for your account type yet — please use Support if you need help.",
+      reply: "The Copilot is not available for your account type yet. Please use Support if you need assistance.",
       unsupported: true,
     });
   }
@@ -118,14 +117,12 @@ export async function POST(req: Request) {
         .eq('buyer_id', user.id)
         .in('status', ['pending', 'confirmed', 'awaiting_payment', 'paid', 'dispatched', 'in_transit']);
       activeOrderCount = count ?? 0;
-      // escrow_accounts_status_check: pending | funded | released | refunded | disputed
       const { count: escrowCount } = await (supabase.from as any)('escrow_accounts')
         .select('id', { count: 'exact', head: true })
         .eq('buyer_user_id', user.id)
         .eq('status', 'funded');
       activeEscrowCount = escrowCount ?? 0;
     } else if (copilotRole === 'transporter') {
-      // delivery_requests_status_check: open | assigned | in_transit | delivered | cancelled
       const { count } = await (supabase.from as any)('delivery_requests')
         .select('id', { count: 'exact', head: true })
         .eq('transporter_id', user.id)
@@ -139,10 +136,24 @@ export async function POST(req: Request) {
       activeOrderCount = count ?? 0;
     }
   } catch {
-    // Non-fatal — the model is told to say "not sure" rather than fabricate anyway.
+    // Non-fatal — advisory continues
   }
 
   const ctx: ToolContext = { supabase, userId: user.id, profileId, role: copilotRole };
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  // If OpenAI API key is not configured, seamlessly run the deterministic assistant engine
+  if (!apiKey) {
+    try {
+      const reply = await handleDeterministicCopilot(ctx, message, displayName);
+      return NextResponse.json({ reply });
+    } catch {
+      return NextResponse.json({
+        reply: "I am currently reviewing your request. Please check your Orders or Deliveries dashboard for live status.",
+      });
+    }
+  }
+
   const systemPrompt = buildCopilotSystemPrompt({ displayName, role: copilotRole, activeOrderCount, activeEscrowCount, region });
   const toolSchemas = TOOL_SCHEMAS[copilotRole];
 
@@ -158,7 +169,7 @@ export async function POST(req: Request) {
     while (round < MAX_TOOL_ROUNDS) {
       round++;
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 25000);
+      const timeout = setTimeout(() => controller.abort(), 20000);
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
@@ -173,14 +184,17 @@ export async function POST(req: Request) {
       clearTimeout(timeout);
 
       if (!res.ok) {
-        return NextResponse.json({ error: 'Copilot is temporarily unavailable. Please try again.' }, { status: 502 });
+        // Fallback to deterministic assistant if OpenAI returns an error
+        const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName);
+        return NextResponse.json({ reply: fallbackReply });
       }
 
       const json = await res.json();
       const choice = json.choices?.[0];
       const assistantMsg = choice?.message;
       if (!assistantMsg) {
-        return NextResponse.json({ error: 'Copilot is temporarily unavailable. Please try again.' }, { status: 502 });
+        const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName);
+        return NextResponse.json({ reply: fallbackReply });
       }
 
       const toolCalls = assistantMsg.tool_calls;
@@ -205,11 +219,19 @@ export async function POST(req: Request) {
         }
         messages.push({ role: 'tool', tool_call_id: call.id, content: JSON.stringify(result) });
       }
-      // Loop again so the model can produce a final answer from the tool results.
     }
 
-    return NextResponse.json({ reply: "I wasn't able to finish looking that up — please try rephrasing, or ask me to escalate to a human." });
-  } catch (err) {
-    return NextResponse.json({ error: 'Copilot is temporarily unavailable. Please try again.' }, { status: 502 });
+    const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName);
+    return NextResponse.json({ reply: fallbackReply });
+  } catch {
+    // Graceful fallback to deterministic assistant on any network/timeout error
+    try {
+      const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName);
+      return NextResponse.json({ reply: fallbackReply });
+    } catch {
+      return NextResponse.json({
+        reply: "I was unable to complete that lookup right now. Please try again or visit your account dashboard.",
+      });
+    }
   }
 }

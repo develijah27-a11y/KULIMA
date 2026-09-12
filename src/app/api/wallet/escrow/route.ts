@@ -277,7 +277,7 @@ export async function POST(req: Request) {
               await (db.from as any)('driver_assignments').insert(
                 driverUserIds.map((driverId: string) => ({ delivery_id: dr.id, driver_id: driverId, status: 'pending' })),
               );
-              const deliveryBody = `🚛 Standard · ${order.quantity_kg}kg from ${order.pickup_district} → ${dropoff} · UGX ${fare.totalFare.toLocaleString()}`;
+              const deliveryBody = `Standard · ${order.quantity_kg}kg from ${order.pickup_district} to ${dropoff} · UGX ${fare.totalFare.toLocaleString()}`;
               await (db.from as any)('notifications').insert(
                 driverUserIds.map((driverId: string) => ({
                   user_id: driverId, role: 'transporter', type: 'delivery', title: 'New Delivery Request',

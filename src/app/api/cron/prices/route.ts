@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { verifyCronAuth } from '@/lib/cron-auth';
 
 // Vercel cron — runs daily at 07:00 EAT (04:00 UTC)
 // Fetches real global commodity prices and stores them in market_prices
@@ -184,8 +185,7 @@ async function insertOwnFarmerPrices(supabase: ReturnType<typeof createServiceRo
 // ── Main cron handler ─────────────────────────────────────────────────────
 
 export async function GET(req: Request) {
-  const v = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
-  if (v !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verifyCronAuth(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

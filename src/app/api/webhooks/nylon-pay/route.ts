@@ -18,15 +18,20 @@ export async function POST(req: Request) {
     process.env.PAYMENT_WEBHOOK_SECRET ||
     process.env.PRIMEPAY_WEBHOOK_SECRET ||
     process.env.NYLON_PAY_WEBHOOK_SECRET ||
-    '3dddf1cafb39c06eba4b9460582a2cb8fb8881d5863fe4667910ef2d76175f52';
+    (process.env.NODE_ENV !== 'production' ? '3dddf1cafb39c06eba4b9460582a2cb8fb8881d5863fe4667910ef2d76175f52' : '');
+
+  if (!secret) {
+    console.error('[Payment Webhook] Webhook secret not configured on server');
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+  }
 
   if (!verifyWebhookSignature({ payload: rawBody, signature, secret })) {
     logSystemEvent({
       category: 'auth_failure',
       level: 'error',
-      route: '/api/webhooks/prime-pay',
+      route: '/api/webhooks/nylon-pay',
       method: 'POST',
-      message: 'Payment webhook signature mismatch',
+      message: 'Payment webhook signature mismatch or invalid timestamp',
     });
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
@@ -39,8 +44,12 @@ export async function POST(req: Request) {
   }
 
   const payload = body.payload || body.data || body;
-  const transactionId = body.transaction_id || body.transactionId || payload.transaction_id || payload.transactionId;
-  const reference = payload.reference || body.reference || transactionId;
+  const rawTxId = body.transaction_id || body.transactionId || payload.transaction_id || payload.transactionId;
+  const rawRef = payload.reference || body.reference || rawTxId;
+
+  // Sanitize reference and transactionId to prevent PostgREST injection
+  const reference = String(rawRef || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+  const transactionId = String(rawTxId || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
 
   if (!reference && !transactionId) return NextResponse.json({ received: true });
 
@@ -49,9 +58,10 @@ export async function POST(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+  const lookupRef = transactionId || reference;
   const { data: momoReq } = await (admin.from as any)('mobile_money_requests')
     .select('id, user_id, amount, status, type, provider_ref')
-    .or(`provider_ref.eq.${transactionId || reference},provider_ref.eq.${reference},id.eq.${reference}`)
+    .or(`provider_ref.eq.${lookupRef},provider_ref.eq.${reference},id.eq.${reference}`)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
@@ -67,7 +77,22 @@ export async function POST(req: Request) {
     statusStr === 'charge.success';
 
   if (isSuccess && momoReq.type === 'deposit') {
-    const amount = Number(payload.amount ?? momoReq.amount);
+    // SECURITY: Use momoReq.amount as authoritative source of truth.
+    // If webhook reports an amount differing from what was initiated, reject/flag.
+    const reportedAmount = payload.amount !== undefined ? Number(payload.amount) : null;
+    if (reportedAmount !== null && Math.abs(reportedAmount - Number(momoReq.amount)) > 0.01) {
+      logSystemEvent({
+        category: 'auth_failure',
+        level: 'error',
+        route: '/api/webhooks/nylon-pay',
+        method: 'POST',
+        message: `Webhook deposit amount mismatch: reported ${reportedAmount} vs expected ${momoReq.amount}`,
+        metadata: { reference, momoReqId: momoReq.id },
+      });
+      return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
+    }
+
+    const amount = Number(momoReq.amount);
 
     let claimed = false;
     try {
@@ -113,6 +138,8 @@ export async function POST(req: Request) {
     }
   }
 
+  const safeProviderRef = String(momoReq.provider_ref || '').replace(/[^a-zA-Z0-9_\-]/g, '').slice(0, 100);
+
   if (isSuccess && momoReq.type === 'withdrawal') {
     await Promise.all([
       (admin.from as any)('mobile_money_requests').update({
@@ -122,7 +149,7 @@ export async function POST(req: Request) {
       (admin.from as any)('wallet_transactions').update({
         status: 'completed',
         updated_at: new Date().toISOString(),
-      }).or(`reference.eq.${reference},reference.eq.${transactionId},reference.eq.${momoReq.provider_ref}`),
+      }).or(`reference.eq.${reference},reference.eq.${transactionId},reference.eq.${safeProviderRef}`),
     ]);
   }
 
@@ -147,13 +174,13 @@ export async function POST(req: Request) {
       (admin.from as any)('wallet_transactions').update({
         status: 'failed',
         updated_at: new Date().toISOString(),
-      }).or(`reference.eq.${reference},reference.eq.${transactionId},reference.eq.${momoReq.provider_ref}`),
+      }).or(`reference.eq.${reference},reference.eq.${transactionId},reference.eq.${safeProviderRef}`),
     ]);
 
     logSystemEvent({
       category: 'failed_payment',
       level: 'error',
-      route: '/api/webhooks/prime-pay',
+      route: '/api/webhooks/nylon-pay',
       method: 'POST',
       message: `Withdrawal payout failed: ${payload.message || body.message || 'Unknown network failure'}`,
       metadata: { reference, transactionId },

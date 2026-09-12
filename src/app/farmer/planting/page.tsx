@@ -1,4 +1,4 @@
-﻿import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import {
   PLANTING_CALENDAR,
@@ -347,7 +347,7 @@ export default async function PlantingPage() {
                   }}
                 >
                   <div style={{ width: '160px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '18px' }}>{cal.emoji}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 6, background: 'var(--color-primary-bg)', color: 'var(--color-primary)' }}><Leaf size={14} /></span>
                     <div>
                       <p style={{ fontSize: '13px', fontWeight: 700, color: C.text, textTransform: 'capitalize' }}>
                         {cal.crop.replace(/_/g, ' ')}
@@ -398,7 +398,7 @@ export default async function PlantingPage() {
                     style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px' }}
                   >
                     <div style={{ width: '160px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '18px' }}>{cal.emoji}</span>
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 6, background: 'var(--color-primary-bg)', color: 'var(--color-primary)' }}><Leaf size={14} /></span>
                       <p style={{ fontSize: '13px', fontWeight: 600, color: C.text, textTransform: 'capitalize' }}>
                         {cal.crop.replace(/_/g, ' ')}
                       </p>
@@ -431,7 +431,7 @@ export default async function PlantingPage() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '18px' }}>{cal.emoji}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 6, background: 'var(--color-primary-bg)', color: 'var(--color-primary)' }}><Leaf size={14} /></span>
                     <p style={{ fontSize: '14px', fontWeight: 700, color: C.text, textTransform: 'capitalize' }}>
                       {cal.crop.replace(/_/g, ' ')}
                     </p>

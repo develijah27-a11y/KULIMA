@@ -78,7 +78,7 @@ const nextConfig = {
       // remembers to touch in the same change, so the map silently renders
       // blank in production with no error the tile-source code itself
       // would ever surface.
-      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.basemaps.cartocdn.com",
+      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.basemaps.cartocdn.com https://*.google.com https://*.googleapis.com https://mt0.google.com https://mt1.google.com https://mt2.google.com https://mt3.google.com",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openweathermap.org https://cloudflareinsights.com",
       "object-src 'none'",
       "base-uri 'self'",

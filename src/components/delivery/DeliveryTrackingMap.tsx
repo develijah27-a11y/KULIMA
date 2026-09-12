@@ -4,7 +4,12 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Marker as LMarker, Polyline as LPolyline } from 'leaflet';
 import { Locate } from 'lucide-react';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
-import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
+import {
+  GOOGLE_STREETS_TILE_URL,
+  GOOGLE_HYBRID_TILE_URL,
+  MAP_TILE_OPTIONS,
+  HYBRID_TILE_OPTIONS,
+} from '@/lib/map-tiles';
 
 interface Props {
   deliveryId: string;
@@ -105,6 +110,8 @@ export function DeliveryTrackingMap({
 
   const [ready, setReady] = useState(false);
   const [showRecenter, setShowRecenter] = useState(false);
+  const [layerType, setLayerType] = useState<'streets' | 'satellite'>('streets');
+  const tileLayerRef = useRef<any>(null);
 
   const districtPickup  = UGANDA_DISTRICTS[pickupDistrict];
   const districtDropoff = UGANDA_DISTRICTS[dropoffDistrict];
@@ -142,7 +149,8 @@ export function DeliveryTrackingMap({
       const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false }).setView(center, initialZoom);
       mapRef.current = map;
 
-      L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+      const tile = L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+      tileLayerRef.current = tile;
       L.control.zoom({ position: 'bottomright' }).addTo(map);
 
       // A manual pan/drag (not a programmatic panTo from recenter()) means
@@ -287,6 +295,20 @@ export function DeliveryTrackingMap({
     return () => { cancelled = true; clearInterval(interval); };
   }, [ready, deliveryId, otherPartyLabel, pollMs, onPosition]);
 
+  const switchLayer = async (nextType: 'streets' | 'satellite') => {
+    if (nextType === layerType || !mapRef.current) return;
+    const L = await import('leaflet');
+    if (tileLayerRef.current) {
+      mapRef.current.removeLayer(tileLayerRef.current);
+    }
+    const newLayer = nextType === 'satellite'
+      ? L.tileLayer(GOOGLE_HYBRID_TILE_URL, HYBRID_TILE_OPTIONS)
+      : L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS);
+    newLayer.addTo(mapRef.current);
+    tileLayerRef.current = newLayer;
+    setLayerType(nextType);
+  };
+
   return (
     <div style={{ position: 'relative', height: '100%', width: '100%', borderRadius: 16, overflow: 'hidden' }}>
       <link rel="stylesheet" href="/leaflet/leaflet.css" />
@@ -303,6 +325,41 @@ export function DeliveryTrackingMap({
       `}</style>
 
       <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
+
+      {/* Map / Satellite Layer Switcher */}
+      {ready && (
+        <div style={{
+          position: 'absolute', top: 12, right: 12, zIndex: 500,
+          background: '#ffffff', borderRadius: 8,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.18)', display: 'flex',
+          overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)',
+        }}>
+          <button
+            type="button"
+            onClick={() => switchLayer('streets')}
+            style={{
+              padding: '5px 11px', fontSize: 11.5, fontWeight: 700,
+              border: 'none', cursor: 'pointer',
+              background: layerType === 'streets' ? '#166B3A' : 'transparent',
+              color: layerType === 'streets' ? '#ffffff' : '#182018',
+            }}
+          >
+            Map
+          </button>
+          <button
+            type="button"
+            onClick={() => switchLayer('satellite')}
+            style={{
+              padding: '5px 11px', fontSize: 11.5, fontWeight: 700,
+              border: 'none', cursor: 'pointer',
+              background: layerType === 'satellite' ? '#166B3A' : 'transparent',
+              color: layerType === 'satellite' ? '#ffffff' : '#182018',
+            }}
+          >
+            Satellite
+          </button>
+        </div>
+      )}
 
       {/* Skeleton/shimmer loading state — a broken map and a loading map
           previously looked identical (both a flat gray box), which is part

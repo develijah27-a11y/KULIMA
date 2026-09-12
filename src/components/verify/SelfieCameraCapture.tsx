@@ -236,12 +236,15 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    setError('');
     onCapture(file);
     stopCamera();
   }
 
   function retake() {
+    setError('');
     onCapture(null);
     startCamera();
   }
@@ -554,6 +557,30 @@ export function SelfieCameraCapture({ onCapture, capturedFile }: Props) {
                 display: 'block',
               }}
             />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              stopCamera();
+              fileInputRef.current?.click();
+            }}
+            style={{
+              padding: '8px 14px',
+              borderRadius: 10,
+              border: `1.5px solid ${C.border}`,
+              background: C.cardBg,
+              color: C.text,
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 5,
+            }}
+            title="Use your phone's native camera"
+          >
+            <Camera size={14} /> Phone camera
           </button>
 
           <button

@@ -27,6 +27,8 @@ export function CopilotChat({ role }: { role: string }) {
   const [error, setError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  const [lastPrompt, setLastPrompt] = useState('');
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, sending]);
@@ -35,6 +37,7 @@ export function CopilotChat({ role }: { role: string }) {
     const trimmed = text.trim();
     if (!trimmed || sending) return;
     setError('');
+    setLastPrompt(trimmed);
     const next = [...messages, { role: 'user' as const, content: trimmed }];
     setMessages(next);
     setDraft('');
@@ -45,16 +48,24 @@ export function CopilotChat({ role }: { role: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: trimmed, history: next.slice(0, -1) }),
       });
-      const json = await res.json();
+      let json: any = null;
+      try {
+        json = await res.json();
+      } catch {
+        json = null;
+      }
+
       if (!res.ok) {
-        setError(json.error ?? 'Something went wrong. Please try again.');
-        setMessages(messages);
+        setError(json?.error ?? 'Service is momentarily busy. Please tap retry.');
         return;
       }
-      setMessages(m => [...m, { role: 'assistant', content: json.reply ?? '...' }]);
+      if (json?.reply) {
+        setMessages(m => [...m, { role: 'assistant', content: json.reply }]);
+      } else {
+        setMessages(m => [...m, { role: 'assistant', content: 'Lookup completed. Please check your dashboard for further details.' }]);
+      }
     } catch {
-      setError('Could not reach the Copilot. Check your connection and try again.');
-      setMessages(messages);
+      setError('Connection interrupted. Please tap retry to send again.');
     } finally {
       setSending(false);
     }
@@ -108,8 +119,31 @@ export function CopilotChat({ role }: { role: string }) {
           </div>
         )}
         {error && (
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 6, color: 'var(--color-danger)', fontSize: 12.5 }}>
-            <AlertCircle size={14} style={{ flexShrink: 0, marginTop: 1 }} /> {error}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(239, 68, 68, 0.08)', color: 'var(--color-danger)', fontSize: 12.5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <AlertCircle size={14} style={{ flexShrink: 0 }} />
+              <span>{error}</span>
+            </div>
+            {lastPrompt && (
+              <button
+                type="button"
+                onClick={() => send(lastPrompt)}
+                disabled={sending}
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  border: '1px solid var(--color-danger)',
+                  background: 'transparent',
+                  color: 'var(--color-danger)',
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                Retry
+              </button>
+            )}
           </div>
         )}
         <div ref={bottomRef} />

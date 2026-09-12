@@ -1,8 +1,13 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Map as LMap } from 'leaflet';
-import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
+import {
+  GOOGLE_STREETS_TILE_URL,
+  GOOGLE_HYBRID_TILE_URL,
+  MAP_TILE_OPTIONS,
+  HYBRID_TILE_OPTIONS,
+} from '@/lib/map-tiles';
 
 interface Farm {
   id: string;
@@ -17,15 +22,17 @@ interface Props {
 }
 
 export function FarmMapClient({ farms }: Props) {
-  const mapRef      = useRef<LMap | null>(null);
+  const mapRef = useRef<LMap | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const tileLayerRef = useRef<any>(null);
+  const [layerType, setLayerType] = useState<'streets' | 'satellite'>('streets');
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     let mounted = true;
 
     // Async import — does NOT block the main thread
-    import('leaflet').then(L => {
+    import('leaflet').then((L) => {
       if (!mounted || !containerRef.current || mapRef.current) return;
 
       delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -38,14 +45,15 @@ export function FarmMapClient({ farms }: Props) {
       const map = L.map(containerRef.current!, { zoomControl: false }).setView([1.3733, 32.2903], 7);
       mapRef.current = map;
 
-      L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+      const tile = L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+      tileLayerRef.current = tile;
 
       requestAnimationFrame(() => map.invalidateSize());
       setTimeout(() => map.invalidateSize(), 300);
 
       const bounds: [number, number][] = [];
 
-      farms.forEach(farm => {
+      farms.forEach((farm) => {
         if (farm.boundary?.coordinates?.[0]) {
           const coords = farm.boundary.coordinates[0] as [number, number][];
           const latLngs = coords.map(([lng, lat]) => L.latLng(lat, lng));
@@ -65,7 +73,7 @@ export function FarmMapClient({ farms }: Props) {
             </div>
           `);
 
-          latLngs.forEach(ll => bounds.push([ll.lat, ll.lng]));
+          latLngs.forEach((ll) => bounds.push([ll.lat, ll.lng]));
         }
       });
 
@@ -78,13 +86,73 @@ export function FarmMapClient({ farms }: Props) {
       mounted = false;
       mapRef.current?.remove();
       mapRef.current = null;
+      tileLayerRef.current = null;
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const switchLayer = async (nextType: 'streets' | 'satellite') => {
+    if (nextType === layerType || !mapRef.current) return;
+    const L = await import('leaflet');
+    if (tileLayerRef.current) {
+      mapRef.current.removeLayer(tileLayerRef.current);
+    }
+    const newLayer = nextType === 'satellite'
+      ? L.tileLayer(GOOGLE_HYBRID_TILE_URL, HYBRID_TILE_OPTIONS)
+      : L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS);
+    newLayer.addTo(mapRef.current);
+    tileLayerRef.current = newLayer;
+    setLayerType(nextType);
+  };
+
   return (
-    <>
+    <div style={{ position: 'relative', height: '100%', width: '100%' }}>
       <link rel="stylesheet" href="/leaflet/leaflet.css" />
       <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
-    </>
+      <div
+        style={{
+          position: 'absolute',
+          top: 10,
+          right: 10,
+          zIndex: 1000,
+          background: 'var(--d-card)',
+          borderRadius: 8,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+          display: 'flex',
+          overflow: 'hidden',
+          border: '1px solid var(--d-border)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => switchLayer('streets')}
+          style={{
+            padding: '5px 11px',
+            fontSize: 11.5,
+            fontWeight: 700,
+            border: 'none',
+            cursor: 'pointer',
+            background: layerType === 'streets' ? 'var(--color-primary)' : 'transparent',
+            color: layerType === 'streets' ? '#ffffff' : 'var(--d-text)',
+          }}
+        >
+          Map
+        </button>
+        <button
+          type="button"
+          onClick={() => switchLayer('satellite')}
+          style={{
+            padding: '5px 11px',
+            fontSize: 11.5,
+            fontWeight: 700,
+            border: 'none',
+            cursor: 'pointer',
+            background: layerType === 'satellite' ? 'var(--color-primary)' : 'transparent',
+            color: layerType === 'satellite' ? '#ffffff' : 'var(--d-text)',
+          }}
+        >
+          Satellite
+        </button>
+      </div>
+    </div>
   );
 }

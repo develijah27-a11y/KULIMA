@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { verifyCronAuth } from '@/lib/cron-auth';
 
 // Vercel cron — runs daily at 08:30 EAT (05:30 UTC). Aggregates real
 // supplier_orders system-wide (every dealer's customers, not just one
@@ -12,8 +13,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 // quote requests, still-pending carts, and cancelled orders.
 
 export async function GET(req: Request) {
-  const v = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
-  if (v !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!verifyCronAuth(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

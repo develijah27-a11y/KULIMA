@@ -14,7 +14,6 @@ import {
   Users,
   RotateCcw,
   Crown,
-  Smile,
   Paperclip,
   Mic,
   Search,
@@ -46,7 +45,7 @@ const LISTING_CROPS = [
   'groundnuts',
   'cotton',
 ];
-const LISTING_PREFIX = '📦 LISTING · ';
+const LISTING_PREFIX = 'LISTING · ';
 
 // Preset Themes for Group Chat (Cropify Themes)
 const CHAT_THEMES = [
@@ -127,9 +126,9 @@ interface Props {
   membersList?: GroupMemberItem[];
 }
 
-// WhatsApp Member Identifiable Colors
+// Cropify Member Identifiable Colors
 const MEMBER_COLORS = [
-  '#1FA855', // WhatsApp Emerald
+  '#1FA855', // Cropify Emerald
   '#0284C7', // Sky Blue
   '#7C3AED', // Purple
   '#D97706', // Warm Amber
@@ -147,7 +146,7 @@ function getMemberColor(name: string) {
   return MEMBER_COLORS[hash];
 }
 
-function formatWhatsAppTime(iso: string) {
+function formatChatTime(iso: string) {
   try {
     const d = new Date(iso);
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
@@ -170,27 +169,7 @@ function dateSeparatorLabel(iso: string) {
   }
 }
 
-// Categorized Emojis for quick WhatsApp picker
-const EMOJI_CATEGORIES = [
-  {
-    title: 'Popular',
-    emojis: ['👍', '❤️', '😂', '🔥', '🙏', '👏', '🎉', '🌾', '🌽', '🚜', '💰', '✅'],
-  },
-  {
-    title: 'Farm & Crops',
-    emojis: ['🌾', '🌽', '🥔', '🍅', '🍌', '☕', '🥑', '🥕', '🥬', '🥦', '🧅', '🧄', '🌱', '🌿', '🚜', '🧺', '📦'],
-  },
-  {
-    title: 'Smileys',
-    emojis: ['😀', '😃', '😄', '😁', '😊', '😇', '🙂', '😉', '😌', '😍', '🥰', '😎', '🤝', '🙌', '💪', '✨'],
-  },
-  {
-    title: 'Trade & Status',
-    emojis: ['💰', '💵', '📈', '📊', '🚚', '📦', '⚖️', '⏳', '⭐', '📍', '📞', '💡'],
-  },
-];
-
-const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🌾'];
+const QUICK_REACTIONS = ['Agree', 'Noted', 'Done', 'Review'];
 
 export function GroupChatClient({
   adminId,
@@ -219,8 +198,7 @@ export function GroupChatClient({
   // Quoted Replying State
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
-  // Emoji Popover & Attachments Popover
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  // Attachments Popover
   const [attachmentMenuOpen, setAttachmentMenuOpen] = useState(false);
 
   // Modals & Panels
@@ -556,7 +534,6 @@ export function GroupChatClient({
       setSending(true);
       setDraft('');
       setReplyingTo(null);
-      setEmojiPickerOpen(false);
       if (inputRef.current) inputRef.current.style.height = '42px';
     }
     setError(null);
@@ -649,7 +626,6 @@ export function GroupChatClient({
       sendMessage();
     } else if (e.key === 'Escape') {
       setReplyingTo(null);
-      setEmojiPickerOpen(false);
       setAttachmentMenuOpen(false);
     }
   };
@@ -861,7 +837,7 @@ export function GroupChatClient({
 
   return (
     <div className="wa-chat-container">
-      {/* ── WhatsApp Toast ── */}
+      {/* ── Cropify Chat Toast ── */}
       {toastMessage && (
         <div
           style={{
@@ -889,7 +865,7 @@ export function GroupChatClient({
         </div>
       )}
 
-      {/* ── WhatsApp Topbar / Header ── */}
+      {/* ── Cropify Chat Topbar / Header ── */}
       <div
         className="wa-chat-header"
         style={{
@@ -982,7 +958,7 @@ export function GroupChatClient({
             </div>
 
             <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, maxWidth: '100%' }}>
                 <h2
                   style={{
                     margin: 0,
@@ -993,7 +969,7 @@ export function GroupChatClient({
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     letterSpacing: '-0.02em',
-                    flex: '0 1 auto',
+                    flex: '1 1 auto',
                     minWidth: 0,
                   }}
                 >
@@ -1004,14 +980,14 @@ export function GroupChatClient({
                     style={{
                       fontSize: 9.5,
                       fontWeight: 800,
-                      padding: '1px 5px',
+                      padding: '2px 6px',
                       borderRadius: 4,
                       background: 'rgba(234, 179, 8, 0.15)',
-                      color: '#CA8A04',
+                      color: '#B45309',
                       border: '1px solid rgba(234, 179, 8, 0.3)',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 2,
+                      gap: 3,
                       flexShrink: 0,
                       whiteSpace: 'nowrap',
                     }}
@@ -1037,7 +1013,7 @@ export function GroupChatClient({
         </div>
 
         {/* Right: Header Action Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, marginLeft: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 10, position: 'relative', zIndex: 10 }}>
           {/* In-Chat Search Button */}
           <button
             onClick={() => {
@@ -1199,7 +1175,7 @@ export function GroupChatClient({
         </div>
       </div>
 
-      {/* ── WhatsApp In-Chat Search Bar Overlay ── */}
+      {/* ── Cropify In-Chat Search Bar Overlay ── */}
       {searchOpen && (
         <div
           style={{
@@ -1286,7 +1262,7 @@ export function GroupChatClient({
         </div>
       )}
 
-      {/* ── WhatsApp Message Stream Wallpaper ── */}
+      {/* ── Cropify Message Stream Wallpaper ── */}
       <div
         ref={streamRef}
         onScroll={handleScroll}
@@ -1461,10 +1437,10 @@ export function GroupChatClient({
           </div>
         )}
 
-        {/* ── WhatsApp Message Stream ── */}
+        {/* ── Cropify Message Stream ── */}
         {grouped.map(({ date, msgs }) => (
           <div key={date}>
-            {/* Sticky/Centered WhatsApp Date Pill */}
+            {/* Sticky/Centered Date Pill */}
             <div style={{ display: 'flex', justifyContent: 'center', margin: '14px 0 10px' }}>
               <span className="wa-date-pill">{dateSeparatorLabel(msgs[0].created_at)}</span>
             </div>
@@ -1581,7 +1557,7 @@ export function GroupChatClient({
                         </div>
                       )}
 
-                      {/* WhatsApp Bubble Surface */}
+                      {/* Cropify Bubble Surface */}
                       <div
                         className={isOwn ? 'wa-bubble-outgoing' : 'wa-bubble-incoming'}
                         style={{
@@ -1591,7 +1567,7 @@ export function GroupChatClient({
                           position: 'relative',
                         }}
                       >
-                        {/* 1. WhatsApp Quoted Message Preview (if reply) */}
+                        {/* 1. Quoted Message Preview (if reply) */}
                         {parsedPayload?.type === 'reply' && parsedPayload.replyTo && (
                           <div
                             className="wa-quote-block"
@@ -1719,7 +1695,7 @@ export function GroupChatClient({
                             )}
                           </div>
                         ) : parsedPayload?.type === 'voice' ? (
-                          /* 4. WhatsApp Voice Note Player */
+                          /* 4. Voice Note Player */
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 200, padding: '4px 2px' }}>
                             <button
                               onClick={() =>
@@ -1764,7 +1740,7 @@ export function GroupChatClient({
                             </span>
                           </div>
                         ) : parsedPayload?.type === 'poll' ? (
-                          /* 5. WhatsApp Interactive Poll */
+                          /* 5. Interactive Poll */
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <BarChart2 size={15} color="#008069" />
@@ -1853,7 +1829,7 @@ export function GroupChatClient({
                           </p>
                         )}
 
-                        {/* WhatsApp Bubble Timestamp & Read Receipt Footer */}
+                        {/* Bubble Timestamp and Read Receipt Footer */}
                         <div
                           style={{
                             display: 'flex',
@@ -1876,10 +1852,10 @@ export function GroupChatClient({
                               ? 'sending…'
                               : isFailed
                               ? 'failed'
-                              : formatWhatsAppTime(msg.created_at)}
+                              : formatChatTime(msg.created_at)}
                           </span>
 
-                          {/* WhatsApp Read Receipt Checks */}
+                          {/* Read Receipt Checks */}
                           {isOwn && !isFailed && !isPending && (
                             <span title="Delivered & Read" style={{ display: 'inline-flex', color: '#53BDEB' }}>
                               <CheckCheck size={14} strokeWidth={2.4} />
@@ -1909,7 +1885,7 @@ export function GroupChatClient({
                         </div>
                       </div>
 
-                      {/* WhatsApp Reaction Badges Attached under Bubble */}
+                      {/* Reaction Badges Attached under Bubble */}
                       {Object.keys(msgReactions).length > 0 && (
                         <div
                           className="wa-reaction-badge"
@@ -1928,7 +1904,7 @@ export function GroupChatClient({
                       )}
                     </div>
 
-                    {/* WhatsApp Action Hover Pill (Reactions, Reply, Copy, Delete) */}
+                    {/* Action Hover Pill (Reactions, Reply, Copy, Delete) */}
                     <div
                       className="wa-action-trigger"
                       style={{
@@ -1943,24 +1919,24 @@ export function GroupChatClient({
                         marginBottom: 4,
                       }}
                     >
-                      {/* Quick Emoji Reaction Pill Buttons */}
-                      {QUICK_REACTIONS.slice(0, 4).map((em) => (
+                      {/* Quick Reaction Pill Buttons */}
+                      {QUICK_REACTIONS.map((tag) => (
                         <button
-                          key={em}
-                          onClick={() => handleToggleReaction(msg.id, em)}
-                          title={`React with ${em}`}
+                          key={tag}
+                          onClick={() => handleToggleReaction(msg.id, tag)}
+                          title={`React with ${tag}`}
                           style={{
-                            border: 'none',
-                            background: 'transparent',
+                            border: '1px solid var(--d-border)',
+                            background: 'var(--color-surface-2)',
+                            borderRadius: 6,
                             cursor: 'pointer',
-                            fontSize: 14,
-                            padding: '1px 2px',
-                            transition: 'transform 0.1s ease',
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                            color: 'var(--d-text)',
+                            padding: '2px 5px',
                           }}
-                          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.25)')}
-                          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                         >
-                          {em}
+                          {tag}
                         </button>
                       ))}
 
@@ -2096,7 +2072,7 @@ export function GroupChatClient({
         </div>
       )}
 
-      {/* ── WhatsApp Replying Preview Docked Bar ── */}
+      {/* ── Quoted Replying Preview Docked Bar ── */}
       {replyingTo && (
         <div
           style={{
@@ -2143,62 +2119,9 @@ export function GroupChatClient({
         </div>
       )}
 
-      {/* ── WhatsApp Categorized Emoji Picker Popover ── */}
-      {emojiPickerOpen && (
-        <div
-          style={{
-            borderTop: '1px solid var(--d-border)',
-            background: 'var(--d-card)',
-            padding: '12px 14px',
-            maxHeight: 220,
-            overflowY: 'auto',
-          }}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {EMOJI_CATEGORIES.map((cat) => (
-              <div key={cat.title}>
-                <p
-                  style={{
-                    margin: '0 0 4px',
-                    fontSize: 10.5,
-                    fontWeight: 800,
-                    color: 'var(--d-muted)',
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {cat.title}
-                </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {cat.emojis.map((em) => (
-                    <button
-                      key={em}
-                      onClick={() => {
-                        setDraft((d) => d + em);
-                        inputRef.current?.focus();
-                      }}
-                      style={{
-                        border: 'none',
-                        background: 'transparent',
-                        fontSize: 20,
-                        cursor: 'pointer',
-                        padding: 4,
-                        borderRadius: 6,
-                        transition: 'transform 0.1s ease',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-                    >
-                      {em}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Quoted Replying Preview Docked Bar */}
 
-      {/* ── WhatsApp Attachments Tray Popover ── */}
+      {/* ── Cropify Attachments Tray Popover ── */}
       {attachmentMenuOpen && (
         <div
           style={{
@@ -2321,7 +2244,7 @@ export function GroupChatClient({
         </div>
       )}
 
-      {/* ── WhatsApp Modern Input Toolbar ── */}
+      {/* ── Cropify Modern Input Toolbar ── */}
       <div
         className="wa-bottom-bar"
         style={{
@@ -2398,23 +2321,6 @@ export function GroupChatClient({
           </div>
         ) : (
           <div className="wa-input-pill">
-            {/* WhatsApp Emoji Trigger (inside capsule) */}
-            <button
-              type="button"
-              onClick={() => {
-                setEmojiPickerOpen((v) => !v);
-                setAttachmentMenuOpen(false);
-              }}
-              aria-label="Toggle Emojis"
-              title="Emojis & Stickers"
-              className="wa-pill-btn"
-              style={{
-                color: emojiPickerOpen ? theme.accent : undefined,
-              }}
-            >
-              <Smile size={22} />
-            </button>
-
             {/* Auto-growing Textarea (inside capsule) */}
             <textarea
               ref={inputRef}
@@ -2431,12 +2337,11 @@ export function GroupChatClient({
               disabled={sending}
             />
 
-            {/* WhatsApp Paperclip Attachment Trigger (inside capsule) */}
+            {/* Paperclip Attachment Trigger (inside capsule) */}
             <button
               type="button"
               onClick={() => {
                 setAttachmentMenuOpen((v) => !v);
-                setEmojiPickerOpen(false);
               }}
               aria-label="Attachments"
               title="Share crop lots, photos or polls"
@@ -2448,7 +2353,7 @@ export function GroupChatClient({
               <Paperclip size={20} />
             </button>
 
-            {/* WhatsApp Camera Photo Trigger (inside capsule) */}
+            {/* Camera Photo Trigger (inside capsule) */}
             <button
               type="button"
               onClick={() => setPhotoModalOpen(true)}
@@ -2461,7 +2366,7 @@ export function GroupChatClient({
           </div>
         )}
 
-        {/* WhatsApp Standalone Circular Mic or Send Button */}
+        {/* Standalone Circular Mic or Send Button */}
         {isRecording ? null : canSend ? (
           <button
             type="button"
@@ -2500,7 +2405,7 @@ export function GroupChatClient({
         )}
       </div>
 
-      {/* ── WhatsApp Group Info Side Sheet Drawer ── */}
+      {/* ── Cropify Group Info Side Sheet Drawer ── */}
       {groupInfoOpen && (
         <GroupInfoDrawer
           groupName={groupName}
@@ -2558,7 +2463,7 @@ export function GroupChatClient({
 }
 
 // ─────────────────────────────────────────────────────────────
-// WhatsApp Group Info Side Sheet Drawer
+// Cropify Group Info Side Sheet Drawer
 // ─────────────────────────────────────────────────────────────
 function GroupInfoDrawer({
   groupName,

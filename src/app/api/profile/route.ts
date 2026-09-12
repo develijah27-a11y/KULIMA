@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { isCulpritAdminName } from '@/lib/admin-guard';
 
 export async function PATCH(req: Request) {
   const supabase = await createClient();
@@ -11,6 +12,10 @@ export async function PATCH(req: Request) {
 
   if (!full_name?.trim()) {
     return NextResponse.json({ ok: false, error: 'Full name is required' }, { status: 400 });
+  }
+
+  if (isCulpritAdminName(full_name) || isCulpritAdminName(business_name)) {
+    return NextResponse.json({ ok: false, error: 'Reserved name: administrative or test titles cannot be used.' }, { status: 400 });
   }
 
   const update: Record<string, unknown> = {

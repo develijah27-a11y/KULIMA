@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { sendPushToUsers } from '@/lib/push';
+import { verifyCronAuth } from '@/lib/cron-auth';
 
 // Vercel cron — reminds buyers/requesters who placed an order or delivery
 // request but never funded escrow, so the seller/driver isn't left waiting
@@ -10,8 +11,7 @@ const REMINDER_AFTER_MS = 2 * 60 * 60 * 1000; // 2 hours after creation
 const REMIND_EVERY_MS   = 12 * 60 * 60 * 1000; // don't re-nag more than every 12h
 
 export async function GET(req: Request) {
-  const v = req.headers.get('x-vercel-secret') ?? req.headers.get('authorization');
-  if (v !== `Bearer ${process.env.CRON_SECRET}`) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!verifyCronAuth(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   // Service-role client — a Vercel Cron request has no Supabase session, so
   // the regular session-scoped client would see zero rows on both

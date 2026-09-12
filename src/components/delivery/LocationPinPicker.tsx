@@ -5,16 +5,20 @@ import type { Map as LMap } from 'leaflet';
 import { LocateFixed, Check, MapPin } from 'lucide-react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
-import { MAP_TILE_URL, MAP_TILE_OPTIONS } from '@/lib/map-tiles';
+import {
+  GOOGLE_STREETS_TILE_URL,
+  GOOGLE_HYBRID_TILE_URL,
+  MAP_TILE_OPTIONS,
+  HYBRID_TILE_OPTIONS,
+} from '@/lib/map-tiles';
 
-interface Props {
+interface LocationPinPickerProps {
   open: boolean;
   onClose: () => void;
   onConfirm: (pos: { lat: number; lng: number }) => void;
-  title: string;
   district: string;
-  /** Skip pin confirmation and just use the district centroid instead. */
   onSkip: () => void;
+  title?: string;
 }
 
 // Uber/Bolt-style "confirm exact pickup pin" screen: a pin stays fixed in
@@ -24,13 +28,22 @@ interface Props {
 // sees where the pin lands and drags the MAP to correct it themselves,
 // which is more reliable than trusting either raw device GPS or a fuzzy
 // free-text address on its own.
-export function LocationPinPicker({ open, onClose, onConfirm, title, district, onSkip }: Props) {
-  const mapRef = useRef<LMap | null>(null);
+export function LocationPinPicker({
+  open,
+  onClose,
+  district,
+  onConfirm,
+  onSkip,
+  title = 'Pin your pickup spot',
+}: LocationPinPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<LMap | null>(null);
+  const tileLayerRef = useRef<any>(null);
   const [ready, setReady] = useState(false);
   const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState('');
+  const [layerType, setLayerType] = useState<'streets' | 'satellite'>('streets');
 
   const districtInfo = UGANDA_DISTRICTS[district];
 
@@ -45,7 +58,8 @@ export function LocationPinPicker({ open, onClose, onConfirm, title, district, o
       const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false }).setView([start.lat, start.lng], 14);
       mapRef.current = map;
 
-      L.tileLayer(MAP_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+      const tile = L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+      tileLayerRef.current = tile;
 
       map.on('moveend', () => {
         const c = map.getCenter();
@@ -67,9 +81,24 @@ export function LocationPinPicker({ open, onClose, onConfirm, title, district, o
       mounted = false;
       mapRef.current?.remove();
       mapRef.current = null;
+      tileLayerRef.current = null;
       setReady(false);
     };
   }, [open, district]);
+
+  const switchLayer = async (nextType: 'streets' | 'satellite') => {
+    if (nextType === layerType || !mapRef.current) return;
+    const L = await import('leaflet');
+    if (tileLayerRef.current) {
+      mapRef.current.removeLayer(tileLayerRef.current);
+    }
+    const newLayer = nextType === 'satellite'
+      ? L.tileLayer(GOOGLE_HYBRID_TILE_URL, HYBRID_TILE_OPTIONS)
+      : L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS);
+    newLayer.addTo(mapRef.current);
+    tileLayerRef.current = newLayer;
+    setLayerType(nextType);
+  };
 
   function useMyLocation() {
     if (!('geolocation' in navigator)) { setLocateError('Location is not available on this device.'); return; }
@@ -94,6 +123,39 @@ export function LocationPinPicker({ open, onClose, onConfirm, title, district, o
       <div style={{ position: 'relative', height: 260, borderRadius: 14, overflow: 'hidden', marginBottom: 12 }}>
         <link rel="stylesheet" href="/leaflet/leaflet.css" />
         <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
+
+        {/* Map / Satellite Layer Switcher */}
+        <div style={{
+          position: 'absolute', top: 10, right: 10, zIndex: 600,
+          background: 'var(--d-card, #ffffff)', borderRadius: 8,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.18)', display: 'flex',
+          overflow: 'hidden', border: '1px solid var(--d-border, #e4e8e1)',
+        }}>
+          <button
+            type="button"
+            onClick={() => switchLayer('streets')}
+            style={{
+              padding: '5px 10px', fontSize: 11, fontWeight: 700,
+              border: 'none', cursor: 'pointer',
+              background: layerType === 'streets' ? 'var(--color-primary)' : 'transparent',
+              color: layerType === 'streets' ? '#ffffff' : 'var(--d-text, #182018)',
+            }}
+          >
+            Map
+          </button>
+          <button
+            type="button"
+            onClick={() => switchLayer('satellite')}
+            style={{
+              padding: '5px 10px', fontSize: 11, fontWeight: 700,
+              border: 'none', cursor: 'pointer',
+              background: layerType === 'satellite' ? 'var(--color-primary)' : 'transparent',
+              color: layerType === 'satellite' ? '#ffffff' : 'var(--d-text, #182018)',
+            }}
+          >
+            Satellite
+          </button>
+        </div>
 
         {/* Fixed center pin — the map moves underneath this, not the other way round */}
         <div style={{

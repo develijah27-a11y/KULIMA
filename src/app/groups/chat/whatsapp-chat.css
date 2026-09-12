@@ -1,4 +1,4 @@
-/* WhatsApp Chat Theme & Component Styling */
+/* Cropify Group Chat Theme & Component Styling */
 
 /* Lock main dashboard container while in chat to guarantee pinned bars and smooth stream scrolling */
 body.wa-chat-active main {
@@ -72,7 +72,7 @@ body.wa-chat-active main {
   }
 }
 
-/* WhatsApp Pinned Header & Bottom Bar */
+/* Cropify Pinned Header & Bottom Bar */
 .wa-chat-header {
   position: sticky;
   top: 0;
@@ -87,7 +87,7 @@ body.wa-chat-active main {
   flex-shrink: 0;
 }
 
-/* WhatsApp Mobile Input Pill & Circular Action Button */
+/* Cropify Input Pill & Circular Action Button */
 .wa-input-pill {
   display: flex;
   align-items: flex-end;
@@ -102,10 +102,20 @@ body.wa-chat-active main {
   box-sizing: border-box;
 }
 
+.wa-input-pill:focus-within {
+  outline: none !important;
+  border-color: rgba(0, 0, 0, 0.16) !important;
+}
+
 .dark .wa-input-pill {
   background: #202c33;
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.dark .wa-input-pill:focus-within {
+  outline: none !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
 }
 
 .wa-pill-btn {
@@ -192,7 +202,7 @@ body.wa-chat-active main {
 }
 
 
-/* WhatsApp Doodle Background Wallpaper */
+/* Cropify Chat Doodle Background Wallpaper */
 .wa-wallpaper {
   background-color: #efeae2;
   background-image: radial-gradient(#d5cdc4 0.75px, transparent 0.75px), radial-gradient(#d5cdc4 0.75px, #efeae2 0.75px);
@@ -265,7 +275,7 @@ body.wa-chat-active main {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* WhatsApp Quoted Reply Block */
+/* Cropify Quoted Reply Block */
 .wa-quote-block {
   border-left: 4px solid #00a884;
   background: rgba(0, 0, 0, 0.04);
@@ -335,7 +345,7 @@ body.wa-chat-active main {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* WhatsApp Smooth Custom Scrollbar */
+/* Cropify Smooth Custom Scrollbar */
 .wa-scroll-stream::-webkit-scrollbar {
   width: 6px;
 }
