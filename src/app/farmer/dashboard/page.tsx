@@ -12,7 +12,6 @@ import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 import { NewsWidget } from '@/components/news/NewsWidget';
 import { getUnifiedMarketPrices } from '@/lib/prices';
-import { DashboardWelcomeHero } from '@/components/layout/DashboardWelcomeHero';
 import {
   Package, DollarSign, Home, Bell, CheckCircle2, Sprout,
   Sun, Moon, Cloud, CloudSun, CloudMoon, CloudRain, CloudLightning, Snowflake,
@@ -941,18 +940,6 @@ export default async function FarmerDashboardPage() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
-
-      {/* 0a · Executive Welcome Hero */}
-      <DashboardWelcomeHero
-        name={firstName}
-        role="farmer"
-        location={profile?.location}
-        secondaryAction={farmsCount === 0 ? {
-          href: '/farmer/farm/new',
-          label: 'Register Farm',
-          icon: <Sprout size={14} className="text-emerald-600" />,
-        } : undefined}
-      />
 
       {/* 0. Top-Tier Farm Registration Reminder (Shown prominently when 0 farms are registered) */}
       {farmsCount === 0 && (

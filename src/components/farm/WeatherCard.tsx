@@ -1,16 +1,39 @@
 'use client';
 
+import React from 'react';
 import { Card } from '@/components/ui/Card';
+import {
+  Sun, Moon, CloudSun, Cloud, CloudRain, CloudLightning, Snowflake, Wind,
+} from 'lucide-react';
 
-export const weatherEmoji: Record<string, string> = {
-  '01d': '☀️', '01n': '🌙',
-  '02d': '🌤', '02n': '🌤',
-  '03d': '⛅', '03n': '⛅',
-  '04d': '☁️', '04n': '☁️',
-  '09d': '🌦', '10d': '🌧️',
-  '11d': '⛈️', '13d': '❄️',
-  '50d': '🌫️',
-};
+export function getWeatherIcon(code: string, size = 32) {
+  switch (code) {
+    case '01d':
+      return <Sun size={size} className="text-amber-500" />;
+    case '01n':
+      return <Moon size={size} className="text-indigo-400" />;
+    case '02d':
+    case '03d':
+      return <CloudSun size={size} className="text-amber-400" />;
+    case '02n':
+    case '03n':
+      return <CloudSun size={size} className="text-indigo-300" />;
+    case '04d':
+    case '04n':
+      return <Cloud size={size} className="text-slate-400" />;
+    case '09d':
+    case '10d':
+      return <CloudRain size={size} className="text-sky-500" />;
+    case '11d':
+      return <CloudLightning size={size} className="text-amber-500" />;
+    case '13d':
+      return <Snowflake size={size} className="text-sky-300" />;
+    case '50d':
+      return <Wind size={size} className="text-slate-400" />;
+    default:
+      return <CloudSun size={size} className="text-amber-400" />;
+  }
+}
 
 const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -25,12 +48,10 @@ export function WeatherCard({
   currentTemp: number;
   description: string;
   iconCode: string;
-  forecast?: { label: string; emoji: string; temp: number }[];
+  forecast?: { label: string; iconCode?: string; emoji?: string; temp: number }[];
   rainAlert?: string;
   locationName?: string;
 }) {
-  const emoji = weatherEmoji[iconCode] ?? '🌤';
-
   return (
     <Card variant="elevated" className="overflow-hidden">
       {/* Alert banner */}
@@ -41,9 +62,9 @@ export function WeatherCard({
       )}
       {/* Current weather */}
       <div className="flex items-center gap-4">
-        <span className="text-5xl leading-none" role="img" aria-label={description}>
-          {emoji}
-        </span>
+        <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 dark:bg-amber-400/10">
+          {getWeatherIcon(iconCode, 36)}
+        </div>
         <div>
           <p
             className="text-4xl font-extrabold text-[var(--color-text)] font-mono"
@@ -63,7 +84,9 @@ export function WeatherCard({
           {forecast.map((d) => (
             <div key={d.label} className="flex flex-col items-center gap-1 min-w-[44px]">
               <span className="text-[10px] text-[var(--color-text-muted)] font-medium">{d.label}</span>
-              <span className="text-lg">{d.emoji}</span>
+              <div className="py-1">
+                {getWeatherIcon(d.iconCode ?? '02d', 18)}
+              </div>
               <span className="text-[11px] text-[var(--color-text)] font-mono">{d.temp}°</span>
             </div>
           ))}

@@ -1,10 +1,14 @@
-import { DashboardWelcomeHeroSkeleton } from '@/components/layout/DashboardWelcomeHeroSkeleton';
-
 export default function BuyerDashboardLoading() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto animate-pulse">
-      {/* Executive Welcome Header Skeleton */}
-      <DashboardWelcomeHeroSkeleton />
+      {/* Header skeleton */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-2">
+          <div className="dash-skeleton h-6 w-52 rounded-lg" />
+          <div className="dash-skeleton h-4 w-32 rounded-lg" />
+        </div>
+        <div className="dash-skeleton h-9 w-36 rounded-xl" />
+      </div>
 
       {/* 4 Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

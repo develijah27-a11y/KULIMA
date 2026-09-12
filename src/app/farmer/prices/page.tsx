@@ -70,7 +70,15 @@ function CashPriceCard({ price }: { price: any }) {
       {/* Header */}
       <div style={{ padding: '14px 16px 10px', borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <span style={{ fontSize: 22 }}>{price.crop_emoji}</span>
+          <div style={{
+            width: 28, height: 28, borderRadius: 8,
+            background: `${color}18`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: color,
+            flexShrink: 0,
+          }}>
+            <Leaf size={16} />
+          </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: 0, lineHeight: 1.2 }}>
               {price.crop_name}

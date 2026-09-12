@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
         userId: dr.requester_id,
         role: dr.requester_role ?? null,
         type: 'delivery',
-        title: '⚠️ Payment required',
+        title: 'Payment required',
         body: `Your delivery will be cancelled in ${minsLeft} minute${minsLeft !== 1 ? 's' : ''} if payment is not completed. Pay now to keep your driver.`,
         url: dr.requester_role === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries',
       }).catch(() => {});
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
         userId: dr.requester_id,
         role: dr.requester_role ?? null,
         type: 'delivery',
-        title: '🚛 Your driver is waiting',
+        title: 'Your driver is waiting',
         body: `Complete payment for your ${dr.cargo_kg} kg delivery to confirm your driver. They cannot start until payment is received.`,
         url: dr.requester_role === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries',
       }).catch(() => {});

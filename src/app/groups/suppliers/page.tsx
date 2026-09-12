@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Package, Leaf, FlaskConical, Wrench, Settings } from 'lucide-react';
+import { Package, Leaf, FlaskConical, Wrench, Settings, Zap } from 'lucide-react';
 import { VerificationBadge } from '@/components/trust/VerificationBadge';
 import { type VerificationLevel } from '@/lib/trust';
 import { FavouriteButton } from '@/components/ui/FavouriteButton';
@@ -208,8 +208,8 @@ export default async function GroupSuppliersPage({
                     {p.stock_qty.toLocaleString()} {p.unit} left
                   </span>
                   {flashActive && (
-                    <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 999, background: 'var(--color-harvest)', color: '#fff' }}>
-                      ⚡ Flash Deal
+                    <span style={{ position: 'absolute', top: 10, left: 10, fontSize: 10, fontWeight: 800, padding: '3px 9px', borderRadius: 999, background: 'var(--color-harvest)', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <Zap size={10} fill="currentColor" /> Flash Deal
                     </span>
                   )}
                 </div>

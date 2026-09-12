@@ -1,7 +1,8 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { Leaf } from 'lucide-react';
 import { getCropPhotoUrl, getCropGradient } from '@/lib/crop-photos';
 
 interface CropPhotoProps {
@@ -36,9 +37,21 @@ export function CropPhoto({ crop, width = 600, height = 400, className = '', sty
         {/* Decorative blur circles */}
         <div style={{ position: 'absolute', top: '-20%', right: '-20%', width: '60%', height: '60%', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', filter: 'blur(20px)' }} />
         <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '50%', height: '50%', borderRadius: '50%', background: 'rgba(255,255,255,0.04)', filter: 'blur(16px)' }} />
-        <span style={{ fontSize: Math.min(width, height) * 0.28, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))', position: 'relative', zIndex: 1 }}>
-          {gradient.emoji}
-        </span>
+        <div style={{
+          width: Math.min(width, height) * 0.45,
+          height: Math.min(width, height) * 0.45,
+          borderRadius: '50%',
+          background: 'rgba(255,255,255,0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#ffffff',
+          position: 'relative',
+          zIndex: 1,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+        }}>
+          <Leaf size={Math.min(width, height) * 0.25} />
+        </div>
         {showEmoji && (
           <span style={{ position: 'absolute', bottom: 8, right: 10, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {crop}
@@ -88,7 +101,9 @@ export function CropPhotoCard({
           </>
         ) : (
           <div style={{ background: `linear-gradient(135deg, ${gradient.from} 0%, ${gradient.to} 100%)`, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 48, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>{gradient.emoji}</span>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+              <Leaf size={28} />
+            </div>
           </div>
         )}
         {badge && (

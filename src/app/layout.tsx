@@ -123,11 +123,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn(poppins.variable, inter.variable, dmMono.variable, oswald.variable, plexSans.variable, plexMono.variable)}
-    >
+    <html lang="en" suppressHydrationWarning>
       <head>
         {/* Theme init — must be first script, blocks paint intentionally */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

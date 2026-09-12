@@ -241,8 +241,8 @@ export function WalletActions({ balance, escrowBalance }: Props) {
                   {provider === 'airtel' ? '*185# → Pending Approvals' : '*165# → My Account → Approvals'}
                 </strong>
               </p>
-              <p style={{ margin: 0, color: C.greenMed, fontWeight: 600 }}>
-                ✓ As soon as you enter your PIN, the system will detect the payment automatically.
+              <p style={{ margin: 0, color: C.greenMed, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Check size={14} /> As soon as you enter your PIN, the system will detect the payment automatically.
               </p>
             </div>
           </div>

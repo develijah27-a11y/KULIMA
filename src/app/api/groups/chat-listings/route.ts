@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   }
 
   const senderName = (myProfile as any).full_name ?? 'Member';
-  const body = `📦 LISTING · ${+quantityKg}kg ${cropType}${notes ? ` — ${notes}` : ''}`;
+  const body = `LISTING · ${+quantityKg}kg ${cropType}${notes ? ` — ${notes}` : ''}`;
 
   const { data: message, error: msgError } = await (supabase.from as any)('group_messages')
     .insert({ admin_id: adminId, sender_id: user.id, sender_name: senderName, body })

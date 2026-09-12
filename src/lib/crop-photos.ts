@@ -29,28 +29,28 @@ export const CROP_PHOTO_IDS: Record<string, string> = {
 
 // Gradient fallbacks by crop category (used when photo isn't available)
 export const CROP_GRADIENTS: Record<string, { from: string; to: string; emoji: string }> = {
-  coffee:         { from: '#3B1F09', to: '#7C4A1E', emoji: '☕' },
-  coffee_robusta: { from: '#3B1F09', to: '#7C4A1E', emoji: '☕' },
-  coffee_arabica: { from: '#4A2310', to: '#8B5E3C', emoji: '☕' },
-  tea:            { from: '#1B4332', to: '#40916C', emoji: '🍵' },
-  tea_green:      { from: '#1B4332', to: '#40916C', emoji: '🍵' },
-  maize:          { from: '#92400E', to: '#D97706', emoji: '🌽' },
-  beans:          { from: '#7F1D1D', to: '#DC2626', emoji: '🫘' },
-  banana:         { from: '#713F12', to: '#CA8A04', emoji: '🍌' },
-  cassava:        { from: '#065F46', to: '#059669', emoji: '🥔' },
-  tomato:         { from: '#7F1D1D', to: '#EF4444', emoji: '🍅' },
-  avocado:        { from: '#166534', to: '#16A34A', emoji: '🥑' },
-  rice:           { from: '#0C4A6E', to: '#0284C7', emoji: '🌾' },
-  vanilla:        { from: '#3B1F09', to: '#854D0E', emoji: '🌿' },
-  cotton:         { from: '#374151', to: '#6B7280', emoji: '🌾' },
-  sunflower:      { from: '#713F12', to: '#EAB308', emoji: '🌻' },
-  sesame:         { from: '#78350F', to: '#D97706', emoji: '🌱' },
-  cocoa:          { from: '#44201A', to: '#78350F', emoji: '🍫' },
-  soybeans:       { from: '#065F46', to: '#15803D', emoji: '🫘' },
-  groundnuts:     { from: '#78350F', to: '#B45309', emoji: '🥜' },
-  macadamia:      { from: '#1C1917', to: '#57534E', emoji: '🥥' },
-  sorghum:        { from: '#78350F', to: '#C2410C', emoji: '🌾' },
-  tobacco:        { from: '#1C1917', to: '#44403C', emoji: '🍂' },
+  coffee:         { from: '#3B1F09', to: '#7C4A1E', emoji: '' },
+  coffee_robusta: { from: '#3B1F09', to: '#7C4A1E', emoji: '' },
+  coffee_arabica: { from: '#4A2310', to: '#8B5E3C', emoji: '' },
+  tea:            { from: '#1B4332', to: '#40916C', emoji: '' },
+  tea_green:      { from: '#1B4332', to: '#40916C', emoji: '' },
+  maize:          { from: '#92400E', to: '#D97706', emoji: '' },
+  beans:          { from: '#7F1D1D', to: '#DC2626', emoji: '' },
+  banana:         { from: '#713F12', to: '#CA8A04', emoji: '' },
+  cassava:        { from: '#065F46', to: '#059669', emoji: '' },
+  tomato:         { from: '#7F1D1D', to: '#EF4444', emoji: '' },
+  avocado:        { from: '#166534', to: '#16A34A', emoji: '' },
+  rice:           { from: '#0C4A6E', to: '#0284C7', emoji: '' },
+  vanilla:        { from: '#3B1F09', to: '#854D0E', emoji: '' },
+  cotton:         { from: '#374151', to: '#6B7280', emoji: '' },
+  sunflower:      { from: '#713F12', to: '#EAB308', emoji: '' },
+  sesame:         { from: '#78350F', to: '#D97706', emoji: '' },
+  cocoa:          { from: '#44201A', to: '#78350F', emoji: '' },
+  soybeans:       { from: '#065F46', to: '#15803D', emoji: '' },
+  groundnuts:     { from: '#78350F', to: '#B45309', emoji: '' },
+  macadamia:      { from: '#1C1917', to: '#57534E', emoji: '' },
+  sorghum:        { from: '#78350F', to: '#C2410C', emoji: '' },
+  tobacco:        { from: '#1C1917', to: '#44403C', emoji: '' },
 };
 
 export function getCropPhotoUrl(cropKey: string, width = 600, height = 400): string | null {
@@ -61,7 +61,7 @@ export function getCropPhotoUrl(cropKey: string, width = 600, height = 400): str
 
 export function getCropGradient(cropKey: string) {
   const key = cropKey.toLowerCase().replace(/\s+/g, '_');
-  return CROP_GRADIENTS[key] ?? { from: '#1B4332', to: '#40916C', emoji: '🌱' };
+  return CROP_GRADIENTS[key] ?? { from: '#1B4332', to: '#40916C', emoji: '' };
 }
 
 const CROP_COLOR_ALIASES: Record<string, string> = {

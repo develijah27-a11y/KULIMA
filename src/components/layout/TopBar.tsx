@@ -45,11 +45,13 @@ export function TopBar({
     }
   });
   const [hour, setHour] = useState(() => new Date().getHours());
+  const [displayGreeting, setDisplayGreeting] = useState(greeting);
 
   useEffect(() => {
     try {
       const d = new Date();
-      setHour(d.getHours());
+      const h = d.getHours();
+      setHour(h);
       setDateString(
         d.toLocaleDateString('en-GB', {
           weekday: 'short',
@@ -58,8 +60,11 @@ export function TopBar({
           year: 'numeric',
         })
       );
+      const name = greeting.includes(',') ? greeting.split(',').slice(1).join(',').trim() : '';
+      const timeGreeting = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+      setDisplayGreeting(name ? `${timeGreeting}, ${name}` : timeGreeting);
     } catch {}
-  }, []);
+  }, [greeting]);
 
   const currentMeta = currentRole ? ROLE_META[currentRole] : null;
   // Every self-addable role is listed here, not just ones the account
@@ -121,7 +126,7 @@ export function TopBar({
             className="font-bold truncate"
             style={{ fontSize: '14px', color: 'var(--color-text)', fontFamily: 'var(--font-heading)', lineHeight: 1.25 }}
           >
-            {greeting}
+            {displayGreeting}
           </p>
         </div>
 
@@ -140,7 +145,7 @@ export function TopBar({
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
               </span>
               <MapPin size={11} className="shrink-0 text-emerald-600" />
-              {location}, Uganda
+              {location.toLowerCase().includes('uganda') ? location : `${location}, Uganda`}
             </span>
           )}
         </div>

@@ -6,7 +6,8 @@
  */
 
 import Image from 'next/image';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { User } from 'lucide-react';
 
 interface OptimizedImageProps {
   src: string;
@@ -92,12 +93,12 @@ export function Avatar({
   src,
   alt,
   size = 40,
-  fallback = '👤',
+  fallback,
 }: {
   src?: string;
   alt: string;
   size?: number;
-  fallback?: string;
+  fallback?: React.ReactNode;
 }) {
   const [error, setError] = useState(false);
 
@@ -110,10 +111,9 @@ export function Avatar({
           height: size,
           background: 'var(--color-primary-bg)',
           color: 'var(--color-primary)',
-          fontSize: size * 0.5,
         }}
       >
-        {fallback}
+        {fallback ?? <User size={Math.round(size * 0.55)} />}
       </div>
     );
   }

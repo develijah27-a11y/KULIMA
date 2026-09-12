@@ -86,7 +86,7 @@ function SignInContent() {
   useEffect(() => {
     // Skip the check entirely if we're here because a session just expired.
     if (reason === 'session_expired') { setChecking(false); return; }
-    // ⚠️  Intentionally using getSession() here — NOT getUser().
+    // NOTE: Intentionally using getSession() here — NOT getUser().
     // This check is purely for the "you're already signed in as X" UI widget.
     // It reads from localStorage with zero network round-trip, so the form
     // appears instantly on mobile instead of blocking 500-2000 ms waiting for

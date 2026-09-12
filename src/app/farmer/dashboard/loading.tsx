@@ -1,11 +1,6 @@
-import { DashboardWelcomeHeroSkeleton } from '@/components/layout/DashboardWelcomeHeroSkeleton';
-
 export default function FarmerDashboardLoading() {
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
-
-      {/* 0 · Welcome Header Skeleton */}
-      <DashboardWelcomeHeroSkeleton />
 
       {/* 1 · Weather Card (3-col layout matching actual WeatherCard) */}
       <div

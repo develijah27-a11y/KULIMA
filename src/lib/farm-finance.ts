@@ -29,7 +29,7 @@ export interface CropFinancialProfile {
 
 export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
   maize: {
-    name: 'Maize', emoji: '🌽',
+    name: 'Maize', emoji: '',
     seedRateKgPerHa: 25,
     seedCostUGXPerKg: 5000,
     yieldKgPerHa: { pessimistic: 1500, realistic: 2800, optimistic: 4500 },
@@ -45,7 +45,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Apply DAP at planting, CAN at knee-high stage. Use hybrid seed (H614D, Longe 5) for top yields.',
   },
   beans: {
-    name: 'Beans', emoji: '🫘',
+    name: 'Beans', emoji: '',
     seedRateKgPerHa: 90,
     seedCostUGXPerKg: 4500,
     yieldKgPerHa: { pessimistic: 600, realistic: 1000, optimistic: 1600 },
@@ -61,7 +61,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Inoculate with Rhizobium to fix nitrogen. Intercrop with maize for land-use efficiency.',
   },
   groundnuts: {
-    name: 'Groundnuts', emoji: '🥜',
+    name: 'Groundnuts', emoji: '',
     seedRateKgPerHa: 120,
     seedCostUGXPerKg: 4000,
     yieldKgPerHa: { pessimistic: 700, realistic: 1200, optimistic: 1800 },
@@ -77,7 +77,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Apply gypsum at flowering for pod filling. Well-drained sandy loam soils are best.',
   },
   sorghum: {
-    name: 'Sorghum', emoji: '🌾',
+    name: 'Sorghum', emoji: '',
     seedRateKgPerHa: 8,
     seedCostUGXPerKg: 6000,
     yieldKgPerHa: { pessimistic: 1200, realistic: 2000, optimistic: 3200 },
@@ -93,7 +93,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Drought-tolerant — ideal for Lira, Soroti, Gulu. Thin to 2 plants per station after emergence.',
   },
   rice: {
-    name: 'Rice', emoji: '🌾',
+    name: 'Rice', emoji: '',
     seedRateKgPerHa: 80,
     seedCostUGXPerKg: 3500,
     yieldKgPerHa: { pessimistic: 2000, realistic: 3500, optimistic: 5500 },
@@ -109,7 +109,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Use certified seed (WITA 9, Komboka). Level paddy field carefully. Maintain 5cm flood depth after transplanting.',
   },
   cassava: {
-    name: 'Cassava', emoji: '🥔',
+    name: 'Cassava', emoji: '',
     seedRateKgPerHa: 0,
     seedCostUGXPerKg: 0,
     plantingMaterialNote: '~4,000 stems per hectare at 1m×1m spacing',
@@ -127,7 +127,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Use NARO-certified virus-free cuttings (NASE 3, NASE 19). Plant at start of rains. Mulch to control weeds.',
   },
   sweet_potatoes: {
-    name: 'Sweet Potato', emoji: '🍠',
+    name: 'Sweet Potato', emoji: '',
     seedRateKgPerHa: 0,
     seedCostUGXPerKg: 0,
     plantingMaterialNote: 'Vine cuttings — ~30,000 per hectare',
@@ -145,7 +145,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Mound size affects yield significantly. 30cm high mounds at 75×30cm give best results.',
   },
   tomato: {
-    name: 'Tomato', emoji: '🍅',
+    name: 'Tomato', emoji: '',
     seedRateKgPerHa: 0.35,
     seedCostUGXPerKg: 900000,
     yieldKgPerHa: { pessimistic: 10000, realistic: 20000, optimistic: 35000 },
@@ -161,7 +161,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Start nursery 4 weeks before transplanting. Stake at 45cm height. Weekly fungicide is non-negotiable in wet season.',
   },
   coffee: {
-    name: 'Coffee', emoji: '☕',
+    name: 'Coffee', emoji: '',
     seedRateKgPerHa: 0,
     seedCostUGXPerKg: 0,
     plantingMaterialNote: '~1,100 seedlings/ha at 3m×3m spacing',
@@ -179,7 +179,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Year 1–2: establishment (no harvest). Year 3+: full production. Annual pruning doubles yields.',
   },
   sunflower: {
-    name: 'Sunflower', emoji: '🌻',
+    name: 'Sunflower', emoji: '',
     seedRateKgPerHa: 10,
     seedCostUGXPerKg: 8000,
     yieldKgPerHa: { pessimistic: 800, realistic: 1400, optimistic: 2200 },
@@ -195,7 +195,7 @@ export const CROP_PROFILES: Record<string, CropFinancialProfile> = {
     agronomy: 'Plant at 75cm×30cm. Apply foliar boron at flowering to prevent empty heads.',
   },
   banana: {
-    name: 'Banana (Matooke)', emoji: '🍌',
+    name: 'Banana (Matooke)', emoji: '',
     seedRateKgPerHa: 0,
     seedCostUGXPerKg: 0,
     plantingMaterialNote: '~400 suckers/ha at 3m×2.5m spacing',
@@ -236,24 +236,24 @@ export const COST_LABELS: Record<string, string> = {
 };
 
 export const COST_CATEGORIES: { key: string; label: string; icon: string }[] = [
-  { key: 'seeds',           label: 'Seeds & Planting',     icon: '🌱' },
-  { key: 'landPrep',        label: 'Land Preparation',     icon: '🚜' },
-  { key: 'dap',             label: 'DAP Fertilizer',       icon: '💊' },
-  { key: 'can',             label: 'CAN / Urea',           icon: '💊' },
-  { key: 'lime',            label: 'Agricultural Lime',    icon: '🪨' },
-  { key: 'herbicide',       label: 'Herbicide',            icon: '🧴' },
-  { key: 'fungicide',       label: 'Fungicide',            icon: '🧴' },
-  { key: 'pesticide',       label: 'Pesticide',            icon: '🧴' },
-  { key: 'laborPlanting',   label: 'Labor — Planting',     icon: '👷' },
-  { key: 'laborWeeding',    label: 'Labor — Weeding',      icon: '👷' },
-  { key: 'laborHarvest',    label: 'Labor — Harvest',      icon: '👷' },
-  { key: 'laborProcessing', label: 'Labor — Processing',   icon: '👷' },
-  { key: 'transport',       label: 'Transport',            icon: '🚛' },
-  { key: 'packaging',       label: 'Bags & Packaging',     icon: '📦' },
-  { key: 'irrigation',      label: 'Irrigation',           icon: '💧' },
-  { key: 'storage',         label: 'Storage',              icon: '🏭' },
-  { key: 'insurance',       label: 'Crop Insurance',       icon: '🛡️' },
-  { key: 'other',           label: 'Other Costs',          icon: '➕' },
+  { key: 'seeds',           label: 'Seeds & Planting',     icon: '' },
+  { key: 'landPrep',        label: 'Land Preparation',     icon: '' },
+  { key: 'dap',             label: 'DAP Fertilizer',       icon: '' },
+  { key: 'can',             label: 'CAN / Urea',           icon: '' },
+  { key: 'lime',            label: 'Agricultural Lime',    icon: '' },
+  { key: 'herbicide',       label: 'Herbicide',            icon: '' },
+  { key: 'fungicide',       label: 'Fungicide',            icon: '' },
+  { key: 'pesticide',       label: 'Pesticide',            icon: '' },
+  { key: 'laborPlanting',   label: 'Labor — Planting',     icon: '' },
+  { key: 'laborWeeding',    label: 'Labor — Weeding',      icon: '' },
+  { key: 'laborHarvest',    label: 'Labor — Harvest',      icon: '' },
+  { key: 'laborProcessing', label: 'Labor — Processing',   icon: '' },
+  { key: 'transport',       label: 'Transport',            icon: '' },
+  { key: 'packaging',       label: 'Bags & Packaging',     icon: '' },
+  { key: 'irrigation',      label: 'Irrigation',           icon: '' },
+  { key: 'storage',         label: 'Storage',              icon: '' },
+  { key: 'insurance',       label: 'Crop Insurance',       icon: '' },
+  { key: 'other',           label: 'Other Costs',          icon: '' },
 ];
 
 export interface FarmCalcInput {
@@ -405,16 +405,16 @@ export function calculateFarmFinancials(input: FarmCalcInput): FarmCalcResult {
 }
 
 export const EXPENSE_CATEGORIES = [
-  { value: 'seeds',        label: 'Seeds & Planting Material', icon: '🌱' },
-  { value: 'fertilizer',  label: 'Fertilizers',               icon: '💊' },
-  { value: 'pesticide',   label: 'Pesticides & Herbicides',   icon: '🧴' },
-  { value: 'labor',       label: 'Labor',                     icon: '👷' },
-  { value: 'land_prep',   label: 'Land Preparation',          icon: '🚜' },
-  { value: 'transport',   label: 'Transport',                 icon: '🚛' },
-  { value: 'equipment',   label: 'Equipment / Tools',         icon: '🔧' },
-  { value: 'irrigation',  label: 'Irrigation',                icon: '💧' },
-  { value: 'storage',     label: 'Storage',                   icon: '🏭' },
-  { value: 'other',       label: 'Other',                     icon: '➕' },
+  { value: 'seeds',        label: 'Seeds & Planting Material', icon: '' },
+  { value: 'fertilizer',  label: 'Fertilizers',               icon: '' },
+  { value: 'pesticide',   label: 'Pesticides & Herbicides',   icon: '' },
+  { value: 'labor',       label: 'Labor',                     icon: '' },
+  { value: 'land_prep',   label: 'Land Preparation',          icon: '' },
+  { value: 'transport',   label: 'Transport',                 icon: '' },
+  { value: 'equipment',   label: 'Equipment / Tools',         icon: '' },
+  { value: 'irrigation',  label: 'Irrigation',                icon: '' },
+  { value: 'storage',     label: 'Storage',                   icon: '' },
+  { value: 'other',       label: 'Other',                     icon: '' },
 ];
 
 export const SEASONS = ['A2026', 'B2025', 'A2025', 'B2024', 'A2024'];

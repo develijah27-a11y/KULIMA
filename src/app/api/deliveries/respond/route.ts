@@ -121,7 +121,7 @@ export async function POST(req: Request) {
 
   // Notify the requester that a driver is on their way
   try {
-    const typeLabel = delivery.delivery_type === 'cold' ? '❄️ Cold' : delivery.delivery_type === 'fast' ? '⚡ Fast' : '🚛 Standard';
+    const typeLabel = delivery.delivery_type === 'cold' ? 'Cold Storage' : delivery.delivery_type === 'fast' ? 'Express' : 'Standard';
 
     await (admin.from as any)('notifications').insert({
       user_id: delivery.requester_id,

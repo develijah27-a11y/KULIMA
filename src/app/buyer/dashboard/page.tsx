@@ -11,8 +11,6 @@ import { type VerificationLevel } from '@/lib/trust';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import { NewsWidget } from '@/components/news/NewsWidget';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
-import { DashboardWelcomeHero } from '@/components/layout/DashboardWelcomeHero';
-import { DashboardWelcomeHeroSkeleton } from '@/components/layout/DashboardWelcomeHeroSkeleton';
 import { getUnifiedMarketPrices } from '@/lib/prices';
 
 const C = {
@@ -472,19 +470,19 @@ async function WelcomeHeader({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Buyer';
   return (
-    <DashboardWelcomeHero
-      name={firstName}
-      role="buyer"
-      location={profile?.location}
-      actionHref="/buyer/listings"
-      actionLabel="Browse Market"
-      actionIcon={<ShoppingBag size={15} />}
-      secondaryAction={{
-        href: '/buyer/orders',
-        label: 'My Orders',
-        icon: <Package size={14} className="text-sky-500" />,
-      }}
-    />
+    <div className="flex items-start justify-between">
+      <div>
+        <h1 className="text-xl font-black" style={{ color: C.text, letterSpacing: '-0.03em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+          Welcome back, {firstName}
+        </h1>
+        <p className="text-sm mt-0.5" style={{ color: C.muted }}>Buyer · {profile?.location ?? 'Uganda'}</p>
+      </div>
+      <Link href="/buyer/listings"
+        className="px-4 py-2 rounded-xl text-sm font-bold text-white flex items-center gap-1.5"
+        style={{ background: C.green, textDecoration: 'none' }}>
+        Browse Market &rarr;
+      </Link>
+    </div>
   );
 }
 
@@ -525,7 +523,15 @@ export default async function BuyerDashboardPage() {
 
       <BiometricSetupBanner />
 
-      <Suspense fallback={<DashboardWelcomeHeroSkeleton />}>
+      <Suspense fallback={
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <div className="dash-skeleton h-6 w-52 rounded-lg" />
+            <div className="dash-skeleton h-4 w-32 rounded-lg" />
+          </div>
+          <div className="dash-skeleton h-9 w-36 rounded-xl" />
+        </div>
+      }>
         <WelcomeHeader userId={userId} />
       </Suspense>
 
