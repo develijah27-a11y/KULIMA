@@ -123,15 +123,15 @@ export const DELIVERY_TYPE_META: Record<DeliveryType, {
   icon: string; label: string; color: string; bg: string; border: string;
 }> = {
   standard: {
-    icon: '🚛', label: 'Standard',
+    icon: 'Standard', label: 'Standard Delivery',
     color: 'var(--color-primary)',  bg: 'var(--color-primary-bg)',  border: 'var(--color-primary)',
   },
   fast: {
-    icon: '⚡', label: 'Fast Delivery',
+    icon: 'Express', label: 'Fast Delivery',
     color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)',  border: 'var(--color-harvest)',
   },
   cold: {
-    icon: '❄️', label: 'Cold Chain',
+    icon: 'Cold', label: 'Cold Chain',
     color: '#0EA5E9', bg: '#E0F2FE', border: '#0EA5E9',
   },
 };

@@ -6,6 +6,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { sendPushToUsers } from '@/lib/push';
 import { logSystemEvent } from '@/lib/system-log';
 import { sendEmail, purchaseReceiptEmail } from '@/lib/email';
+import { notifyNearbyDrivers } from '@/lib/notify-drivers';
 
 const admin = () => createServiceClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -255,43 +256,16 @@ export async function POST(req: Request) {
           if (dr) {
             await (db.from as any)('orders').update({ delivery_request_id: dr.id }).eq('id', orderId);
 
-            // Auto-match available, right-sized verified drivers covering the
-            // pickup district — same matching rule as POST /api/deliveries
-            // (kept in sync manually since this is a second creation path).
-            let { data: matchedVehicles } = await (db.from as any)('vehicles')
-              .select('user_id')
-              .eq('is_available', true)
-              .gte('capacity_kg', Number(order.quantity_kg))
-              .contains('districts', [order.pickup_district])
-              .limit(50);
-            if (!matchedVehicles || matchedVehicles.length === 0) {
-              const res = await (db.from as any)('vehicles')
-                .select('user_id')
-                .eq('is_available', true)
-                .gte('capacity_kg', Number(order.quantity_kg))
-                .limit(50);
-              matchedVehicles = res.data;
-            }
-            const driverUserIds = [...new Set<string>((matchedVehicles ?? []).map((v: any) => v.user_id as string))];
-            if (driverUserIds.length > 0) {
-              await (db.from as any)('driver_assignments').insert(
-                driverUserIds.map((driverId: string) => ({ delivery_id: dr.id, driver_id: driverId, status: 'pending' })),
-              );
-              const deliveryBody = `Standard · ${order.quantity_kg}kg from ${order.pickup_district} to ${dropoff} · UGX ${fare.totalFare.toLocaleString()}`;
-              await (db.from as any)('notifications').insert(
-                driverUserIds.map((driverId: string) => ({
-                  user_id: driverId, role: 'transporter', type: 'delivery', title: 'New Delivery Request',
-                  body: deliveryBody,
-                  read: false,
-                })),
-              );
-              await sendPushToUsers(driverUserIds, {
-                title: 'New Delivery Request',
-                body:  deliveryBody,
-                url:   '/transporter/job-queue',
-                tag:   `delivery-${dr.id}`,
-              });
-            }
+            // Notify all nearby verified drivers covering the area
+            await notifyNearbyDrivers(db, {
+              deliveryId: dr.id,
+              pickupDistrict: order.pickup_district,
+              dropoffDistrict: dropoff,
+              cargoKg: Number(order.quantity_kg),
+              cargoType: order.crop_type,
+              deliveryType: 'standard',
+              totalFare: fare.totalFare,
+            });
           }
         }
       }

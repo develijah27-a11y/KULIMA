@@ -14,9 +14,7 @@ interface Driver {
   distanceKm: number;
 }
 
-const VEHICLE_EMOJI: Record<string, string> = {
-  motorcycle: '🏍️', pickup: '🛻', truck: '🚚', lorry: '🚚', minivan: '🚐', tractor: '🚜',
-};
+const TRUCK_SVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#166B3A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-5l-3-4h-5v10Z"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>`;
 
 interface Props {
   /** Fallback map center when GPS permission isn't granted. */
@@ -154,7 +152,7 @@ export function NearbyDriversMap({ userDistrict, height = 300, pollMs = 8_000 }:
           } else {
             const icon = L.divIcon({
               className: '', iconSize: [30, 30], iconAnchor: [15, 15],
-              html: `<div style="width:28px;height:28px;border-radius:10px;background:#fff;border:2px solid #166B3A;box-shadow:0 2px 6px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:15px">${VEHICLE_EMOJI[d.vehicleType] ?? '🚗'}</div>`,
+              html: `<div style="width:28px;height:28px;border-radius:10px;background:#fff;border:2px solid #166B3A;box-shadow:0 2px 6px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center">${TRUCK_SVG}</div>`,
             });
             const marker = L.marker([d.lat, d.lng], { icon }).addTo(mapRef.current!)
               .bindPopup(`${d.vehicleType.charAt(0).toUpperCase()}${d.vehicleType.slice(1)} · ~${d.distanceKm.toFixed(1)} km away`);

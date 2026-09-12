@@ -5,6 +5,7 @@ import { calcFare, type DeliveryType } from '@/lib/delivery-pricing';
 import { sendPushToUsers } from '@/lib/push';
 import { sendEmail, deliveryArrivedEmail } from '@/lib/email';
 import { logSystemEvent } from '@/lib/system-log';
+import { notifyNearbyDrivers } from '@/lib/notify-drivers';
 
 // ─── GET: list open deliveries for transporters to browse ────────────────────
 export async function GET(req: Request) {
@@ -113,7 +114,7 @@ export async function POST(req: Request) {
 
   const deliveryId = data.id;
 
-  // Auto-match: find available verified drivers operating in the pickup district
+  // Auto-match: find and notify ALL nearby verified drivers operating in the area
   // Use service role to read across RLS boundaries
   const admin = createAdmin(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -122,109 +123,21 @@ export async function POST(req: Request) {
 
   let driversNotified = 0;
   try {
-    const cargoKgNum = parseFloat(cargo_kg);
-
-    function baseVehicleQuery() {
-      let q = (admin.from as any)('vehicles')
-        .select('user_id')
-        .eq('is_available', true)
-        .gte('capacity_kg', cargoKgNum);
-      if (delivery_type === 'cold') q = q.eq('is_cold_capable', true);
-      return q;
-    }
-
-    // Primary match: available, right-sized vehicles actually operating in
-    // the pickup district. `districts` is a text[] of districts a
-    // transporter covers — `.contains` maps to Postgres `@>`.
-    let { data: matchedVehicles } = await baseVehicleQuery()
-      .contains('districts', [pickup_district])
-      .limit(50);
-
-    // Fallback: nobody covers that exact district (small/rural area, or a
-    // transporter just hasn't added it to their coverage list yet) — still
-    // notify other available, right-sized drivers nationwide rather than
-    // silently notifying no one. The open-jobs browse/bid flow is the
-    // ultimate safety net regardless, but a push notification reaches
-    // drivers who aren't actively browsing.
-    if (!matchedVehicles || matchedVehicles.length === 0) {
-      const res = await baseVehicleQuery().limit(50);
-      matchedVehicles = res.data;
-    }
-
-    let driverUserIds: string[] = matchedVehicles
-      ? [...new Set<string>(matchedVehicles.map((v: any) => v.user_id as string))]
-      : [];
-
-    // Fallback 2: no vehicle anywhere in the system is available/right-sized
-    // for this job (or no vehicle has ever been registered at all) — don't
-    // silently notify nobody, notify every transporter-role account
-    // directly so they still hear about the job and can register a vehicle
-    // / bid from the open-jobs list. Confirmed live in production
-    // 2026-08-16: 5 transporter accounts exist but only 1 vehicle row
-    // exists total, so vehicle-based matching alone misses most registered
-    // transporters.
-    if (driverUserIds.length === 0) {
-      const [{ data: byRole }, { data: byRoles }] = await Promise.all([
-        (admin.from as any)('profiles').select('user_id').eq('role', 'transporter').limit(200),
-        (admin.from as any)('profiles').select('user_id').contains('roles', ['transporter']).limit(200),
-      ]);
-      const allTransporterIds = new Set<string>();
-      (byRole ?? []).forEach((p: any) => allTransporterIds.add(p.user_id));
-      (byRoles ?? []).forEach((p: any) => allTransporterIds.add(p.user_id));
-      if (allTransporterIds.size > 0) driverUserIds = [...allTransporterIds];
-    }
-
-    if (driverUserIds.length > 0) {
-      driversNotified = driverUserIds.length;
-
-      const assignments = driverUserIds.map((driverId: string) => ({
-        delivery_id: deliveryId,
-        driver_id:   driverId,
-        status:      'pending',
-      }));
-      await (admin.from as any)('driver_assignments').insert(assignments).select('id');
-
-      const { data: driverProfiles } = await (admin.from as any)('profiles')
-        .select('id, user_id')
-        .in('user_id', driverUserIds);
-
-      if (driverProfiles && driverProfiles.length > 0) {
-        const typeLabel = delivery_type === 'cold' ? '❄️ Cold' : delivery_type === 'fast' ? '⚡ Fast' : '🚛 Standard';
-        const notifications = driverProfiles.map((p: any) => ({
-          user_id: p.user_id,
-          role:    'transporter',
-          type:    'delivery',
-          title:   'New Delivery Request',
-          body:    `${typeLabel} · ${cargo_kg}kg from ${pickup_district} → ${dropoff_district} · UGX ${fare.totalFare.toLocaleString()}`,
-          read:    false,
-        }));
-        await (admin.from as any)('notifications').insert(notifications);
-        await sendPushToUsers(driverUserIds, {
-          title: 'New Delivery Request',
-          body:  `${typeLabel} · ${cargo_kg}kg from ${pickup_district} → ${dropoff_district} · UGX ${fare.totalFare.toLocaleString()}`,
-          url:   '/transporter/job-queue',
-          tag:   `delivery-${deliveryId}`,
-        });
-      }
-    }
-  } catch (err) {
-    // Driver matching is non-critical — the delivery request itself is
-    // already created and visible in the open-jobs browse list regardless.
-    // But a failure here used to be completely invisible (no log anywhere),
-    // so a real bug (bad query, RLS, malformed insert) could silently mean
-    // nobody ever gets notified with zero trace. Log it so that's visible.
-    logSystemEvent({
-      category: 'error',
-      level: 'error',
-      route: '/api/deliveries',
-      method: 'POST',
-      userId: user.id,
-      message: err instanceof Error ? err.message : 'Driver auto-match/notify failed',
-      metadata: {
-        deliveryId, pickup_district, dropoff_district, delivery_type, cargo_kg,
-        stack: err instanceof Error ? err.stack?.slice(0, 2000) : undefined,
-      },
+    const notifyRes = await notifyNearbyDrivers(admin, {
+      deliveryId,
+      pickupDistrict: pickup_district,
+      dropoffDistrict: dropoff_district,
+      cargoKg: parseFloat(cargo_kg),
+      cargoType: cargo_type || null,
+      deliveryType: delivery_type,
+      totalFare: fare.totalFare,
+      pickupLat: pickup_lat,
+      pickupLng: pickup_lng,
+      excludeUserId: user.id,
     });
+    driversNotified = notifyRes.driversNotified;
+  } catch (err) {
+    console.error('[/api/deliveries POST notifyNearbyDrivers]', err);
   }
 
   return NextResponse.json({ success: true, deliveryId, fare, driversNotified });

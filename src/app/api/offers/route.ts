@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
 import { notifyUser } from '@/lib/notify';
+import { notifyNearbyDrivers } from '@/lib/notify-drivers';
+import { calcFare } from '@/lib/delivery-pricing';
 
 export async function GET(req: Request) {
   const supabase = await createClient();
@@ -156,6 +158,21 @@ export async function PATCH(req: Request) {
 
         if (dr) {
           await (supabase.from as any)('orders').update({ delivery_request_id: (dr as any).id }).eq('id', (newOrder as any).id);
+          try {
+            const dropoffDist = (buyerProfile as any)?.location ?? 'Kampala';
+            const fare = calcFare(listing.district, dropoffDist, listing.quantity_kg, 'standard');
+            await notifyNearbyDrivers(stockAdmin, {
+              deliveryId: (dr as any).id,
+              pickupDistrict: listing.district,
+              dropoffDistrict: dropoffDist,
+              cargoKg: listing.quantity_kg,
+              cargoType: listing.crop_type,
+              deliveryType: 'standard',
+              totalFare: fare.totalFare,
+            });
+          } catch (notifErr) {
+            console.error('[/api/offers notifyNearbyDrivers]', notifErr);
+          }
         }
       }
 
