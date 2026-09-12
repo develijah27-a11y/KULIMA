@@ -60,35 +60,40 @@ export interface ServerWeatherData {
   daily: DailyForecast[];
   district: string;
   source: 'openweather' | 'open-meteo' | 'fallback';
+  rainNotice?: {
+    expected: boolean;
+    summary: string;
+    label: string;
+    time: string;
+    mm: number;
+  };
 }
 
-// WMO weather code → OWM icon + description
-function wmoToIcon(code: number): { icon: string; description: string } {
-  if (code === 0)                  return { icon: '01d', description: 'clear sky' };
-  if (code === 1)                  return { icon: '02d', description: 'mainly clear' };
-  if (code === 2)                  return { icon: '03d', description: 'partly cloudy' };
-  if (code === 3)                  return { icon: '04d', description: 'overcast' };
-  if (code === 45 || code === 48)  return { icon: '50d', description: 'foggy' };
-  if (code >= 51 && code <= 55)    return { icon: '09d', description: 'drizzle' };
-  if (code >= 61 && code <= 65)    return { icon: '10d', description: code <= 62 ? 'light rain' : code === 63 ? 'moderate rain' : 'heavy rain' };
-  if (code >= 80 && code <= 82)    return { icon: '09d', description: code === 80 ? 'light showers' : 'rain showers' };
-  if (code === 95)                 return { icon: '11d', description: 'thunderstorm' };
-  if (code === 96 || code === 99)  return { icon: '11d', description: 'thunderstorm with hail' };
-  return { icon: '02d', description: 'partly cloudy' };
+// WMO weather code → OWM icon + description (supports day/night variants)
+function wmoToIcon(code: number, isDay = true): { icon: string; description: string } {
+  const dOrN = isDay ? 'd' : 'n';
+  if (code === 0)                  return { icon: `01${dOrN}`, description: isDay ? 'Clear sky' : 'Clear night' };
+  if (code === 1)                  return { icon: `02${dOrN}`, description: isDay ? 'Mainly clear' : 'Mainly clear night' };
+  if (code === 2)                  return { icon: `03${dOrN}`, description: 'Partly cloudy' };
+  if (code === 3)                  return { icon: `04${dOrN}`, description: 'Overcast' };
+  if (code === 45 || code === 48)  return { icon: `50${dOrN}`, description: 'Foggy' };
+  if (code >= 51 && code <= 55)    return { icon: `09${dOrN}`, description: 'Drizzle' };
+  if (code >= 61 && code <= 65)    return { icon: `10${dOrN}`, description: code <= 62 ? 'Light rain' : code === 63 ? 'Moderate rain' : 'Heavy rain' };
+  if (code >= 80 && code <= 82)    return { icon: `09${dOrN}`, description: code === 80 ? 'Light showers' : 'Rain showers' };
+  if (code === 95)                 return { icon: `11${dOrN}`, description: 'Thunderstorm' };
+  if (code === 96 || code === 99)  return { icon: `11${dOrN}`, description: 'Thunderstorm with hail' };
+  return { icon: `02${dOrN}`, description: 'Partly cloudy' };
 }
 
 function farmingNote(code: number, precipMm: number, precipProb: number, soilMoisture?: number): string {
-  if (code === 95 || code === 96 || code === 99) return '⚠️ Avoid field work — thunderstorms expected';
-  if (precipMm > 15)  return '🌧️ Heavy rain — check drainage, delay spraying';
-  if (precipMm > 5)   return '🌦️ Good planting rains — ideal for germination';
-  // Below ~0.15 m³/m³ is dry topsoil for most Uganda loam/clay soils — worth
-  // flagging even on an otherwise dry, clear day since it's the one signal
-  // OWM's fallback can't provide at all.
-  if (soilMoisture !== undefined && soilMoisture < 0.15 && precipProb < 30) return '🏜️ Topsoil is dry — irrigate before planting if possible';
-  if (precipProb > 70) return '☂️ High rain chance — prepare for wet conditions';
-  if (code <= 2)       return '☀️ Clear weather — good for spraying and harvesting';
-  if (code === 3)      return '⛅ Overcast — good fieldwork conditions';
-  return '🌤️ Fair conditions for farm activities';
+  if (code === 95 || code === 96 || code === 99) return 'Avoid field work — thunderstorms expected';
+  if (precipMm > 15)  return 'Heavy rain — check drainage, delay spraying';
+  if (precipMm > 5)   return 'Good planting rains — ideal for germination';
+  if (soilMoisture !== undefined && soilMoisture < 0.15 && precipProb < 30) return 'Topsoil is dry — irrigate before planting if possible';
+  if (precipProb > 70) return 'High rain chance — prepare for wet conditions';
+  if (code <= 2)       return 'Clear weather — good for spraying and harvesting';
+  if (code === 3)      return 'Overcast — good fieldwork conditions';
+  return 'Fair conditions for farm activities';
 }
 
 async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherData | null> {
@@ -96,18 +101,21 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
     const url = new URL('https://api.open-meteo.com/v1/forecast');
     url.searchParams.set('latitude', lat.toFixed(4));
     url.searchParams.set('longitude', lon.toFixed(4));
-    url.searchParams.set('current', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,soil_temperature_0cm,soil_moisture_0_to_1cm');
+    url.searchParams.set('current', 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,soil_temperature_0cm,soil_moisture_0_to_1cm,is_day');
+    url.searchParams.set('hourly', 'temperature_2m,precipitation_probability,precipitation,weather_code');
     url.searchParams.set('daily', 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,et0_fao_evapotranspiration');
-    url.searchParams.set('timezone', 'Africa/Nairobi');
+    url.searchParams.set('timezone', 'Africa/Kampala');
     url.searchParams.set('forecast_days', '14');
 
-    const res = await fetch(url.toString(), { next: { revalidate: 1800 } });
+    const res = await fetch(url.toString(), { next: { revalidate: 900 } });
     if (!res.ok) return null;
     const json = await res.json();
 
     const c = json.current;
     const d = json.daily;
-    const { icon: nowIcon, description: nowDesc } = wmoToIcon(c.weather_code);
+    const h = json.hourly;
+    const isDay = c.is_day === 1;
+    const { icon: nowIcon, description: nowDesc } = wmoToIcon(c.weather_code, isDay);
 
     const soilMoistureNow: number | undefined = c.soil_moisture_0_to_1cm;
 
@@ -115,20 +123,18 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
       const code = d.weather_code[i];
       const precip = d.precipitation_sum[i] ?? 0;
       const prob   = d.precipitation_probability_max[i] ?? 0;
-      const { icon, description } = wmoToIcon(code);
+      const { icon, description } = wmoToIcon(code, true);
       const dt = new Date(date);
-      const fmtTime = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' }) : undefined;
+      const fmtTime = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Kampala' }) : undefined;
       return {
         date,
-        dayLabel: dt.toLocaleDateString('en-UG', { weekday: 'short', day: 'numeric', month: 'short' }),
+        dayLabel: dt.toLocaleDateString('en-UG', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Africa/Kampala' }),
         high: Math.round(d.temperature_2m_max[i]),
         low:  Math.round(d.temperature_2m_min[i]),
         icon,
         description,
         precipMm: Math.round(precip * 10) / 10,
         precipProbability: prob,
-        // Only the first day (today) has an actual soil-moisture reading —
-        // Open-Meteo doesn't forecast soil moisture 14 days out.
         farmingNote: farmingNote(code, precip, prob, i === 0 ? soilMoistureNow : undefined),
         sunrise: fmtTime(d.sunrise?.[i]),
         sunset: fmtTime(d.sunset?.[i]),
@@ -136,18 +142,61 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
       };
     });
 
-    // Build OWM-compatible forecast items from daily data (compatibility with dashboard)
-    const forecast: WeatherForecastItem[] = daily.slice(0, 14).map((day, i) => ({
-      dt_txt: new Date(Date.now() + i * 86400000).toISOString(),
-      main: {
-        temp: Math.round((day.high + day.low) / 2),
-        temp_min: day.low,
-        temp_max: day.high,
-      },
-      weather: [{ icon: day.icon, description: day.description }],
-      rain: day.precipMm > 0 ? { '3h': day.precipMm / 8 } : undefined,
-      pop: day.precipProbability / 100,
-    }));
+    // Build real hourly forecast items for upcoming 48 hours
+    const forecast: WeatherForecastItem[] = [];
+    if (h && Array.isArray(h.time)) {
+      for (let i = 0; i < h.time.length && forecast.length < 48; i++) {
+        const timeStr = h.time[i]; // e.g. "2026-09-12T11:00"
+        const dt = new Date(`${timeStr}:00+03:00`);
+        const precip = Number(h.precipitation?.[i] ?? 0);
+        const pop = Number(h.precipitation_probability?.[i] ?? 0);
+        const code = Number(h.weather_code?.[i] ?? 0);
+        const temp = Math.round(Number(h.temperature_2m?.[i] ?? c.temperature_2m));
+        const hourUg = dt.getHours();
+        const isHourDay = hourUg >= 6 && hourUg < 19;
+        const { icon: hIcon, description: hDesc } = wmoToIcon(code, isHourDay);
+
+        forecast.push({
+          dt_txt: dt.toISOString(),
+          main: { temp, temp_min: temp, temp_max: temp },
+          weather: [{ icon: hIcon, description: hDesc }],
+          rain: precip > 0 ? { '3h': Math.round(precip * 10) / 10 } : undefined,
+          pop: Math.round(pop) / 100,
+        });
+      }
+    } else {
+      daily.slice(0, 14).forEach((day, i) => {
+        forecast.push({
+          dt_txt: new Date(Date.now() + i * 86400000).toISOString(),
+          main: { temp: Math.round((day.high + day.low) / 2), temp_min: day.low, temp_max: day.high },
+          weather: [{ icon: day.icon, description: day.description }],
+          rain: day.precipMm > 0 ? { '3h': day.precipMm / 8 } : undefined,
+          pop: day.precipProbability / 100,
+        });
+      });
+    }
+
+    // Determine accurate upcoming rain notice for the next 24 hours
+    let rainNotice = { expected: false, summary: 'No rain expected today', label: 'Good for fieldwork', time: '', mm: 0 };
+    const nowMs = Date.now() - 15 * 60000;
+    const upcomingRain = forecast.find(f => {
+      const t = new Date(f.dt_txt).getTime();
+      return t >= nowMs && ((f.rain?.['3h'] ?? 0) >= 0.2 || (f.pop ?? 0) >= 0.45);
+    });
+
+    if (upcomingRain) {
+      const dt = new Date(upcomingRain.dt_txt);
+      const timeStr = dt.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Kampala' });
+      const mm = upcomingRain.rain?.['3h'] ?? 0;
+      const prob = Math.round((upcomingRain.pop ?? 0) * 100);
+      rainNotice = {
+        expected: true,
+        summary: `Rain likely around ${timeStr}`,
+        label: mm > 0 ? `${mm.toFixed(1)}mm expected (${prob}% chance)` : `${prob}% chance of rain`,
+        time: timeStr,
+        mm,
+      };
+    }
 
     return {
       now: {
@@ -165,6 +214,7 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
       daily,
       district: '',
       source: 'open-meteo',
+      rainNotice,
     };
   } catch {
     return null;
@@ -237,10 +287,10 @@ function ugandaFallbackWeather(district = 'Kampala'): ServerWeatherData {
       high: rain ? 25 : 29,
       low: 18,
       icon: rain ? '10d' : '02d',
-      description: rain ? 'light rain' : 'partly cloudy',
+      description: rain ? 'Light rain' : 'Partly cloudy',
       precipMm: rain ? 8.4 : 0.5,
       precipProbability: rain ? 70 : 20,
-      farmingNote: rain ? '🌦️ Good planting rains — ideal for germination' : '☀️ Clear weather — good for spraying and harvesting',
+      farmingNote: rain ? 'Good planting rains — ideal for germination' : 'Clear weather — good for spraying and harvesting',
     };
   });
 
@@ -248,7 +298,7 @@ function ugandaFallbackWeather(district = 'Kampala'): ServerWeatherData {
     now: {
       temp: isRainy ? 24 : 28,
       feelsLike: isRainy ? 26 : 30,
-      description: isRainy ? 'light rain' : 'partly cloudy',
+      description: isRainy ? 'Light rain' : 'Partly cloudy',
       icon: isRainy ? '10d' : '02d',
       humidity: isRainy ? 82 : 65,
       wind: isRainy ? 4.1 : 2.8,
@@ -267,22 +317,23 @@ function ugandaFallbackWeather(district = 'Kampala'): ServerWeatherData {
   };
 }
 
-// Cache weather per location for 30 minutes using Next.js data cache.
-// This is faster than a Supabase roundtrip — data lives in the Node.js
-// process memory and survives across requests within the same deployment.
+// Cache weather per location for 15 minutes using Next.js data cache.
 const fetchWeatherCached = unstable_cache(
   async (lat: number, lon: number): Promise<ServerWeatherData> => {
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    let data: ServerWeatherData | null = null;
-    if (apiKey) data = await fetchOpenWeatherMap(lat, lon, apiKey);
-    if (!data)  data = await fetchOpenMeteo(lat, lon);
+    // 1. Try Open-Meteo first for hourly precision, day/night awareness, and Uganda calibration
+    let data: ServerWeatherData | null = await fetchOpenMeteo(lat, lon);
+    // 2. Fallback to OpenWeatherMap if needed
+    if (!data) {
+      const apiKey = process.env.OPENWEATHER_API_KEY;
+      if (apiKey) data = await fetchOpenWeatherMap(lat, lon, apiKey);
+    }
     const closest = findClosestDistrict(lat, lon);
     const result = data ?? ugandaFallbackWeather(closest);
     if (!result.district) result.district = closest;
     return result;
   },
-  ['weather-location'],
-  { revalidate: 900, tags: ['weather'] }
+  ['weather-location-v5'],
+  { revalidate: 600, tags: ['weather'] }
 );
 
 export async function fetchWeatherForFarmer(lat: number, lon: number): Promise<ServerWeatherData> {

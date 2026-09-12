@@ -1,11 +1,11 @@
-﻿import { redirect } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getAuthSession, getSupabase } from '@/lib/supabase/auth-cache';
 import { fetchWeatherForDistrict } from '@/lib/weather-server';
 import { DISTRICT_NAMES } from '@/lib/districts';
 import { getCurrentSeasonSummary, generatePlantingAlerts, applyWeatherToPlantingAlerts } from '@/lib/planting-calendar';
 import { WeatherDistrictSelector } from './WeatherDistrictSelector';
-import { Sun, Moon, CloudSun, Cloud, CloudRain, CloudLightning, Snowflake, Wind, Droplets, CalendarDays, Leaf, Sprout } from 'lucide-react';
+import { Sun, Moon, CloudSun, CloudMoon, Cloud, CloudRain, CloudLightning, Snowflake, Wind, Droplets, CalendarDays, Leaf, Sprout } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -18,12 +18,13 @@ const C = {
 function WeatherIcon({ code, size = 22 }: { code: string; size?: number }) {
   if (code === '01d') return <Sun size={size} style={{ color: '#F59E0B' }} />;
   if (code === '01n') return <Moon size={size} style={{ color: '#94A3B8' }} />;
-  if (code === '02d' || code === '02n') return <CloudSun size={size} style={{ color: '#60A5FA' }} />;
+  if (code === '02n') return <CloudMoon size={size} style={{ color: '#94A3B8' }} />;
+  if (code === '02d') return <CloudSun size={size} style={{ color: '#60A5FA' }} />;
   if (code === '03d' || code === '03n' || code === '04d' || code === '04n') return <Cloud size={size} style={{ color: '#94A3B8' }} />;
   if (code === '09d' || code === '09n' || code === '10d' || code === '10n') return <CloudRain size={size} style={{ color: '#3B82F6' }} />;
   if (code === '11d' || code === '11n') return <CloudLightning size={size} style={{ color: '#7C3AED' }} />;
-  if (code === '13d') return <Snowflake size={size} style={{ color: '#BAE6FD' }} />;
-  if (code === '50d') return <Wind size={size} style={{ color: '#94A3B8' }} />;
+  if (code === '13d' || code === '13n') return <Snowflake size={size} style={{ color: '#BAE6FD' }} />;
+  if (code === '50d' || code === '50n') return <Wind size={size} style={{ color: '#94A3B8' }} />;
   return <CloudSun size={size} style={{ color: '#60A5FA' }} />;
 }
 
@@ -130,9 +131,9 @@ export default async function WeatherPage({
             <div className="p-5">
               <p style={{ fontSize: '11px', fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>Wind</p>
               <div style={{ display: 'flex', marginBottom: '4px', color: C.muted }}><Wind size={32} /></div>
-              <p style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>{weather.now.wind} m/s</p>
+              <p style={{ fontSize: '24px', fontWeight: 800, color: C.text }}>{Math.round(weather.now.wind)} km/h</p>
               <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
-                {weather.now.wind > 8 ? 'Strong — delay spraying' : weather.now.wind > 4 ? 'Moderate' : 'Calm — good for spraying'}
+                {weather.now.wind > 25 ? 'Strong — delay spraying' : weather.now.wind > 15 ? 'Moderate' : 'Calm — good for spraying'}
               </p>
             </div>
 

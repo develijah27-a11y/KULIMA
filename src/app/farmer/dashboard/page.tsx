@@ -11,9 +11,10 @@ import { type VerificationLevel } from '@/lib/trust';
 import { NearbyDriversMap } from '@/components/delivery/NearbyDriversMap';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 import { NewsWidget } from '@/components/news/NewsWidget';
+import { getUnifiedMarketPrices } from '@/lib/prices';
 import {
   Package, DollarSign, Home, Bell, CheckCircle2, Sprout,
-  Sun, Moon, Cloud, CloudSun, CloudRain, CloudLightning, Snowflake,
+  Sun, Moon, Cloud, CloudSun, CloudMoon, CloudRain, CloudLightning, Snowflake,
   Calendar, MessageCircle, ShoppingCart, Pencil, ClipboardList, Search,
   BarChart3, Leaf, AlertTriangle, AlertCircle, Wind, Droplets, Truck,
   ArrowRight, User,
@@ -116,15 +117,17 @@ const Card = ({ children, className = '', style = {} }: { children: React.ReactN
 
 function WeatherIcon({ code, size = 28 }: { code: string; size?: number }) {
   const s = { size, strokeWidth: 1.5 };
+  const isNight = code?.endsWith('n');
   const n = code?.replace(/[dn]$/, '') ?? '';
-  if (code === '01n') return <Moon {...s} style={{ color: '#94A3B8' }} />;
+  if (isNight && (n === '01' || n === '')) return <Moon {...s} style={{ color: '#94A3B8' }} />;
+  if (isNight && (n === '02' || n === '03')) return <CloudMoon {...s} style={{ color: '#94A3B8' }} />;
   if (n === '01') return <Sun {...s} style={{ color: '#F59E0B' }} />;
-  if (n === '02') return <CloudSun {...s} style={{ color: '#94A3B8' }} />;
+  if (n === '02') return <CloudSun {...s} style={{ color: '#F59E0B' }} />;
   if (n === '03' || n === '04') return <Cloud {...s} style={{ color: '#94A3B8' }} />;
   if (n === '09' || n === '10') return <CloudRain {...s} style={{ color: '#60A5FA' }} />;
   if (n === '11') return <CloudLightning {...s} style={{ color: '#7C3AED' }} />;
   if (n === '13') return <Snowflake {...s} style={{ color: '#60A5FA' }} />;
-  return <Cloud {...s} style={{ color: '#94A3B8' }} />;
+  return isNight ? <Moon {...s} style={{ color: '#94A3B8' }} /> : <Sun {...s} style={{ color: '#F59E0B' }} />;
 }
 
 // ─── Streaming: Weather card (3-column) ──────────────────────────────────────
@@ -145,14 +148,20 @@ async function WeatherCard({ userId }: { userId: string }) {
   const weather = await getWeatherCached(lat, lon);
 
   const dailyMap: Record<string, { high: number; low: number; icon: string }> = {};
-  for (const item of weather.forecast) {
-    const k = new Date(item.dt_txt).toLocaleDateString('en-UG', { weekday: 'short' });
-    if (!dailyMap[k]) dailyMap[k] = { high: item.main.temp_max, low: item.main.temp_min, icon: item.weather[0].icon };
-    else { dailyMap[k].high = Math.max(dailyMap[k].high, item.main.temp_max); dailyMap[k].low = Math.min(dailyMap[k].low, item.main.temp_min); }
+  for (const item of weather.daily ?? []) {
+    const k = item.dayLabel?.split(' ')?.[0] ?? item.date;
+    if (!dailyMap[k]) dailyMap[k] = { high: item.high, low: item.low, icon: item.icon };
   }
-  const days = Object.entries(dailyMap).slice(0, 4);
+  const days = Object.entries(dailyMap).slice(1, 4);
 
-  const todayDate = new Date().toLocaleDateString('en-UG', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  // Uganda local date (Africa/Kampala UTC+3)
+  const todayDate = new Date().toLocaleDateString('en-UG', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'Africa/Kampala',
+  });
 
   return (
     <Card>
@@ -172,37 +181,30 @@ async function WeatherCard({ userId }: { userId: string }) {
           <p className="text-sm capitalize mt-1" style={{ color: C.muted }}>{weather.now.description}</p>
           <div className="flex gap-4 mt-3 flex-wrap">
             <span className="text-xs flex items-center gap-1" style={{ color: C.muted }}><Droplets size={11} /> {weather.now.humidity}%</span>
-            <span className="text-xs flex items-center gap-1" style={{ color: C.muted }}><Wind size={11} /> {weather.now.wind.toFixed(1)} m/s</span>
+            <span className="text-xs flex items-center gap-1" style={{ color: C.muted }}><Wind size={11} /> {Math.round(weather.now.wind)} km/h</span>
           </div>
         </div>
 
         {/* Rain forecast */}
         <div className="p-4 sm:p-5 min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Rain Forecast</p>
-          {(() => {
-            const rainItem = weather.forecast.find((f) => (f.rain?.['3h'] ?? 0) > 0);
-            if (rainItem) {
-              const dt = new Date(rainItem.dt_txt);
-              return (
-                <>
-                  <div className="mb-1"><CloudRain size={28} strokeWidth={1.5} style={{ color: '#60A5FA' }} /></div>
-                  <p className="text-sm font-bold" style={{ color: C.red }}>
-                    Rain at {dt.toLocaleTimeString('en-UG', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                  <p className="text-xs mt-1" style={{ color: C.muted }}>
-                    {rainItem.rain?.['3h'].toFixed(1)}mm expected
-                  </p>
-                </>
-              );
-            }
-            return (
-              <>
-                <div className="mb-1"><Sun size={28} strokeWidth={1.5} style={{ color: '#F59E0B' }} /></div>
-                <p className="text-sm font-bold" style={{ color: C.greenMed }}>No rain expected</p>
-                <p className="text-xs mt-1" style={{ color: C.muted }}>Good for fieldwork</p>
-              </>
-            );
-          })()}
+          {weather.rainNotice?.expected ? (
+            <>
+              <div className="mb-1"><CloudRain size={28} strokeWidth={1.5} style={{ color: '#60A5FA' }} /></div>
+              <p className="text-sm font-bold" style={{ color: C.red }}>
+                {weather.rainNotice.summary}
+              </p>
+              <p className="text-xs mt-1" style={{ color: C.muted }}>
+                {weather.rainNotice.label}
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="mb-1"><Sun size={28} strokeWidth={1.5} style={{ color: '#F59E0B' }} /></div>
+              <p className="text-sm font-bold" style={{ color: C.greenMed }}>No rain expected today</p>
+              <p className="text-xs mt-1" style={{ color: C.muted }}>Clear for fieldwork</p>
+            </>
+          )}
         </div>
 
         {/* Date */}
@@ -211,7 +213,7 @@ async function WeatherCard({ userId }: { userId: string }) {
           <div className="mb-1"><Calendar size={28} strokeWidth={1.5} style={{ color: C.blue }} /></div>
           <p className="text-sm font-bold leading-snug" style={{ color: C.text }}>{todayDate}</p>
           <div className="flex gap-2 mt-3 flex-wrap">
-            {days.slice(0, 2).map(([label, d]) => (
+            {days.map(([label, d]) => (
               <div key={label} className="text-center">
                 <p className="text-[10px]" style={{ color: C.muted }}>{label}</p>
                 <div className="flex justify-center my-0.5"><WeatherIcon code={d.icon} size={16} /></div>
@@ -343,30 +345,20 @@ async function AIBanner({ userId }: { userId: string }) {
 // ─── Streaming: Market prices table ──────────────────────────────────────────
 
 async function MarketPricesTable({ userId }: { userId: string }) {
-  const supabase = await createClient();
   const profile = await getProfile(userId);
-  const { data: prices } = await supabase
-    .from('market_prices')
-    .select('crop_type, price_per_kg, recorded_at')
-    .gte('recorded_at', new Date(Date.now() - 2 * 864e5).toISOString())
-    .order('recorded_at', { ascending: false })
-    .limit(40);
-
-  const rows = prices ?? [];
-  const groups: Record<string, number[]> = {};
-  rows.forEach((p: any) => {
-    const k = p.crop_type?.toLowerCase() ?? '';
-    if (!groups[k]) groups[k] = [];
-    groups[k].push(p.price_per_kg);
-  });
+  const userDistrict = profile?.location ?? '';
+  const marketResult = await getUnifiedMarketPrices({ district: userDistrict });
 
   const primary = profile?.primary_crop?.toLowerCase() ?? '';
-  const sorted = Object.entries(groups)
-    .map(([crop, ps]) => ({
-      crop,
-      latest: ps[0],
-      trend: ps[1] ? ((ps[0] - ps[1]) / ps[1] * 100) : null,
-    }))
+  const sorted = Object.entries(marketResult.averages)
+    .map(([crop, avgPrice]) => {
+      const trendData = marketResult.dailyTrends[crop];
+      return {
+        crop,
+        latest: avgPrice,
+        trend: trendData?.changePercent ?? 0,
+      };
+    })
     .sort((a, b) => (a.crop === primary ? -1 : b.crop === primary ? 1 : 0))
     .slice(0, 8);
 

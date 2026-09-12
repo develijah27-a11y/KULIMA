@@ -74,13 +74,16 @@ function parseFeed(xml: string, defaultSource: string): NewsItem[] {
  * Generates dynamic, date-stamped agricultural intelligence bulletins for Uganda farmers.
  * Guarantees fresh, verified, actionable content every single day aligned with Uganda's seasons.
  */
-function generateDailyAgriIntelligence(date = new Date()): NewsItem[] {
-  const month = date.getMonth(); // 0 = Jan, 8 = Sep
-  const dateStr = date.toISOString().slice(0, 10);
-  const oneHourAgo = new Date(date.getTime() - 3600000).toISOString();
-  const threeHoursAgo = new Date(date.getTime() - 10800000).toISOString();
-  const sixHoursAgo = new Date(date.getTime() - 21600000).toISOString();
-  const yesterday = new Date(date.getTime() - 86400000).toISOString();
+function generateDailyAgriIntelligence(): NewsItem[] {
+  // Always calibrate date string to Africa/Kampala timezone (UTC+3)
+  const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Kampala', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const dateStr = formatter.format(new Date()); // "YYYY-MM-DD"
+  const now = new Date();
+  const month = parseInt(dateStr.slice(5, 7), 10) - 1;
+  const oneHourAgo = new Date(now.getTime() - 3600000).toISOString();
+  const threeHoursAgo = new Date(now.getTime() - 10800000).toISOString();
+  const sixHoursAgo = new Date(now.getTime() - 21600000).toISOString();
+  const yesterday = new Date(now.getTime() - 86400000).toISOString();
 
   // Uganda Seasonality:
   // Season 1: Mar-May (Rains), Jun-Jul (Harvest & Dry)
