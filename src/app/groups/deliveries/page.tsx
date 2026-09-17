@@ -2,7 +2,8 @@ import type { JSX, ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Search, Car, Truck, Package, X as XIcon, Zap, Snowflake, User, CheckCircle2 } from 'lucide-react';
+import { Search, Car, Truck, Package, X as XIcon, Zap, Snowflake, User, CheckCircle2, Phone } from 'lucide-react';
+import { getTelUri, formatPhoneDisplay } from '@/lib/phone-dialer';
 import { PayDeliveryButton } from '@/app/buyer/deliveries/PayDeliveryButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
@@ -146,10 +147,32 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
         </p>
 
         {d.transporter && (
-          <p style={{ fontSize: 11, color: C.muted, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <User size={10} /> Driver: {d.transporter.full_name ?? 'Assigned'}
-            {d.transporter.phone_number && ` · ${d.transporter.phone_number}`}
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, margin: '0 0 8px', flexWrap: 'wrap' }}>
+            <p style={{ fontSize: 11, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <User size={11} /> Driver: <strong style={{ color: C.text }}>{d.transporter.full_name ?? 'Assigned'}</strong>
+            </p>
+            {d.transporter.phone_number && (
+              <a
+                href={getTelUri(d.transporter.phone_number)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '3px 9px',
+                  borderRadius: 6,
+                  background: 'var(--color-primary-bg, #e3efe4)',
+                  color: C.green,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  border: '1px solid rgba(22, 107, 58, 0.2)',
+                }}
+                title={`Call driver directly: ${formatPhoneDisplay(d.transporter.phone_number)}`}
+              >
+                <Phone size={11} /> Call {formatPhoneDisplay(d.transporter.phone_number)}
+              </a>
+            )}
+          </div>
         )}
 
         {['assigned', 'in_transit'].includes(d.status) && d.transporter && (
@@ -161,6 +184,7 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
               pickupCoords={d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null}
               dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
               otherPartyLabel={d.transporter?.full_name ?? 'Driver'}
+              driverPhone={d.transporter?.phone_number}
             />
           </div>
         )}

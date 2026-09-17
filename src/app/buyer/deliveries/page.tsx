@@ -8,7 +8,8 @@ import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton
 import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
 import { LiveDeliveryStatusBanner } from '@/components/delivery/LiveDeliveryStatusBanner';
 import type { JSX } from 'react';
-import { Truck, Search, Car, Package, Snowflake, Zap, CheckCircle2, User } from 'lucide-react';
+import { Truck, Search, Car, Package, Snowflake, Zap, CheckCircle2, User, Phone } from 'lucide-react';
+import { getTelUri, formatPhoneDisplay } from '@/lib/phone-dialer';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -186,12 +187,32 @@ function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any;
 
         {/* Driver info */}
         {d.transporter && (
-          <p style={{ fontSize: 11, color: C.muted, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <User size={11} />Driver: {d.transporter.full_name ?? 'Assigned'}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, margin: '0 0 8px', flexWrap: 'wrap' }}>
+            <p style={{ fontSize: 11, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <User size={11} />Driver: <strong style={{ color: C.text }}>{d.transporter.full_name ?? 'Assigned'}</strong>
+            </p>
             {d.transporter.phone_number && (
-              <> · <a href={`tel:${d.transporter.phone_number}`} style={{ color: C.greenMed, fontWeight: 700, textDecoration: 'none' }}>{d.transporter.phone_number}</a></>
+              <a
+                href={getTelUri(d.transporter.phone_number)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '3px 9px',
+                  borderRadius: 6,
+                  background: 'var(--color-primary-bg, #e3efe4)',
+                  color: C.greenMed,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  border: '1px solid rgba(22, 107, 58, 0.2)',
+                }}
+                title={`Call driver directly: ${formatPhoneDisplay(d.transporter.phone_number)}`}
+              >
+                <Phone size={11} /> Call {formatPhoneDisplay(d.transporter.phone_number)}
+              </a>
             )}
-          </p>
+          </div>
         )}
         {/* Live Captain Status Alert (Getting Captain near you / Captain reaches in X min) */}
         {['open', 'assigned', 'in_transit'].includes(d.status) && (

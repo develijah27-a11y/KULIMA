@@ -8,6 +8,7 @@ import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { DriverTrackingSheet } from '@/components/delivery/DriverTrackingSheet';
 import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
 import { ShowPaymentQR } from '@/components/delivery/ShowPaymentQR';
+import { getTelUri, openPhoneDialer, getWhatsAppUri, formatPhoneDisplay } from '@/lib/phone-dialer';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -197,18 +198,37 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                         </p>
                       </div>
                       {d.requester.phone_number && (
-                        <div style={{ display: 'flex', gap: 6 }}>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                           <a
-                            href={`tel:${d.requester.phone_number}`}
+                            href={getTelUri(d.requester.phone_number)}
+                            onClick={(e) => openPhoneDialer(d.requester.phone_number, e)}
                             style={{
-                              fontSize: 11, fontWeight: 700, color: C.green,
-                              textDecoration: 'none', background: C.cardBg,
-                              padding: '5px 10px', borderRadius: 8,
-                              border: `1px solid ${C.border}`,
-                              display: 'inline-flex', alignItems: 'center', gap: 4,
+                              fontSize: 12, fontWeight: 700, color: '#fff',
+                              textDecoration: 'none', background: C.green,
+                              padding: '6px 12px', borderRadius: 8,
+                              display: 'inline-flex', alignItems: 'center', gap: 5,
+                              boxShadow: '0 2px 6px rgba(34,197,94,0.3)',
+                              cursor: 'pointer',
+                            }}
+                            title={`Call Requester: ${formatPhoneDisplay(d.requester.phone_number)}`}
+                          >
+                            <Phone size={13} /> Call {formatPhoneDisplay(d.requester.phone_number)}
+                          </a>
+                          <a
+                            href={getWhatsAppUri(d.requester.phone_number, `Hello ${d.requester.full_name ?? ''}, this is your Cropify driver regarding delivery #${d.id.slice(0, 8)}.`)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                              fontSize: 12, fontWeight: 700, color: '#fff',
+                              textDecoration: 'none', background: '#25D366',
+                              padding: '6px 12px', borderRadius: 8,
+                              display: 'inline-flex', alignItems: 'center', gap: 5,
+                              boxShadow: '0 2px 6px rgba(37,211,102,0.3)',
+                              cursor: 'pointer',
                             }}
                           >
-                            <Phone size={12} /> Call
+                            WhatsApp
                           </a>
                         </div>
                       )}
@@ -412,27 +432,32 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
               )}
             </div>
             {d.requester.phone_number && (
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 <a
-                  href={`tel:${d.requester.phone_number}`}
+                  href={getTelUri(d.requester.phone_number)}
+                  onClick={(e) => openPhoneDialer(d.requester.phone_number, e)}
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                    padding: '6px 12px', borderRadius: 8,
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '7px 14px', borderRadius: 10,
                     background: C.green, color: '#fff',
-                    fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                    fontSize: 13, fontWeight: 800, textDecoration: 'none',
+                    boxShadow: '0 2px 8px rgba(34,197,94,0.35)',
+                    cursor: 'pointer',
                   }}
+                  title={`Call Requester: ${formatPhoneDisplay(d.requester.phone_number)}`}
                 >
-                  <Phone size={12} /> Call
+                  <Phone size={13} /> Call {formatPhoneDisplay(d.requester.phone_number)}
                 </a>
                 <a
-                  href={`https://wa.me/${d.requester.phone_number.replace(/\D/g, '')}`}
+                  href={getWhatsAppUri(d.requester.phone_number, `Hello ${d.requester.full_name ?? ''}, this is your Cropify driver regarding your delivery #${d.id.slice(0, 8)}.`)}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                    padding: '6px 12px', borderRadius: 8,
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '7px 14px', borderRadius: 10,
                     background: '#25D366', color: '#fff',
-                    fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                    fontSize: 13, fontWeight: 800, textDecoration: 'none',
+                    boxShadow: '0 2px 8px rgba(37,211,102,0.3)',
                   }}
                 >
                   WhatsApp

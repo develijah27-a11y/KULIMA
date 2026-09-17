@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Truck, Navigation, Radio, CheckCircle, Clock, Phone, MapPin, ChevronRight, Sparkles } from 'lucide-react';
 import { TrackDeliveryButton } from './TrackDeliveryButton';
+import { getTelUri, openPhoneDialer, formatPhoneDisplay } from '@/lib/phone-dialer';
 
 interface Props {
   delivery: {
@@ -200,18 +201,44 @@ export function LiveDeliveryStatusBanner({ delivery, transporter, vehicle, photo
             </p>
           </div>
 
-          <TrackDeliveryButton
-            delivery={delivery}
-            driver={{
-              name: transporter.full_name ?? 'Captain',
-              phone: transporter.phone_number,
-              vehicleType: vehicle?.vehicle_type,
-              plateNumber: vehicle?.plate_number,
-              makeModel: vehicle?.make_model,
-              isColdCapable: vehicle?.is_cold_capable,
-              photoUrl,
-            }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {transporter.phone_number && (
+              <a
+                href={getTelUri(transporter.phone_number)}
+                onClick={(e) => openPhoneDialer(transporter.phone_number, e)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '9px 14px',
+                  borderRadius: 12,
+                  background: '#10B981',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: 13,
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 10px rgba(16,185,129,0.35)',
+                  cursor: 'pointer',
+                }}
+                title={`Call Captain: ${formatPhoneDisplay(transporter.phone_number)}`}
+              >
+                <Phone size={14} /> Call Captain
+              </a>
+            )}
+
+            <TrackDeliveryButton
+              delivery={delivery}
+              driver={{
+                name: transporter.full_name ?? 'Captain',
+                phone: transporter.phone_number,
+                vehicleType: vehicle?.vehicle_type,
+                plateNumber: vehicle?.plate_number,
+                makeModel: vehicle?.make_model,
+                isColdCapable: vehicle?.is_cold_capable,
+                photoUrl,
+              }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -274,18 +301,44 @@ export function LiveDeliveryStatusBanner({ delivery, transporter, vehicle, photo
             </p>
           </div>
 
-          <TrackDeliveryButton
-            delivery={delivery}
-            driver={{
-              name: transporter.full_name ?? 'Captain',
-              phone: transporter.phone_number,
-              vehicleType: vehicle?.vehicle_type,
-              plateNumber: vehicle?.plate_number,
-              makeModel: vehicle?.make_model,
-              isColdCapable: vehicle?.is_cold_capable,
-              photoUrl,
-            }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {transporter.phone_number && (
+              <a
+                href={getTelUri(transporter.phone_number)}
+                onClick={(e) => openPhoneDialer(transporter.phone_number, e)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '9px 14px',
+                  borderRadius: 12,
+                  background: '#10B981',
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                  fontSize: 13,
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 10px rgba(16,185,129,0.35)',
+                  cursor: 'pointer',
+                }}
+                title={`Call Captain: ${formatPhoneDisplay(transporter.phone_number)}`}
+              >
+                <Phone size={14} /> Call Captain
+              </a>
+            )}
+
+            <TrackDeliveryButton
+              delivery={delivery}
+              driver={{
+                name: transporter.full_name ?? 'Captain',
+                phone: transporter.phone_number,
+                vehicleType: vehicle?.vehicle_type,
+                plateNumber: vehicle?.plate_number,
+                makeModel: vehicle?.make_model,
+                isColdCapable: vehicle?.is_cold_capable,
+                photoUrl,
+              }}
+            />
+          </div>
         </div>
       </div>
     );

@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Marker as LMarker, Polyline as LPolyline } from 'leaflet';
 import {
-  Volume2, VolumeX, Search, Maximize2, Minimize2, Heart, X,
+  Volume2, VolumeX, Search, Maximize2, Minimize2, Heart, X, Phone,
 } from 'lucide-react';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
+import { openPhoneDialer, formatPhoneDisplay } from '@/lib/phone-dialer';
 import {
   DARK_NAV_TILE_URL,
   DARK_NAV_TILE_OPTIONS,
@@ -1069,32 +1070,58 @@ export function DeliveryTrackingMap({
           </div>
         </div>
 
-        {/* Recent / Details Button */}
-        <button
-          type="button"
-          onClick={() => {
-            if (onToggleDetails) {
-              onToggleDetails();
-            } else if (driverPhone) {
-              window.location.href = `tel:${driverPhone}`;
-            } else {
-              setShowQuickSearch(prev => !prev);
-            }
-          }}
-          style={{
-            padding: '7px 18px',
-            borderRadius: 10,
-            background: '#FFFFFF',
-            color: '#0F172A',
-            border: 'none',
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-          }}
-        >
-          Recent
-        </button>
+        {/* Action Buttons: Direct Phone Call & Recent/Details */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          {driverPhone && (
+            <button
+              type="button"
+              onClick={(e) => openPhoneDialer(driverPhone, e)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                padding: '7px 14px',
+                borderRadius: 10,
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                color: '#FFFFFF',
+                border: 'none',
+                fontSize: 12.5,
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 2px 10px rgba(16, 185, 129, 0.45)',
+                transition: 'transform 0.15s ease',
+              }}
+              title={`Call ${otherPartyLabel}: ${formatPhoneDisplay(driverPhone)}`}
+            >
+              <Phone size={14} /> Call
+            </button>
+          )}
+
+          {/* Recent / Details Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onToggleDetails) {
+                onToggleDetails();
+              } else {
+                setShowQuickSearch(prev => !prev);
+              }
+            }}
+            style={{
+              padding: '7px 15px',
+              borderRadius: 10,
+              background: '#FFFFFF',
+              color: '#0F172A',
+              border: 'none',
+              fontSize: 12.5,
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            }}
+          >
+            Recent
+          </button>
+        </div>
       </div>
     </div>
   );

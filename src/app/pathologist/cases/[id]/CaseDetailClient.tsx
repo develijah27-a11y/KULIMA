@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Leaf, Stethoscope, MessageSquare, Phone, ExternalLink, User, Copy, Check, Sparkles } from 'lucide-react';
+import { openPhoneDialer, getTelUri } from '@/lib/phone-dialer';
 
 const C = {
   text:       'var(--d-text)',
@@ -254,7 +255,8 @@ export function CaseDetailClient({
             )}
             {phone && (
               <a
-                href={`tel:${phone}`}
+                href={getTelUri(phone)}
+                onClick={(e) => openPhoneDialer(phone, e)}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 12px', borderRadius: 9,
                   background: 'var(--d-subtle)', border: `1px solid ${C.border}`, color: C.text, fontSize: 12, fontWeight: 600, textDecoration: 'none',

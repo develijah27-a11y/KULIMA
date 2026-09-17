@@ -7,6 +7,7 @@ import { DeliveryTrackingMap } from './DeliveryTrackingMap';
 import { ShareLocationButton } from './ShareLocationButton';
 import { Phone, MessageCircle, Truck, Bike, Car, Package, Snowflake, User } from 'lucide-react';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
+import { openPhoneDialer, getTelUri, getWhatsAppUri, formatPhoneDisplay } from '@/lib/phone-dialer';
 
 const VEHICLE_ICON: Record<string, React.ReactNode> = {
   motorcycle: <Bike size={22} />,
@@ -181,29 +182,37 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 10 }}>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {otherParty.phone && (
           <a
-            href={`tel:${otherParty.phone}`}
+            href={getTelUri(otherParty.phone)}
+            onClick={(e) => openPhoneDialer(otherParty.phone, e)}
             style={{
-              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-              padding: '12px', borderRadius: 12, background: 'var(--color-primary, #166B3A)', color: '#fff',
+              flex: '1 1 180px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+              padding: '12px 14px', borderRadius: 12, background: 'var(--color-primary, #166B3A)', color: '#fff',
               fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
+              boxShadow: '0 4px 12px rgba(22, 107, 58, 0.25)',
             }}
           >
-            <Phone size={15} /> Call {otherParty.role === 'driver' ? 'driver' : 'buyer'}
+            <Phone size={16} /> Call {otherParty.role === 'driver' ? 'Captain' : 'Requester'} ({formatPhoneDisplay(otherParty.phone)})
           </a>
         )}
-        <a
-          href={`sms:${otherParty.phone ?? ''}`}
-          style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
-            padding: '12px', borderRadius: 12, background: 'var(--color-surface-2, #f3f5f1)',
-            color: 'var(--d-text, #182018)', fontWeight: 700, fontSize: 13.5, textDecoration: 'none',
-          }}
-        >
-          <MessageCircle size={15} /> Message
-        </a>
+        {otherParty.phone && (
+          <a
+            href={getWhatsAppUri(otherParty.phone, `Hello ${otherParty.name}, reaching out regarding Cropify delivery #${delivery.id.slice(0, 8)}.`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '12px 14px', borderRadius: 12, background: 'var(--color-surface-2, #f3f5f1)',
+              color: 'var(--d-text, #182018)', fontWeight: 700, fontSize: 13, textDecoration: 'none',
+              border: '1px solid var(--d-border, #e2e8f0)',
+            }}
+          >
+            <MessageCircle size={15} style={{ color: '#25D366' }} /> WhatsApp
+          </a>
+        )}
       </div>
 
       {shareOwnLocation && (

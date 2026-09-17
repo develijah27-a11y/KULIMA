@@ -6,6 +6,7 @@ import {
   CheckCircle2, AlertCircle, XCircle, RefreshCw, Send,
   User, Shield, X, Phone, Mail, ExternalLink, Check, Copy, Sparkles,
 } from 'lucide-react';
+import { openPhoneDialer, getTelUri } from '@/lib/phone-dialer';
 
 type TicketStatus = 'open' | 'in_progress' | 'pending_user' | 'resolved' | 'closed';
 type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
@@ -257,7 +258,11 @@ function TicketPanel({ ticketId, onClose, onUpdated }: { ticketId: string; onClo
                     <ExternalLink size={11}/> WhatsApp
                   </a>
                 )}
-                <a href={`tel:${phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 8, background: 'var(--color-surface-2)', border: `1px solid ${C.border}`, color: C.text, fontSize: 11, fontWeight: 700, textDecoration: 'none' }}>
+                <a
+                  href={getTelUri(phone)}
+                  onClick={(e) => openPhoneDialer(phone, e)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 8, background: 'var(--color-surface-2)', border: `1px solid ${C.border}`, color: C.text, fontSize: 11, fontWeight: 700, textDecoration: 'none' }}
+                >
                   <Phone size={11}/> Call
                 </a>
                 <button onClick={() => handleCopyPhone(phone)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 8, background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, fontSize: 11, cursor: 'pointer' }}>

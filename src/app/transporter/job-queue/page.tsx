@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CheckCircle2, X, Truck, Zap, Snowflake, MapPin, Calendar, Map, Phone } from 'lucide-react';
+import { getTelUri, openPhoneDialer, formatPhoneDisplay, getWhatsAppUri } from '@/lib/phone-dialer';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -146,45 +147,68 @@ function JobCard({ job, onAccepted }: { job: Job; onAccepted: (id: string) => vo
         )}
 
         {/* Requester Information */}
-        {job.requester && (
-          <div style={{
-            background: 'var(--color-surface-2)',
-            borderRadius: 12,
-            padding: '10px 14px',
-            marginBottom: 14,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 10,
-            flexWrap: 'wrap',
-          }}>
-            <div>
-              <p style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, margin: 0 }}>
-                Requester
-              </p>
-              <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '2px 0 0' }}>
-                {job.requester.full_name || 'Verified Requester'}
-                {job.requester.location ? ` · ${job.requester.location}` : ''}
-              </p>
-            </div>
-            {job.requester.phone_number && (
-              <div style={{ display: 'flex', gap: 6 }}>
-                <a
-                  href={`tel:${job.requester.phone_number}`}
-                  style={{
-                    fontSize: 11, fontWeight: 700, color: C.greenMed,
-                    textDecoration: 'none', background: C.cardBg,
-                    padding: '5px 10px', borderRadius: 8,
-                    border: `1px solid ${C.border}`,
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                  }}
-                >
-                  <Phone size={12} /> Call
-                </a>
+        {(() => {
+          const req = job.requester;
+          if (!req) return null;
+          return (
+            <div style={{
+              background: 'var(--color-surface-2)',
+              borderRadius: 12,
+              padding: '10px 14px',
+              marginBottom: 14,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              flexWrap: 'wrap',
+            }}>
+              <div>
+                <p style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, margin: 0 }}>
+                  Requester
+                </p>
+                <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '2px 0 0' }}>
+                  {req.full_name || 'Verified Requester'}
+                  {req.location ? ` · ${req.location}` : ''}
+                </p>
               </div>
-            )}
-          </div>
-        )}
+              {req.phone_number && (
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <a
+                    href={getTelUri(req.phone_number)}
+                    onClick={(e) => openPhoneDialer(req.phone_number, e)}
+                    style={{
+                      fontSize: 12, fontWeight: 700, color: '#fff',
+                      textDecoration: 'none', background: C.green,
+                      padding: '6px 12px', borderRadius: 8,
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      boxShadow: '0 2px 6px rgba(34,197,94,0.3)',
+                      cursor: 'pointer',
+                    }}
+                    title={`Call Requester: ${formatPhoneDisplay(req.phone_number)}`}
+                  >
+                    <Phone size={13} /> Call {formatPhoneDisplay(req.phone_number)}
+                  </a>
+                  <a
+                    href={getWhatsAppUri(req.phone_number, `Hello ${req.full_name ?? ''}, this is your Cropify driver regarding delivery #${job.id.slice(0, 8)}.`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      fontSize: 12, fontWeight: 700, color: '#fff',
+                      textDecoration: 'none', background: '#25D366',
+                      padding: '6px 12px', borderRadius: 8,
+                      display: 'inline-flex', alignItems: 'center', gap: 5,
+                      boxShadow: '0 2px 6px rgba(37,211,102,0.3)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    WhatsApp
+                  </a>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Accept button */}
         <button
