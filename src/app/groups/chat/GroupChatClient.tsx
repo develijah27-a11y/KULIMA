@@ -2605,7 +2605,7 @@ function GroupInfoDrawer({
             Description
           </p>
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: 'var(--d-text)' }}>
-            Official agricultural collective group on Kulima. Farmers coordinate harvest cycles, submit lot quantities, and negotiate direct collective off-taker contracts.
+            Official agricultural collective group on Cropify. Farmers coordinate harvest cycles, submit lot quantities, and negotiate direct collective off-taker contracts.
           </p>
         </div>
 

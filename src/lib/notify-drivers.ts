@@ -10,6 +10,7 @@ export interface NotifyNearbyDriversParams {
   cargoKg: number;
   cargoType?: string | null;
   deliveryType?: string; // 'standard' | 'fast' | 'cold'
+  driverEarnings?: number;
   totalFare?: number;
   pickupLat?: number | null;
   pickupLng?: number | null;
@@ -103,7 +104,7 @@ export async function notifyNearbyDrivers(
 
     if (vehicles && vehicles.length > 0) {
       for (const v of vehicles) {
-        if (!v.user_id || v.user_id === excludeUserId) continue;
+        if (!v.user_id || v.user_id === excludeUserId || v.is_available === false) continue;
 
         // If cold transport requested, we still prefer cold-capable but don't strictly hide standard if fallback needed
         let isMatch = false;
@@ -189,18 +190,17 @@ export async function notifyNearbyDrivers(
       }
     }
 
-    // 3. Fallback logic: Ensure every driver in the vicinity is reached
-    // If fewer than 5 drivers match strict proximity, expand with regional matches
-    if (matchedDriverIds.size < 5) {
+    // 3. Match accuracy: Only alert drivers who genuinely match the pickup location.
+    // If strict nearby drivers exist, we notify only them (accurate count!).
+    // Only if ZERO nearby drivers exist in that district do we expand to regional/active transporters.
+    if (matchedDriverIds.size === 0) {
       for (const id of regionalDriverIds) {
         matchedDriverIds.add(id);
       }
-    }
-
-    // If still zero or very sparse (< 3), notify all registered transporters nationwide
-    if (matchedDriverIds.size < 3) {
-      for (const id of allTransporterIds) {
-        matchedDriverIds.add(id);
+      if (matchedDriverIds.size === 0) {
+        for (const id of allTransporterIds) {
+          matchedDriverIds.add(id);
+        }
       }
     }
 
@@ -231,10 +231,11 @@ export async function notifyNearbyDrivers(
         ? 'Express Delivery'
         : 'Standard Delivery';
 
-    const fareFormatted = totalFare ? `UGX ${Math.round(totalFare).toLocaleString()}` : '';
-    const notifTitle = 'New Delivery Request Nearby';
+    const payoutAmount = params.driverEarnings ?? params.totalFare;
+    const fareFormatted = payoutAmount ? `UGX ${Math.round(payoutAmount).toLocaleString()}` : '';
+    const notifTitle = 'New Delivery Job Available';
     const notifBody = fareFormatted
-      ? `${typeLabel} · ${cargoKg}kg from ${pickupDistrict} to ${dropoffDistrict} · ${fareFormatted}`
+      ? `${typeLabel} · ${cargoKg}kg from ${pickupDistrict} to ${dropoffDistrict} · Earn ${fareFormatted}`
       : `${typeLabel} · ${cargoKg}kg from ${pickupDistrict} to ${dropoffDistrict}`;
 
     // 6. Insert in-app notifications
@@ -249,7 +250,8 @@ export async function notifyNearbyDrivers(
         pickup_district: pickupDistrict,
         dropoff_district: dropoffDistrict,
         cargo_kg: cargoKg,
-        fare: totalFare ?? null,
+        driver_earnings: payoutAmount ?? null,
+        fare: payoutAmount ?? null,
       },
       read: false,
     }));
@@ -260,13 +262,18 @@ export async function notifyNearbyDrivers(
       console.error('[notifyNearbyDrivers] Error inserting notifications:', notifErr);
     }
 
-    // 7. Dispatch Web Push notifications
+    // 7. Dispatch Web Push notifications with dedicated job actions
     try {
       await sendPushToUsers(driverUserIds, {
         title: notifTitle,
         body: notifBody,
         url: '/transporter/job-queue',
         tag: `delivery-${deliveryId}`,
+        type: 'delivery',
+        actions: [
+          { action: 'view_job', title: '👀 View Job' },
+          { action: 'accept_job', title: '⚡ Accept Now' },
+        ],
       });
     } catch (pushErr) {
       console.error('[notifyNearbyDrivers] Error sending push notifications:', pushErr);

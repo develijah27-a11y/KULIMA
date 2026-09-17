@@ -27,6 +27,9 @@ function getAppOrigin(req: Request): string {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, '');
   }
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://www.cropifyapp.com';
+  }
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
     return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/+$/, '')}`;
   }

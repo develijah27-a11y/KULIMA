@@ -1,4 +1,4 @@
-import { sendPushToUsers } from '@/lib/push';
+import { sendPushToUsers, type PushAction } from '@/lib/push';
 
 export interface NotifyInput {
   userId: string;
@@ -10,6 +10,8 @@ export interface NotifyInput {
   data?: Record<string, unknown>;
   /** Where tapping the OS push notification should land. Defaults to /dashboard. */
   url?: string;
+  /** Custom interactive action buttons (replaces browser's weird default "Unsubscribe" action) */
+  actions?: PushAction[];
 }
 
 // Every in-app notification should go through here instead of a raw
@@ -52,12 +54,52 @@ export async function notifyUsers(supabase: any, notifications: NotifyInput[]): 
     return { ok: false };
   }
 
+  // Derive professional user-experience actions to eliminate the native browser "Unsubscribe" button
+  const getActionsForNotification = (n: NotifyInput): PushAction[] => {
+    if (n.actions && n.actions.length > 0) return n.actions;
+    const text = `${n.type} ${n.title} ${n.body}`.toLowerCase();
+    if (text.includes('delivery') || text.includes('job') || text.includes('driver') || text.includes('pickup') || text.includes('transit')) {
+      return [
+        { action: 'view_job', title: '👀 View Job' },
+        { action: 'open_app', title: '🚀 Open Cropify' },
+      ];
+    }
+    if (text.includes('order') || text.includes('purchase') || text.includes('offer')) {
+      return [
+        { action: 'view_order', title: '📦 View Order' },
+        { action: 'open_app', title: '🚀 Open Cropify' },
+      ];
+    }
+    if (text.includes('message') || text.includes('chat') || text.includes('group')) {
+      return [
+        { action: 'open_chat', title: '💬 Open Chat' },
+        { action: 'open_app', title: '📱 Open App' },
+      ];
+    }
+    if (text.includes('loan') || text.includes('wallet') || text.includes('payment') || text.includes('paid')) {
+      return [
+        { action: 'view_wallet', title: '💰 View Details' },
+        { action: 'open_app', title: '🚀 Open App' },
+      ];
+    }
+    return [
+      { action: 'view', title: '👀 View Details' },
+      { action: 'open_app', title: '🚀 Open Cropify' },
+    ];
+  };
+
   // Pushes are best-effort and independent per recipient — one failing
   // subscription must never block the in-app row (already written above)
   // or another recipient's push.
   await Promise.all(
     notifications.map(n =>
-      sendPushToUsers([n.userId], { title: n.title, body: n.body, url: n.url ?? '/dashboard' }).catch(() => {}),
+      sendPushToUsers([n.userId], {
+        title: n.title,
+        body: n.body,
+        url: n.url ?? '/dashboard',
+        type: n.type,
+        actions: getActionsForNotification(n),
+      }).catch(() => {}),
     ),
   );
 

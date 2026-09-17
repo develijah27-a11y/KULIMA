@@ -67,7 +67,7 @@ export function purchaseReceiptEmail(opts: {
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="vertical-align: middle;">
-                  <div style="display: inline-block; width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.16); text-align: center; line-height: 34px; font-weight: 900; font-size: 16px; color: #fff; font-family: Georgia, serif;">A</div>
+                  <div style="display: inline-block; width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.16); text-align: center; line-height: 34px; font-weight: 900; font-size: 16px; color: #fff; font-family: Georgia, serif;">C</div>
                 </td>
                 <td style="vertical-align: middle; padding-left: 10px;">
                   <p style="margin: 0; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em;">CROPIFY</p>
@@ -192,7 +192,7 @@ export function deliveryArrivedEmail(opts: {
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="vertical-align: middle;">
-                  <div style="display: inline-block; width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.16); text-align: center; line-height: 34px; font-weight: 900; font-size: 16px; color: #fff; font-family: Georgia, serif;">A</div>
+                  <div style="display: inline-block; width: 34px; height: 34px; border-radius: 9px; background: rgba(255,255,255,0.16); text-align: center; line-height: 34px; font-weight: 900; font-size: 16px; color: #fff; font-family: Georgia, serif;">C</div>
                 </td>
                 <td style="vertical-align: middle; padding-left: 10px;">
                   <p style="margin: 0; color: #fff; font-size: 13px; font-weight: 800; letter-spacing: 0.04em;">CROPIFY</p>

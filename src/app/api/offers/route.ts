@@ -168,6 +168,7 @@ export async function PATCH(req: Request) {
               cargoKg: listing.quantity_kg,
               cargoType: listing.crop_type,
               deliveryType: 'standard',
+              driverEarnings: fare.driverEarnings,
               totalFare: fare.totalFare,
             });
           } catch (notifErr) {

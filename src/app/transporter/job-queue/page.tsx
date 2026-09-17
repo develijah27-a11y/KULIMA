@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, X, Truck, Zap, Snowflake, MapPin, Calendar, Map } from 'lucide-react';
+import { CheckCircle2, X, Truck, Zap, Snowflake, MapPin, Calendar, Map, Phone } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -40,6 +40,11 @@ type Job = {
   driver_earnings: number | null;
   notes: string | null;
   created_at: string;
+  requester?: {
+    full_name?: string | null;
+    phone_number?: string | null;
+    location?: string | null;
+  } | null;
 };
 
 function Toast({ msg, ok }: { msg: string; ok: boolean }) {
@@ -137,6 +142,47 @@ function JobCard({ job, onAccepted }: { job: Job; onAccepted: (id: string) => vo
         {job.notes && (
           <div style={{ padding: '8px 12px', background: C.greenBg, borderRadius: 10, marginBottom: 14 }}>
             <p style={{ fontSize: 11, color: C.greenMed, margin: 0, fontStyle: 'italic' }}>"{job.notes}"</p>
+          </div>
+        )}
+
+        {/* Requester Information */}
+        {job.requester && (
+          <div style={{
+            background: 'var(--color-surface-2)',
+            borderRadius: 12,
+            padding: '10px 14px',
+            marginBottom: 14,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            flexWrap: 'wrap',
+          }}>
+            <div>
+              <p style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, margin: 0 }}>
+                Requester
+              </p>
+              <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '2px 0 0' }}>
+                {job.requester.full_name || 'Verified Requester'}
+                {job.requester.location ? ` · ${job.requester.location}` : ''}
+              </p>
+            </div>
+            {job.requester.phone_number && (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <a
+                  href={`tel:${job.requester.phone_number}`}
+                  style={{
+                    fontSize: 11, fontWeight: 700, color: C.greenMed,
+                    textDecoration: 'none', background: C.cardBg,
+                    padding: '5px 10px', borderRadius: 8,
+                    border: `1px solid ${C.border}`,
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                  }}
+                >
+                  <Phone size={12} /> Call
+                </a>
+              </div>
+            )}
           </div>
         )}
 

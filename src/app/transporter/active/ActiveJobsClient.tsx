@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle, Navigation2 } from 'lucide-react';
+import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle, Navigation2, Phone } from 'lucide-react';
 import { NavigateButton } from '@/components/delivery/NavigateButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { DriverTrackingSheet } from '@/components/delivery/DriverTrackingSheet';
@@ -172,6 +172,47 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
                     <p style={{ fontSize: 11, color: C.muted, padding: '8px 12px', background: 'var(--color-surface-2)', borderRadius: 8, margin: '0 0 12px' }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MessageSquare size={11} />{d.notes}</span>
                     </p>
+                  )}
+
+                  {/* Requester info */}
+                  {d?.requester && (
+                    <div style={{
+                      background: 'var(--color-surface-2)',
+                      borderRadius: 12,
+                      padding: '10px 14px',
+                      marginBottom: 12,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 8,
+                      flexWrap: 'wrap',
+                    }}>
+                      <div>
+                        <p style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, margin: 0 }}>
+                          Requester
+                        </p>
+                        <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '2px 0 0' }}>
+                          {d.requester.full_name || 'Verified Requester'}
+                          {d.requester.location ? ` · ${d.requester.location}` : ''}
+                        </p>
+                      </div>
+                      {d.requester.phone_number && (
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <a
+                            href={`tel:${d.requester.phone_number}`}
+                            style={{
+                              fontSize: 11, fontWeight: 700, color: C.green,
+                              textDecoration: 'none', background: C.cardBg,
+                              padding: '5px 10px', borderRadius: 8,
+                              border: `1px solid ${C.border}`,
+                              display: 'inline-flex', alignItems: 'center', gap: 4,
+                            }}
+                          >
+                            <Phone size={12} /> Call
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {/* Actions */}
@@ -344,6 +385,61 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
           {d.pickup_location && <p style={{ margin: '0 0 2px' }}>{d.pickup_location}, {d.pickup_district}</p>}
           {isInTransit && d.dropoff_location && <p style={{ margin: '0 0 2px', fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center', gap: 4 }}><Target size={11} />Deliver to:</p>}
           {isInTransit && d.dropoff_location && <p style={{ margin: 0 }}>{d.dropoff_location}, {d.dropoff_district}</p>}
+        </div>
+      )}
+
+      {/* Requester Contact Details */}
+      {d.requester && (
+        <div style={{
+          background: 'var(--color-surface-2)',
+          borderRadius: 12,
+          padding: '12px 14px',
+          marginBottom: 12,
+          border: '1px solid var(--color-border-mid)',
+        }}>
+          <p style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: C.muted, margin: '0 0 6px' }}>
+            Requester Contact Details
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>
+                {d.requester.full_name || 'Verified Requester'}
+              </p>
+              {d.requester.location && (
+                <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <MapPin size={11} /> {d.requester.location}
+                </p>
+              )}
+            </div>
+            {d.requester.phone_number && (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <a
+                  href={`tel:${d.requester.phone_number}`}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '6px 12px', borderRadius: 8,
+                    background: C.green, color: '#fff',
+                    fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                  }}
+                >
+                  <Phone size={12} /> Call
+                </a>
+                <a
+                  href={`https://wa.me/${d.requester.phone_number.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '6px 12px', borderRadius: 8,
+                    background: '#25D366', color: '#fff',
+                    fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                  }}
+                >
+                  WhatsApp
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

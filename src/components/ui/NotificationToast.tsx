@@ -33,7 +33,8 @@ export function showToast(toast: Omit<ToastItem, 'id'>) {
     try {
       new Notification(`Cropify · ${toast.title}`, {
         body: toast.body,
-        icon: '/icon-192.png',
+        icon: '/icons/icon-192.png',
+        badge: '/icons/notification-badge-96.png',
         tag: item.id,
       });
     } catch { /* silently ignored — browser may disallow outside service worker */ }

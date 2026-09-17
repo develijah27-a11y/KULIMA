@@ -155,7 +155,7 @@ async function fetchSingleFeed(feed: { url: string; defaultSource: string }): Pr
 
     const res = await fetch(feed.url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; CropifyNewsBot/1.0; +https://cropify.ug)',
+        'User-Agent': 'Mozilla/5.0 (compatible; CropifyNewsBot/1.0; +https://www.cropifyapp.com)',
         'Accept': 'application/rss+xml, application/xml, text/xml, */*',
       },
       signal: controller.signal,

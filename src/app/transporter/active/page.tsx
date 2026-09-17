@@ -14,7 +14,8 @@ export default async function ActiveJobsPage() {
         delivery:delivery_requests(
           id, pickup_district, pickup_location, dropoff_district, dropoff_location,
           cargo_kg, cargo_type, delivery_type, estimated_fare, distance_km,
-          driver_earnings, pickup_date, notes
+          driver_earnings, pickup_date, notes,
+          requester:profiles!delivery_requests_requester_profile_fkey(full_name, phone_number, location)
         )
       `)
       .eq('driver_id', user.id)
@@ -27,7 +28,7 @@ export default async function ActiveJobsPage() {
         dropoff_district, dropoff_location, dropoff_lat, dropoff_lng,
         cargo_kg, cargo_type, delivery_type, estimated_fare, driver_earnings,
         distance_km, status, accepted_at, picked_up_at, pickup_date,
-        requester:profiles!delivery_requests_requester_profile_fkey(full_name, phone_number)
+        requester:profiles!delivery_requests_requester_profile_fkey(full_name, phone_number, location)
       `)
       .eq('transporter_id', user.id)
       .in('status', ['assigned', 'in_transit'])

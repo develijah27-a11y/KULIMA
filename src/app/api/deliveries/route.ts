@@ -20,7 +20,7 @@ export async function GET(req: Request) {
   const status   = searchParams.get('status') ?? 'open';
 
   let query = (supabase.from as any)('delivery_requests')
-    .select('id, pickup_district, dropoff_district, cargo_kg, cargo_type, pickup_date, pickup_location, dropoff_location, delivery_type, estimated_fare, driver_earnings, distance_km, notes, status, created_at')
+    .select('id, pickup_district, dropoff_district, cargo_kg, cargo_type, pickup_date, pickup_location, dropoff_location, delivery_type, estimated_fare, driver_earnings, distance_km, notes, status, created_at, requester:profiles!delivery_requests_requester_profile_fkey(full_name, phone_number, location)')
     .order('pickup_date', { ascending: true });
 
   if (status) query = query.eq('status', status);
@@ -70,21 +70,23 @@ export async function POST(req: Request) {
   const { count: overdueUnpaid } = await (supabase.from as any)('delivery_requests')
     .select('id', { count: 'exact', head: true })
     .eq('requester_id', user.id)
-    .in('status', ['assigned', 'in_transit', 'delivered'])
-    .neq('payment_status', 'paid')
-    .lte('accepted_at', overdueSince);
-  if ((overdueUnpaid ?? 0) > 0) {
+    .eq('status', 'delivered')
+    .eq('payment_status', 'pending')
+    .lt('delivered_at', overdueSince);
+
+  if (overdueUnpaid && overdueUnpaid > 0) {
     return NextResponse.json({
-      error: 'You have an unpaid delivery from more than a day ago. Please pay it before requesting a new one — your driver is still waiting.',
-    }, { status: 403 });
+      error: 'You have a completed delivery with payment still pending past 24 hours. Please settle the driver fare on your existing delivery before posting a new one.',
+      code: 'DELIVERY_PAYMENT_OVERDUE',
+    }, { status: 402 });
   }
 
   // Calculate fare automatically based on route + type + weight
   const fare = calcFare(pickup_district, dropoff_district, parseFloat(cargo_kg), delivery_type as DeliveryType);
 
   const { data, error } = await (supabase.from as any)('delivery_requests').insert({
-    offer_id:         offer_id ?? null,
     requester_id:     user.id,
+    offer_id:         offer_id ?? null,
     pickup_district,
     pickup_location:  pickup_location || pickup_district,
     pickup_lat:       validCoord(pickup_lat) && validLng(pickup_lng) ? pickup_lat : null,
@@ -130,6 +132,7 @@ export async function POST(req: Request) {
       cargoKg: parseFloat(cargo_kg),
       cargoType: cargo_type || null,
       deliveryType: delivery_type,
+      driverEarnings: fare.driverEarnings,
       totalFare: fare.totalFare,
       pickupLat: pickup_lat,
       pickupLng: pickup_lng,

@@ -113,37 +113,117 @@ self.addEventListener('message', (event) => {
 // ── Web Push ─────────────────────────────────────────────────────────────
 self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
-  let payload: { title?: string; body?: string; url?: string; tag?: string } = {};
+  let payload: {
+    title?: string;
+    body?: string;
+    url?: string;
+    tag?: string;
+    type?: string;
+    actions?: { action: string; title: string; icon?: string }[];
+  } = {};
   try { payload = event.data.json(); } catch { payload = { body: event.data.text() }; }
 
   const title = payload.title ?? 'Cropify';
+  const rawUrl = payload.url ?? '/dashboard';
+
+  // Always bind the target URL to the official production domain or local origin
+  const origin = self.location.origin.includes('localhost')
+    ? self.location.origin
+    : 'https://www.cropifyapp.com';
+
+  const fullUrl = rawUrl.startsWith('http') ? rawUrl : new URL(rawUrl, origin).href;
+
+  // Custom action buttons based on notification type so Android / Chrome NEVER shows the weird "Unsubscribe" button!
+  let actions = payload.actions;
+  if (!actions || actions.length === 0) {
+    const combinedText = `${title} ${payload.body ?? ''} ${payload.type ?? ''}`.toLowerCase();
+    if (
+      combinedText.includes('delivery') ||
+      combinedText.includes('job') ||
+      combinedText.includes('driver') ||
+      combinedText.includes('pickup') ||
+      combinedText.includes('transit')
+    ) {
+      actions = [
+        { action: 'view_job', title: '👀 View Job' },
+        { action: 'open_app', title: '🚀 Open Cropify' },
+      ];
+    } else if (
+      combinedText.includes('chat') ||
+      combinedText.includes('message') ||
+      combinedText.includes('group') ||
+      combinedText.includes('reply')
+    ) {
+      actions = [
+        { action: 'open_chat', title: '💬 Open Chat' },
+        { action: 'open_app', title: '📱 View' },
+      ];
+    } else if (
+      combinedText.includes('order') ||
+      combinedText.includes('purchase') ||
+      combinedText.includes('offer')
+    ) {
+      actions = [
+        { action: 'view_order', title: '📦 View Order' },
+        { action: 'open_app', title: '🚀 Open Cropify' },
+      ];
+    } else if (
+      combinedText.includes('wallet') ||
+      combinedText.includes('loan') ||
+      combinedText.includes('payment') ||
+      combinedText.includes('paid')
+    ) {
+      actions = [
+        { action: 'view_wallet', title: '💰 View Details' },
+        { action: 'open_app', title: '🚀 Open App' },
+      ];
+    } else {
+      actions = [
+        { action: 'view', title: '👀 View' },
+        { action: 'open_app', title: '🚀 Open Cropify' },
+      ];
+    }
+  }
+
   event.waitUntil(
     self.registration.showNotification(title, {
       body: payload.body ?? '',
       icon: '/icons/icon-192.png',
       badge: '/icons/notification-badge-96.png',
-      tag: payload.tag,
-      data: { url: payload.url ?? '/dashboard' },
+      tag: payload.tag || `cropify-${Date.now()}`,
+      data: {
+        url: fullUrl,
+        rawUrl,
+      },
+      actions,
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
     }),
   );
 });
 
 // Focus an already-open Cropify tab if one exists and navigate it,
-// otherwise open a new one.
+// otherwise open a new one with the canonical URL.
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
-  const url = (event.notification.data as { url?: string } | undefined)?.url ?? '/dashboard';
+  const notifData = event.notification.data as { url?: string; rawUrl?: string } | undefined;
+  const origin = self.location.origin.includes('localhost')
+    ? self.location.origin
+    : 'https://www.cropifyapp.com';
+
+  const targetUrl = notifData?.url || `${origin}/dashboard`;
+
   event.waitUntil(
     (async () => {
       const clientsList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       for (const client of clientsList) {
         if ('focus' in client) {
           await (client as WindowClient).focus();
-          if ('navigate' in client) await (client as WindowClient).navigate(url);
+          if ('navigate' in client) await (client as WindowClient).navigate(targetUrl);
           return;
         }
       }
-      await self.clients.openWindow(url);
+      await self.clients.openWindow(targetUrl);
     })(),
   );
 });

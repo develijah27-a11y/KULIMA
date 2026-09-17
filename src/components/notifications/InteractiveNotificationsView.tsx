@@ -60,6 +60,18 @@ function formatTime(iso: string): string {
   }
 }
 
+function getNotificationActionLabel(type?: string, href?: string): string | null {
+  if (!href) return null;
+  const h = href.toLowerCase();
+  if (h.includes('/transporter') || type === 'delivery') return '👀 View Job';
+  if (h.includes('/orders') || type === 'offer') return '📦 View Order';
+  if (h.includes('/groups') || h.includes('/chat') || type === 'message') return '💬 Open Chat';
+  if (h.includes('/wallet') || type === 'payment' || type === 'loan') return '💰 View Details';
+  if (type === 'pest' || type === 'disease') return '🔬 View Diagnosis';
+  if (type === 'price') return '📈 View Market';
+  return '👀 View Details';
+}
+
 export function InteractiveNotificationsView({
   initialNotifications,
   role,
@@ -293,6 +305,7 @@ export function InteractiveNotificationsView({
           {items.map((n, i) => {
             const icon = TYPE_ICONS[n.type ?? 'system'] ?? <Bell size={17} />;
             const isUnread = !n.read;
+            const actionLabel = getNotificationActionLabel(n.type, n.href);
 
             const cardContent = (
               <div
@@ -354,6 +367,29 @@ export function InteractiveNotificationsView({
                     >
                       {n.body}
                     </p>
+                  )}
+
+                  {actionLabel && (
+                    <div style={{ marginTop: 8 }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '5px 12px',
+                          borderRadius: 9,
+                          fontSize: 12,
+                          fontWeight: 700,
+                          background: isUnread ? 'var(--color-primary)' : 'var(--color-surface-2)',
+                          color: isUnread ? '#ffffff' : 'var(--d-text)',
+                          border: isUnread ? 'none' : '1px solid var(--d-border)',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        {actionLabel}
+                        <span aria-hidden="true">→</span>
+                      </span>
+                    </div>
                   )}
                 </div>
 

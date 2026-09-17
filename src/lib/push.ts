@@ -6,17 +6,26 @@ function ensureConfigured() {
   if (configured) return;
   const publicKey  = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject    = process.env.VAPID_SUBJECT ?? 'mailto:support@cropify.app';
+  const subject    = process.env.VAPID_SUBJECT ?? 'mailto:support@cropifyapp.com';
   if (!publicKey || !privateKey) return; // push simply no-ops until keys are set
   webpush.setVapidDetails(subject, publicKey, privateKey);
   configured = true;
 }
 
-interface PushPayload {
+export interface PushAction {
+  action: string;
+  title: string;
+  icon?: string;
+}
+
+export interface PushPayload {
   title: string;
   body: string;
   url?: string;
   tag?: string;
+  type?: string;
+  actions?: PushAction[];
+  data?: Record<string, unknown>;
 }
 
 // Sends a real OS-level push notification to every device a user has

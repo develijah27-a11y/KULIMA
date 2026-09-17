@@ -18,9 +18,9 @@ export function getUgandaHour(): number {
 
 export function getTimeGreeting(name?: string, hour?: number): string {
   const h = hour !== undefined ? hour : getUgandaHour();
-  const timeGreeting = h >= 5 && h < 12
+  const timeGreeting = h < 12
     ? 'Good morning'
-    : h >= 12 && h < 17
+    : h < 17
     ? 'Good afternoon'
     : 'Good evening';
   const cleanName = name ? name.split(' ')[0].replace(/,/g, '').trim() : '';

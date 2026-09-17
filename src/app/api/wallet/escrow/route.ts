@@ -264,6 +264,7 @@ export async function POST(req: Request) {
               cargoKg: Number(order.quantity_kg),
               cargoType: order.crop_type,
               deliveryType: 'standard',
+              driverEarnings: fare.driverEarnings,
               totalFare: fare.totalFare,
             });
           }

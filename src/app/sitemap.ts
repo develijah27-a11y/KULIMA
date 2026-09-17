@@ -16,30 +16,38 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 1.0,
+      images: [
+        `${SITE_URL}/og-image.png`,
+        `${SITE_URL}/logo.png`,
+      ],
     },
     {
       url: `${SITE_URL}/how-it-works`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.85,
+      images: [`${SITE_URL}/og-image.png`],
     },
     {
       url: `${SITE_URL}/about`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
+      images: [`${SITE_URL}/logo.png`],
     },
     {
       url: `${SITE_URL}/news`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.8,
+      images: [`${SITE_URL}/og-image.png`],
     },
     {
       url: `${SITE_URL}/premium`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.75,
+      images: [`${SITE_URL}/og-image.png`],
     },
     {
       url: `${SITE_URL}/faq`,

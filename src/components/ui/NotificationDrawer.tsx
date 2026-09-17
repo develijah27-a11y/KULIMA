@@ -289,9 +289,28 @@ function NotifItem({
         <p style={{ fontSize: 12, color: 'var(--color-text-muted)', lineHeight: 1.4, marginTop: 2 }} className="line-clamp-2">
           {n.body}
         </p>
-        <p style={{ fontSize: 10, color: 'var(--color-text-hint)', marginTop: 4 }}>
-          {timeAgo(n.createdAt)}
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, gap: 8 }}>
+          <p style={{ fontSize: 10, color: 'var(--color-text-hint)', margin: 0 }}>
+            {timeAgo(n.createdAt)}
+          </p>
+          {n.href && (
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: 'var(--color-primary)',
+                background: 'var(--color-surface-2)',
+                padding: '2px 7px',
+                borderRadius: 6,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
+              }}
+            >
+              {n.href.includes('/transporter') ? 'View Job' : n.href.includes('/order') ? 'View Order' : n.href.includes('/chat') || n.href.includes('/groups') ? 'Open Chat' : 'View'} →
+            </span>
+          )}
+        </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
         {!n.read && onMarkRead && (
