@@ -25,6 +25,7 @@ describe('handleDeterministicCopilot', () => {
   };
 
   beforeEach(() => {
+    jest.clearAllMocks();
     jest.restoreAllMocks();
   });
 
@@ -146,4 +147,44 @@ describe('handleDeterministicCopilot', () => {
     expect(reply).toContain('120,000');
     expect(reply).toContain('Payment Breakdown for Trip #6ef37b76');
   });
+
+  it('provides direct troubleshooting guidance for network lag and offline usage', async () => {
+    const reply = await handleDeterministicCopilot(mockCtx, 'the app is very slow and lagg on my wifi', 'Alex');
+
+    expect(reply).toContain('cropify-offline');
+    expect(reply).toContain('IndexedDB');
+    expect(reply).toContain('Clear Cache');
+  });
+
+  it('explains produce quality grading and the 3-strike seller rule', async () => {
+    const reply = await handleDeterministicCopilot(mockCtx, 'what is the quality grading and strike rule for farmers', 'Alex');
+
+    expect(reply).toContain('Grade 1 (Premium)');
+    expect(reply).toContain('3-Strike');
+    expect(reply).toContain('suspended');
+  });
+
+  it('escalates poor quality goods complaints under quality_dispute category with high priority', async () => {
+    const spy = jest.spyOn(tools, 'escalate_to_human').mockResolvedValueOnce({
+      escalated: true,
+      ticketId: '98765432-abcd-1234-abcd-1234567890ab',
+    });
+
+    const reply = await handleDeterministicCopilot(
+      mockCtx,
+      'The farmer delivered rotten and under-grade maize which does not match Grade 1 for order 12345678',
+      'Alex'
+    );
+
+    expect(spy).toHaveBeenCalledWith(
+      mockCtx,
+      expect.objectContaining({
+        category: 'quality_dispute',
+        priority: 'high',
+      })
+    );
+    expect(reply).toContain('Ticket #98765432');
+    expect(reply).toContain('Quality Dispute');
+  });
 });
+

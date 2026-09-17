@@ -76,8 +76,6 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
 
   if (!open) return null;
 
-  const initial = profile?.name?.[0]?.toUpperCase() ?? 'U';
-
   return (
     <div className="cropify-drawer-root md:hidden">
       {/* Backdrop */}
@@ -155,7 +153,9 @@ export function MobileSidebarDrawer({ navItems, profile, roleSwitcher }: Props) 
         {/* ── Profile footer ── */}
         {profile && (
           <div className="cropify-drawer-footer">
-            <div className="cropify-drawer-avatar">{initial}</div>
+            <div className="cropify-drawer-avatar" style={{ padding: 0, overflow: 'hidden' }}>
+              <img src="/icons/icon-192.png" alt="Cropify" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
+            </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p className="cropify-drawer-name">{profile.name}</p>
               <p className="cropify-drawer-role-sub">{profile.role}</p>

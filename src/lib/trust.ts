@@ -43,11 +43,11 @@ interface DocRequirement {
 
 export function getRequiredDocs(level: 'green' | 'blue' | 'gold', role: string): DocRequirement[] {
   if (level === 'green') {
-    return [{ key: 'national_id', label: 'National ID / Passport / Permit (front)', accept: 'image/*,application/pdf' }];
+    return [{ key: 'national_id', label: 'National ID or Passport (front)', accept: 'image/*,application/pdf' }];
   }
   if (level === 'blue') {
     const base: DocRequirement[] = [
-      { key: 'national_id', label: 'National ID / Passport / Permit (front)', accept: 'image/*,application/pdf' },
+      { key: 'national_id', label: 'National ID or Passport (front)', accept: 'image/*,application/pdf' },
       { key: 'selfie',      label: 'Selfie Photo (with ID)',                 accept: 'image/*' },
     ];
     if (role === 'buyer' || role === 'supplier')
@@ -64,7 +64,7 @@ export function getRequiredDocs(level: 'green' | 'blue' | 'gold', role: string):
   }
   // gold - enterprise
   return [
-    { key: 'national_id',   label: 'National ID / Passport / Permit (front)', accept: 'image/*,application/pdf' },
+    { key: 'national_id',   label: 'National ID or Passport (front)', accept: 'image/*,application/pdf' },
     { key: 'selfie',        label: 'Selfie Photo (with ID)',                 accept: 'image/*' },
     { key: 'business_reg',  label: 'Business Registration',                  accept: 'image/*,application/pdf' },
   ];

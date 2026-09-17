@@ -50,7 +50,7 @@ export default async function AdminUsersPage({
 
   // Build query
   let query = (supabase.from as any)('profiles')
-    .select('id, user_id, full_name, phone_number, location, role, created_at, primary_crop, verification_level', { count: 'exact' })
+    .select('id, user_id, full_name, phone_number, location, role, created_at, primary_crop, verification_level, is_suspended, quality_strikes, suspension_reason', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
 
@@ -169,7 +169,19 @@ export default async function AdminUsersPage({
                       {(u.full_name ?? '?')[0].toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{u.full_name ?? 'Unknown'}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{u.full_name ?? 'Unknown'}</p>
+                        {u.is_suspended && (
+                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>
+                            SUSPENDED
+                          </span>
+                        )}
+                        {(u.quality_strikes ?? 0) > 0 && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-harvest-bg)', color: 'var(--color-harvest)' }}>
+                            ⚠️ {u.quality_strikes} strike{u.quality_strikes > 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] truncate" style={{ color: C.muted }}>{u.phone_number ?? '—'}</p>
                     </div>
                   </div>

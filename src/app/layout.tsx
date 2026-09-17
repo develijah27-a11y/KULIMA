@@ -9,7 +9,6 @@ import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { ServiceWorkerRegistrar } from "@/components/shared/ServiceWorkerRegistrar";
 import { OfflineSyncManager } from "@/components/shared/OfflineSyncManager";
 import { OfflineBanner } from "@/components/shared/OfflineBanner";
-import { InstallPrompt } from "@/components/shared/InstallPrompt";
 import { Wordmark } from "@/components/ui/Wordmark";
 
 // Self-hosted via next/font: fonts are fetched at build time and served from
@@ -134,6 +133,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png?v=12" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Cropify" />
+        <meta name="application-name" content="Cropify" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
         <meta name="theme-color" content="#166B3A" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0F172A" media="(prefers-color-scheme: dark)" />
@@ -176,7 +178,6 @@ export default function RootLayout({
         <ServiceWorkerRegistrar />
         <OfflineSyncManager />
         <OfflineBanner />
-        <InstallPrompt />
       </body>
     </html>
   );

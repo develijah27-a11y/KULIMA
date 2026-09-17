@@ -69,7 +69,7 @@ export async function POST(req: Request) {
         distanceKm: 28,
         deliveryType: 'standard',
         deliveredAt: new Date().toISOString(),
-        receiptNo: `AGN-TEST-${Date.now().toString().slice(-6)}`,
+        receiptNo: `CRP-TEST-${Date.now().toString().slice(-6)}`,
       });
     } else {
       // Default: purchase receipt
@@ -83,7 +83,7 @@ export async function POST(req: Request) {
         unitPrice: 120000,
         amount: customAmount ? Number(customAmount) : 240000,
         district: 'Wakiso',
-        receiptNo: `AGN-TEST-${Date.now().toString().slice(-6)}`,
+        receiptNo: `CRP-TEST-${Date.now().toString().slice(-6)}`,
         purchasedAt: new Date().toISOString(),
       });
     }

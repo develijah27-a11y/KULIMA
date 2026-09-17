@@ -4,7 +4,7 @@ import { useState, useEffect, type FormEvent, type JSX } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Truck, Zap, Snowflake, MapPin, Clock, CheckCircle2, Megaphone, AlertTriangle,
-  Loader2, ShoppingBag, ArrowRight, Repeat, Sparkles, Store
+  Loader2, ShoppingBag, ArrowRight, Repeat, Sparkles, Store, Lock, ShieldCheck,
 } from 'lucide-react';
 import { calcFare, type DeliveryType, type FareBreakdown } from '@/lib/delivery-pricing';
 import { DISTRICT_NAMES } from '@/lib/districts';
@@ -705,35 +705,60 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         </div>
       </div>
 
-      {/* Live Route & Fare Calculation Card */}
+      {/* Live Route & Escrow Protected Fare Card */}
       {fare && (
         <div style={{
-          padding: '16px 18px', borderRadius: 14,
+          padding: '18px 20px', borderRadius: 16,
           background: 'var(--color-primary-bg)',
-          border: '1.5px solid var(--color-primary-muted)',
+          border: '1.5px solid var(--color-primary-muted, rgba(34,197,94,0.3))',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
             <div>
-              <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: 0 }}>Estimated Trip Fare</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                <span style={{ fontSize: 10, fontWeight: 900, background: 'var(--color-primary)', color: '#fff', padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Lock size={10} /> ESCROW PROTECTED
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.green }}>100% Refundable</span>
+              </div>
+              <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: '4px 0 0' }}>Trip Fare Breakdown</p>
               <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>
                 {pickupDistrict} → {dropoffDistrict} {serviceMode === 'combined' ? '(Round Trip)' : ''}
               </p>
             </div>
-            <p style={{ fontSize: 22, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
-              UGX {fare.totalFare.toLocaleString()}
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: 24, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
+                UGX {fare.totalFare.toLocaleString()}
+              </p>
+              <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>held safely in escrow</p>
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--color-surface, #fff)', borderRadius: 12, padding: '10px 14px', marginBottom: 12, border: `1px solid ${C.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+              <span style={{ color: C.muted }}>Driver Guaranteed Earnings</span>
+              <span style={{ fontWeight: 700, color: C.text }}>UGX {fare.driverEarnings.toLocaleString()}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
+              <span style={{ color: C.muted }}>Goods In-Transit & Platform Cover</span>
+              <span style={{ fontWeight: 700, color: C.green }}>UGX {fare.commissionAmount.toLocaleString()}</span>
+            </div>
+            <div style={{ height: 1, background: 'var(--d-border)', marginBottom: 6 }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 11.5, color: C.muted }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <MapPin size={11} /> Distance: ~{fare.distanceKm} km
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Clock size={11} /> Est. Arrival: {fare.etaLabel}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            <ShieldCheck size={16} style={{ color: C.green, flexShrink: 0, marginTop: 1 }} />
+            <p style={{ fontSize: 11.5, color: C.text, margin: 0, lineHeight: 1.45 }}>
+              <strong>Escrow Protection:</strong> Funds are locked safely and released to the driver <em>only</em> after cargo is verified delivered at your dropoff. If no driver accepts or the trip cancels, your funds are instantly refunded.
             </p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, fontSize: 12, color: C.muted, borderTop: `1px solid ${C.border}`, paddingTop: 8 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <MapPin size={12} /> Distance: ~{fare.distanceKm} km
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Clock size={12} /> Estimated ETA: {fare.etaLabel}
-            </span>
-          </div>
-          <p style={{ fontSize: 11.5, color: 'var(--color-success)', margin: '8px 0 0', fontWeight: 600 }}>
-            Every captain operating near {pickupDistrict} will be alerted immediately.
-          </p>
         </div>
       )}
 
@@ -743,36 +768,40 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         </p>
       )}
 
-      {/* Direct Submit Action */}
+      {/* Direct Submit Action with Escrow */}
       <button
         type="submit"
         disabled={loading || !fare}
         style={{
           padding: '16px',
-          background: (loading || !fare) ? 'var(--color-surface-2, #ccc)' : C.green,
+          background: (loading || !fare) ? 'var(--color-surface-2, #ccc)' : 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)',
           color: (loading || !fare) ? C.muted : '#fff',
           border: 'none',
-          borderRadius: 12,
-          fontWeight: 800,
+          borderRadius: 14,
+          fontWeight: 900,
           fontSize: 15,
           cursor: (loading || !fare) ? 'not-allowed' : 'pointer',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           gap: 8,
-          boxShadow: (loading || !fare) ? 'none' : '0 4px 14px rgba(22, 107, 58, 0.25)',
+          boxShadow: (loading || !fare) ? 'none' : '0 6px 20px rgba(22, 163, 74, 0.35)',
           transition: 'all 0.15s ease',
         }}
       >
         {loading ? (
           <>
             <Loader2 size={18} className="animate-spin" />
-            Alerting Nearby Captains…
+            Locking Escrow & Alerting Nearby Captains…
           </>
         ) : fare ? (
-          `Confirm ${serviceMode === 'shop_pickup' ? 'Pickup' : 'Delivery'} · UGX ${fare.totalFare.toLocaleString()}`
+          <>
+            <Lock size={16} />
+            <span>Request {serviceMode === 'shop_pickup' ? 'Pickup' : 'Delivery'} — Secure UGX {fare.totalFare.toLocaleString()} with Escrow</span>
+            <ArrowRight size={16} />
+          </>
         ) : (
-          'Enter Drop-off & Cargo to Calculate Fare'
+          'Enter Drop-off & Cargo to Calculate Escrow Fare'
         )}
       </button>
     </form>

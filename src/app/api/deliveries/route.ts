@@ -255,7 +255,7 @@ export async function PATCH(req: Request) {
               driverPhone:      (driverProfile as any)?.phone_number ?? null,
               vehicleMakeModel: (vehicle as any)?.make_model ?? null,
               vehiclePlate:     (vehicle as any)?.plate_number ?? null,
-              receiptNo:        `AGN-${String(id).slice(0, 8).toUpperCase()}`,
+              receiptNo:        `CRP-${String(id).slice(0, 8).toUpperCase()}`,
             }),
           );
         }

@@ -23,23 +23,23 @@ const SUGGESTIONS: Record<string, string[]> = {
   transporter: [
     "What's my current assignment?",
     "Break down my payment for this delivery",
-    "I have a complaint to raise",
-    "What is the time right now?",
+    "I have a delivery complaint to raise",
+    "How do wallet payouts and escrow work?",
     "Who is the founder of Cropify?",
   ],
   farmer: [
     "What's the status of my last order?",
     "What's the current price for maize?",
+    "Produce quality standards and 3-strike policy",
     "My beans have yellow spots on the leaves",
     "I have a complaint to raise",
-    "Who is the founder of Cropify?",
   ],
   buyer: [
     "Where is my order?",
+    "Report poor quality or under-grade produce",
     "Has my escrow been released?",
     "The delivery I received doesn't match the listing",
-    "I have a complaint to raise",
-    "Who is the founder of Cropify?",
+    "How does escrow protection work?",
   ],
   agro_dealer: [
     "What's the status of my listings?",

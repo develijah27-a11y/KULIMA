@@ -308,12 +308,13 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
             <div
               style={{
                 width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                overflow: 'hidden',
                 background: 'rgba(255,255,255,0.16)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 12, fontWeight: 800, color: 'var(--color-sidebar-text)',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
               }}
             >
-              {profile.name[0]?.toUpperCase() ?? 'U'}
+              <img src="/icons/icon-192.png" alt="Cropify" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div className="min-w-0 flex-1">
               <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-sidebar-text)', lineHeight: 1.3 }} className="truncate">
@@ -346,12 +347,13 @@ export function Sidebar({ navItems, profile, roleSwitcher }: SidebarProps) {
             title={profile.name}
             style={{
               width: 30, height: 30, borderRadius: 8,
+              overflow: 'hidden',
               background: 'rgba(255,255,255,0.16)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 800, color: 'var(--color-sidebar-text)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
             }}
           >
-            {profile.name[0]?.toUpperCase() ?? 'U'}
+            <img src="/icons/icon-192.png" alt="Cropify" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <button
             onClick={handleSignOut}

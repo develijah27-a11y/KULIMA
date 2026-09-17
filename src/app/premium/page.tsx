@@ -90,7 +90,7 @@ const PLANS: Plan[] = [
       'Priority support (response within 4 h)',
     ],
     cta: 'Start Farmer Pro',
-    ctaHref: '/farmer/premium',
+    ctaHref: '/auth/signup?plan=farmer-pro',
   },
   {
     id: 'business',
@@ -115,7 +115,7 @@ const PLANS: Plan[] = [
       'Priority support (response within 2 h)',
     ],
     cta: 'Start Business',
-    ctaHref: '/supplier/premium',
+    ctaHref: '/auth/signup?plan=business',
   },
   {
     id: 'enterprise',
@@ -274,7 +274,7 @@ export default function PremiumPage() {
           <span style={{ fontSize: 16, fontWeight: 900, color: TEXT, letterSpacing: '-0.02em' }}>Cropify</span>
         </Link>
         <div style={{ display: 'flex', gap: 10 }}>
-          <Link href="/dashboard" style={{ fontSize: 13, fontWeight: 700, color: MUTED, textDecoration: 'none', padding: '8px 12px' }}>Dashboard</Link>
+          <Link href="/auth/signin" style={{ fontSize: 13, fontWeight: 700, color: MUTED, textDecoration: 'none', padding: '8px 12px' }}>Sign in</Link>
           <Link href="/auth/signup" style={{ fontSize: 13, fontWeight: 800, padding: '8px 18px', borderRadius: 10, background: GREEN, color: '#fff', textDecoration: 'none' }}>Get started</Link>
         </div>
       </nav>

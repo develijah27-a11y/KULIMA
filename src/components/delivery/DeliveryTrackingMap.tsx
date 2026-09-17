@@ -34,6 +34,7 @@ interface Props {
   onClose?: () => void;
   onToggleDetails?: () => void;
   fullscreenByDefault?: boolean;
+  compact?: boolean;
 }
 
 // OpenRouteService geometry proxy
@@ -147,6 +148,7 @@ export function DeliveryTrackingMap({
   onClose,
   onToggleDetails,
   fullscreenByDefault = false,
+  compact = false,
 }: Props) {
   const mapRef = useRef<LMap | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -166,8 +168,6 @@ export function DeliveryTrackingMap({
   const [layerType, setLayerType] = useState<'navigation' | 'satellite' | 'streets'>('navigation');
   const [isFullscreen, setIsFullscreen] = useState(fullscreenByDefault);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [replyText, setReplyText] = useState('');
-  const [flyingEmojis, setFlyingEmojis] = useState<{ id: number; char: string; x: number }[]>([]);
   const [etaMinutes, setEtaMinutes] = useState<number>(20);
   const [distanceRemainingKm, setDistanceRemainingKm] = useState<number>(18);
   const [nextManeuverDistance, setNextManeuverDistance] = useState<string>('17 km to ↰');
@@ -206,16 +206,6 @@ export function DeliveryTrackingMap({
     setShowRecenter(false);
     mapRef.current.panTo(lastPosRef.current, { animate: true, duration: 0.6 });
   }, []);
-
-  // Quick Emoji Feedback reaction
-  const triggerEmojiReaction = (char: string) => {
-    const id = Date.now() + Math.random();
-    const x = Math.floor(Math.random() * 60) - 30;
-    setFlyingEmojis(prev => [...prev, { id, char, x }]);
-    setTimeout(() => {
-      setFlyingEmojis(prev => prev.filter(e => e.id !== id));
-    }, 1800);
-  };
 
   // Toggle map layer
   const switchLayer = async (nextType: 'navigation' | 'satellite' | 'streets') => {
@@ -494,7 +484,7 @@ export function DeliveryTrackingMap({
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   })();
 
-  const activeDriverNote = driverNotes || 'Hectic night but we roll 😂 GM';
+  const activeDriverNote = driverNotes?.trim() || null;
 
   return (
     <div
@@ -519,11 +509,6 @@ export function DeliveryTrackingMap({
           70% { transform: scale(2.2); opacity: 0; }
           100% { transform: scale(2.2); opacity: 0; }
         }
-        @keyframes float-emoji {
-          0% { transform: translateY(0) scale(0.8); opacity: 1; }
-          80% { transform: translateY(-70px) scale(1.3); opacity: 0.9; }
-          100% { transform: translateY(-90px) scale(1.1); opacity: 0; }
-        }
         .cropify-turn-card {
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
@@ -544,257 +529,320 @@ export function DeliveryTrackingMap({
           TOP TURN-BY-TURN HUD MANEUVER CARD (Emerald Dark Banner)
           Matches user image: "Stay on Mbarara - Masaka Rd", "17 km to ↰", Google Mic
          ───────────────────────────────────────────────────────────── */}
-      <div
-        className="cropify-turn-card"
-        style={{
-          position: 'absolute',
-          top: 14,
-          left: 14,
-          right: 14,
-          zIndex: 800,
-          background: 'linear-gradient(135deg, #005C4B 0%, #004D40 100%)',
-          borderRadius: 20,
-          padding: '14px 18px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          color: '#FFFFFF',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0, paddingRight: 10 }}>
-          <h2
-            style={{
-              fontSize: 18,
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              margin: 0,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              color: '#FFFFFF',
-            }}
-          >
-            {roadTitle}
-          </h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 14.5, fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)' }}>
-              {nextManeuverDistance}
-            </span>
-          </div>
-        </div>
-
-        {/* Action icons: Voice Guidance / Assistant & Fullscreen */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <button
-            type="button"
-            onClick={() => speakInstruction(`${roadTitle}. In ${nextManeuverDistance.replace('to ↰', 'turn ahead')}`)}
-            title="Spoken Maneuver Guidance"
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: '50%',
-              background: '#FFFFFF',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-              transition: 'transform 0.15s ease',
-            }}
-          >
-            {/* Google-style Multi-Color Mic Icon */}
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" fill="#4285F4"/>
-              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" fill="#34A853"/>
-              <path d="M12 14c.77 0 1.48-.3 2-.8l-2-2-2 2c.52.5 1.23.8 2 .8z" fill="#EA4335"/>
-              <path d="M12 16.5c1.4 0 2.67-.57 3.58-1.48l-1.42-1.42c-.55.55-1.32.9-2.16.9s-1.61-.35-2.16-.9L8.42 15.02C9.33 15.93 10.6 16.5 12 16.5z" fill="#FBBC05"/>
-            </svg>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsFullscreen(prev => !prev)}
-            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen GPS'}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              background: 'rgba(255,255,255,0.2)',
-              border: 'none',
-              cursor: 'pointer',
-              color: '#FFFFFF',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-          </button>
-        </div>
-      </div>
-
       {/* ─────────────────────────────────────────────────────────────
-          RIGHT FLOATING HUD CONTROLS
-          Compass Needle, Search, Sound Toggle, Layer Mode
+          COMPACT MODE OVERLAY: Sleek route preview & expand button
          ───────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 96,
-          right: 14,
-          zIndex: 800,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}
-      >
-        {/* Compass Needle */}
-        <button
-          type="button"
-          onClick={() => {
-            if (mapRef.current && lastPosRef.current) {
-              mapRef.current.setView(lastPosRef.current, mapRef.current.getZoom(), { animate: true });
-            }
-          }}
-          title="Align Compass North"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            background: 'rgba(15, 23, 42, 0.88)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            position: 'relative',
-          }}
-        >
-          {/* Compass Dial with Red North needle */}
+      {compact && (
+        <>
           <div
             style={{
-              width: 22,
-              height: 22,
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              zIndex: 800,
+              background: 'rgba(7, 13, 20, 0.88)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: 8,
+              padding: '5px 11px',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: 11.5,
+              fontWeight: 700,
+              color: '#FFFFFF',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
+            }}
+          >
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#00E5FF', boxShadow: '0 0 6px #00E5FF' }} />
+            <span>{pickupDistrict} → {dropoffDistrict}</span>
+          </div>
+
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 10,
+              left: 10,
+              zIndex: 800,
+              background: 'rgba(7, 13, 20, 0.88)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: 8,
+              padding: '5px 11px',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              fontSize: 11.5,
+              fontWeight: 800,
+              color: '#FBBF24',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
+            }}
+          >
+            ~{etaMinutes} min · {distanceRemainingKm.toFixed(0)} km
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (onToggleDetails) onToggleDetails();
+              else setIsFullscreen(true);
+            }}
+            title="Expand Fullscreen GPS"
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              zIndex: 800,
+              background: 'rgba(7, 13, 20, 0.88)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: 8,
+              padding: '5px 10px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              cursor: 'pointer',
+              color: '#FFFFFF',
+              fontSize: 11,
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
+            }}
+          >
+            <Maximize2 size={12} /> Expand
+          </button>
+        </>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          TOP TURN-BY-TURN HUD MANEUVER CARD (Emerald Dark Banner)
+          Visible only in full GPS tracking mode
+         ───────────────────────────────────────────────────────────── */}
+      {!compact && (
+        <div
+          className="cropify-turn-card"
+          style={{
+            position: 'absolute',
+            top: 14,
+            left: 14,
+            right: 14,
+            zIndex: 800,
+            background: 'linear-gradient(135deg, #005C4B 0%, #004D40 100%)',
+            borderRadius: 20,
+            padding: '14px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            color: '#FFFFFF',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0, paddingRight: 10 }}>
+            <h2
+              style={{
+                fontSize: 18,
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                margin: 0,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                color: '#FFFFFF',
+              }}
+            >
+              {roadTitle}
+            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 14.5, fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)' }}>
+                {nextManeuverDistance}
+              </span>
+            </div>
+          </div>
+
+          {/* Action icons: Voice Guidance / Assistant & Fullscreen */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <button
+              type="button"
+              onClick={() => speakInstruction(`${roadTitle}. In ${nextManeuverDistance.replace('to ↰', 'turn ahead')}`)}
+              title="Spoken Maneuver Guidance"
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: '50%',
+                background: '#FFFFFF',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                transition: 'transform 0.15s ease',
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" fill="#4285F4"/>
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" fill="#34A853"/>
+                <path d="M12 14c.77 0 1.48-.3 2-.8l-2-2-2 2c.52.5 1.23.8 2 .8z" fill="#EA4335"/>
+                <path d="M12 16.5c1.4 0 2.67-.57 3.58-1.48l-1.42-1.42c-.55.55-1.32.9-2.16.9s-1.61-.35-2.16-.9L8.42 15.02C9.33 15.93 10.6 16.5 12 16.5z" fill="#FBBC05"/>
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(prev => !prev)}
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen GPS'}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.2)',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          RIGHT FLOATING HUD CONTROLS (Compass, Search, Sound, Layer Toggle)
+         ───────────────────────────────────────────────────────────── */}
+      {!compact && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 96,
+            right: 14,
+            zIndex: 800,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}
+        >
+          {/* Compass Needle */}
+          <button
+            type="button"
+            onClick={() => {
+              if (mapRef.current && lastPosRef.current) {
+                mapRef.current.setView(lastPosRef.current, mapRef.current.getZoom(), { animate: true });
+              }
+            }}
+            title="Align Compass North"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.88)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transform: `rotate(${-compassHeading}deg)`,
-              transition: 'transform 0.3s ease-out',
+              position: 'relative',
             }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <polygon points="12,2 16,12 12,9 8,12" fill="#EF4444" />
-              <polygon points="12,22 16,12 12,15 8,12" fill="#F8FAFC" />
-            </svg>
-          </div>
-        </button>
-
-        {/* Search / Route Inspect FAB */}
-        <button
-          type="button"
-          onClick={() => setShowQuickSearch(prev => !prev)}
-          title="Inspect Route Stops"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            background: 'rgba(15, 23, 42, 0.88)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-          }}
-        >
-          <Search size={19} />
-        </button>
-
-        {/* Audio Mute / Unmute FAB */}
-        <button
-          type="button"
-          onClick={() => {
-            const next = !soundEnabled;
-            setSoundEnabled(next);
-            if (next) speakInstruction('Voice guidance active');
-          }}
-          title={soundEnabled ? 'Mute Voice' : 'Unmute Voice'}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: '50%',
-            background: 'rgba(15, 23, 42, 0.88)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: soundEnabled ? '#00E5FF' : '#94A3B8',
-          }}
-        >
-          {soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}
-        </button>
-
-        {/* Layer Mode Pill (Dark Nav / Satellite) */}
-        <div
-          style={{
-            background: 'rgba(15, 23, 42, 0.88)',
-            backdropFilter: 'blur(10px)',
-            borderRadius: 22,
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => switchLayer('navigation')}
-            style={{
-              padding: '8px',
-              fontSize: 10,
-              fontWeight: 800,
-              color: layerType === 'navigation' ? '#00E5FF' : '#94A3B8',
-              background: layerType === 'navigation' ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              textTransform: 'uppercase',
-            }}
-          >
-            Night
+            <div
+              style={{
+                width: 22,
+                height: 22,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: `rotate(${-compassHeading}deg)`,
+                transition: 'transform 0.3s ease-out',
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <polygon points="12,2 16,12 12,9 8,12" fill="#EF4444" />
+                <polygon points="12,22 16,12 12,15 8,12" fill="#F8FAFC" />
+              </svg>
+            </div>
           </button>
+
+          {/* Search / Route Inspect FAB */}
           <button
             type="button"
-            onClick={() => switchLayer('satellite')}
+            onClick={() => setShowQuickSearch(prev => !prev)}
+            title="Inspect Route Stops"
             style={{
-              padding: '8px',
-              fontSize: 10,
-              fontWeight: 800,
-              color: layerType === 'satellite' ? '#00E5FF' : '#94A3B8',
-              background: layerType === 'satellite' ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
-              border: 'none',
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.88)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
               cursor: 'pointer',
-              textTransform: 'uppercase',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#FFFFFF',
             }}
           >
-            Sat
+            <Search size={19} />
+          </button>
+
+          {/* Audio Mute / Unmute FAB */}
+          <button
+            type="button"
+            onClick={() => {
+              const next = !soundEnabled;
+              setSoundEnabled(next);
+              if (next) speakInstruction('Voice guidance active');
+            }}
+            title={soundEnabled ? 'Mute Voice' : 'Unmute Voice'}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.88)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: soundEnabled ? '#00E5FF' : '#94A3B8',
+            }}
+          >
+            {soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}
+          </button>
+
+          {/* Layer Mode Toggle (Dark Navigation vs Satellite) */}
+          <button
+            type="button"
+            onClick={() => switchLayer(layerType === 'navigation' ? 'satellite' : 'navigation')}
+            title={layerType === 'navigation' ? 'Switch to Satellite Map' : 'Switch to Dark GPS Map'}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: '50%',
+              background: 'rgba(15, 23, 42, 0.88)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 16,
+            }}
+          >
+            {layerType === 'navigation' ? '🌙' : '🛰️'}
           </button>
         </div>
-      </div>
+      )}
 
       {/* ─────────────────────────────────────────────────────────────
           QUICK SEARCH / WAYPOINT INSPECTOR DRAWER
          ───────────────────────────────────────────────────────────── */}
-      {showQuickSearch && (
+      {!compact && showQuickSearch && (
         <div
           style={{
             position: 'absolute',
@@ -831,72 +879,54 @@ export function DeliveryTrackingMap({
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          DRIVER LIVE STATUS BUBBLE
-          "Hectic night but we roll 😂 GM"
+          DRIVER LIVE STATUS BUBBLE (Visible only if real driver notes exist)
          ───────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 128,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 800,
-          maxWidth: '85%',
-          pointerEvents: 'auto',
-        }}
-      >
+      {!compact && activeDriverNote && (
         <div
           style={{
-            background: 'rgba(15, 23, 42, 0.85)',
-            backdropFilter: 'blur(12px)',
-            borderRadius: 16,
-            padding: '8px 16px',
-            color: '#FFFFFF',
-            fontSize: 13,
-            fontWeight: 700,
-            textAlign: 'center',
-            boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
+            position: 'absolute',
+            bottom: 110,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 800,
+            maxWidth: '85%',
+            pointerEvents: 'auto',
           }}
         >
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#00E5FF', boxShadow: '0 0 6px #00E5FF' }} />
-          <span>{activeDriverNote}</span>
-        </div>
-      </div>
-
-      {/* Floating Animated Emojis */}
-      <div style={{ position: 'absolute', bottom: 120, right: 40, pointerEvents: 'none', zIndex: 950 }}>
-        {flyingEmojis.map(item => (
           <div
-            key={item.id}
             style={{
-              position: 'absolute',
-              bottom: 0,
-              left: item.x,
-              fontSize: 26,
-              animation: 'float-emoji 1.8s ease-out forwards',
+              background: 'rgba(15, 23, 42, 0.85)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: 16,
+              padding: '8px 16px',
+              color: '#FFFFFF',
+              fontSize: 13,
+              fontWeight: 700,
+              textAlign: 'center',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
             }}
           >
-            {item.char}
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#00E5FF', boxShadow: '0 0 6px #00E5FF' }} />
+            <span>{activeDriverNote}</span>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
       {/* ─────────────────────────────────────────────────────────────
           FLOATING "▲ Re-center" BUTTON (Bottom-Left)
-          Visible when user drags map away from the vehicle
          ───────────────────────────────────────────────────────────── */}
-      {ready && showRecenter && (
+      {!compact && ready && showRecenter && (
         <button
           type="button"
           onClick={recenter}
           aria-label="Re-center on vehicle"
           style={{
             position: 'absolute',
-            bottom: 126,
+            bottom: 90,
             left: 14,
             zIndex: 800,
             height: 38,
@@ -920,158 +950,82 @@ export function DeliveryTrackingMap({
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          QUICK CHAT & EMOJI REACTION BAR
-          "Reply" input + 😍 😂 ❤️
-         ───────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 74,
-          left: 14,
-          right: 14,
-          zIndex: 800,
-          background: 'rgba(15, 23, 42, 0.9)',
-          backdropFilter: 'blur(14px)',
-          borderRadius: 999,
-          padding: '6px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Reply to driver…"
-          value={replyText}
-          onChange={e => setReplyText(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter' && replyText.trim()) {
-              triggerEmojiReaction('💬');
-              setReplyText('');
-            }
-          }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            color: '#FFFFFF',
-            fontSize: 13,
-            fontWeight: 600,
-            flex: 1,
-            paddingRight: 10,
-          }}
-        />
-
-        {/* Quick Reaction Emoji Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button
-            type="button"
-            onClick={() => triggerEmojiReaction('😍')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: 0 }}
-          >
-            😍
-          </button>
-          <button
-            type="button"
-            onClick={() => triggerEmojiReaction('😂')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: 0 }}
-          >
-            😂
-          </button>
-          <button
-            type="button"
-            onClick={() => triggerEmojiReaction('❤️')}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: 18,
-              padding: 0,
-              color: '#EF4444',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <Heart size={19} fill="#EF4444" />
-          </button>
-        </div>
-      </div>
-
-      {/* ─────────────────────────────────────────────────────────────
           BOTTOM ETA NAVIGATION CARD & ACTION CONTROLS
-          Gold ETA "20 min", "18 km · 1:02 AM", Back, Recent
+          Visible in expanded/fullscreen navigation mode
          ───────────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 800,
-          background: 'linear-gradient(180deg, rgba(7, 13, 20, 0.95) 0%, #05090F 100%)',
-          backdropFilter: 'blur(16px)',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          padding: '10px 16px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        {/* Back Button */}
-        <button
-          type="button"
-          onClick={() => {
-            if (isFullscreen) {
-              setIsFullscreen(false);
-            } else if (onClose) {
-              onClose();
-            }
-          }}
+      {!compact && (
+        <div
           style={{
-            padding: '7px 18px',
-            borderRadius: 10,
-            background: '#FFFFFF',
-            color: '#0F172A',
-            border: 'none',
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 800,
+            background: 'linear-gradient(180deg, rgba(7, 13, 20, 0.95) 0%, #05090F 100%)',
+            backdropFilter: 'blur(16px)',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '12px 18px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
           }}
         >
-          Back
-        </button>
+          {/* Back Button (Only when in fullscreen or when explicitly closable) */}
+          {(isFullscreen || onClose) && (
+            <button
+              type="button"
+              onClick={() => {
+                if (isFullscreen) {
+                  setIsFullscreen(false);
+                } else if (onClose) {
+                  onClose();
+                }
+              }}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 10,
+                background: '#FFFFFF',
+                color: '#0F172A',
+                border: 'none',
+                fontSize: 13,
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                flexShrink: 0,
+              }}
+            >
+              Back
+            </button>
+          )}
 
-        {/* Central Bold Gold / Amber ETA Display */}
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 900,
-              color: '#FBBF24',
-              letterSpacing: '-0.02em',
-              lineHeight: 1.1,
-              textShadow: '0 0 12px rgba(251, 191, 36, 0.35)',
-            }}
-          >
-            {etaMinutes} min
+          {/* Central Bold Gold / Amber ETA Display */}
+          <div style={{ textAlign: (isFullscreen || onClose) ? 'center' : 'left', flex: 1 }}>
+            <div
+              style={{
+                fontSize: 22,
+                fontWeight: 900,
+                color: '#FBBF24',
+                letterSpacing: '-0.02em',
+                lineHeight: 1.1,
+                textShadow: '0 0 12px rgba(251, 191, 36, 0.35)',
+              }}
+            >
+              {etaMinutes} min
+            </div>
+            <div
+              style={{
+                fontSize: 11.5,
+                fontWeight: 700,
+                color: 'rgba(255, 255, 255, 0.75)',
+                marginTop: 2,
+              }}
+            >
+              {distanceRemainingKm.toFixed(0)} km · {arrivalTimeStr}
+            </div>
           </div>
-          <div
-            style={{
-              fontSize: 11.5,
-              fontWeight: 700,
-              color: 'rgba(255, 255, 255, 0.75)',
-              marginTop: 2,
-            }}
-          >
-            {distanceRemainingKm.toFixed(0)} km · {arrivalTimeStr}
-          </div>
-        </div>
 
-        {/* Action Buttons: Direct Phone Call & Recent/Details */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          {/* Action Buttons: Direct Phone Call */}
           {driverPhone && (
             <button
               type="button"
@@ -1080,49 +1034,24 @@ export function DeliveryTrackingMap({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 5,
-                padding: '7px 14px',
+                padding: '8px 16px',
                 borderRadius: 10,
                 background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                 color: '#FFFFFF',
                 border: 'none',
-                fontSize: 12.5,
+                fontSize: 13,
                 fontWeight: 800,
                 cursor: 'pointer',
                 boxShadow: '0 2px 10px rgba(16, 185, 129, 0.45)',
-                transition: 'transform 0.15s ease',
+                flexShrink: 0,
               }}
               title={`Call ${otherPartyLabel}: ${formatPhoneDisplay(driverPhone)}`}
             >
               <Phone size={14} /> Call
             </button>
           )}
-
-          {/* Recent / Details Button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (onToggleDetails) {
-                onToggleDetails();
-              } else {
-                setShowQuickSearch(prev => !prev);
-              }
-            }}
-            style={{
-              padding: '7px 15px',
-              borderRadius: 10,
-              background: '#FFFFFF',
-              color: '#0F172A',
-              border: 'none',
-              fontSize: 12.5,
-              fontWeight: 800,
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-            }}
-          >
-            Recent
-          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }

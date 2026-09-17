@@ -120,7 +120,103 @@ As your Cropify Copilot, I assist you with real-time delivery status, payment br
   }
 
   // ==========================================================================
-  // 3. COMPLAINTS, SUPPORT ESCALATION & DISPUTES
+  // 3. TROUBLESHOOTING & DIRECT PROBLEM SOLVING (SOLVED BY AI)
+  // ==========================================================================
+  
+  // App performance, slow Wi-Fi, lag, or security
+  if (
+    msg.includes('slow') ||
+    msg.includes('lagg') ||
+    msg.includes('lag') ||
+    msg.includes('network') ||
+    msg.includes('wifi') ||
+    msg.includes('wi-fi') ||
+    msg.includes('offline') ||
+    msg.includes('freeze') ||
+    msg.includes('hanging') ||
+    msg.includes('security') ||
+    msg.includes('secure')
+  ) {
+    return `**Cropify Network, Offline & Security Guide:**
+
+• **Offline & Restricted Networks**: Cropify is engineered with local IndexedDB offline storage (\`cropify-offline\`). You can browse cached listings, view active orders, and draft actions even on unstable or restricted Wi-Fi connections. Once reconnected, pending actions sync automatically.
+• **High-Grade Encryption**: All transactions and personal data are encrypted via TLS 1.3 with strict Content-Security-Policies to prevent eavesdropping and malicious network tampering.
+• **Resolving App Lag**:
+  1. Check if offline mode is active in the header bar.
+  2. Tap your profile avatar -> **Settings** -> **Clear Cache** to refresh cached assets.
+  3. Ensure your browser allows IndexedDB storage.
+• **Need Technical Support?**: If an issue persists, ask me: *"File a technical support ticket for app lag"* or visit the [Support Page](/support?category=technical).`;
+  }
+
+  // Produce quality standards, grading & 3-strike policy (informational questions)
+  const isProduceQualityInfo =
+    (msg.includes('quality standard') ||
+     msg.includes('grading rule') ||
+     msg.includes('what is the quality') ||
+     msg.includes('3-strike') ||
+     msg.includes('strike rule') ||
+     msg.includes('how are farmers flagged')) &&
+    !msg.includes('delivered') &&
+    !msg.includes('rotten') &&
+    !msg.includes('not match') &&
+    !msg.includes('damaged');
+
+  if (isProduceQualityInfo) {
+    return `**Cropify Produce Quality Standards & 3-Strike Seller Policy:**
+
+• **Produce Grading Standards**:
+  • **Grade 1 (Premium)**: <13.5% moisture content (maize/beans), uniform size, clean bags, zero mold, rot, or insect infestation.
+  • **Grade 2 (Commercial)**: Fair average quality, standard grain size, acceptable minor blemishes.
+  • **Substandard / Under-Grade**: Prohibited from being represented as Grade 1.
+
+⚠️ **Automated 3-Strike Seller Quality Rule**:
+• Buyers can dispute delivered produce within 48 hours of arrival.
+• When substandard or under-grade goods are verified, a **Quality Strike** is officially logged against the seller.
+• **Automatic Suspension**: If a farmer or seller exceeds **3 consistent quality complaints**, their account is automatically flagged, new listings/sales are blocked, and the account is temporarily suspended pending admin termination review.
+
+If you received poor-quality produce, say: *"I want to report poor quality produce for Order <ID>"* or [File a Quality Dispute](/support?category=quality_dispute&priority=high).`;
+  }
+
+  // How escrow works & payment security
+  if (
+    (msg.includes('how does escrow work') ||
+     msg.includes('how escrow works') ||
+     msg.includes('is my money safe') ||
+     msg.includes('payment protection') ||
+     msg.includes('how do i get paid')) &&
+    !msg.includes('check escrow for order')
+  ) {
+    return `**How Cropify Escrow Protection Works:**
+
+1. **Buyer Funds Escrow**: The buyer pays for produce + transport via MTN Mobile Money or Airtel Money (PrimePay). The money is safely locked in Cropify Escrow.
+2. **Farmer Dispatches**: The farmer confirms the order and prepares the goods knowing payment is 100% secured.
+3. **Transport & Delivery**: The assigned transporter picks up the cargo and delivers it to the buyer.
+4. **Inspection & Release**: The recipient scans the delivery QR code and inspects the goods. Once confirmed, escrow releases funds instantly to the seller and transporter wallets!
+5. **48-Hour Dispute Window**: If produce arrives damaged or under-grade, the buyer can freeze escrow and raise a dispute.`;
+  }
+
+  // PIN reset and receipt downloads
+  if (msg.includes('reset pin') || msg.includes('forgot pin') || msg.includes('change pin') || msg.includes('wallet pin')) {
+    return `**How to Reset or Change Your Wallet PIN:**
+
+1. Navigate to the **Wallet** tab in your navigation bar.
+2. Tap the **Settings / Security** gear icon next to your wallet balance.
+3. Select **Change Wallet PIN**.
+4. Enter your current PIN and choose a new 4-digit code.
+5. If you forgot your PIN, tap **Forgot PIN?** to receive an SMS verification code on your registered phone number.`;
+  }
+
+  if (msg.includes('receipt') || msg.includes('invoice') || msg.includes('download receipt')) {
+    return `**Fintech Receipts & Invoices:**
+
+Every completed transaction on Cropify generates an official fintech receipt with a scannable QR verification code:
+• **For Buyers**: Open **Orders** -> select any completed order -> tap **Download Receipt / Invoice**.
+• **For Transporters**: Open **Deliveries** -> tap your completed trip to view your fare breakdown and payout receipt.
+• **For In-Person POS**: POS sales receipts can be printed or downloaded immediately after payment.`;
+  }
+
+  // ==========================================================================
+  // 4. COMPLAINTS, SUPPORT ESCALATION & DISPUTES (STRUCTURED TICKET FLOW)
   // ==========================================================================
   const isComplaintIntent =
     msg.includes('complaint') ||
@@ -128,13 +224,18 @@ As your Cropify Copilot, I assist you with real-time delivery status, payment br
     msg.includes('file a complaint') ||
     msg.includes('make a complaint') ||
     msg.includes('report an issue') ||
+    msg.includes('report farmer') ||
+    msg.includes('report seller') ||
+    msg.includes('report buyer') ||
+    msg.includes('report driver') ||
     msg.includes('i have a problem') ||
     msg.includes('i have an issue') ||
     msg.includes('bad service') ||
+    msg.includes('rotten') ||
     msg.includes('damaged') ||
-    msg.includes('damage') ||
     msg.includes('damaged cargo') ||
     msg.includes('goods damaged') ||
+    msg.includes('poor quality') ||
     msg.includes('driver refused') ||
     msg.includes('buyer refused') ||
     msg.includes('farmer refused') ||
@@ -147,7 +248,8 @@ As your Cropify Copilot, I assist you with real-time delivery status, payment br
     msg.includes('talk to someone') ||
     msg.includes('customer care') ||
     msg.includes('support team') ||
-    msg.includes('file a ticket');
+    msg.includes('file a ticket') ||
+    msg.includes('support ticket');
 
   if (isComplaintIntent || (isAwaitingComplaintDetails && userMessage.length > 5)) {
     // If the message has descriptive substance (or is responding to our complaint prompt)
@@ -159,48 +261,68 @@ As your Cropify Copilot, I assist you with real-time delivery status, payment br
 
     if (hasDetailedDescription || isAwaitingComplaintDetails) {
       let category = 'other';
-      if (msg.includes('pay') || msg.includes('money') || msg.includes('escrow') || msg.includes('wallet') || msg.includes('earn')) {
+      let priority: 'low' | 'medium' | 'high' | 'urgent' = 'medium';
+
+      if (msg.includes('quality') || msg.includes('grade') || msg.includes('rotten') || msg.includes('spoil') || msg.includes('substandard') || msg.includes('damaged produce')) {
+        category = 'quality_dispute';
+        priority = 'high';
+      } else if (msg.includes('pay') || msg.includes('money') || msg.includes('escrow') || msg.includes('wallet') || msg.includes('earn') || msg.includes('refund')) {
         category = 'payments';
+        priority = 'high';
       } else if (msg.includes('delivery') || msg.includes('driver') || msg.includes('trip') || msg.includes('cargo') || msg.includes('transporter')) {
         category = 'logistics';
+        priority = 'medium';
       } else if (msg.includes('order') || msg.includes('product') || msg.includes('crop') || msg.includes('listing')) {
         category = 'marketplace';
+        priority = 'medium';
+      } else if (msg.includes('bug') || msg.includes('crash') || msg.includes('error') || msg.includes('lag') || msg.includes('app')) {
+        category = 'technical';
+        priority = 'medium';
       } else if (msg.includes('kyc') || msg.includes('id') || msg.includes('permit') || msg.includes('verification')) {
         category = 'kyc';
+        priority = 'medium';
       }
 
-      const isUrgent = msg.includes('urgent') || msg.includes('emergency') || msg.includes('stolen') || msg.includes('fraud');
+      if (msg.includes('urgent') || msg.includes('emergency') || msg.includes('stolen') || msg.includes('fraud') || msg.includes('scam')) {
+        priority = 'urgent';
+      }
+
       const ticketRes = await tools.escalate_to_human(ctx, {
         summary: userMessage,
         category,
-        urgent: isUrgent,
+        priority,
+        orderId: extractedId ?? undefined,
       });
 
       if (ticketRes.escalated) {
-        return `I have opened an official support ticket for you (**Ticket #${ticketRes.ticketId.slice(0, 8)}**).
+        const catName = category === 'quality_dispute' ? 'Quality Dispute' : category.toUpperCase();
+        return `✅ **Official Support Ticket Created (Ticket #${ticketRes.ticketId.slice(0, 8)})**
 
-Our dispatch and moderation team has been notified and will review your case.
+• **Category**: ${catName}
+• **Priority / Urgency**: **${priority.toUpperCase()}**
+${extractedId ? `• **Order / Reference**: #${extractedId.slice(0, 8)}\n` : ''}• **Status**: [Status: open]
 
-**Direct Support Contacts:**
-• **WhatsApp**: [0758984224](https://wa.me/256758984224) (Fastest for active transit issues)
-• **Phone Call**: 0786857587
-• **Email**: kwagalaelijahhannington@gmail.com
+Your complaint has been delivered directly to the **Cropify Admin Dashboard** for urgent investigation and resolution. ${category === 'quality_dispute' ? 'If this seller has accumulated repeated poor-quality reports, Cropify will automatically issue a strike and suspend their account.' : ''}
 
-You can also view updates directly in your account's **Support** tab.`;
+**Next Steps:**
+• Track replies and upload evidence in your [Support Dashboard](/support).
+• For emergency dispatch issues, call or WhatsApp our operations desk:
+  • **WhatsApp**: [0758984224](https://wa.me/256758984224)
+  • **Phone Call**: 0786857587`;
       }
     }
 
-    // Otherwise, guide the user warmly on how to lodge their complaint
+    // Otherwise, guide the user on structuring their complaint
     return `I am here to assist you with filing your complaint or resolving any issue with your account.
 
 **How would you like to proceed?**
-1. **File an official ticket right now**: Reply with a brief summary of what happened (e.g., your Order/Trip ID, whether it involves payment, delayed transit, or cargo damage). I will generate an official ticket immediately.
+1. **File an official ticket right now**: Reply with a brief summary of what happened (e.g., your Order/Trip ID, whether it involves payment, delayed transit, or substandard/poor quality cargo). I will generate an official ticket immediately.
 2. **Contact Support directly**:
    • **WhatsApp**: [0758984224](https://wa.me/256758984224)
    • **Phone Call**: 0786857587
    • **Email**: kwagalaelijahhannington@gmail.com
 
-Our support team reviews every complaint and ensures escrow protections are enforced.`;
+Our support team reviews every complaint, ensures escrow protections are enforced, and penalizes substandard produce with automated 3-strike seller flags. You can also open the [Support Ticket Page](/support?category=quality_dispute&priority=high).`;
   }
 
   // Dispute Draft (e.g., buyer received bad goods)
@@ -216,7 +338,7 @@ Our support team reviews every complaint and ensures escrow protections are enfo
       orderId,
       description: userMessage,
     });
-    return `${res.note}\n\n**Draft Dispute Summary:** "${res.draftText}"`;
+    return `${res.note}\n\n**Draft Dispute Summary:** "${res.draftText}"\n\n💡 *Tip: If the seller delivered substandard or under-grade produce, tell me "File a quality complaint for order ${orderId.slice(0, 8)}" and I will escalate a formal quality strike to admin support.*`;
   }
 
   // ==========================================================================

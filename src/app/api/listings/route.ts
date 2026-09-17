@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
@@ -50,6 +50,16 @@ export async function POST(req: Request) {
   // Get the profiles.id (different from auth.users.id)
   const profile = await getOrCreateProfile(supabase, user);
   if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 500 });
+
+  // Check if seller's account is suspended (e.g. for poor-grade produce strikes)
+  const { checkIsAccountSuspended } = await import('@/lib/moderation/quality-strikes');
+  const suspensionCheck = await checkIsAccountSuspended(user.id);
+  if (suspensionCheck.isSuspended) {
+    return NextResponse.json({
+      success: false,
+      error: `Your account is temporarily suspended: ${suspensionCheck.reason || 'Exceeded 3 poor-quality produce reports'}. New listings cannot be published. Please contact support.`,
+    }, { status: 403 });
+  }
 
   const body = await req.json();
   // Accept both camelCase (farmer form) and snake_case (group create page)

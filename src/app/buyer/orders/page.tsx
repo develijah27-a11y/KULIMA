@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Leaf, ClipboardList, CheckCircle2, Truck, Package, Star, X, AlertTriangle, FileText, Check } from 'lucide-react';
+import { Leaf, ClipboardList, CheckCircle2, Truck, Package, Star, X, AlertTriangle, FileText, Check, Info, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
@@ -82,6 +82,76 @@ function ReturnCountdown({ deliveredAt }: { deliveredAt: string | null }) {
   );
 }
 
+function getStepStatusGuidance(status: string, farmerName: string | null, totalAmount: number, cropType: string) {
+  switch (status) {
+    case 'pending':
+      return {
+        badge: 'Step 1 of 6 · Placed',
+        title: `Waiting for ${farmerName || 'Farmer'} to confirm stock`,
+        desc: `The order for ${cropType} has been placed. The farmer is currently reviewing inventory. Once confirmed, you can securely fund escrow to dispatch delivery.`,
+        bg: 'var(--color-sky-bg)',
+        border: 'var(--color-sky)',
+        color: 'var(--color-sky)',
+      };
+    case 'confirmed':
+      return {
+        badge: 'Step 2 of 6 · Stock Confirmed',
+        title: 'Action Required: Pay Escrow to Dispatch Delivery',
+        desc: `${farmerName || 'The farmer'} has confirmed available stock! Tap below to secure UGX ${Math.round(totalAmount).toLocaleString()} in Cropify Escrow. A nearby driver will be matched immediately.`,
+        bg: 'var(--color-primary-bg)',
+        border: 'var(--color-primary)',
+        color: 'var(--color-primary)',
+      };
+    case 'paid':
+      return {
+        badge: 'Step 3 of 6 · Payment Secured in Escrow',
+        title: 'Matching Nearby Driver...',
+        desc: `UGX ${Math.round(totalAmount).toLocaleString()} is safely locked in escrow. The system has notified nearby transporters to accept the pickup job.`,
+        bg: 'var(--color-primary-bg)',
+        border: 'var(--color-primary)',
+        color: 'var(--color-primary)',
+      };
+    case 'dispatched':
+      return {
+        badge: 'Step 4 of 6 · Driver Assigned',
+        title: 'Driver En Route to Farm Pickup',
+        desc: 'A transporter has accepted this delivery job and is heading to the pickup location to load your cargo.',
+        bg: 'var(--color-sky-bg)',
+        border: 'var(--color-sky)',
+        color: 'var(--color-sky)',
+      };
+    case 'in_transit':
+      return {
+        badge: 'Step 5 of 6 · Cargo On The Way',
+        title: 'Cargo In Transit with Live GPS',
+        desc: `Your ${cropType} is loaded and on the road! The driver is broadcasting live location and ETA updates.`,
+        bg: 'var(--color-harvest-bg)',
+        border: 'var(--color-harvest)',
+        color: 'var(--color-harvest)',
+      };
+    case 'delivered':
+      return {
+        badge: 'Step 6 of 6 · Delivered',
+        title: 'Action Required: Inspect & Confirm Receipt',
+        desc: `Cargo has arrived! Please inspect your ${cropType}. When satisfied, tap 'Confirm Receipt' to release funds to ${farmerName || 'the farmer'}. You have 48 hours to raise any quality dispute.`,
+        bg: 'var(--color-harvest-bg)',
+        border: 'var(--color-harvest)',
+        color: 'var(--color-harvest)',
+      };
+    case 'completed':
+      return {
+        badge: 'Completed · Escrow Released',
+        title: 'Order Successfully Completed',
+        desc: `Payment of UGX ${Math.round(totalAmount).toLocaleString()} has been released to ${farmerName || 'the farmer'}. Thank you for trading on Cropify!`,
+        bg: 'var(--color-success-bg)',
+        border: 'var(--color-success)',
+        color: 'var(--color-success)',
+      };
+    default:
+      return null;
+  }
+}
+
 function Pipeline({ status }: { status: string }) {
   const cur = STEP_IDX[status] ?? 0;
   if (status === 'cancelled') return (
@@ -91,31 +161,44 @@ function Pipeline({ status }: { status: string }) {
     </div>
   );
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 0, overflow: 'auto', padding: '10px 0' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 0, overflow: 'auto', padding: '12px 0 8px' }}>
       {STEPS.map((s, i) => {
         const done    = i < cur;
         const active  = i === cur;
-        const future  = i > cur;
         return (
           <div key={s.key} style={{ display: 'flex', alignItems: 'center', flex: i < STEPS.length - 1 ? 1 : 0, minWidth: 0 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
               <div style={{
-                width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: active ? 32 : 26, height: active ? 32 : 26, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 12,
                 background: done ? C.green : active ? C.green : 'var(--color-surface-2)',
-                border: active ? `2px solid ${C.green}` : done ? 'none' : `2px solid ${C.border}`,
-                boxShadow: active ? `0 0 0 3px ${C.greenBg}` : 'none',
+                border: active ? `2px solid ${C.green}` : done ? 'none' : `1.5px solid ${C.border}`,
+                boxShadow: active ? `0 0 0 4px ${C.greenBg}` : 'none',
                 transition: 'all 0.3s',
               }}>
-                {done ? <span style={{ display: 'flex', color: '#fff' }}><Check size={10} /></span>
-                      : <span style={{ display: 'flex', color: done ? '#fff' : 'var(--color-text-muted)' }}>{s.icon}</span>}
+                {done ? (
+                  <span style={{ display: 'flex', color: '#fff' }}><Check size={11} /></span>
+                ) : (
+                  <span style={{ display: 'flex', color: active ? '#fff' : 'var(--color-text-muted)' }}>{s.icon}</span>
+                )}
               </div>
-              <span style={{ fontSize: 9, color: active ? C.green : done ? C.greenMed : C.muted, fontWeight: active || done ? 700 : 400, whiteSpace: 'nowrap' }}>
+              <span style={{
+                fontSize: active ? 10 : 9,
+                color: active ? C.green : done ? C.greenMed : C.muted,
+                fontWeight: active ? 800 : done ? 700 : 400,
+                whiteSpace: 'nowrap',
+              }}>
                 {s.label}
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div style={{ flex: 1, height: 2, background: done ? C.green : 'var(--color-surface-2)', transition: 'background 0.3s', margin: '0 2px', marginBottom: 18 }} />
+              <div style={{
+                flex: 1, height: 2,
+                background: done ? C.green : 'var(--color-surface-2)',
+                transition: 'background 0.3s',
+                margin: '0 4px',
+                marginBottom: 18,
+              }} />
             )}
           </div>
         );
@@ -189,16 +272,34 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
     });
   }
 
-  async function raiseDispute() {
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('poor_quality');
+  const [disputeNote, setDisputeNote] = useState('');
+
+  async function submitDispute() {
     startT(async () => {
       const res = await fetch(`/api/orders/${order.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'dispute' }),
+        body: JSON.stringify({
+          action: 'dispute',
+          reason: disputeReason,
+          note: disputeNote.trim() || undefined,
+        }),
       });
       const json = await res.json();
-      if (json.success) { showToast('Dispute raised — admin will review within 24 hours', true); onAction(); }
-      else showToast(json.error ?? 'Failed', false);
+      if (json.success) {
+        setShowDisputeModal(false);
+        showToast(
+          json.sellerSuspended
+            ? 'Dispute submitted. Seller reached 3 quality strikes and has been temporarily suspended.'
+            : 'Dispute submitted — Cropify support team will review within 24 hours.',
+          true
+        );
+        onAction();
+      } else {
+        showToast(json.error ?? 'Failed to submit dispute', false);
+      }
     });
   }
 
@@ -268,6 +369,43 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
         )}
       </div>
 
+      {/* Dynamic Step Guidance Explainer */}
+      {(() => {
+        const guide = getStepStatusGuidance(order.status, farmer?.full_name ?? null, order.total_amount, order.crop_type);
+        if (!guide) return null;
+        return (
+          <div style={{ padding: '0 20px 14px' }}>
+            <div style={{
+              background: guide.bg,
+              border: `1px solid ${guide.border}`,
+              borderRadius: 12,
+              padding: '12px 14px',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{
+                  fontSize: 10,
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  color: guide.color,
+                }}>
+                  {guide.badge}
+                </span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: guide.color }}>
+                  {order.status === 'confirmed' || order.status === 'delivered' ? '⚡ ACTION NEEDED' : 'IN PROGRESS'}
+                </span>
+              </div>
+              <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: '0 0 3px' }}>
+                {guide.title}
+              </p>
+              <p style={{ fontSize: 11.5, color: C.muted, margin: 0, lineHeight: 1.5 }}>
+                {guide.desc}
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Notes */}
       {(order.farmer_note || order.buyer_note) && (
         <div style={{ padding: '0 20px 12px' }}>
@@ -329,7 +467,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
           )}
           {canDispute && (
             <button
-              onClick={raiseDispute}
+              onClick={() => setShowDisputeModal(true)}
               disabled={pending}
               style={{
                 width: '100%', padding: '10px', borderRadius: 12, border: `1.5px solid ${C.red}`,
@@ -353,6 +491,181 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
               Cancel Order
             </button>
           )}
+        </div>
+      )}
+
+      {/* Structured Dispute & Quality Reporting Modal */}
+      {showDisputeModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1100,
+          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        }} onClick={() => setShowDisputeModal(false)}>
+          <div style={{
+            background: C.cardBg, borderRadius: 16, maxWidth: 480, width: '100%',
+            padding: 22, boxShadow: 'var(--d-shadow-card)',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-0.02em' }}>
+                  Raise Dispute & Report Quality
+                </h3>
+                <p style={{ fontSize: 12, color: C.muted, margin: '3px 0 0' }}>
+                  Order #{order.id.slice(0, 8)} · {order.crop_type} ({order.quantity_kg} kg)
+                </p>
+              </div>
+              <button onClick={() => setShowDisputeModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4 }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ background: 'var(--color-danger-bg)', borderRadius: 10, padding: '10px 12px', marginBottom: 14, border: `1px solid var(--color-danger-border)` }}>
+              <p style={{ fontSize: 11.5, color: C.red, margin: 0, lineHeight: 1.45, fontWeight: 600 }}>
+                Escrow funds will remain safely frozen while Cropify investigates. Sellers reported 3 times for poor quality goods are automatically flagged and temporarily suspended.
+              </p>
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: C.text, display: 'block', marginBottom: 5 }}>
+                Complaint Reason *
+              </label>
+              <select
+                value={disputeReason}
+                onChange={e => setDisputeReason(e.target.value)}
+                className="app-input"
+                style={{ width: '100%', fontSize: 13, cursor: 'pointer' }}
+              >
+                <option value="poor_quality">Substandard / Rotten / Bad Produce</option>
+                <option value="under_grade">Under-Grade (Doesn't match advertised quality grade)</option>
+                <option value="damaged_produce">Damaged in Transit / Crushed Goods</option>
+                <option value="weight_shortage">Weight Shortage / Incomplete Delivery</option>
+                <option value="wrong_item">Wrong Crop / Variety Delivered</option>
+                <option value="other">Other Transaction Issue</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: C.text, display: 'block', marginBottom: 5 }}>
+                Problem Description & Evidence Details
+              </label>
+              <textarea
+                value={disputeNote}
+                onChange={e => setDisputeNote(e.target.value)}
+                placeholder="Describe the issue in detail (e.g., discoloration, mold, moisture, weight received). You can also upload photos in Support."
+                rows={3}
+                className="app-input"
+                style={{ width: '100%', fontSize: 12.5, resize: 'vertical' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={submitDispute}
+                disabled={pending}
+                className="btn-primary"
+                style={{ flex: 1, padding: '10px', fontSize: 13, background: C.red, borderColor: C.red }}
+              >
+                {pending ? 'Submitting…' : 'Submit Dispute & Freeze Escrow'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowDisputeModal(false)}
+                disabled={pending}
+                className="btn-ghost"
+                style={{ padding: '10px 16px', fontSize: 13 }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrderLifecycleExplainer() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{
+      background: C.cardBg,
+      borderRadius: 16,
+      boxShadow: C.cardShadow,
+      border: `1.5px solid ${C.border}`,
+      overflow: 'hidden',
+    }}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%',
+          padding: '13px 18px',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          textAlign: 'left',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <span style={{
+            width: 28, height: 28, borderRadius: 8,
+            background: 'var(--color-primary-bg)', color: C.green,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}>
+            <Info size={15} />
+          </span>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: 0 }}>
+              Order Lifecycle Guide: How All Steps Finish
+            </p>
+            <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>
+              Placed → Confirmed → Paid → Driver → On the way → Delivered
+            </p>
+          </div>
+        </div>
+        <span style={{ color: C.muted, display: 'flex' }}>
+          {open ? <ChevronUp size={17} /> : <ChevronDown size={17} />}
+        </span>
+      </button>
+
+      {open && (
+        <div style={{ padding: '4px 18px 18px', borderTop: `1px solid ${C.border}`, background: 'var(--color-surface-2)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+            {[
+              { step: '1. Placed', who: 'Buyer', badgeBg: 'var(--color-sky-bg)', badgeCol: 'var(--color-sky)', desc: 'Buyer selects kilograms (e.g. 50 kg rice) and submits order. Farmer Kwagala Elijah receives immediate push/in-app alert.' },
+              { step: '2. Confirmed', who: 'Farmer', badgeBg: 'var(--color-primary-bg)', badgeCol: 'var(--color-primary)', desc: 'Farmer inspects Kampala storage/farm and taps "Confirm Order" to guarantee stock.' },
+              { step: '3. Paid', who: 'Buyer', badgeBg: 'var(--color-primary-bg)', badgeCol: 'var(--color-primary)', desc: 'Buyer taps "Pay UGX 100,000 — Arrange Delivery". Payment is locked in Cropify Escrow with 100% money-back protection.' },
+              { step: '4. Driver', who: 'System & Transporter', badgeBg: 'var(--color-sky-bg)', badgeCol: 'var(--color-sky)', desc: 'System automatically dispatches to vetted local transporters. Transporter accepts the job and heads to pickup.' },
+              { step: '5. On the way', who: 'Driver', badgeBg: 'var(--color-harvest-bg)', badgeCol: 'var(--color-harvest)', desc: 'Transporter picks up rice from Kampala and turns on live GPS tracking. Buyer watches arrival ETA in real time.' },
+              { step: '6. Delivered', who: 'Driver & Buyer', badgeBg: 'var(--color-harvest-bg)', badgeCol: 'var(--color-harvest)', desc: 'Driver marks cargo delivered. Buyer receives delivery alert and has a 48-hour return/inspection window.' },
+              { step: '7. Done', who: 'Buyer & Escrow', badgeBg: 'var(--color-success-bg)', badgeCol: 'var(--color-success)', desc: 'Buyer taps "Confirm Receipt", Cropify instantly releases UGX 100,000 to Kwagala Elijah, and an official receipt is issued.' },
+            ].map(item => (
+              <div key={item.step} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <span style={{
+                  fontSize: 10,
+                  fontWeight: 900,
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                  background: item.badgeBg,
+                  color: item.badgeCol,
+                  whiteSpace: 'nowrap',
+                  marginTop: 1,
+                  flexShrink: 0,
+                }}>
+                  {item.step}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: C.text, margin: 0 }}>
+                    {item.who} · <span style={{ fontWeight: 400, color: C.muted }}>{item.desc}</span>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -425,6 +738,9 @@ export default function BuyerOrdersPage() {
           ))}
         </div>
       )}
+
+      {/* Order Lifecycle Guide */}
+      <OrderLifecycleExplainer />
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>

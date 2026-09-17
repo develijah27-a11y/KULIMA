@@ -8,8 +8,8 @@ import {
 } from 'lucide-react';
 
 type TicketStatus = 'open' | 'in_progress' | 'pending_user' | 'resolved' | 'closed';
-type TicketCategory = 'payments' | 'marketplace' | 'logistics' | 'kyc' | 'technical' | 'account' | 'other';
-type TicketPriority = 'low' | 'medium' | 'high';
+type TicketCategory = 'payments' | 'marketplace' | 'logistics' | 'kyc' | 'technical' | 'account' | 'quality_dispute' | 'other';
+type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
 
 interface Ticket {
   id: string;
@@ -17,6 +17,7 @@ interface Ticket {
   category: TicketCategory;
   status: TicketStatus;
   priority: TicketPriority;
+  order_id?: string | null;
   created_at: string;
   updated_at: string;
   resolved_at: string | null;
@@ -36,13 +37,14 @@ interface TicketDetail extends Ticket {
 }
 
 const CATEGORIES: { value: TicketCategory; label: string }[] = [
-  { value: 'payments',     label: 'Payments' },
-  { value: 'marketplace',  label: 'Marketplace' },
-  { value: 'logistics',    label: 'Logistics' },
-  { value: 'kyc',          label: 'KYC & Verification' },
-  { value: 'technical',    label: 'Technical Issues' },
-  { value: 'account',      label: 'Account' },
-  { value: 'other',        label: 'Other' },
+  { value: 'quality_dispute', label: 'Quality & Produce Dispute' },
+  { value: 'payments',        label: 'Payments & Escrow' },
+  { value: 'marketplace',     label: 'Marketplace & Orders' },
+  { value: 'logistics',       label: 'Logistics & Delivery' },
+  { value: 'kyc',             label: 'KYC & Verification' },
+  { value: 'technical',       label: 'Technical Issues & App Performance' },
+  { value: 'account',         label: 'Account & Security' },
+  { value: 'other',           label: 'Other' },
 ];
 
 const STATUS_CFG: Record<TicketStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
@@ -57,6 +59,7 @@ const PRIORITY_CFG: Record<TicketPriority, { color: string; bg: string }> = {
   low:    { color: 'var(--color-text-muted)', bg: 'var(--color-surface-2)' },
   medium: { color: 'var(--color-harvest)',    bg: 'var(--color-harvest-bg)' },
   high:   { color: 'var(--color-danger)',     bg: 'var(--color-danger-bg)' },
+  urgent: { color: '#fff',                    bg: 'var(--color-danger)' },
 };
 
 function fmtDate(iso: string) {
@@ -69,24 +72,47 @@ function fmtTime(iso: string) {
 
 // ─── New Ticket Form ──────────────────────────────────────────────────────────
 
-function NewTicketForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
-  const [subject, setSubject] = useState('');
-  const [category, setCategory] = useState<TicketCategory>('technical');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<TicketPriority>('medium');
+interface NewTicketInitialValues {
+  subject?: string;
+  category?: TicketCategory;
+  description?: string;
+  priority?: TicketPriority;
+  orderId?: string;
+}
+
+function NewTicketForm({
+  initialValues,
+  onCreated,
+  onCancel,
+}: {
+  initialValues?: NewTicketInitialValues;
+  onCreated: () => void;
+  onCancel: () => void;
+}) {
+  const [subject, setSubject] = useState(initialValues?.subject ?? '');
+  const [category, setCategory] = useState<TicketCategory>(initialValues?.category ?? 'technical');
+  const [description, setDescription] = useState(initialValues?.description ?? '');
+  const [priority, setPriority] = useState<TicketPriority>(initialValues?.priority ?? 'medium');
+  const [orderId, setOrderId] = useState(initialValues?.orderId ?? '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (description.length < 20) { setError('Please describe your issue in at least 20 characters.'); return; }
+    if (description.length < 15) { setError('Please describe your issue in at least 15 characters.'); return; }
     setLoading(true);
     setError('');
     try {
       const res = await fetch('/api/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, category, description, priority }),
+        body: JSON.stringify({
+          subject,
+          category,
+          description,
+          priority,
+          order_id: orderId.trim() || undefined,
+        }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Failed to create ticket');
@@ -102,8 +128,12 @@ function NewTicketForm({ onCreated, onCancel }: { onCreated: () => void; onCance
     <div style={{ background: 'var(--d-card)', borderRadius: 16, padding: 24, boxShadow: 'var(--d-shadow-card)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--d-text)', margin: 0, letterSpacing: '-0.02em' }}>New Support Ticket</h2>
-          <p style={{ fontSize: 12, color: 'var(--d-muted)', margin: '4px 0 0' }}>Describe your issue and we'll get back to you as soon as possible.</p>
+          <h2 style={{ fontSize: 16, fontWeight: 800, color: 'var(--d-text)', margin: 0, letterSpacing: '-0.02em' }}>
+            New Support Ticket
+          </h2>
+          <p style={{ fontSize: 12, color: 'var(--d-muted)', margin: '4px 0 0' }}>
+            Describe your issue and Cropify support will investigate and provide solutions.
+          </p>
         </div>
         <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--d-muted)', padding: 4, display: 'flex', minHeight: 'unset', minWidth: 'unset' }}>
           <X size={18} />
@@ -130,13 +160,27 @@ function NewTicketForm({ onCreated, onCancel }: { onCreated: () => void; onCance
             </select>
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--d-text)', display: 'block', marginBottom: 6 }}>Priority</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--d-text)', display: 'block', marginBottom: 6 }}>Priority / Urgency</label>
             <select value={priority} onChange={e => setPriority(e.target.value as TicketPriority)} className="app-input" style={{ cursor: 'pointer' }}>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
+              <option value="low">Low (General inquiry)</option>
+              <option value="medium">Medium (Account / Feature issue)</option>
+              <option value="high">High (Blocked payment / delivery)</option>
+              <option value="urgent">Urgent (Fraud / Perishable goods rotting / Escrow dispute)</option>
             </select>
           </div>
+        </div>
+
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--d-text)', display: 'block', marginBottom: 6 }}>
+            Order / Delivery Reference (Optional)
+          </label>
+          <input
+            value={orderId}
+            onChange={e => setOrderId(e.target.value)}
+            placeholder="e.g. Order ID, Trip ID, or Transaction Reference"
+            maxLength={100}
+            className="app-input"
+          />
         </div>
 
         <div>
@@ -345,6 +389,24 @@ export function SupportTickets() {
   const [view, setView] = useState<'list' | 'new' | { ticketId: string }>('list');
   const [filterStatus, setFilterStatus] = useState('');
   const [search, setSearch] = useState('');
+  const [initialFormValues, setInitialFormValues] = useState<NewTicketInitialValues | undefined>();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      const subject = sp.get('subject') || undefined;
+      const category = (sp.get('category') as TicketCategory) || undefined;
+      const priority = (sp.get('priority') as TicketPriority) || undefined;
+      const description = sp.get('description') || undefined;
+      const orderId = sp.get('orderId') || sp.get('order_id') || undefined;
+      const openNew = sp.get('new') === 'true' || Boolean(subject || description || category);
+
+      if (openNew) {
+        setInitialFormValues({ subject, category, priority, description, orderId });
+        setView('new');
+      }
+    }
+  }, []);
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
@@ -366,7 +428,13 @@ export function SupportTickets() {
     : tickets;
 
   if (view === 'new') {
-    return <NewTicketForm onCreated={() => { setView('list'); loadTickets(); }} onCancel={() => setView('list')} />;
+    return (
+      <NewTicketForm
+        initialValues={initialFormValues}
+        onCreated={() => { setView('list'); loadTickets(); }}
+        onCancel={() => setView('list')}
+      />
+    );
   }
 
   if (typeof view === 'object' && 'ticketId' in view) {

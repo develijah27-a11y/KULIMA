@@ -63,7 +63,7 @@ export interface CachedDiseaseScan {
   is_offline_pending?: boolean;
 }
 
-const DB_NAME = 'kulima-offline';
+const DB_NAME = 'cropify-offline';
 const DB_VERSION = 3;
 const QUEUE_CHANGED_EVENT = 'cropify:queue-changed';
 

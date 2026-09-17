@@ -4,10 +4,11 @@ import { z } from 'zod';
 
 const CreateTicketSchema = z.object({
   subject: z.string().min(5).max(200),
-  category: z.enum(['payments', 'marketplace', 'logistics', 'kyc', 'technical', 'account', 'other']),
-  description: z.string().min(20).max(5000),
-  priority: z.enum(['low', 'medium', 'high']).optional().default('medium'),
+  category: z.enum(['payments', 'marketplace', 'logistics', 'kyc', 'technical', 'account', 'quality_dispute', 'other']),
+  description: z.string().min(15).max(5000),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional().default('medium'),
   screenshot_url: z.string().url().optional().nullable(),
+  order_id: z.string().optional().nullable(),
 });
 
 export async function GET(request: NextRequest) {
@@ -71,11 +72,25 @@ export async function POST(request: NextRequest) {
   if (screenshot_url) {
     insertPayload.screenshot_url = screenshot_url;
   }
+  if (parsed.data.order_id) {
+    insertPayload.order_id = parsed.data.order_id;
+  }
 
-  const { data: ticket, error } = await (supabase.from as any)('support_tickets')
+  let { data: ticket, error } = await (supabase.from as any)('support_tickets')
     .insert(insertPayload)
     .select('id, subject, status, created_at')
     .single();
+
+  if (error && error.message?.includes('column')) {
+    delete insertPayload.order_id;
+    delete insertPayload.screenshot_url;
+    const retry = await (supabase.from as any)('support_tickets')
+      .insert(insertPayload)
+      .select('id, subject, status, created_at')
+      .single();
+    ticket = retry.data;
+    error = retry.error;
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

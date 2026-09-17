@@ -333,7 +333,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
           </label>
           <input
             type="text" value={toAccount} onChange={e => setToAccount(e.target.value.toUpperCase())}
-            placeholder="e.g. AGN1234567890"
+            placeholder="e.g. CRP1234567890"
             style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: 'var(--d-input-bg)' }}
           />
         </div>

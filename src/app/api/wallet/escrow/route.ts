@@ -210,7 +210,7 @@ export async function POST(req: Request) {
               unitPrice:   Number(order.unit_price),
               amount:      totalAmount,
               district:    order.pickup_district ?? null,
-              receiptNo:   `AGN-${orderId.slice(0, 8).toUpperCase()}`,
+              receiptNo:   `CRP-${orderId.slice(0, 8).toUpperCase()}`,
               purchasedAt: now,
             }),
           ).catch((emailErr) => {

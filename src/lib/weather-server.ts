@@ -107,7 +107,10 @@ async function fetchOpenMeteo(lat: number, lon: number): Promise<ServerWeatherDa
     url.searchParams.set('timezone', 'Africa/Kampala');
     url.searchParams.set('forecast_days', '14');
 
-    const res = await fetch(url.toString(), { next: { revalidate: 900 } });
+    const res = await fetch(url.toString(), {
+      next: { revalidate: 900 },
+      signal: AbortSignal.timeout(6000),
+    });
     if (!res.ok) return null;
     const json = await res.json();
 
@@ -246,7 +249,10 @@ async function fetchOpenWeatherMap(lat: number, lon: number, apiKey: string): Pr
   try {
     const res = await fetch(
       `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&cnt=40`,
-      { next: { revalidate: 1800 } }
+      {
+        next: { revalidate: 1800 },
+        signal: AbortSignal.timeout(6000),
+      }
     );
     if (!res.ok) return null;
     const json = await res.json();

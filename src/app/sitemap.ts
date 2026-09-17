@@ -36,13 +36,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       images: [`${SITE_URL}/logo.png`],
     },
     {
-      url: `${SITE_URL}/news`,
-      lastModified: now,
-      changeFrequency: 'daily',
-      priority: 0.8,
-      images: [`${SITE_URL}/og-image.png`],
-    },
-    {
       url: `${SITE_URL}/premium`,
       lastModified: now,
       changeFrequency: 'monthly',
@@ -54,12 +47,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
-    },
-    {
-      url: `${SITE_URL}/help`,
-      lastModified: now,
-      changeFrequency: 'monthly',
-      priority: 0.65,
     },
     {
       url: `${SITE_URL}/contact`,

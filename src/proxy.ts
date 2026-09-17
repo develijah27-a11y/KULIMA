@@ -30,8 +30,8 @@ const RATE_LIMIT_RULES: { prefix: string; limit: number; windowMs: number }[] = 
   { prefix: '/api/doctor',            limit: 10, windowMs: 60_000  },
   // Support tickets
   { prefix: '/api/support',           limit: 30, windowMs: 60_000  },
-  // General API — generous fallback to catch abusive scraping
-  { prefix: '/api/',                  limit: 120, windowMs: 60_000 },
+  // General API — accommodate multiple users sharing a corporate/campus Wi-Fi NAT IP
+  { prefix: '/api/',                  limit: 300, windowMs: 60_000 },
 ];
 
 function getIp(req: NextRequest): string {

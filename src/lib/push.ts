@@ -6,7 +6,10 @@ function ensureConfigured() {
   if (configured) return;
   const publicKey  = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject    = process.env.VAPID_SUBJECT ?? 'mailto:support@cropifyapp.com';
+  let subject = process.env.VAPID_SUBJECT ?? 'mailto:support@cropifyapp.com';
+  if (subject.toLowerCase().includes('kulima') || subject.toLowerCase().includes('agrinova') || !subject.includes('cropifyapp.com')) {
+    subject = 'mailto:support@cropifyapp.com';
+  }
   if (!publicKey || !privateKey) return; // push simply no-ops until keys are set
   webpush.setVapidDetails(subject, publicKey, privateKey);
   configured = true;

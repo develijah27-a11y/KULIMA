@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, X, Truck, Zap, Snowflake, MapPin, Calendar, Map, Phone } from 'lucide-react';
+import { CheckCircle2, X, Truck, Zap, Snowflake, MapPin, Calendar, Map, Phone, Lock, ShieldCheck } from 'lucide-react';
 import { getTelUri, openPhoneDialer, formatPhoneDisplay, getWhatsAppUri } from '@/lib/phone-dialer';
 
 const C = {
@@ -122,9 +122,13 @@ function JobCard({ job, onAccepted }: { job: Job; onAccepted: (id: string) => vo
             <p style={{ fontSize: 19, fontWeight: 900, color: C.green, margin: 0, letterSpacing: '-0.02em' }}>
               UGX {Math.round(job.driver_earnings ?? job.estimated_fare ?? 0).toLocaleString()}
             </p>
-            <p style={{ fontSize: 9, color: C.muted, margin: '1px 0 0' }}>
-              {job.driver_earnings ? 'your earnings' : 'est. fare'}
-            </p>
+            <span style={{
+              fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 999,
+              background: 'var(--color-primary-bg)', color: C.green,
+              display: 'inline-flex', alignItems: 'center', gap: 3, marginTop: 3,
+            }}>
+              <Lock size={9} /> Escrow Guaranteed
+            </span>
           </div>
         </div>
 

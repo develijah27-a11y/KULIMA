@@ -21,29 +21,15 @@ import { rateLimit } from '@/lib/rate-limit';
 // never surfaced to the caller, so this endpoint can't be used to enumerate
 // registered emails.
 function getAppOrigin(req: Request): string {
-  if (process.env.NEXT_PUBLIC_APP_URL) {
+  const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    const proto = req.headers.get('x-forwarded-proto') || 'http';
+    return `${proto}://${host}`;
+  }
+  if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('vercel.app')) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/+$/, '');
   }
-  if (process.env.NEXT_PUBLIC_SITE_URL) {
-    return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, '');
-  }
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://www.cropifyapp.com';
-  }
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/+$/, '')}`;
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL.replace(/\/+$/, '')}`;
-  }
-
-  const forwardedHost = req.headers.get('x-forwarded-host') || req.headers.get('host');
-  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
-  if (forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`;
-  }
-
-  return new URL(req.url).origin;
+  return 'https://www.cropifyapp.com';
 }
 
 export async function POST(req: Request) {

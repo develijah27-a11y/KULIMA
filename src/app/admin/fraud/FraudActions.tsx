@@ -18,22 +18,27 @@ export function FraudActions({ flagId, currentStatus }: Props) {
   const [status, setStatus]   = useState(currentStatus);
   const [loading, setLoading] = useState(false);
 
-  const buttons = TRANSITIONS[status];
-  if (!buttons?.length) return null;
-
   async function act(action: string, next: string) {
+    if (action === 'terminate' && !confirm('Are you sure you want to PERMANENTLY TERMINATE this account and deactivate their listings?')) {
+      return;
+    }
     setLoading(true);
-    await fetch('/api/admin/fraud', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: flagId, action }),
-    });
-    setStatus(next);
-    setLoading(false);
+    try {
+      await fetch('/api/admin/fraud', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: flagId, action }),
+      });
+      setStatus(next);
+    } finally {
+      setLoading(false);
+    }
   }
 
+  const buttons = TRANSITIONS[status] ?? [];
+
   return (
-    <div className="flex gap-2 shrink-0">
+    <div className="flex gap-2 shrink-0 items-center flex-wrap">
       {buttons.map(({ action, label, next, color }) => (
         <button
           key={action}
@@ -48,6 +53,34 @@ export function FraudActions({ flagId, currentStatus }: Props) {
           {label}
         </button>
       ))}
+
+      {status !== 'resolved' && status !== 'dismissed' && (
+        <>
+          <button
+            disabled={loading}
+            onClick={() => act('reinstate', 'resolved')}
+            style={{
+              padding: '5px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+              border: `1px solid var(--color-success)`, background: 'var(--color-success-bg)', color: 'var(--color-success)',
+              cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.5 : 1,
+            }}
+          >
+            Lift Ban
+          </button>
+          <button
+            disabled={loading}
+            onClick={() => act('terminate', 'resolved')}
+            style={{
+              padding: '5px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700,
+              border: `1px solid var(--color-danger)`, background: 'var(--color-danger)', color: '#fff',
+              cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.5 : 1,
+            }}
+          >
+            Terminate
+          </button>
+        </>
+      )}
     </div>
   );
 }
+

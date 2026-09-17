@@ -11,12 +11,12 @@ const serwist = new Serwist({
   navigationPreload: false,
 
   runtimeCaching: [
-    // ── HTML Navigation (2G resilience with fallback to /offline) ─────────────
+    // ── HTML Navigation (2G & secure proxy resilience with fallback to /offline) ──
     {
       matcher: ({ request }) => request.mode === 'navigate',
       handler: new NetworkFirst({
         cacheName: 'cropify-pages-v2',
-        networkTimeoutSeconds: 3,
+        networkTimeoutSeconds: 8, // Resilient 8s to accommodate secure corporate proxy inspection
         plugins: [
           new ExpirationPlugin({
             maxEntries: 50,
@@ -123,7 +123,14 @@ self.addEventListener('push', (event: PushEvent) => {
   } = {};
   try { payload = event.data.json(); } catch { payload = { body: event.data.text() }; }
 
-  const title = payload.title ?? 'Cropify';
+  const rawTitle = payload.title ?? 'Cropify';
+  const cleanTitle = rawTitle.replace(/kulima/gi, 'Cropify').replace(/agrinova/gi, 'Cropify');
+  const title = cleanTitle.toLowerCase().includes('cropify')
+    ? cleanTitle
+    : `Cropify · ${cleanTitle}`;
+  const cleanBody = (payload.body ?? '')
+    .replace(/kulima/gi, 'Cropify')
+    .replace(/agrinova/gi, 'Cropify');
   const rawUrl = payload.url ?? '/dashboard';
 
   // Always bind the target URL to the official production domain or local origin
@@ -136,7 +143,7 @@ self.addEventListener('push', (event: PushEvent) => {
   // Custom action buttons based on notification type so Android / Chrome NEVER shows the weird "Unsubscribe" button!
   let actions = payload.actions;
   if (!actions || actions.length === 0) {
-    const combinedText = `${title} ${payload.body ?? ''} ${payload.type ?? ''}`.toLowerCase();
+    const combinedText = `${title} ${cleanBody} ${payload.type ?? ''}`.toLowerCase();
     if (
       combinedText.includes('delivery') ||
       combinedText.includes('job') ||
@@ -156,7 +163,7 @@ self.addEventListener('push', (event: PushEvent) => {
     ) {
       actions = [
         { action: 'open_chat', title: '💬 Open Chat' },
-        { action: 'open_app', title: '📱 View' },
+        { action: 'open_app', title: '🚀 Open Cropify' },
       ];
     } else if (
       combinedText.includes('order') ||
@@ -175,7 +182,7 @@ self.addEventListener('push', (event: PushEvent) => {
     ) {
       actions = [
         { action: 'view_wallet', title: '💰 View Details' },
-        { action: 'open_app', title: '🚀 Open App' },
+        { action: 'open_app', title: '🚀 Open Cropify' },
       ];
     } else {
       actions = [
@@ -185,11 +192,14 @@ self.addEventListener('push', (event: PushEvent) => {
     }
   }
 
+  const iconUrl = `${origin}/icons/icon-192.png`;
+  const badgeUrl = `${origin}/icons/notification-badge-96.png`;
+
   event.waitUntil(
     self.registration.showNotification(title, {
-      body: payload.body ?? '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/notification-badge-96.png',
+      body: cleanBody,
+      icon: iconUrl,
+      badge: badgeUrl,
       tag: payload.tag || `cropify-${Date.now()}`,
       data: {
         url: fullUrl,

@@ -23,29 +23,56 @@ const SUPPORTED_ROLES: Record<string, CopilotUserContext['role']> = {
 // Tool schemas sent to OpenAI, gated per role — a transporter's model
 // literally cannot call get_price because it's never in its tool list,
 // not because a prompt instruction tells it not to.
+const ESCALATE_TOOL_SCHEMA = {
+  type: 'function',
+  function: {
+    name: 'escalate_to_human',
+    description: 'Create an official structured support ticket for the admin dashboard to investigate and resolve.',
+    parameters: {
+      type: 'object',
+      properties: {
+        summary: { type: 'string', description: 'Structured description of the issue including facts, dates, and evidence details' },
+        category: {
+          type: 'string',
+          enum: ['payments', 'marketplace', 'logistics', 'kyc', 'technical', 'account', 'quality_dispute', 'other'],
+          description: 'Category of the issue. Use quality_dispute for substandard or under-grade produce complaints.'
+        },
+        priority: {
+          type: 'string',
+          enum: ['low', 'medium', 'high', 'urgent'],
+          description: 'Severity: urgent for fraud/perishable rot/lockouts; high for blocked money/deliveries/bad produce; medium for feature bugs; low for general questions.'
+        },
+        urgent: { type: 'boolean' },
+        orderId: { type: 'string', description: 'Associated Order ID or Delivery ID if applicable' },
+      },
+      required: ['summary'],
+    },
+  },
+};
+
 const TOOL_SCHEMAS: Record<CopilotUserContext['role'], any[]> = {
   farmer: [
     { type: 'function', function: { name: 'get_order_status', description: "Get status of the farmer's own orders. Omit orderId for their most recent orders.", parameters: { type: 'object', properties: { orderId: { type: 'string' } } } } },
     { type: 'function', function: { name: 'get_escrow_status', description: 'Get escrow status for one of the farmer\'s own orders.', parameters: { type: 'object', properties: { orderId: { type: 'string' } }, required: ['orderId'] } } },
     { type: 'function', function: { name: 'get_price', description: 'Look up recent recorded market prices for a crop.', parameters: { type: 'object', properties: { cropType: { type: 'string' }, district: { type: 'string' } }, required: ['cropType'] } } },
-    { type: 'function', function: { name: 'escalate_to_human', description: 'Create a support ticket for a human to review.', parameters: { type: 'object', properties: { summary: { type: 'string' }, category: { type: 'string', enum: ['payments', 'marketplace', 'logistics', 'kyc', 'technical', 'account', 'other'] }, urgent: { type: 'boolean' } }, required: ['summary'] } } },
+    ESCALATE_TOOL_SCHEMA,
   ],
   buyer: [
     { type: 'function', function: { name: 'get_order_status', description: "Get status of the buyer's own orders. Omit orderId for their most recent orders.", parameters: { type: 'object', properties: { orderId: { type: 'string' } } } } },
     { type: 'function', function: { name: 'get_escrow_status', description: 'Get escrow status for one of the buyer\'s own orders.', parameters: { type: 'object', properties: { orderId: { type: 'string' } }, required: ['orderId'] } } },
     { type: 'function', function: { name: 'get_transporter_assignment', description: "Get transporter assignment status for one of the buyer's orders.", parameters: { type: 'object', properties: { orderId: { type: 'string' } }, required: ['orderId'] } } },
     { type: 'function', function: { name: 'draft_dispute', description: 'Draft (not file) dispute text for an order.', parameters: { type: 'object', properties: { orderId: { type: 'string' }, description: { type: 'string' } }, required: ['orderId', 'description'] } } },
-    { type: 'function', function: { name: 'escalate_to_human', description: 'Create a support ticket for a human to review.', parameters: { type: 'object', properties: { summary: { type: 'string' }, category: { type: 'string', enum: ['payments', 'marketplace', 'logistics', 'kyc', 'technical', 'account', 'other'] }, urgent: { type: 'boolean' } }, required: ['summary'] } } },
+    ESCALATE_TOOL_SCHEMA,
   ],
   transporter: [
     { type: 'function', function: { name: 'get_assignment_status', description: "Get the transporter's own delivery assignment status. Omit deliveryId for their most recent assignments.", parameters: { type: 'object', properties: { deliveryId: { type: 'string' } } } } },
     { type: 'function', function: { name: 'get_delivery_breakdown', description: 'Get itemized payment breakdown for one of the transporter\'s own deliveries.', parameters: { type: 'object', properties: { deliveryId: { type: 'string' } }, required: ['deliveryId'] } } },
-    { type: 'function', function: { name: 'escalate_to_human', description: 'Create a support ticket for a human to review.', parameters: { type: 'object', properties: { summary: { type: 'string' }, category: { type: 'string', enum: ['payments', 'marketplace', 'logistics', 'kyc', 'technical', 'account', 'other'] }, urgent: { type: 'boolean' } }, required: ['summary'] } } },
+    ESCALATE_TOOL_SCHEMA,
   ],
   agro_dealer: [
     { type: 'function', function: { name: 'get_listing_status', description: "Get the dealer's own product listing status. Omit productId for all their listings.", parameters: { type: 'object', properties: { productId: { type: 'string' } } } } },
     { type: 'function', function: { name: 'get_price_intelligence', description: 'Look up recent recorded market prices for a crop/product, to help set competitive pricing.', parameters: { type: 'object', properties: { cropType: { type: 'string' } }, required: ['cropType'] } } },
-    { type: 'function', function: { name: 'escalate_to_human', description: 'Create a support ticket for a human to review.', parameters: { type: 'object', properties: { summary: { type: 'string' }, category: { type: 'string', enum: ['payments', 'marketplace', 'logistics', 'kyc', 'technical', 'account', 'other'] }, urgent: { type: 'boolean' } }, required: ['summary'] } } },
+    ESCALATE_TOOL_SCHEMA,
   ],
 };
 

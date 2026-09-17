@@ -468,7 +468,7 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
         </div>
       )}
 
-      <div style={{ height: 190, borderRadius: 12, overflow: 'hidden', marginBottom: 10 }}>
+      <div style={{ height: 190, borderRadius: 12, overflow: 'hidden', marginBottom: 12, position: 'relative', border: '1px solid var(--d-border)' }}>
         <DeliveryTrackingMap
           deliveryId={d.id}
           pickupDistrict={d.pickup_district}
@@ -476,6 +476,8 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
           pickupCoords={d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null}
           dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
           otherPartyLabel={d.requester?.full_name ?? 'Requester'}
+          compact={true}
+          onToggleDetails={() => setTrackingId(d.id)}
         />
       </div>
 

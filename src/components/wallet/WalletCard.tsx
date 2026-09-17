@@ -10,21 +10,18 @@ export interface WalletCardProps {
   /** Wallet balance in whole currency units, e.g. 1250000 for UGX 1,250,000 */
   balance: number;
   currency?: string;
-  /** Real wallets.account_number, e.g. "AGN1234567890" — never invent this */
+  /** Real wallets.account_number, e.g. "CRP1234567890" — never invent this */
   accountNumber: string | null | undefined;
   holderName: string;
   /** Funds currently held in escrow for active deals, shown as a secondary line if > 0 */
   escrowBalance?: number;
 }
 
-// Formats a real Cropify account number card-style: keeps the "AGN" prefix
+// Formats a real Cropify account number card-style: keeps the 3-letter prefix ("CRP" or legacy "AGN")
 // and last 4 digits visible (so it's never mistaken for a card-network
-// number), masks the middle, grouped in dashes for readability. Presents
-// the account number the backend already generates — this does not change
-// the underlying format (transfer_between_wallets matches on the exact
-// stored string; changing it here would be cosmetic-only and misleading).
+// number), masks the middle, grouped in dashes for readability.
 function formatAccountNumber(accountNumber: string): string {
-  const prefix = accountNumber.slice(0, 3); // "AGN"
+  const prefix = accountNumber.slice(0, 3).toUpperCase();
   const digits = accountNumber.slice(3);
   if (digits.length <= 4) return `${prefix}-${digits}`;
   const last4 = digits.slice(-4);

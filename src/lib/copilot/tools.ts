@@ -173,29 +173,58 @@ export async function draft_dispute(ctx: ToolContext, args: { orderId: string; d
   };
 }
 
-export async function escalate_to_human(ctx: ToolContext, args: { summary: string; category?: string; urgent?: boolean }) {
+export async function escalate_to_human(
+  ctx: ToolContext,
+  args: { summary: string; category?: string; urgent?: boolean; priority?: 'low' | 'medium' | 'high' | 'urgent'; orderId?: string }
+) {
   const { supabase, userId, role } = ctx;
   if (!args.summary || args.summary.trim().length < 10) {
     return { error: 'Need a bit more detail before I can escalate this.' };
   }
-  const allowedCategories = ['payments', 'marketplace', 'logistics', 'kyc', 'technical', 'account', 'other'];
+  const allowedCategories = ['payments', 'marketplace', 'logistics', 'kyc', 'technical', 'account', 'quality_dispute', 'other'];
   const category = allowedCategories.includes(args.category ?? '') ? args.category : 'other';
 
+  const priority = args.priority || (args.urgent ? 'urgent' : 'medium');
   const { data: profile } = await supabase.from('profiles').select('full_name, role').eq('user_id', userId).single();
 
-  const { data: ticket, error } = await (supabase.from as any)('support_tickets').insert({
+  const insertPayload: Record<string, unknown> = {
     user_id: userId,
     user_name: (profile as any)?.full_name ?? 'User',
     user_role: (profile as any)?.role ?? role,
     subject: args.summary.slice(0, 100),
     category,
     description: args.summary,
-    priority: args.urgent ? 'high' : 'medium',
+    priority,
     status: 'open',
-  }).select('id').single();
+  };
 
-  if (error) return { error: 'Could not create a support ticket right now — please contact support directly.' };
-  return { escalated: true, ticketId: ticket.id, note: 'This has been sent to the Cropify support team for review.' };
+  if (args.orderId) {
+    insertPayload.order_id = args.orderId;
+  }
+
+  let { data: ticket, error } = await (supabase.from as any)('support_tickets')
+    .insert(insertPayload)
+    .select('id')
+    .single();
+
+  if (error && error.message?.includes('column')) {
+    delete insertPayload.order_id;
+    const retry = await (supabase.from as any)('support_tickets')
+      .insert(insertPayload)
+      .select('id')
+      .single();
+    ticket = retry.data;
+    error = retry.error;
+  }
+
+  if (error) return { error: 'Could not create a support ticket right now — please visit /support directly.' };
+  return {
+    escalated: true,
+    ticketId: ticket.id,
+    priority,
+    category,
+    note: 'Your structured complaint has been escalated to the Cropify Admin Support Desk for review and resolution.',
+  };
 }
 
 export { resolveProfileId };

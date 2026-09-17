@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { JSX } from 'react';
-import { CloudRain, Bug, TrendingDown, Truck, ClipboardList, AlertTriangle, Clock } from 'lucide-react';
+import { CloudRain, Bug, TrendingDown, Truck, AlertTriangle, Clock } from 'lucide-react';
+import { AutomatedRiskAlertsCard } from '@/components/risk/AutomatedRiskAlertsCard';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -22,6 +23,11 @@ export default async function RiskManagementPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
+
+  const { data: profile } = await (supabase.from as any)('profiles')
+    .select('full_name')
+    .eq('id', user.id)
+    .single();
 
   const { data: contracts } = await (supabase.from as any)('offtaker_contracts')
     .select('status, delivery_date, quantity_kg')
@@ -74,10 +80,10 @@ export default async function RiskManagementPage() {
         ))}
       </div>
 
-      <div style={{ padding: '16px 20px', borderRadius: 14, background: C.cardBg, boxShadow: C.cardShadow }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: C.text, margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 6 }}><ClipboardList size={14} />Automated Risk Alerts Coming Soon</p>
-        <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>We're building SMS and push notifications for when weather or disease alerts affect your contract districts. Stay tuned.</p>
-      </div>
+      <AutomatedRiskAlertsCard
+        userEmail={user.email}
+        userName={profile?.full_name ?? user.email?.split('@')[0]}
+      />
     </div>
   );
 }

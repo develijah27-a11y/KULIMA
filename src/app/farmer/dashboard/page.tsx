@@ -28,7 +28,7 @@ const getProfile = cache(async (userId: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from('profiles')
-    .select('full_name, primary_crop, phone_number, location, latitude, longitude, id, role, verification_level, role_verification_levels')
+    .select('full_name, primary_crop, phone_number, location, latitude, longitude, id, role, verification_level, role_verification_levels, is_suspended, suspension_reason, quality_strikes')
     .eq('user_id', userId)
     .single();
   return data as any;
@@ -940,6 +940,45 @@ export default async function FarmerDashboardPage() {
 
   return (
     <div className="space-y-5 max-w-5xl mx-auto">
+
+      {/* Account Suspension / Quality Strikes Alert */}
+      {profile?.is_suspended && (
+        <div
+          className="rounded-2xl p-5 border-2"
+          style={{
+            background: 'var(--color-danger-bg)',
+            borderColor: 'var(--color-danger)',
+          }}
+        >
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'var(--color-danger)', color: '#fff' }}>
+              <AlertTriangle size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h3 className="text-base font-black" style={{ color: 'var(--color-danger)' }}>
+                  ⚠️ Account Temporarily Suspended — Quality Moderation
+                </h3>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: 'var(--color-danger)', color: '#fff' }}>
+                  {profile.quality_strikes ?? 3} QUALITY STRIKES
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-medium leading-relaxed" style={{ color: C.text }}>
+                {profile.suspension_reason || 'Your account has been temporarily suspended after receiving 3 or more buyer reports regarding substandard or under-grade produce. New listings cannot be created pending administrative review.'}
+              </p>
+              <div className="mt-3 flex gap-3 flex-wrap items-center">
+                <Link
+                  href="/farmer/support?category=quality_dispute&priority=urgent&subject=Appeal%20Quality%20Suspension"
+                  className="text-xs font-bold underline"
+                  style={{ color: 'var(--color-danger)' }}
+                >
+                  Contact Support Desk to Appeal →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 0. Top-Tier Farm Registration Reminder (Shown prominently when 0 farms are registered) */}
       {farmsCount === 0 && (

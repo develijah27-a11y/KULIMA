@@ -41,34 +41,35 @@ export default function NotFound() {
 
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
         <Link
-          href="/dashboard"
+          href="/"
           style={{
             padding: '12px 24px', background: 'var(--color-primary)', color: '#fff',
             borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
             boxShadow: '0 4px 12px rgba(27,67,50,0.3)',
           }}
         >
-          Go to Dashboard →
+          Return Home →
         </Link>
         <Link
-          href="/farmer/marketplace"
+          href="/auth/signin"
+          rel="nofollow"
           style={{
             padding: '12px 24px', background: '#fff', color: 'var(--color-primary)',
             borderRadius: 12, fontSize: 14, fontWeight: 700, textDecoration: 'none',
             border: '1.5px solid var(--color-border-mid)',
           }}
         >
-          Browse Marketplace
+          Sign in to Dashboard
         </Link>
       </div>
 
       {/* Quick links */}
       <div style={{ marginTop: 48, display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
         {[
-          { href: '/farmer/dashboard', label: 'Farmer Hub' },
-          { href: '/buyer/dashboard',  label: 'Buyer Hub' },
-          { href: '/farmer/prices',    label: 'Live Prices' },
-          { href: '/farmer/weather',   label: 'Weather' },
+          { href: '/how-it-works', label: 'How It Works' },
+          { href: '/premium',      label: 'Pricing & Plans' },
+          { href: '/faq',          label: 'FAQ' },
+          { href: '/contact',      label: 'Contact Support' },
         ].map(({ href, label }) => (
           <Link key={href} href={href} style={{ fontSize: 12, color: 'var(--color-primary-hover)', fontWeight: 600, textDecoration: 'none' }}>
             {label}

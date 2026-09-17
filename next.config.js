@@ -70,20 +70,14 @@ const nextConfig = {
       "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
       "font-src 'self' https://fonts.gstatic.com",
-      // basemaps.cartocdn.com (a/b/c/d subdomains — src/lib/map-tiles.ts's
-      // MAP_TILE_OPTIONS.subdomains) is the current default map tile
-      // source and was missing here — same recurring failure mode as
-      // Stadia and Mapbox before it: a new tile provider gets wired into
-      // map-tiles.ts but the CSP allowlist is a separate file nobody
-      // remembers to touch in the same change, so the map silently renders
-      // blank in production with no error the tile-source code itself
-      // would ever surface.
-      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.basemaps.cartocdn.com https://*.google.com https://*.googleapis.com https://mt0.google.com https://mt1.google.com https://mt2.google.com https://mt3.google.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openweathermap.org https://cloudflareinsights.com",
+      // Include ArcGIS servers (used by map-tiles.ts as default satellite & street basemaps)
+      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.basemaps.cartocdn.com https://server.arcgisonline.com https://*.arcgisonline.com https://*.google.com https://*.googleapis.com https://mt0.google.com https://mt1.google.com https://mt2.google.com https://mt3.google.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openweathermap.org https://api.open-meteo.com https://cloudflareinsights.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
+      "upgrade-insecure-requests",
     ].join('; ');
 
     const securityHeaders = [

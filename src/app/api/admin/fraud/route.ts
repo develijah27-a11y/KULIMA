@@ -16,8 +16,25 @@ async function handlePATCH(req: Request) {
   const { data: me } = await supabase.from('profiles').select('role').eq('user_id', user.id).single();
   if ((me as any)?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { id, action } = await req.json();
+  const { id, action, notes } = await req.json();
   if (!id || !action) return NextResponse.json({ error: 'id and action required' }, { status: 400 });
+
+  // Look up flag to find target user_id
+  const { data: flag } = await (supabase.from as any)('fraud_flags')
+    .select('id, user_id, reason, status')
+    .eq('id', id)
+    .single();
+
+  if (action === 'reinstate' || action === 'terminate' || action === 'reset_strikes') {
+    if (!flag?.user_id) return NextResponse.json({ error: 'Flag not found' }, { status: 404 });
+    const { adminManageAccountStatus } = await import('@/lib/moderation/quality-strikes');
+    const result = await adminManageAccountStatus({
+      sellerUserId: flag.user_id,
+      action: action as any,
+      adminNotes: notes,
+    });
+    return NextResponse.json(result);
+  }
 
   const nextStatus = ACTION_MAP[action];
   if (!nextStatus) return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });

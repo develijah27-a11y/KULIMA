@@ -15,9 +15,6 @@ export default function robots(): MetadataRoute.Robots {
         '/pos', '/api', '/auth/reset-password', '/auth/confirm',
       ],
     },
-    sitemap: [
-      'https://www.cropifyapp.com/sitemap.xml',
-      'https://www.cropifyapp.com/sitemap_index.xml',
-    ],
+    sitemap: 'https://www.cropifyapp.com/sitemap.xml',
   };
 }

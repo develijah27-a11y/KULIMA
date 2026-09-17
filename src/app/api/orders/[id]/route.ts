@@ -176,6 +176,9 @@ export async function PATCH(req: Request, { params }: Params) {
       }
     }
 
+    const disputeReason = body.reason || 'poor_quality';
+    const disputeDesc = `Buyer raised a dispute on ${order.crop_type} (${order.quantity_kg} kg, UGX ${Math.round(order.total_amount).toLocaleString()}). Reason: ${disputeReason}.${note ? ` Note: ${note}` : ''}`;
+
     await (supabase.from as any)('orders').update({
       status:              'disputed',
       disputed_at:         now,
@@ -187,25 +190,50 @@ export async function PATCH(req: Request, { params }: Params) {
       await (supabase.from as any)('escrow_accounts').update({ status: 'disputed' }).eq('id', order.escrow_id);
     }
 
+    const sellerUserId = (farmerProfile as any)?.user_id ?? null;
+
     // Create dispute record for admin review
     await (supabase.from as any)('disputes').insert({
       complainant_id: user.id,
-      respondent_id:  (farmerProfile as any)?.user_id ?? null,
+      respondent_id:  sellerUserId,
       order_id:       id,
-      reason:         'return_request',
-      description:    `Buyer raised a dispute on ${order.crop_type} (${order.quantity_kg} kg, UGX ${Math.round(order.total_amount).toLocaleString()}).${note ? ` Note: ${note}` : ''}`,
+      reason:         disputeReason,
+      description:    disputeDesc,
       status:         'open',
     });
+
+    // Check if dispute is for poor-quality / under-grade produce
+    const isQualityComplaint =
+      disputeReason.includes('quality') ||
+      disputeReason.includes('grade') ||
+      disputeReason.includes('damage') ||
+      (note && /rotten|spoil|bad grade|low quality|substandard|damaged/i.test(note));
+
+    let strikeResult = null;
+    if (isQualityComplaint && sellerUserId) {
+      const { recordQualityStrike } = await import('@/lib/moderation/quality-strikes');
+      strikeResult = await recordQualityStrike({
+        sellerUserId,
+        reporterUserId: user.id,
+        orderId: id,
+        reason: disputeReason,
+        description: disputeDesc,
+      });
+    }
 
     // Alert admin
     await (supabase.from as any)('notifications').insert({
       type:  'alert',
-      title: `Return/dispute on order #${id.slice(0, 8)}`,
-      body:  `Buyer raised a dispute on ${order.crop_type} (${order.quantity_kg} kg). Admin review required.`,
-      data:  { order_id: id },
+      title: `Dispute on order #${id.slice(0, 8)} (${disputeReason})`,
+      body:  `Buyer raised a dispute on ${order.crop_type} (${order.quantity_kg} kg). ${strikeResult?.isSuspended ? '⚠️ Seller account reached 3 strikes and has been auto-suspended.' : 'Admin review required.'}`,
+      data:  { order_id: id, strike_count: strikeResult?.strikeCount },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      strikeCount: strikeResult?.strikeCount,
+      sellerSuspended: strikeResult?.isSuspended ?? false,
+    });
   }
 
   return NextResponse.json({ error: 'Unknown action' }, { status: 400 });

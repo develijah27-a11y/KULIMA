@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { Leaf, FileText, Clock } from 'lucide-react';
+import { Leaf, FileText, Clock, Building2, ShieldCheck, ArrowRight } from 'lucide-react';
 import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
@@ -44,6 +44,38 @@ export default async function OfftakerContractsPage() {
         <Link href="/offtaker/pipeline/new" style={{ padding: '8px 16px', background: C.blue, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
           + New Contract
         </Link>
+      </div>
+
+      {/* Enterprise Forward Outgrower Notice */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(2,132,199,0.08) 0%, rgba(14,165,233,0.03) 100%)',
+        borderRadius: 16,
+        border: '1.5px solid rgba(14,165,233,0.25)',
+        padding: '16px 20px',
+        display: 'flex',
+        gap: 12,
+        alignItems: 'flex-start',
+      }}>
+        <span style={{
+          width: 36, height: 36, borderRadius: 10,
+          background: 'var(--color-sky-bg)', color: 'var(--color-sky)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <Building2 size={18} />
+        </span>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <p style={{ fontSize: 13, fontWeight: 800, color: 'var(--d-text)', margin: 0 }}>
+              Enterprise Forward Outgrower Agreements
+            </p>
+            <span style={{ fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 4, background: 'var(--color-sky-bg)', color: 'var(--color-sky)' }}>
+              Over 75% of Uganda Agri-Finance
+            </span>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--d-muted)', margin: 0, lineHeight: 1.5 }}>
+            Forward contracts enable enterprise offtakers to lock in multi-ton crop supply with verified farmer cooperatives before planting. When deliveries arrive at factory gate, automated <strong>Contract Invoices</strong> are generated for URA Withholding Tax (WHT @ 6%) and corporate bank wire disbursements.
+          </p>
+        </div>
       </div>
 
       {rows.length === 0 ? (

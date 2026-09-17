@@ -31,10 +31,11 @@ export function showToast(toast: Omit<ToastItem, 'id'>) {
   ) {
     _lastNotifTime = now;
     try {
+      const origin = window.location.origin;
       new Notification(`Cropify · ${toast.title}`, {
         body: toast.body,
-        icon: '/icons/icon-192.png',
-        badge: '/icons/notification-badge-96.png',
+        icon: `${origin}/icons/icon-192.png`,
+        badge: `${origin}/icons/notification-badge-96.png`,
         tag: item.id,
       });
     } catch { /* silently ignored — browser may disallow outside service worker */ }

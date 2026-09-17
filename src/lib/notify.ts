@@ -73,13 +73,13 @@ export async function notifyUsers(supabase: any, notifications: NotifyInput[]): 
     if (text.includes('message') || text.includes('chat') || text.includes('group')) {
       return [
         { action: 'open_chat', title: '💬 Open Chat' },
-        { action: 'open_app', title: '📱 Open App' },
+        { action: 'open_app', title: '🚀 Open Cropify' },
       ];
     }
     if (text.includes('loan') || text.includes('wallet') || text.includes('payment') || text.includes('paid')) {
       return [
         { action: 'view_wallet', title: '💰 View Details' },
-        { action: 'open_app', title: '🚀 Open App' },
+        { action: 'open_app', title: '🚀 Open Cropify' },
       ];
     }
     return [

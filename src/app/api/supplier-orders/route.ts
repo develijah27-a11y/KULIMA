@@ -140,7 +140,7 @@ export async function POST(req: Request) {
         unitPrice:   unitPrice,
         amount:      +quantity * unitPrice,
         district:    (profile as any).district ?? (profile as any).location ?? null,
-        receiptNo:   `AGN-${String((order as any).id).slice(0, 8).toUpperCase()}`,
+        receiptNo:   `CRP-${String((order as any).id).slice(0, 8).toUpperCase()}`,
         purchasedAt: (order as any).created_at ?? new Date().toISOString(),
       }),
     ).catch((emailErr) => {
@@ -271,7 +271,7 @@ export async function PATCH(req: Request) {
             unitPrice:   Number((buyerOwned as any).unit_price),
             amount:      Number((buyerOwned as any).amount),
             district:    (buyerOwned as any).district ?? null,
-            receiptNo:   `AGN-${String(id).slice(0, 8).toUpperCase()}`,
+            receiptNo:   `CRP-${String(id).slice(0, 8).toUpperCase()}`,
             purchasedAt: new Date().toISOString(),
           }),
         ).catch((emailErr) => {

@@ -393,6 +393,8 @@ export function GroupChatClient({
   useEffect(() => {
     let closedByEffect = false;
 
+    let retryCount = 0;
+
     const connect = () => {
       const ch = supabase.channel(`group_chat_room:${adminId}`, {
         config: { broadcast: { self: false } },
@@ -474,11 +476,20 @@ export function GroupChatClient({
 
       ch.subscribe((status) => {
         if (closedByEffect) return;
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        if (status === 'SUBSCRIBED') {
+          retryCount = 0;
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           supabase.removeChannel(ch);
-          setTimeout(() => {
-            if (!closedByEffect) connect();
-          }, 2000);
+          retryCount++;
+          if (retryCount <= 3) {
+            const delay = Math.min(2000 * Math.pow(2, retryCount - 1), 15000);
+            setTimeout(() => {
+              if (!closedByEffect) connect();
+            }, delay);
+          } else {
+            // WebSockets are blocked by the firewall/network — rely cleanly on HTTP polling
+            console.info('[chat] WebSockets blocked or unavailable on this network; using HTTP message sync');
+          }
         }
       });
 

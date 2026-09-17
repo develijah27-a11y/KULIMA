@@ -52,6 +52,11 @@ const CANNED_TEMPLATES = [
     nextStatus: 'resolved',
   },
   {
+    label: 'Quality Investigation',
+    text: 'We have received your produce quality complaint and opened an investigation. If substandard produce is verified, escrow will be protected and the seller issued a formal quality strike.',
+    nextStatus: 'in_progress',
+  },
+  {
     label: 'Request Details',
     text: 'Thank you for reaching out. Could you please share more details, transaction reference, or a screenshot so we can assist you quickly?',
     nextStatus: 'pending_user',
@@ -68,10 +73,11 @@ const CANNED_TEMPLATES = [
   },
 ];
 
-const CATEGORIES = ['payments','marketplace','logistics','kyc','technical','account','other'];
+const CATEGORIES = ['payments','marketplace','logistics','kyc','technical','account','quality_dispute','other'];
 const CAT_LABELS: Record<string, string> = {
   payments: 'Payments', marketplace: 'Marketplace', logistics: 'Logistics',
-  kyc: 'KYC', technical: 'Technical', account: 'Account', other: 'Other',
+  kyc: 'KYC', technical: 'Technical', account: 'Account',
+  quality_dispute: 'Quality Dispute', other: 'Other',
 };
 
 const STATUS_CFG: Record<TicketStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
