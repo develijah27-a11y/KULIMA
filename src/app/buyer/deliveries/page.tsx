@@ -6,6 +6,7 @@ import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { TrackDeliveryButton } from '@/components/delivery/TrackDeliveryButton';
 import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
 import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
+import { LiveDeliveryStatusBanner } from '@/components/delivery/LiveDeliveryStatusBanner';
 import type { JSX } from 'react';
 import { Truck, Search, Car, Package, Snowflake, Zap, CheckCircle2, User } from 'lucide-react';
 
@@ -192,16 +193,31 @@ function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any;
             )}
           </p>
         )}
+        {/* Live Captain Status Alert (Getting Captain near you / Captain reaches in X min) */}
+        {['open', 'assigned', 'in_transit'].includes(d.status) && (
+          <div style={{ marginBottom: 12 }}>
+            <LiveDeliveryStatusBanner
+              delivery={d}
+              transporter={d.transporter}
+              vehicle={vehicle}
+              photoUrl={photoUrl}
+            />
+          </div>
+        )}
 
         {canTrack && (
-          <div style={{ height: 190, borderRadius: 12, overflow: 'hidden', marginBottom: 10 }}>
+          <div style={{ height: 260, borderRadius: 16, overflow: 'hidden', marginBottom: 12, position: 'relative' }}>
             <DeliveryTrackingMap
               deliveryId={d.id}
               pickupDistrict={d.pickup_district}
               dropoffDistrict={d.dropoff_district}
               pickupCoords={d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null}
               dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
-              otherPartyLabel={d.transporter?.full_name ?? 'Driver'}
+              otherPartyLabel={d.transporter?.full_name ?? 'Captain'}
+              driverPhone={d.transporter?.phone_number}
+              cargoType={d.cargo_type}
+              cargoKg={d.cargo_kg}
+              deliveryType={d.delivery_type}
             />
           </div>
         )}

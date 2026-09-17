@@ -102,7 +102,7 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
 
   return (
     <BottomSheet open={open} onClose={onClose}>
-      <div style={{ height: 260, marginBottom: 16, marginLeft: -20, marginRight: -20, marginTop: -8 }}>
+      <div style={{ height: 320, marginBottom: 16, marginLeft: -20, marginRight: -20, marginTop: -8, position: 'relative' }}>
         <DeliveryTrackingMap
           deliveryId={delivery.id}
           pickupDistrict={delivery.pickup_district}
@@ -110,7 +110,11 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
           pickupCoords={pickupCoords}
           dropoffCoords={dropoffCoords}
           otherPartyLabel={otherParty.name}
+          driverPhone={otherParty.phone}
+          cargoType={delivery.cargo_type}
+          cargoKg={delivery.cargo_kg}
           onPosition={handlePosition}
+          onClose={onClose}
         />
       </div>
 

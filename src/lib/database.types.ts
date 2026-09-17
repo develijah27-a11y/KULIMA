@@ -358,27 +358,33 @@ export interface Database {
           listing_id: string
           buyer_id: string
           offered_price: number
+          counter_price: number | null
           status: string
           message: string | null
           created_at: string
+          updated_at?: string
         }
         Insert: {
           id?: string
           listing_id: string
           buyer_id: string
           offered_price: number
+          counter_price?: number | null
           status?: string
           message?: string | null
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
           listing_id?: string
           buyer_id?: string
           offered_price?: number
+          counter_price?: number | null
           status?: string
           message?: string | null
           created_at?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -572,6 +578,256 @@ export interface Database {
             referencedColumns: ["id"]
           }
         ]
+      }
+      wallets: {
+        Row: {
+          id: string
+          user_id: string
+          balance: number
+          currency: string
+          is_frozen: boolean
+          is_locked: boolean
+          pin_hash: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          balance?: number
+          currency?: string
+          is_frozen?: boolean
+          is_locked?: boolean
+          pin_hash?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          balance?: number
+          currency?: string
+          is_frozen?: boolean
+          is_locked?: boolean
+          pin_hash?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallets_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      wallet_transactions: {
+        Row: {
+          id: string
+          wallet_id: string | null
+          user_id: string
+          type: string
+          amount: number
+          balance_after: number | null
+          status: string
+          reference: string | null
+          description: string | null
+          metadata: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          wallet_id?: string | null
+          user_id: string
+          type: string
+          amount: number
+          balance_after?: number | null
+          status?: string
+          reference?: string | null
+          description?: string | null
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          wallet_id?: string | null
+          user_id?: string
+          type?: string
+          amount?: number
+          balance_after?: number | null
+          status?: string
+          reference?: string | null
+          description?: string | null
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_requests: {
+        Row: {
+          id: string
+          requester_id: string
+          requester_role: string | null
+          transporter_id: string | null
+          pickup_district: string
+          dropoff_district: string
+          pickup_address: string | null
+          dropoff_address: string | null
+          cargo_type: string
+          cargo_kg: number
+          status: string
+          estimated_fare: number
+          distance_km: number | null
+          driver_earnings: number | null
+          pickup_date: string | null
+          payment_status: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          requester_id: string
+          requester_role?: string | null
+          transporter_id?: string | null
+          pickup_district: string
+          dropoff_district: string
+          pickup_address?: string | null
+          dropoff_address?: string | null
+          cargo_type: string
+          cargo_kg: number
+          status?: string
+          estimated_fare?: number
+          distance_km?: number | null
+          driver_earnings?: number | null
+          pickup_date?: string | null
+          payment_status?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          requester_id?: string
+          requester_role?: string | null
+          transporter_id?: string | null
+          pickup_district?: string
+          dropoff_district?: string
+          pickup_address?: string | null
+          dropoff_address?: string | null
+          cargo_type?: string
+          cargo_kg?: number
+          status?: string
+          estimated_fare?: number
+          distance_km?: number | null
+          driver_earnings?: number | null
+          pickup_date?: string | null
+          payment_status?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      delivery_bids: {
+        Row: {
+          id: string
+          delivery_id: string
+          transporter_id: string
+          price: number
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          delivery_id: string
+          transporter_id: string
+          price: number
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          delivery_id?: string
+          transporter_id?: string
+          price?: number
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vehicles: {
+        Row: {
+          id: string
+          user_id: string
+          plate_number: string
+          vehicle_type: string
+          capacity_kg: number
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          plate_number: string
+          vehicle_type: string
+          capacity_kg: number
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plate_number?: string
+          vehicle_type?: string
+          capacity_kg?: number
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      farmer_groups: {
+        Row: {
+          id: string
+          name: string
+          district: string
+          leader_id: string
+          member_count: number
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          district: string
+          leader_id: string
+          member_count?: number
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          district?: string
+          leader_id?: string
+          member_count?: number
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {

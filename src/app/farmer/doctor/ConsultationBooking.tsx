@@ -131,9 +131,9 @@ export function ConsultationBooking({ walletBalance, consultations, farmerDistri
 
       <div style={{ padding: 18 }}>
         {/* Type selector */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
           {([
-            { id: 'remote', label: 'Remote Consultation', sub: 'Video / voice call', fee: 15000, icon: <Smartphone size={18} /> as ReactNode },
+            { id: 'remote', label: 'Remote Consultation', sub: 'In-app chat, voice notes & photos', fee: 15000, icon: <Smartphone size={18} /> as ReactNode },
             { id: 'farm_visit', label: 'Farm Visit', sub: 'Pathologist visits your farm', fee: 50000, icon: <Car size={18} /> as ReactNode },
           ]).map(opt => {
             const sel = type === opt.id;
@@ -152,6 +152,12 @@ export function ConsultationBooking({ walletBalance, consultations, farmerDistri
             );
           })}
         </div>
+        <p style={{ fontSize: 11, color: C.muted, margin: '0 0 14px', display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: type === 'remote' ? C.green : C.amber }} />
+          {type === 'remote'
+            ? 'Zero airtime costs: chat directly with your matched plant pathologist using text, live photos, and audio voice messages.'
+            : 'An accredited crop specialist travels to your farm to inspect infected crops, soil conditions, and pest vectors.'}
+        </p>
 
         {/* Crop type */}
         <div style={{ marginBottom: 12 }}>
@@ -287,7 +293,7 @@ export function ConsultationBooking({ walletBalance, consultations, farmerDistri
                       {c.pathologist?.full_name ?? 'Awaiting pathologist'} · UGX {Number(c.fee_ugx).toLocaleString()}
                     </p>
                   </div>
-                  {c.pathologist && (c.status === 'matched' || c.status === 'active') && (
+                  {c.pathologist && ['matched', 'paid', 'active', 'completed'].includes(c.status) && (
                     <Link href={`/farmer/doctor/chat/${c.id}`}
                       style={{ padding: '7px 13px', background: 'var(--color-primary-bg)', color: C.green, borderRadius: 9, fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
                       Chat →

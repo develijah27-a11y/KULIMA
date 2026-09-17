@@ -74,7 +74,7 @@ export async function POST(req: Request) {
   // Match nearest pathologist (same district first, then any available)
   const { data: matchedPaths } = await (db.from as any)('profiles')
     .select('id, user_id, full_name, location, remote_fee_ugx, visit_fee_ugx')
-    .eq('role', 'pathologist')
+    .or('role.eq.pathologist,roles.cs.{"pathologist"}')
     .order('location', { ascending: true })
     .limit(10);
 

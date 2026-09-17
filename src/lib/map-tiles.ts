@@ -40,3 +40,14 @@ export const HYBRID_TILE_OPTIONS = {
   detectRetina: true,
   crossOrigin: true,
 };
+
+// Ultra-clean high contrast dark night GPS navigation tiles (CartoDB Dark Matter)
+export const DARK_NAV_TILE_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+export const DARK_NAV_TILE_OPTIONS = {
+  attribution: '',
+  subdomains: 'abcd',
+  maxZoom: 20,
+  detectRetina: true,
+  crossOrigin: true,
+};
+

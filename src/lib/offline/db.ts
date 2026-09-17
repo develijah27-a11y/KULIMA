@@ -1,6 +1,7 @@
-import { openDB, DBSchema, type IDBPDatabase } from 'idb';
+import { type IDBPDatabase, type DBSchema } from 'idb';
+import { getDB } from '@/lib/db';
 
-interface CropifyOfflineDB extends DBSchema {
+export interface CropifyOfflineDB extends DBSchema {
   outbox: {
     key: string;
     value: {
@@ -28,8 +29,13 @@ interface CropifyOfflineDB extends DBSchema {
   notifications: {
     key: string;
     value: {
-      id: string; farmerId: string; type: string;
-      title: string; body: string; read: boolean; sentAt: number;
+      id: string;
+      farmerId: string;
+      type: string;
+      title: string;
+      body: string;
+      read: boolean;
+      sentAt: number;
     };
     indexes: { 'by-farmer': string };
   };
@@ -40,25 +46,7 @@ interface CropifyOfflineDB extends DBSchema {
   };
 }
 
-let dbInstance: IDBPDatabase<CropifyOfflineDB> | null = null;
-
 export async function getOfflineDB(): Promise<IDBPDatabase<CropifyOfflineDB>> {
-  if (dbInstance) return dbInstance;
-  // NOTE: keep the physical IndexedDB name 'kulima-offline' unchanged — renaming it
-  // would orphan any farmer's already-queued offline outbox actions (unsynced data).
-  dbInstance = await openDB<CropifyOfflineDB>('kulima-offline', 1, {
-    upgrade(db) {
-      const outbox = db.createObjectStore('outbox', { keyPath: 'id' });
-      outbox.createIndex('by-type', 'type');
-      db.createObjectStore('farmer', { keyPath: 'id' });
-      const prices = db.createObjectStore('prices', { keyPath: 'cropType' });
-      prices.createIndex('by-crop', 'cropType');
-      db.createObjectStore('weather', { keyPath: 'locationKey' });
-      const notifs = db.createObjectStore('notifications', { keyPath: 'id' });
-      notifs.createIndex('by-farmer', 'farmerId');
-      const listings = db.createObjectStore('listings', { keyPath: 'id' });
-      listings.createIndex('by-status', 'data.status');
-    },
-  });
-  return dbInstance;
+  const db = await getDB();
+  return db as unknown as IDBPDatabase<CropifyOfflineDB>;
 }

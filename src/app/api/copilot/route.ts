@@ -197,12 +197,20 @@ export async function POST(req: Request) {
   }
 
   const ctx: ToolContext = { supabase, userId: user.id, profileId, role: copilotRole };
-  const apiKey = process.env.OPENAI_API_KEY;
+  const trimmedHistory = Array.isArray(history) ? history.slice(-MAX_HISTORY_MESSAGES) : [];
 
-  // If OpenAI API key is not configured, seamlessly run the deterministic assistant engine
-  if (!apiKey) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const isApiKeyValid = Boolean(
+    apiKey &&
+    apiKey !== 'REDACTED_REMOVED_FROM_REPO' &&
+    !apiKey.startsWith('REDACTED') &&
+    apiKey.length > 20
+  );
+
+  // If OpenAI API key is not configured or is a placeholder, seamlessly run the deterministic assistant engine
+  if (!isApiKeyValid) {
     try {
-      const reply = await handleDeterministicCopilot(ctx, message, displayName);
+      const reply = await handleDeterministicCopilot(ctx, message, displayName, trimmedHistory);
       return NextResponse.json({ reply });
     } catch {
       return NextResponse.json({
@@ -214,7 +222,6 @@ export async function POST(req: Request) {
   const systemPrompt = buildCopilotSystemPrompt({ displayName, role: copilotRole, activeOrderCount, activeEscrowCount, region });
   const toolSchemas = TOOL_SCHEMAS[copilotRole];
 
-  const trimmedHistory = Array.isArray(history) ? history.slice(-MAX_HISTORY_MESSAGES) : [];
   const messages: any[] = [
     { role: 'system', content: systemPrompt },
     ...trimmedHistory.filter((m: any) => m?.role === 'user' || m?.role === 'assistant').map((m: any) => ({ role: m.role, content: String(m.content ?? '').slice(0, 2000) })),
@@ -242,7 +249,7 @@ export async function POST(req: Request) {
 
       if (!res.ok) {
         // Fallback to deterministic assistant if OpenAI returns an error
-        const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName);
+        const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName, trimmedHistory);
         return NextResponse.json({ reply: fallbackReply });
       }
 
@@ -250,7 +257,7 @@ export async function POST(req: Request) {
       const choice = json.choices?.[0];
       const assistantMsg = choice?.message;
       if (!assistantMsg) {
-        const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName);
+        const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName, trimmedHistory);
         return NextResponse.json({ reply: fallbackReply });
       }
 
@@ -278,12 +285,12 @@ export async function POST(req: Request) {
       }
     }
 
-    const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName);
+    const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName, trimmedHistory);
     return NextResponse.json({ reply: fallbackReply });
   } catch {
     // Graceful fallback to deterministic assistant on any network/timeout error
     try {
-      const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName);
+      const fallbackReply = await handleDeterministicCopilot(ctx, message, displayName, trimmedHistory);
       return NextResponse.json({ reply: fallbackReply });
     } catch {
       return NextResponse.json({

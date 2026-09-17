@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Leaf, Stethoscope } from 'lucide-react';
+import { Leaf, Stethoscope, MessageSquare, Phone, ExternalLink, User, Copy, Check, Sparkles } from 'lucide-react';
 
 const C = {
   text:       'var(--d-text)',
@@ -34,6 +34,14 @@ const TREATMENT_TEMPLATES: Record<string, string> = {
   'Cassava Mosaic':  'Use clean, certified disease-free planting material. Remove and destroy infected plants. Control whitefly vectors with neonicotinoids.',
 };
 
+interface FarmerProfile {
+  id?: string;
+  user_id?: string;
+  full_name?: string | null;
+  phone_number?: string | null;
+  location?: string | null;
+}
+
 interface Case {
   id: string;
   crop_type: string;
@@ -47,21 +55,53 @@ interface Case {
   diagnosis?: string;
   treatment?: string;
   image_urls?: string[];
+  farmer_id?: string;
+  farmer_name?: string;
+  farmer?: FarmerProfile | null;
 }
 
-export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string }) {
+interface ConsultationInfo {
+  id: string;
+  type: string;
+  status: string;
+  fee_ugx: number;
+}
+
+export function CaseDetailClient({
+  c,
+  profileId,
+  consultation,
+}: {
+  c: Case;
+  profileId: string;
+  consultation?: ConsultationInfo | null;
+}) {
   const router = useRouter();
+  const [caseData, setCaseData] = useState<Case>(c);
   const [diagnosis, setDx]   = useState(c.diagnosis ?? '');
   const [treatment, setTx]   = useState(c.treatment ?? '');
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError]    = useState('');
+  const [copiedPhone, setCopiedPhone] = useState(false);
 
-  const isAssigned   = c.pathologist_id === profileId;
-  const canDiagnose  = c.status === 'assigned' && isAssigned;
-  const canClaim     = c.status === 'reported';
-  const canClose     = c.status === 'diagnosed' && isAssigned;
+  useEffect(() => {
+    setCaseData(c);
+    if (c.diagnosis) setDx(c.diagnosis);
+    if (c.treatment) setTx(c.treatment);
+  }, [c]);
 
-  const sev = SEV_CFG[c.urgency] ?? SEV_CFG.unknown;
+  const isAssigned   = caseData.pathologist_id === profileId;
+  const canDiagnose  = (caseData.status === 'assigned' || caseData.status === 'diagnosed') && isAssigned;
+  const canClaim     = caseData.status === 'reported' && !caseData.pathologist_id;
+  const canClose     = caseData.status === 'diagnosed' && isAssigned;
+
+  const sev = SEV_CFG[caseData.urgency] ?? SEV_CFG.unknown;
+  const farmer = caseData.farmer;
+  const phone = farmer?.phone_number ?? '';
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  const waUrl = cleanPhone
+    ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello ${farmer?.full_name ?? caseData.farmer_name ?? 'Farmer'}, I am the plant pathologist assigned to your ${caseData.crop_type} case on Cropify.`)}`
+    : null;
 
   async function action(act: string, extra?: object) {
     setLoading(act); setError('');
@@ -69,14 +109,41 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
       const res = await fetch('/api/disease-reports', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: c.id, action: act, diagnosis, treatment, ...extra }),
+        body: JSON.stringify({ id: caseData.id, action: act, diagnosis, treatment, ...extra }),
       });
       const json = await res.json();
       if (json.error) { setError(json.error); return; }
+
+      // Optimistic update of local state so the UI transitions instantly
+      if (act === 'claim') {
+        setCaseData(prev => ({
+          ...prev,
+          status: 'assigned',
+          pathologist_id: profileId,
+        }));
+      } else if (act === 'diagnose') {
+        setCaseData(prev => ({
+          ...prev,
+          status: 'diagnosed',
+          diagnosis,
+          treatment,
+        }));
+      } else if (act === 'close') {
+        setCaseData(prev => ({
+          ...prev,
+          status: 'closed',
+        }));
+      }
+
       router.refresh();
     } finally { setLoading(null); }
   }
 
+  function handleCopyPhone(p: string) {
+    navigator.clipboard.writeText(p);
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2000);
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -90,19 +157,26 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
           </div>
           <div>
             <h1 className="text-lg font-black" style={{ color: C.text, letterSpacing: '-0.02em', margin: '0 0 4px', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif", textTransform: 'capitalize' }}>
-              {c.crop_type} Disease Report
+              {caseData.crop_type} Disease Report
             </h1>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: sev.bg, color: sev.color }}>{sev.label} severity</span>
-              <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: 'var(--d-subtle)', color: C.muted, textTransform: 'capitalize' }}>{c.status}</span>
+              <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 999, background: 'var(--d-subtle)', color: C.muted, textTransform: 'capitalize' }}>
+                {caseData.status === 'assigned' && isAssigned ? 'Assigned to you' : caseData.status}
+              </span>
+              {isAssigned && (
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--color-success-bg)', color: 'var(--color-success)' }}>
+                  Active Case
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           {[
-            { label: 'District', value: c.district },
-            { label: 'Reported', value: new Date(c.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'long', year: 'numeric' }) },
+            { label: 'District', value: caseData.district },
+            { label: 'Reported', value: new Date(caseData.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'long', year: 'numeric' }) },
           ].map(({ label, value }) => (
             <div key={label} style={{ padding: '10px 14px', background: 'var(--d-subtle)', borderRadius: 10 }}>
               <p style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: 'uppercase', margin: '0 0 3px' }}>{label}</p>
@@ -113,14 +187,14 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
 
         <div style={{ marginTop: 14, padding: '14px 16px', background: 'var(--d-subtle)', borderRadius: 10 }}>
           <p style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: 'uppercase', margin: '0 0 6px' }}>Symptoms</p>
-          <p style={{ fontSize: 13, color: C.text, margin: 0, lineHeight: 1.6 }}>{c.symptoms ?? 'None described'}</p>
+          <p style={{ fontSize: 13, color: C.text, margin: 0, lineHeight: 1.6 }}>{caseData.symptoms ?? 'None described'}</p>
         </div>
 
-        {c.image_urls && c.image_urls.length > 0 && (
+        {caseData.image_urls && caseData.image_urls.length > 0 && (
           <div style={{ marginTop: 14 }}>
             <p style={{ fontSize: 10, color: C.muted, fontWeight: 600, textTransform: 'uppercase', margin: '0 0 8px' }}>Photos</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {c.image_urls.map((url: string, i: number) => (
+              {caseData.image_urls.map((url: string, i: number) => (
                 <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block', flexShrink: 0 }}>
                   <Image
                     src={url}
@@ -138,8 +212,67 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
         )}
       </div>
 
+      {/* Farmer Contact & Consultation Communication */}
+      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '18px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--color-primary-bg)', color: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <User size={18} />
+            </div>
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: 0 }}>
+                {farmer?.full_name ?? caseData.farmer_name ?? 'Farmer'}
+              </p>
+              <p style={{ fontSize: 11, color: C.muted, margin: '2px 0 0' }}>
+                {caseData.district}{phone ? ` · ${phone}` : ''}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {consultation && (
+              <Link
+                href={`/pathologist/chat/${consultation.id}`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 9,
+                  background: C.green, color: '#fff', fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                }}>
+                <MessageSquare size={13} /> Open In-App Chat
+              </Link>
+            )}
+            {waUrl && (
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 12px', borderRadius: 9,
+                  background: '#25D366', color: '#fff', fontSize: 12, fontWeight: 700, textDecoration: 'none',
+                }}>
+                <ExternalLink size={13} /> WhatsApp
+              </a>
+            )}
+            {phone && (
+              <a
+                href={`tel:${phone}`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 12px', borderRadius: 9,
+                  background: 'var(--d-subtle)', border: `1px solid ${C.border}`, color: C.text, fontSize: 12, fontWeight: 600, textDecoration: 'none',
+                }}>
+                <Phone size={13} /> Call
+              </a>
+            )}
+          </div>
+        </div>
+
+        <p style={{ fontSize: 11, color: C.muted, margin: 0, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <Sparkles size={11} style={{ color: C.green }} />
+          Zero airtime cost: farmers can exchange text messages, crop photos, and audio voice notes directly inside the app.
+        </p>
+      </div>
+
       {/* Diagnosis section */}
-      {(canDiagnose || c.diagnosis) && (
+      {(canDiagnose || caseData.diagnosis) && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 24 }}>
           <p style={{ fontSize: 15, fontWeight: 700, color: C.text, margin: '0 0 16px', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Diagnosis & Treatment</p>
 
@@ -202,7 +335,7 @@ export function CaseDetailClient({ c, profileId }: { c: Case; profileId: string 
         )}
         {!canClaim && !canDiagnose && !canClose && (
           <p style={{ fontSize: 13, color: C.muted, textAlign: 'center', width: '100%' }}>
-            {c.status === 'closed' ? 'This case is closed.' : isAssigned ? 'Diagnosis already submitted.' : 'This case is assigned to another pathologist.'}
+            {caseData.status === 'closed' ? 'This case is closed.' : isAssigned ? 'Diagnosis submitted.' : 'This case is assigned to another pathologist.'}
           </p>
         )}
       </div>

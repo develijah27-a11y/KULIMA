@@ -35,9 +35,13 @@ export default async function MyCasesPage() {
   const rows = (cases ?? []) as any[];
 
   const STATUS: Record<string, { label: string; color: string; bg: string }> = {
+    reported:   { label: 'Open',       color: 'var(--color-danger)',   bg: 'var(--color-danger-bg)' },
+    assigned:   { label: 'Assigned',   color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)' },
+    diagnosed:  { label: 'Diagnosed',  color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)'     },
+    closed:     { label: 'Closed',     color: 'var(--color-success)',  bg: 'var(--color-success-bg)' },
     pending:    { label: 'Pending',    color: 'var(--color-harvest)',  bg: 'var(--color-harvest-bg)' },
-    in_review:  { label: 'In Review', color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)'     },
-    resolved:   { label: 'Resolved',  color: 'var(--color-success)',  bg: 'var(--color-success-bg)' },
+    in_review:  { label: 'In Review',  color: 'var(--color-sky)',      bg: 'var(--color-sky-bg)'     },
+    resolved:   { label: 'Resolved',   color: 'var(--color-success)',  bg: 'var(--color-success-bg)' },
   };
 
 

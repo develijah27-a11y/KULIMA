@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { EXPENSE_CATEGORIES, SEASONS } from '@/lib/farm-finance';
-import { queueRecord } from '@/lib/db';
+import { queueRecord, cacheExpenses, getCachedExpenses, saveLocalExpense } from '@/lib/db';
 import { showToast } from '@/components/ui/Toast';
 import { Leaf, FlaskConical, Droplets, HardHat, Tractor, Truck, Wrench, Package, ClipboardList, X } from 'lucide-react';
 
@@ -44,6 +44,7 @@ interface Expense {
   season: string;
   expense_date: string;
   notes: string | null;
+  is_offline_pending?: boolean;
 }
 
 interface Props {
@@ -58,6 +59,21 @@ export function ExpenseForm({ initialExpenses }: Props) {
   const [error, setError] = useState('');
   const [filterSeason, setFilterSeason] = useState<string>('A2026');
   const [filterCrop, setFilterCrop] = useState('');
+
+  // Cache expenses to IndexedDB or load cached records when offline
+  useEffect(() => {
+    async function initExpenses() {
+      if (initialExpenses && initialExpenses.length > 0) {
+        cacheExpenses(initialExpenses).catch(() => {});
+      } else {
+        const cached = await getCachedExpenses();
+        if (cached && cached.length > 0) {
+          setExpenses(cached as Expense[]);
+        }
+      }
+    }
+    initExpenses();
+  }, [initialExpenses]);
 
   const [form, setForm] = useState({
     category: EXPENSE_CATEGORIES[0].value,
@@ -112,14 +128,35 @@ export function ExpenseForm({ initialExpenses }: Props) {
       });
       setShowForm(false);
     } catch (e: any) {
-      if (!navigator.onLine || (e instanceof TypeError && e.message.includes('fetch'))) {
+      if (!navigator.onLine || (e instanceof TypeError && e.message.includes('fetch')) || e.message.includes('network')) {
+        const localId = `offline-${Date.now()}`;
         const qPayload = {
           ...form,
           amount_ugx: Number(form.amount_ugx),
           quantity: form.quantity ? Number(form.quantity) : null,
         };
-        await queueRecord('expenses', qPayload, 'insert');
-        showToast('Saved locally — will sync when online', 'warning');
+        const offlineItem: Expense = {
+          id: localId,
+          category: form.category,
+          description: form.description,
+          amount_ugx: Number(form.amount_ugx),
+          quantity: form.quantity ? Number(form.quantity) : null,
+          unit: form.unit || null,
+          crop_type: form.crop_type || null,
+          season: form.season,
+          expense_date: form.expense_date,
+          notes: form.notes || null,
+          is_offline_pending: true,
+        };
+        await queueRecord('farm_expenses', qPayload, 'insert');
+        await saveLocalExpense({ ...offlineItem, updatedAt: Date.now() });
+        setExpenses(prev => [offlineItem, ...prev]);
+        showToast('Saved on device — will sync when online', 'warning');
+        setForm({
+          category: EXPENSE_CATEGORIES[0].value, description: '', amount_ugx: '', quantity: '',
+          unit: '', crop_type: '', season: 'A2026',
+          expense_date: new Date().toISOString().split('T')[0], notes: '',
+        });
         setShowForm(false);
       } else {
         setError(e.message);
@@ -346,10 +383,17 @@ export function ExpenseForm({ initialExpenses }: Props) {
 
               {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '14px', fontWeight: 700, color: C.text, marginBottom: '2px' }}>
-                  {expense.description}
-                </p>
-                <p style={{ fontSize: '12px', color: C.muted }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px', flexWrap: 'wrap' }}>
+                  <p style={{ fontSize: '14px', fontWeight: 700, color: C.text, margin: 0 }}>
+                    {expense.description}
+                  </p>
+                  {(expense.is_offline_pending || expense.id.startsWith('offline-')) && (
+                    <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '4px', background: 'var(--color-harvest-bg, #FEF3C7)', color: 'var(--color-harvest, #D97706)' }}>
+                      Pending Sync
+                    </span>
+                  )}
+                </div>
+                <p style={{ fontSize: '12px', color: C.muted, margin: 0 }}>
                   {expense.category.replace(/_/g, ' ')}
                   {expense.crop_type ? ` · ${expense.crop_type.replace(/_/g, ' ')}` : ''}
                   {expense.quantity && expense.unit ? ` · ${expense.quantity} ${expense.unit}` : ''}

@@ -377,16 +377,17 @@ function SubmitPanel({ group, onClose }: { group: Group; onClose: () => void }) 
 }
 
 function LoanPanel({ group, onClose }: { group: Group; onClose: () => void }) {
-  const [loans, setLoans]     = useState<Loan[] | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [amount, setAmount]   = useState('');
-  const [purpose, setPurpose] = useState('');
-  const [repayBy, setRepayBy] = useState('');
-  const [submitting, setSubmit] = useState(false);
+  const [loans, setLoans]             = useState<Loan[] | null>(null);
+  const [groupBalance, setGroupBal]   = useState<number>(0);
+  const [loading, setLoading]         = useState(false);
+  const [amount, setAmount]           = useState('');
+  const [purpose, setPurpose]         = useState('');
+  const [repayBy, setRepayBy]         = useState('');
+  const [submitting, setSubmit]       = useState(false);
   const [repayAmount, setRepayAmount] = useState<Record<string, string>>({});
-  const [repaying, setRepaying] = useState<string | null>(null);
-  const [error, setError]     = useState('');
-  const [success, setSuccess] = useState('');
+  const [repaying, setRepaying]       = useState<string | null>(null);
+  const [error, setError]             = useState('');
+  const [success, setSuccess]         = useState('');
 
   const loadLoans = useCallback(async () => {
     setLoading(true); setError('');
@@ -394,7 +395,8 @@ function LoanPanel({ group, onClose }: { group: Group; onClose: () => void }) {
       const res  = await fetch(`/api/groups/${group.id}/loans`);
       const json = await res.json();
       if (json.error) { setError(json.error); return; }
-      setLoans(json.loans);
+      setLoans(json.loans ?? []);
+      if (json.groupWalletBalance !== undefined) setGroupBal(json.groupWalletBalance);
     } finally { setLoading(false); }
   }, [group.id]);
 
@@ -402,8 +404,14 @@ function LoanPanel({ group, onClose }: { group: Group; onClose: () => void }) {
 
   const hasOpenLoan = (loans ?? []).some(l => l.status === 'pending' || l.status === 'active');
 
+  function setDaysFromNow(days: number) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    setRepayBy(d.toISOString().slice(0, 10));
+  }
+
   async function apply() {
-    if (!amount || Number(amount) <= 0) { setError('Enter a valid amount'); return; }
+    if (!amount || Number(amount) <= 0) { setError('Enter a valid loan amount'); return; }
     setSubmit(true); setError(''); setSuccess('');
     try {
       const res  = await fetch(`/api/groups/${group.id}/loans`, {
@@ -413,7 +421,7 @@ function LoanPanel({ group, onClose }: { group: Group; onClose: () => void }) {
       });
       const json = await res.json();
       if (json.error) { setError(json.error); return; }
-      setSuccess('Loan application submitted — the group leader will review it.');
+      setSuccess('Loan request submitted successfully! Your group leader has been alerted.');
       setAmount(''); setPurpose(''); setRepayBy('');
       loadLoans();
     } finally { setSubmit(false); }
@@ -437,77 +445,229 @@ function LoanPanel({ group, onClose }: { group: Group; onClose: () => void }) {
   }
 
   return (
-    <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow, padding: 0, overflow: 'hidden', marginTop: 8 }}>
-      <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Banknote size={14} />Loans from {group.name}</span>
-        </p>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex' }}><X size={16} /></button>
+    <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 0, overflow: 'hidden', marginTop: 10, border: `1.5px solid ${C.border}` }}>
+      {/* Header */}
+      <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--color-surface-2, rgba(0,0,0,0.02))' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.green }}>
+              <Banknote size={16} />
+            </div>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: C.text }}>
+              Member Credit & Loans
+            </p>
+          </div>
+          <p style={{ margin: '2px 0 0', fontSize: 11.5, color: C.muted }}>
+            Zero-interest seasonal cash assistance pooled by {group.name}
+          </p>
+        </div>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex', padding: 4 }}>
+          <X size={18} />
+        </button>
       </div>
 
+      {/* Group Pool Snapshot */}
+      {groupBalance > 0 && (
+        <div style={{ padding: '10px 20px', background: 'var(--color-primary-bg)', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary-hover)' }}>Group Pool Available:</span>
+          <span style={{ fontSize: 13, fontWeight: 900, color: 'var(--color-primary-hover)' }}>UGX {Math.round(groupBalance).toLocaleString()}</span>
+        </div>
+      )}
+
+      {/* Loan Application Form */}
       {!hasOpenLoan && (
-        <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: C.text }}>Apply for a Loan</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ padding: '18px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ margin: 0, fontSize: 12.5, fontWeight: 800, color: C.text }}>
+              Request a Group Loan
+            </p>
+            <span style={{ fontSize: 10.5, fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'var(--color-success-bg)', color: 'var(--color-success)' }}>
+              0% Community Interest
+            </span>
+          </div>
+
+          {/* Quick preset amount chips */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {['50000', '100000', '200000', '500000'].map(val => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => setAmount(val)}
+                style={{
+                  padding: '4px 10px', borderRadius: 20, border: `1px solid ${amount === val ? C.green : C.border}`,
+                  background: amount === val ? 'var(--color-primary-bg)' : 'transparent',
+                  color: amount === val ? C.green : C.muted, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                }}
+              >
+                UGX {Number(val).toLocaleString()}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: 'block', marginBottom: 4 }}>Amount (UGX) *</label>
+              <input
+                type="number" min="1000" value={amount} onChange={e => setAmount(e.target.value)}
+                placeholder="e.g. 150000"
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: 'block', marginBottom: 4 }}>Repayment Due Date</label>
+              <input
+                type="date" value={repayBy} onChange={e => setRepayBy(e.target.value)}
+                min={new Date().toISOString().slice(0, 10)}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+              />
+            </div>
+          </div>
+
+          {/* Quick duration chips */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>Quick term:</span>
+            {[30, 60, 90].map(days => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => setDaysFromNow(days)}
+                style={{
+                  padding: '3px 8px', borderRadius: 6, border: `1px solid ${C.border}`,
+                  background: 'transparent', color: C.muted, fontSize: 10.5, fontWeight: 700, cursor: 'pointer',
+                }}
+              >
+                {days} Days
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: 'block', marginBottom: 4 }}>Purpose / Need (Optional)</label>
             <input
-              type="number" min="0" value={amount} onChange={e => setAmount(e.target.value)}
-              placeholder="Amount (UGX)"
-              style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
-            />
-            <input
-              type="date" value={repayBy} onChange={e => setRepayBy(e.target.value)}
-              min={new Date().toISOString().slice(0, 10)}
-              style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+              value={purpose} onChange={e => setPurpose(e.target.value)}
+              placeholder="e.g. Buying certified bean seeds & fertilizer for the season"
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
             />
           </div>
-          <input
-            value={purpose} onChange={e => setPurpose(e.target.value)}
-            placeholder="Purpose — e.g. seeds for planting season"
-            style={{ padding: '9px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
-          />
-          {error && <p style={{ margin: 0, fontSize: 12, color: C.red }}>{error}</p>}
-          {success && <div style={{ fontSize: 12, color: 'var(--color-success)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Check size={12} />{success}</div>}
-          <button onClick={apply} disabled={submitting}
-            style={{ padding: '10px', borderRadius: 8, border: 'none', background: C.green, color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: submitting ? 0.7 : 1 }}>
-            {submitting ? 'Submitting…' : 'Apply for Loan'}
+
+          {error && (
+            <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger)' }}>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--color-danger)', fontWeight: 600 }}>{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--color-success-bg)', border: '1px solid var(--color-success)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Check size={14} color="var(--color-success)" />
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--color-success)', fontWeight: 600 }}>{success}</p>
+            </div>
+          )}
+
+          <button
+            onClick={apply}
+            disabled={submitting || !amount || Number(amount) <= 0}
+            style={{
+              padding: '12px', borderRadius: 10, border: 'none', background: C.green,
+              color: '#fff', fontSize: 13, fontWeight: 800, cursor: 'pointer',
+              opacity: submitting || !amount || Number(amount) <= 0 ? 0.6 : 1,
+              transition: 'opacity 0.2s',
+            }}
+          >
+            {submitting ? 'Submitting Application…' : 'Submit Loan Request'}
           </button>
         </div>
       )}
 
+      {/* Member Loan History & Active Repayment */}
       <div>
+        <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-surface-2, rgba(0,0,0,0.01))' }}>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Your Loan History
+          </p>
+        </div>
+
         {loading ? (
-          <div style={{ padding: '24px', textAlign: 'center' }}><p style={{ color: C.muted, fontSize: 13 }}>Loading…</p></div>
+          <div style={{ padding: '30px', textAlign: 'center' }}><p style={{ color: C.muted, fontSize: 13, margin: 0 }}>Loading loan records…</p></div>
         ) : loans === null || loans.length === 0 ? (
-          <div style={{ padding: '24px', textAlign: 'center' }}><p style={{ color: C.muted, fontSize: 13 }}>No loans yet.</p></div>
+          <div style={{ padding: '30px 20px', textAlign: 'center' }}>
+            <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>No loan applications on record with this group.</p>
+          </div>
         ) : (
           loans.map((l, i) => {
             const st = LOAN_STATUS_CFG[l.status] ?? LOAN_STATUS_CFG.pending;
-            const remaining = l.amount - l.repaid_amount;
+            const remaining = Math.max(0, l.amount - (l.repaid_amount || 0));
+            const pct = l.amount > 0 ? Math.min(100, Math.round(((l.repaid_amount || 0) / l.amount) * 100)) : 0;
+
             return (
-              <div key={l.id} style={{ padding: '12px 18px', borderBottom: i < loans.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div key={l.id} style={{ padding: '16px 20px', borderBottom: i < loans.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                   <div>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: C.text }}>UGX {Math.round(l.amount).toLocaleString()}</p>
-                    <p style={{ margin: '2px 0 0', fontSize: 11, color: C.muted }}>{l.purpose || 'General'}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <p style={{ margin: 0, fontSize: 15, fontWeight: 900, color: C.text }}>
+                        UGX {Math.round(l.amount).toLocaleString()}
+                      </p>
+                      <span style={{ fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999, background: st.bg, color: st.color }}>
+                        {st.label}
+                      </span>
+                    </div>
+                    <p style={{ margin: '3px 0 0', fontSize: 12, color: C.muted }}>
+                      {l.purpose || 'General farming assistance'}
+                      {l.repayment_date ? ` · Due: ${new Date(l.repayment_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
+                    </p>
                   </div>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 999, background: st.bg, color: st.color, flexShrink: 0 }}>{st.label}</span>
                 </div>
+
+                {/* Progress bar for active loans */}
                 {l.status === 'active' && (
-                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                    <input
-                      type="number" min="0" max={remaining}
-                      value={repayAmount[l.id] ?? ''}
-                      onChange={e => setRepayAmount(prev => ({ ...prev, [l.id]: e.target.value }))}
-                      placeholder={`Repay (owe ${Math.round(remaining).toLocaleString()})`}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 6, border: `1px solid ${C.border}`, fontSize: 12, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
-                    />
-                    <button
-                      disabled={repaying === l.id}
-                      onClick={() => repay(l.id)}
-                      style={{ padding: '7px 14px', borderRadius: 6, border: 'none', background: C.greenMed, color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      {repaying === l.id ? '…' : 'Repay'}
-                    </button>
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 4 }}>
+                      <span>Repaid: UGX {Math.round(l.repaid_amount || 0).toLocaleString()} ({pct}%)</span>
+                      <span style={{ color: 'var(--color-harvest)' }}>Owed: UGX {Math.round(remaining).toLocaleString()}</span>
+                    </div>
+                    <div style={{ width: '100%', height: 6, borderRadius: 999, background: 'var(--d-border)', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', background: C.green, borderRadius: 999, transition: 'width 0.3s' }} />
+                    </div>
+
+                    {/* Repayment controls with quick % chips */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 10 }}>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <input
+                          type="number" min="1" max={remaining}
+                          value={repayAmount[l.id] ?? ''}
+                          onChange={e => setRepayAmount(prev => ({ ...prev, [l.id]: e.target.value }))}
+                          placeholder={`Enter amount to repay (UGX)`}
+                          style={{ flex: 1, padding: '8px 10px', borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12.5, background: 'var(--d-input-bg)', color: 'var(--d-input-text)', boxSizing: 'border-box' }}
+                        />
+                        <button
+                          disabled={repaying === l.id || !repayAmount[l.id]}
+                          onClick={() => repay(l.id)}
+                          style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: C.greenMed, color: '#fff', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', opacity: repaying === l.id ? 0.7 : 1 }}
+                        >
+                          {repaying === l.id ? 'Processing…' : 'Repay'}
+                        </button>
+                      </div>
+
+                      {/* Quick chips: 25%, 50%, 100% */}
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {[0.25, 0.5, 1].map(fraction => {
+                          const val = Math.round(remaining * fraction);
+                          const label = fraction === 1 ? 'Full Balance' : `${fraction * 100}%`;
+                          return (
+                            <button
+                              key={fraction}
+                              type="button"
+                              onClick={() => setRepayAmount(prev => ({ ...prev, [l.id]: String(val) }))}
+                              style={{
+                                padding: '3px 8px', borderRadius: 6, border: `1px solid ${C.border}`,
+                                background: 'transparent', color: C.muted, fontSize: 10.5, fontWeight: 700, cursor: 'pointer',
+                              }}
+                            >
+                              {label} (UGX {val.toLocaleString()})
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

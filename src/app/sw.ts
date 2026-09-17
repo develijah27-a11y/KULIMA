@@ -2,6 +2,8 @@ import { CacheFirst, ExpirationPlugin, NetworkFirst, Serwist, StaleWhileRevalida
 
 declare const self: ServiceWorkerGlobalScope & { __SW_MANIFEST?: string[] };
 
+const OFFLINE_FALLBACK_CACHE = 'cropify-offline-fallback-v1';
+
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST || [],
   skipWaiting: true,
@@ -9,12 +11,27 @@ const serwist = new Serwist({
   navigationPreload: false,
 
   runtimeCaching: [
+    // ── HTML Navigation (2G resilience with fallback to /offline) ─────────────
+    {
+      matcher: ({ request }) => request.mode === 'navigate',
+      handler: new NetworkFirst({
+        cacheName: 'cropify-pages-v2',
+        networkTimeoutSeconds: 3,
+        plugins: [
+          new ExpirationPlugin({
+            maxEntries: 50,
+            maxAgeSeconds: 86400 * 3, // 3 days
+          }),
+        ],
+      }),
+    },
+
     // ── API data ──────────────────────────────────────────────────────────────
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/weather'),
       handler: new NetworkFirst({
         cacheName: 'cropify-weather-v2',
-        networkTimeoutSeconds: 10,
+        networkTimeoutSeconds: 4, // Adaptive 4s for rural 2G
         plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 1800 })],
       }),
     },
@@ -48,13 +65,52 @@ const serwist = new Serwist({
   ],
 });
 
+// Cache the offline fallback page during service worker installation
+self.addEventListener('install', (event: ExtendableEvent) => {
+  event.waitUntil(
+    caches.open(OFFLINE_FALLBACK_CACHE).then((cache) => {
+      return cache.add('/offline').catch((err) => {
+        console.warn('[sw] Could not precache /offline during install:', err);
+      });
+    })
+  );
+});
+
+// Provide /offline fallback when navigation fails completely
+serwist.setCatchHandler(async ({ request }) => {
+  if (request.destination === 'document' || (request as any).mode === 'navigate') {
+    const offlineCache = await caches.open(OFFLINE_FALLBACK_CACHE);
+    const fallback = await offlineCache.match('/offline');
+    if (fallback) return fallback;
+  }
+  return Response.error();
+});
+
 serwist.addEventListeners();
 
+// ── Background Sync ───────────────────────────────────────────────────────
+// When connection resumes or Android triggers background sync, notify
+// the app window so OfflineSyncManager can flush any pending outbox records.
+self.addEventListener('sync', (event: any) => {
+  if (event.tag === 'cropify-sync') {
+    event.waitUntil(
+      self.clients.matchAll({ includeUncontrolled: true, type: 'window' }).then((clients) => {
+        clients.forEach((client) => {
+          client.postMessage({ type: 'CROP_SYNC_TRIGGER' });
+        });
+      })
+    );
+  }
+});
+
+// ── Message channel ───────────────────────────────────────────────────────
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 // ── Web Push ─────────────────────────────────────────────────────────────
-// Shows an OS-level notification even when the app isn't open — this is
-// what actually reaches a driver whose phone is locked, or a farmer/supplier
-// who isn't currently in the app, unlike the in-app notification bell which
-// only updates while a tab is active.
 self.addEventListener('push', (event: PushEvent) => {
   if (!event.data) return;
   let payload: { title?: string; body?: string; url?: string; tag?: string } = {};
@@ -65,11 +121,6 @@ self.addEventListener('push', (event: PushEvent) => {
     self.registration.showNotification(title, {
       body: payload.body ?? '',
       icon: '/icons/icon-192.png',
-      // Android re-tints and masks `badge` to a flat monochrome silhouette
-      // for the status bar — feeding it the full-color app icon (like this
-      // used to) makes the OS's masking turn it into an illegible smudge.
-      // A dedicated single-shape icon is required, separate from `icon`
-      // (which still shows full color in the notification tray itself).
       badge: '/icons/notification-badge-96.png',
       tag: payload.tag,
       data: { url: payload.url ?? '/dashboard' },
@@ -78,7 +129,7 @@ self.addEventListener('push', (event: PushEvent) => {
 });
 
 // Focus an already-open Cropify tab if one exists and navigate it,
-// otherwise open a new one — standard "tap the notification" behavior.
+// otherwise open a new one.
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
   const url = (event.notification.data as { url?: string } | undefined)?.url ?? '/dashboard';

@@ -28,14 +28,24 @@ export default async function AdminDiseaseReportsPage() {
 
   const [{ data: reports }, { data: pathologists }] = await Promise.all([
     (supabase.from as any)('disease_reports')
-      .select('id, farmer_name, crop_type, symptoms, urgency, district, status, pathologist_id, reported_at')
+      .select('id, farmer_name, crop_type, symptoms, urgency, district, status, pathologist_id, reported_at, pathologist:profiles!disease_reports_pathologist_id_fkey(id, full_name)')
       .order('reported_at', { ascending: false })
       .limit(100),
-    (supabase.from as any)('profiles').select('id, full_name').eq('role', 'pathologist'),
+    (supabase.from as any)('profiles')
+      .select('id, full_name')
+      .or('role.eq.pathologist,roles.cs.{"pathologist"}'),
   ]);
 
   const rows = (reports ?? []) as any[];
-  const pathologistList = (pathologists ?? []) as any[];
+  const baseList = ((pathologists ?? []) as any[]).slice();
+  const knownIds = new Set(baseList.map((p: any) => p.id));
+  rows.forEach((r: any) => {
+    if (r.pathologist && !knownIds.has(r.pathologist.id)) {
+      baseList.push(r.pathologist);
+      knownIds.add(r.pathologist.id);
+    }
+  });
+  const pathologistList = baseList;
 
   return (
     <div className="max-w-4xl mx-auto space-y-5">

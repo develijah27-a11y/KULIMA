@@ -301,9 +301,36 @@ export function GroupChatClient({
     }
   };
 
-  // Fetch latest messages
+  // Fetch latest messages via service API to bypass RLS barriers, with client fallback
   const fetchMessages = useCallback(async (): Promise<boolean> => {
     try {
+      const res = await fetch(`/api/groups/messages?adminId=${encodeURIComponent(adminId)}`);
+      if (res.ok) {
+        const json = await res.json().catch(() => ({}));
+        if (json.success && Array.isArray(json.messages)) {
+          setMessages((prev) => {
+            const pendingMap = new Map(
+              prev.filter((m) => m.id.startsWith('temp_') || m.failed).map((m) => [m.id, m])
+            );
+            const merged = [...json.messages];
+            for (const pending of pendingMap.values()) {
+              if (
+                !merged.some(
+                  (m) =>
+                    m.body === pending.body &&
+                    Math.abs(new Date(m.created_at).getTime() - new Date(pending.created_at).getTime()) < 30000
+                )
+              ) {
+                merged.push(pending);
+              }
+            }
+            return merged;
+          });
+          return true;
+        }
+      }
+
+      // Fallback to direct client query if endpoint fails
       const { data, error: fetchErr } = await (supabase.from as any)('group_messages')
         .select('id, admin_id, sender_id, sender_name, body, created_at')
         .eq('admin_id', adminId)

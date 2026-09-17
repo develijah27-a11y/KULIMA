@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
 import { notifyUser } from '@/lib/notify';
@@ -106,7 +106,29 @@ export async function PATCH(req: Request) {
   }
   if (!data) return NextResponse.json({ error: 'Report not found, already claimed, or not assigned to you' }, { status: 404 });
 
+  if (action === 'claim') {
+    // If a consultation was linked to this disease report, assign this pathologist to it
+    await (supabase.from as any)('consultations')
+      .update({
+        pathologist_id: user.id,
+        status: 'matched',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('disease_report_id', id)
+      .is('pathologist_id', null);
+  }
+
   if (action === 'diagnose' || action === 'close') {
+    if (action === 'diagnose') {
+      await (supabase.from as any)('consultations')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('disease_report_id', id);
+    }
+
     const { data: farmerProfile } = await supabase
       .from('profiles').select('user_id').eq('id', (data as any).farmer_id).single();
     if (farmerProfile) {

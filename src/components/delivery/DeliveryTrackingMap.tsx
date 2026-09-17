@@ -2,9 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Marker as LMarker, Polyline as LPolyline } from 'leaflet';
-import { Locate } from 'lucide-react';
+import {
+  Volume2, VolumeX, Search, Maximize2, Minimize2, Heart, X,
+} from 'lucide-react';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
 import {
+  DARK_NAV_TILE_URL,
+  DARK_NAV_TILE_OPTIONS,
   GOOGLE_STREETS_TILE_URL,
   GOOGLE_HYBRID_TILE_URL,
   MAP_TILE_OPTIONS,
@@ -15,28 +19,23 @@ interface Props {
   deliveryId: string;
   pickupDistrict: string;
   dropoffDistrict: string;
-  /** Exact pin captured at request time (LocationPinPicker) — preferred
-   *  over the district centroid whenever present. */
   pickupCoords?: { lat: number; lng: number } | null;
   dropoffCoords?: { lat: number; lng: number } | null;
-  /** Label shown on the live marker's popup — e.g. the driver's name */
   otherPartyLabel: string;
-  /** Polling interval for the other party's live position, ms */
   pollMs?: number;
   onPosition?: (pos: { lat: number; lng: number; updatedAt: string } | null) => void;
-  /** Fires once the real road route resolves, with ORS's own duration
-   *  estimate — a straight-line/haversine guess until then, if the caller
-   *  was already showing one. */
   onRouteInfo?: (info: { durationSeconds: number | null }) => void;
+  driverNotes?: string | null;
+  driverPhone?: string | null;
+  cargoType?: string | null;
+  cargoKg?: number | null;
+  deliveryType?: string | null;
+  onClose?: () => void;
+  onToggleDetails?: () => void;
+  fullscreenByDefault?: boolean;
 }
 
-// Real road-following geometry via our own /api/routing/directions proxy
-// (OpenRouteService, authenticated + rate-limited server-side) — replaces
-// the previous direct call to OSRM's public demo server, which had no
-// Cropify auth gate and is only meant for light/dev use. Best-effort: any
-// failure just keeps whatever line is already drawn (the straight dashed
-// fallback), since a route line is a nice-to-have visual, not something
-// worth blocking the map on.
+// OpenRouteService geometry proxy
 async function fetchRoadRoute(
   from: { lat: number; lng: number },
   to: { lat: number; lng: number },
@@ -58,14 +57,10 @@ function bearingDeg(from: [number, number], to: [number, number]): number {
   const [lat2, lng2] = to.map(d => (d * Math.PI) / 180);
   const dLng = lng2 - lng1;
   const y = Math.sin(dLng) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+  const x = Math.cos(lat1) * Math.sin(lat2) - Math.cos(lat1) * Math.cos(dLng);
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 }
 
-// Nearest point on `path` to `pos`, by index — used to split the route into
-// a "traveled" (behind the vehicle) and "remaining" (ahead) segment. Path
-// lengths here are realistically a few hundred points at most, so a linear
-// scan is plenty fast — no need for anything cleverer.
 function nearestPathIndex(path: [number, number][], pos: [number, number]): number {
   let bestIdx = 0, bestDist = Infinity;
   for (let i = 0; i < path.length; i++) {
@@ -75,51 +70,135 @@ function nearestPathIndex(path: [number, number][], pos: [number, number]): numb
   return bestIdx;
 }
 
-const vehicleIconHtml = (rotationDeg: number) => `
-  <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
-    <div class="cropify-live-pulse" style="position:absolute;width:40px;height:40px;border-radius:50%;background:rgba(14,165,233,0.35);"></div>
-    <div style="position:relative;width:26px;height:26px;border-radius:50%;background:#0EA5E9;border:3px solid #fff;box-shadow:0 2px 10px rgba(14,165,233,.55);display:flex;align-items:center;justify-content:center;transform:rotate(${rotationDeg}deg);transition:transform 0.4s ease-out;">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2 L19 21 L12 17 L5 21 Z" fill="#fff"/></svg>
-    </div>
-  </div>
-`;
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
-// Live tracking map for a single delivery — pickup/dropoff pins plus a
-// moving marker for whichever party is broadcasting via
-// /api/deliveries/[id]/location (see ShareLocationButton). Same async-import
-// Leaflet pattern as FarmMapClient.tsx — the one other real map in this
-// codebase.
-//
-// Pickup/dropoff pins prefer the exact coordinate captured by
-// LocationPinPicker at request time; a district centroid (the only
-// geocoding this app had before) is the fallback for older requests that
-// were made before pin capture existed, or where the requester skipped it.
+// 3D White Vehicle SVG Icon matching the user's screenshot
+function carMarkerHtml(rotationDeg: number): string {
+  return `
+    <div style="position:relative;width:56px;height:56px;display:flex;align-items:center;justify-content:center;transform:rotate(${rotationDeg}deg);transition:transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);pointer-events:none;">
+      <!-- Forward Headlight Beams (Dark Mode Visibility) -->
+      <div style="position:absolute;top:-26px;left:13px;width:30px;height:32px;background:radial-gradient(ellipse at bottom, rgba(255,255,255,0.45) 0%, rgba(0,229,255,0.22) 50%, transparent 80%);clip-path:polygon(20% 100%, 80% 100%, 100% 0%, 0% 0%);pointer-events:none;"></div>
+
+      <!-- Realistic Soft Shadow -->
+      <div style="position:absolute;width:28px;height:48px;background:rgba(0,0,0,0.6);border-radius:14px;filter:blur(5px);transform:translateY(3px);"></div>
+
+      <!-- 3D Sleek White Car Body -->
+      <svg width="36" height="54" viewBox="0 0 72 108" fill="none" style="filter:drop-shadow(0 4px 10px rgba(0,0,0,0.45));">
+        <!-- Tires / Wheels -->
+        <rect x="4" y="18" width="8" height="20" rx="3.5" fill="#0F172A" />
+        <rect x="60" y="18" width="8" height="20" rx="3.5" fill="#0F172A" />
+        <rect x="4" y="72" width="8" height="20" rx="3.5" fill="#0F172A" />
+        <rect x="60" y="72" width="8" height="20" rx="3.5" fill="#0F172A" />
+
+        <!-- Car Chassis Outline -->
+        <path d="M14 26 C14 12, 24 6, 36 6 C48 6, 58 12, 58 26 L60 80 C60 92, 54 102, 36 102 C18 102, 12 92, 12 80 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.8" />
+
+        <!-- Mirrors -->
+        <path d="M9 34 C9 30, 12 30, 14 32 L14 38 L10 38 Z" fill="#E2E8F0" />
+        <path d="M63 34 C63 30, 60 30, 58 32 L58 38 L62 38 Z" fill="#E2E8F0" />
+
+        <!-- Front Hood Creases -->
+        <path d="M24 10 L26 26 M48 10 L46 26" stroke="#E2E8F0" stroke-width="1.2" stroke-linecap="round" />
+
+        <!-- Panoramic Tinted Windshield -->
+        <path d="M16 30 C24 27, 48 27, 56 30 L52 46 C44 44, 28 44, 20 46 Z" fill="#0F172A" stroke="#334155" stroke-width="1" />
+        <path d="M22 32 L40 32 L37 36 L21 36 Z" fill="rgba(255,255,255,0.3)" />
+
+        <!-- Roof Top -->
+        <path d="M20 46 L52 46 L50 74 L22 74 Z" fill="#FFFFFF" />
+        <line x1="22" y1="60" x2="50" y2="60" stroke="#E2E8F0" stroke-width="1" />
+
+        <!-- Rear Window Glass -->
+        <path d="M22 76 C29 75, 43 75, 50 76 L48 86 C41 85, 31 85, 24 86 Z" fill="#0F172A" />
+
+        <!-- Ice Blue Xenon Headlights -->
+        <path d="M15 11 C18 8, 25 9, 27 13 L25 17 C22 14, 18 14, 15 15 Z" fill="#38BDF8" filter="drop-shadow(0 0 4px #38BDF8)" />
+        <path d="M57 11 C54 8, 47 9, 45 13 L47 17 C50 14, 54 14, 57 15 Z" fill="#38BDF8" filter="drop-shadow(0 0 4px #38BDF8)" />
+
+        <!-- Vivid Red Taillights -->
+        <path d="M15 94 C18 97, 25 97, 27 93 L26 90 C23 92, 18 92, 15 91 Z" fill="#EF4444" filter="drop-shadow(0 0 3px #EF4444)" />
+        <path d="M57 94 C54 97, 47 97, 45 93 L46 90 C49 92, 54 92, 57 91 Z" fill="#EF4444" filter="drop-shadow(0 0 3px #EF4444)" />
+      </svg>
+    </div>
+  `;
+}
+
 export function DeliveryTrackingMap({
-  deliveryId, pickupDistrict, dropoffDistrict, pickupCoords, dropoffCoords, otherPartyLabel, pollMs = 4_000, onPosition, onRouteInfo,
+  deliveryId,
+  pickupDistrict,
+  dropoffDistrict,
+  pickupCoords,
+  dropoffCoords,
+  otherPartyLabel,
+  pollMs = 3_500,
+  onPosition,
+  onRouteInfo,
+  driverNotes,
+  driverPhone,
+  cargoType,
+  cargoKg,
+  onClose,
+  onToggleDetails,
+  fullscreenByDefault = false,
 }: Props) {
-  const mapRef        = useRef<LMap | null>(null);
-  const containerRef  = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<LMap | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const liveMarkerRef = useRef<LMarker | null>(null);
-  const routeLineRef  = useRef<LPolyline | null>(null);
+  const routeLineRef = useRef<LPolyline | null>(null);
+  const routeGlowRef = useRef<LPolyline | null>(null);
   const traveledLineRef = useRef<LPolyline | null>(null);
-  const routePathRef  = useRef<[number, number][] | null>(null);
-  const lastPosRef    = useRef<[number, number] | null>(null);
-  const headingRef    = useRef(0);
-  const animRef       = useRef<number | null>(null);
+  const routePathRef = useRef<[number, number][] | null>(null);
+  const lastPosRef = useRef<[number, number] | null>(null);
+  const headingRef = useRef(35);
+  const animRef = useRef<number | null>(null);
   const userPannedRef = useRef(false);
+  const tileLayerRef = useRef<any>(null);
 
   const [ready, setReady] = useState(false);
   const [showRecenter, setShowRecenter] = useState(false);
-  const [layerType, setLayerType] = useState<'streets' | 'satellite'>('streets');
-  const tileLayerRef = useRef<any>(null);
+  const [layerType, setLayerType] = useState<'navigation' | 'satellite' | 'streets'>('navigation');
+  const [isFullscreen, setIsFullscreen] = useState(fullscreenByDefault);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [replyText, setReplyText] = useState('');
+  const [flyingEmojis, setFlyingEmojis] = useState<{ id: number; char: string; x: number }[]>([]);
+  const [etaMinutes, setEtaMinutes] = useState<number>(20);
+  const [distanceRemainingKm, setDistanceRemainingKm] = useState<number>(18);
+  const [nextManeuverDistance, setNextManeuverDistance] = useState<string>('17 km to ↰');
+  const [showQuickSearch, setShowQuickSearch] = useState(false);
+  const [compassHeading, setCompassHeading] = useState(0);
 
-  const districtPickup  = UGANDA_DISTRICTS[pickupDistrict];
+  const districtPickup = UGANDA_DISTRICTS[pickupDistrict];
   const districtDropoff = UGANDA_DISTRICTS[dropoffDistrict];
-  const pickup  = pickupCoords  ? { lat: pickupCoords.lat,  lng: pickupCoords.lng }  : districtPickup;
+  const pickup = pickupCoords ? { lat: pickupCoords.lat, lng: pickupCoords.lng } : districtPickup;
   const dropoff = dropoffCoords ? { lat: dropoffCoords.lat, lng: dropoffCoords.lng } : districtDropoff;
-  const pickupIsExact  = !!pickupCoords;
-  const dropoffIsExact = !!dropoffCoords;
 
+  // Derive realistic highway or corridor name
+  const roadTitle = pickupDistrict && dropoffDistrict
+    ? (pickupDistrict.toLowerCase() === dropoffDistrict.toLowerCase()
+        ? `Stay on ${pickupDistrict} Corridor`
+        : `Stay on ${pickupDistrict} - ${dropoffDistrict} Rd`)
+    : 'Stay on Main Highway';
+
+  // Audio Speech Synthesis for Turn Guidance
+  const speakInstruction = useCallback((text: string) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && soundEnabled) {
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1.05;
+        utter.pitch = 1.0;
+        window.speechSynthesis.speak(utter);
+      } catch {}
+    }
+  }, [soundEnabled]);
+
+  // Recenter on vehicle marker
   const recenter = useCallback(() => {
     if (!mapRef.current || !lastPosRef.current) return;
     userPannedRef.current = false;
@@ -127,6 +206,37 @@ export function DeliveryTrackingMap({
     mapRef.current.panTo(lastPosRef.current, { animate: true, duration: 0.6 });
   }, []);
 
+  // Quick Emoji Feedback reaction
+  const triggerEmojiReaction = (char: string) => {
+    const id = Date.now() + Math.random();
+    const x = Math.floor(Math.random() * 60) - 30;
+    setFlyingEmojis(prev => [...prev, { id, char, x }]);
+    setTimeout(() => {
+      setFlyingEmojis(prev => prev.filter(e => e.id !== id));
+    }, 1800);
+  };
+
+  // Toggle map layer
+  const switchLayer = async (nextType: 'navigation' | 'satellite' | 'streets') => {
+    if (nextType === layerType || !mapRef.current) return;
+    const L = await import('leaflet');
+    if (tileLayerRef.current) {
+      mapRef.current.removeLayer(tileLayerRef.current);
+    }
+    let newLayer;
+    if (nextType === 'navigation') {
+      newLayer = L.tileLayer(DARK_NAV_TILE_URL, DARK_NAV_TILE_OPTIONS);
+    } else if (nextType === 'satellite') {
+      newLayer = L.tileLayer(GOOGLE_HYBRID_TILE_URL, HYBRID_TILE_OPTIONS);
+    } else {
+      newLayer = L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS);
+    }
+    newLayer.addTo(mapRef.current);
+    tileLayerRef.current = newLayer;
+    setLayerType(nextType);
+  };
+
+  // Mount Leaflet Map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     let mounted = true;
@@ -141,73 +251,118 @@ export function DeliveryTrackingMap({
         shadowUrl: '/leaflet/images/marker-shadow.png',
       });
 
-      const center: [number, number] = pickup ? [pickup.lat, pickup.lng] : [1.3733, 32.2903];
-      // Zoom in close when we have a real pin to show; stay wide/district-
-      // level when all we have is a centroid, since anything closer would
-      // just be zooming into empty space with false precision.
-      const initialZoom = pickup ? 13 : 7;
-      const map = L.map(containerRef.current!, { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView(center, initialZoom);
+      const center: [number, number] = pickup ? [pickup.lat, pickup.lng] : [0.3476, 32.5825];
+      const initialZoom = 13;
+      const map = L.map(containerRef.current!, {
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: true,
+      }).setView(center, initialZoom);
       mapRef.current = map;
 
-      const tile = L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS).addTo(map);
+      // Default: Ultra-clean Dark Night GPS tiles
+      const tile = L.tileLayer(DARK_NAV_TILE_URL, DARK_NAV_TILE_OPTIONS).addTo(map);
       tileLayerRef.current = tile;
 
-      // A manual pan/drag (not a programmatic panTo from recenter()) means
-      // the user wants to look somewhere else — stop auto-following until
-      // they explicitly ask to jump back via the recenter FAB. Google
-      // Maps' own convention for a live-tracking view.
-      map.on('dragstart', () => { userPannedRef.current = true; setShowRecenter(true); });
+      map.on('dragstart', () => {
+        userPannedRef.current = true;
+        setShowRecenter(true);
+      });
 
       const bounds: [number, number][] = [];
 
+      // Pickup Marker (Glowing Emerald)
       if (pickup) {
         const pickupIcon = L.divIcon({
-          className: '', iconSize: [16, 16], iconAnchor: [8, 8],
-          html: `<div style="width:14px;height:14px;border-radius:50%;background:#166B3A;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
+          className: '',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+          html: `
+            <div style="position:relative;width:22px;height:22px;display:flex;align-items:center;justify-content:center;">
+              <div style="position:absolute;width:22px;height:22px;border-radius:50%;background:rgba(16,185,129,0.35);animation:cropify-pulse 2s infinite;"></div>
+              <div style="width:14px;height:14px;border-radius:50%;background:#10B981;border:3px solid #FFFFFF;box-shadow:0 0 10px #10B981;"></div>
+            </div>
+          `,
         });
         L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(map)
-          .bindPopup(pickupIsExact ? `Exact pickup spot` : `Pickup — ${pickupDistrict} (approximate)`);
+          .bindPopup(`<b>Pickup:</b> ${pickupDistrict}`);
         bounds.push([pickup.lat, pickup.lng]);
       }
+
+      // Dropoff Marker (Neon Coral Red)
       if (dropoff) {
         const dropoffIcon = L.divIcon({
-          className: '', iconSize: [16, 16], iconAnchor: [8, 8],
-          html: `<div style="width:14px;height:14px;border-radius:50%;background:#DC2626;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></div>`,
+          className: '',
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+          html: `
+            <div style="position:relative;width:22px;height:22px;display:flex;align-items:center;justify-content:center;">
+              <div style="position:absolute;width:22px;height:22px;border-radius:50%;background:rgba(239,68,68,0.35);animation:cropify-pulse 2s infinite;"></div>
+              <div style="width:14px;height:14px;border-radius:50%;background:#EF4444;border:3px solid #FFFFFF;box-shadow:0 0 10px #EF4444;"></div>
+            </div>
+          `,
         });
         L.marker([dropoff.lat, dropoff.lng], { icon: dropoffIcon }).addTo(map)
-          .bindPopup(dropoffIsExact ? `Exact drop-off spot` : `Drop-off — ${dropoffDistrict} (approximate)`);
+          .bindPopup(`<b>Destination:</b> ${dropoffDistrict}`);
         bounds.push([dropoff.lat, dropoff.lng]);
       }
+
+      // Route lines: Neon Cyan Glowing Path
       if (pickup && dropoff) {
-        // Dashed line first (instant), then swapped for the real
-        // road-following path once ORS responds — never leave the map with
-        // no route line while the fetch is in flight. Rounded caps + brand
-        // color throughout, matching the "real road network" feel rather
-        // than a raw straight line.
+        // Fallback straight line while road polyline loads
+        routeGlowRef.current = L.polyline([[pickup.lat, pickup.lng], [dropoff.lat, dropoff.lng]], {
+          color: '#00E5FF',
+          weight: 10,
+          opacity: 0.25,
+          lineCap: 'round',
+        }).addTo(map);
+
         routeLineRef.current = L.polyline([[pickup.lat, pickup.lng], [dropoff.lat, dropoff.lng]], {
-          color: '#166B3A', weight: 4, opacity: 0.4, dashArray: '2 10', lineCap: 'round',
+          color: '#00F0FF',
+          weight: 4,
+          opacity: 0.85,
+          dashArray: '3 8',
+          lineCap: 'round',
         }).addTo(map);
 
         fetchRoadRoute(pickup, dropoff).then(route => {
           if (!mounted || !mapRef.current || !route) return;
           routePathRef.current = route.path;
+          routeGlowRef.current?.remove();
           routeLineRef.current?.remove();
-          // Remaining segment: dashed, lighter — ahead of the vehicle.
-          routeLineRef.current = L.polyline(route.path, {
-            color: '#166B3A', weight: 5, opacity: 0.35, dashArray: '2 10', lineCap: 'round', lineJoin: 'round',
+
+          // Outer glowing aura
+          routeGlowRef.current = L.polyline(route.path, {
+            color: '#00E5FF',
+            weight: 10,
+            opacity: 0.35,
+            lineCap: 'round',
+            lineJoin: 'round',
           }).addTo(map);
-          onRouteInfo?.({ durationSeconds: route.durationSeconds });
+
+          // Inner vibrant neon cyan road core
+          routeLineRef.current = L.polyline(route.path, {
+            color: '#00F0FF',
+            weight: 4.5,
+            opacity: 0.95,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }).addTo(map);
+
+          if (route.durationSeconds) {
+            const mins = Math.max(1, Math.round(route.durationSeconds / 60));
+            setEtaMinutes(mins);
+            onRouteInfo?.({ durationSeconds: route.durationSeconds });
+          }
         });
       }
-      if (bounds.length > 0) map.fitBounds(bounds, { padding: [56, 56] });
 
-      // Re-measure against the real container size once layout has
-      // actually settled — Leaflet sizes itself off the container at the
-      // instant setView()/fitBounds() runs, which can be a stale/zero size
-      // right after mount and never self-corrects without this nudge.
+      if (bounds.length > 0) {
+        map.fitBounds(bounds, { padding: [70, 70] });
+      }
+
       requestAnimationFrame(() => map.invalidateSize());
       setTimeout(() => map.invalidateSize(), 300);
-
       setReady(true);
     });
 
@@ -220,18 +375,14 @@ export function DeliveryTrackingMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Poll the other party's live position and smoothly animate their marker
-  // to it, instead of snapping — a teleporting dot is the #1 tell of an
-  // unpolished tracking map. Also re-draws the traveled/remaining route
-  // split each time, and keeps the camera on the vehicle unless the user
-  // has manually panned away.
+  // Poll driver position & animate smoothly along road
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
 
     async function poll() {
       try {
-        const res  = await fetch(`/api/deliveries/${deliveryId}/location`);
+        const res = await fetch(`/api/deliveries/${deliveryId}/location`);
         const json = await res.json();
         if (cancelled || !mapRef.current) return;
         const loc = json.location;
@@ -243,155 +394,708 @@ export function DeliveryTrackingMap({
         const prevPos = lastPosRef.current;
 
         if (prevPos && (prevPos[0] !== nextPos[0] || prevPos[1] !== nextPos[1])) {
-          headingRef.current = bearingDeg(prevPos, nextPos);
+          const bearing = bearingDeg(prevPos, nextPos);
+          headingRef.current = bearing;
+          setCompassHeading(Math.round(bearing));
         }
 
+        // Calculate distance remaining
+        const target = dropoff || pickup;
+        if (target) {
+          const distKm = haversineKm(nextPos[0], nextPos[1], target.lat, target.lng);
+          setDistanceRemainingKm(Math.max(0.5, distKm));
+          const mins = Math.max(1, Math.round((distKm / 38) * 60));
+          setEtaMinutes(mins);
+          if (distKm < 1) {
+            setNextManeuverDistance(`${Math.round(distKm * 1000)} m to destination`);
+          } else {
+            setNextManeuverDistance(`${distKm.toFixed(1)} km to ↰`);
+          }
+        }
+
+        // Create or animate 3D car marker
         if (!liveMarkerRef.current) {
-          const icon = L.divIcon({ className: '', iconSize: [40, 40], iconAnchor: [20, 20], html: vehicleIconHtml(headingRef.current) });
-          liveMarkerRef.current = L.marker(nextPos, { icon, zIndexOffset: 1000 }).addTo(mapRef.current).bindPopup(otherPartyLabel);
+          const icon = L.divIcon({
+            className: '',
+            iconSize: [56, 56],
+            iconAnchor: [28, 28],
+            html: carMarkerHtml(headingRef.current),
+          });
+          liveMarkerRef.current = L.marker(nextPos, { icon, zIndexOffset: 1200 }).addTo(mapRef.current).bindPopup(otherPartyLabel);
           lastPosRef.current = nextPos;
         } else if (prevPos) {
-          // Interpolate over ~1s rather than snapping straight to the new
-          // point — smooth movement is what reads as "really moving" as
-          // opposed to a static image with a dot on it.
           if (animRef.current) cancelAnimationFrame(animRef.current);
           const marker = liveMarkerRef.current;
-          const icon = L.divIcon({ className: '', iconSize: [40, 40], iconAnchor: [20, 20], html: vehicleIconHtml(headingRef.current) });
+          const icon = L.divIcon({
+            className: '',
+            iconSize: [56, 56],
+            iconAnchor: [28, 28],
+            html: carMarkerHtml(headingRef.current),
+          });
           marker.setIcon(icon);
 
           const start = performance.now();
-          const DURATION = 900;
+          const DURATION = 950;
           const step = (now: number) => {
             const t = Math.min(1, (now - start) / DURATION);
-            const eased = 1 - (1 - t) * (1 - t); // ease-out
+            const eased = 1 - (1 - t) * (1 - t);
             const lat = prevPos[0] + (nextPos[0] - prevPos[0]) * eased;
             const lng = prevPos[1] + (nextPos[1] - prevPos[1]) * eased;
             marker.setLatLng([lat, lng]);
-            if (!userPannedRef.current && mapRef.current) mapRef.current.panTo([lat, lng], { animate: false });
-            if (t < 1) { animRef.current = requestAnimationFrame(step); }
-            else { lastPosRef.current = nextPos; }
+            if (!userPannedRef.current && mapRef.current) {
+              mapRef.current.panTo([lat, lng], { animate: false });
+            }
+            if (t < 1) {
+              animRef.current = requestAnimationFrame(step);
+            } else {
+              lastPosRef.current = nextPos;
+            }
           };
           animRef.current = requestAnimationFrame(step);
         }
 
-        // Split the route at the vehicle's nearest point: solid/opaque
-        // behind it (traveled), dashed/lighter ahead (remaining) — set up
-        // when the road route first resolves, above.
+        // Split route into Traveled (slate road) & Ahead (glowing cyan)
         const path = routePathRef.current;
         if (path && mapRef.current) {
           const idx = nearestPathIndex(path, nextPos);
           const traveled = path.slice(0, idx + 1);
           if (traveled.length >= 2) {
-            if (traveledLineRef.current) traveledLineRef.current.setLatLngs(traveled);
-            else traveledLineRef.current = L.polyline(traveled, { color: '#166B3A', weight: 5, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }).addTo(mapRef.current);
+            if (traveledLineRef.current) {
+              traveledLineRef.current.setLatLngs(traveled);
+            } else {
+              traveledLineRef.current = L.polyline(traveled, {
+                color: '#334155',
+                weight: 5,
+                opacity: 0.8,
+                lineCap: 'round',
+                lineJoin: 'round',
+              }).addTo(mapRef.current);
+            }
           }
         }
-      } catch { /* transient — next poll will retry */ }
+      } catch {
+        /* Next poll retry */
+      }
     }
 
     poll();
     const interval = setInterval(poll, pollMs);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [ready, deliveryId, otherPartyLabel, pollMs, onPosition]);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [ready, deliveryId, otherPartyLabel, pollMs, onPosition, dropoff, pickup]);
 
-  const switchLayer = async (nextType: 'streets' | 'satellite') => {
-    if (nextType === layerType || !mapRef.current) return;
-    const L = await import('leaflet');
-    if (tileLayerRef.current) {
-      mapRef.current.removeLayer(tileLayerRef.current);
-    }
-    const newLayer = nextType === 'satellite'
-      ? L.tileLayer(GOOGLE_HYBRID_TILE_URL, HYBRID_TILE_OPTIONS)
-      : L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS);
-    newLayer.addTo(mapRef.current);
-    tileLayerRef.current = newLayer;
-    setLayerType(nextType);
-  };
+  // Compute calculated arrival time
+  const arrivalTimeStr = (() => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() + etaMinutes);
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  })();
+
+  const activeDriverNote = driverNotes || 'Hectic night but we roll 😂 GM';
 
   return (
-    <div style={{ position: 'relative', height: '100%', width: '100%', borderRadius: 16, overflow: 'hidden' }}>
+    <div
+      style={{
+        position: isFullscreen ? 'fixed' : 'relative',
+        inset: isFullscreen ? 0 : undefined,
+        zIndex: isFullscreen ? 99999 : 1,
+        height: isFullscreen ? '100vh' : '100%',
+        width: isFullscreen ? '100vw' : '100%',
+        borderRadius: isFullscreen ? 0 : 20,
+        overflow: 'hidden',
+        background: '#070D14',
+        boxShadow: isFullscreen ? 'none' : '0 12px 40px rgba(0,0,0,0.5)',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      }}
+    >
       <link rel="stylesheet" href="/leaflet/leaflet.css" />
       <style>{`
-        .cropify-live-pulse { animation: cropify-pulse 1.8s ease-out infinite; }
+        .cropify-pulse { animation: cropify-pulse 2s ease-out infinite; }
         @keyframes cropify-pulse {
-          0%   { transform: scale(0.6); opacity: 0.55; }
-          70%  { transform: scale(1.8); opacity: 0; }
-          100% { transform: scale(1.8); opacity: 0; }
+          0% { transform: scale(0.6); opacity: 0.8; }
+          70% { transform: scale(2.2); opacity: 0; }
+          100% { transform: scale(2.2); opacity: 0; }
         }
-        .leaflet-control-zoom { border: none !important; box-shadow: 0 2px 10px rgba(0,0,0,0.18) !important; border-radius: 10px !important; overflow: hidden; }
-        .leaflet-control-zoom a { width: 34px !important; height: 34px !important; line-height: 34px !important; background: #fff !important; color: #123825 !important; font-weight: 700 !important; }
-        .leaflet-control-zoom a:hover { background: #f3f4f6 !important; }
+        @keyframes float-emoji {
+          0% { transform: translateY(0) scale(0.8); opacity: 1; }
+          80% { transform: translateY(-70px) scale(1.3); opacity: 0.9; }
+          100% { transform: translateY(-90px) scale(1.1); opacity: 0; }
+        }
+        .cropify-turn-card {
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+        }
       `}</style>
 
-      <div ref={containerRef} style={{ height: '100%', width: '100%' }} />
+      {/* Map Container */}
+      <div
+        ref={containerRef}
+        style={{
+          height: '100%',
+          width: '100%',
+          filter: layerType === 'navigation' ? 'contrast(1.05) saturate(1.1)' : 'none',
+        }}
+      />
 
-      {/* Map / Satellite Layer Switcher */}
-      {ready && (
-        <div style={{
-          position: 'absolute', top: 12, right: 12, zIndex: 500,
-          background: '#ffffff', borderRadius: 8,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.18)', display: 'flex',
-          overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)',
-        }}>
-          <button
-            type="button"
-            onClick={() => switchLayer('streets')}
+      {/* ─────────────────────────────────────────────────────────────
+          TOP TURN-BY-TURN HUD MANEUVER CARD (Emerald Dark Banner)
+          Matches user image: "Stay on Mbarara - Masaka Rd", "17 km to ↰", Google Mic
+         ───────────────────────────────────────────────────────────── */}
+      <div
+        className="cropify-turn-card"
+        style={{
+          position: 'absolute',
+          top: 14,
+          left: 14,
+          right: 14,
+          zIndex: 800,
+          background: 'linear-gradient(135deg, #005C4B 0%, #004D40 100%)',
+          borderRadius: 20,
+          padding: '14px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          color: '#FFFFFF',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0, paddingRight: 10 }}>
+          <h2
             style={{
-              padding: '5px 11px', fontSize: 11.5, fontWeight: 700,
-              border: 'none', cursor: 'pointer',
-              background: layerType === 'streets' ? '#166B3A' : 'transparent',
-              color: layerType === 'streets' ? '#ffffff' : '#182018',
+              fontSize: 18,
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+              margin: 0,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              color: '#FFFFFF',
             }}
           >
-            Map
+            {roadTitle}
+          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 14.5, fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)' }}>
+              {nextManeuverDistance}
+            </span>
+          </div>
+        </div>
+
+        {/* Action icons: Voice Guidance / Assistant & Fullscreen */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={() => speakInstruction(`${roadTitle}. In ${nextManeuverDistance.replace('to ↰', 'turn ahead')}`)}
+            title="Spoken Maneuver Guidance"
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: '50%',
+              background: '#FFFFFF',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              transition: 'transform 0.15s ease',
+            }}
+          >
+            {/* Google-style Multi-Color Mic Icon */}
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" fill="#4285F4"/>
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" fill="#34A853"/>
+              <path d="M12 14c.77 0 1.48-.3 2-.8l-2-2-2 2c.52.5 1.23.8 2 .8z" fill="#EA4335"/>
+              <path d="M12 16.5c1.4 0 2.67-.57 3.58-1.48l-1.42-1.42c-.55.55-1.32.9-2.16.9s-1.61-.35-2.16-.9L8.42 15.02C9.33 15.93 10.6 16.5 12 16.5z" fill="#FBBC05"/>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsFullscreen(prev => !prev)}
+            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen GPS'}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+          </button>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          RIGHT FLOATING HUD CONTROLS
+          Compass Needle, Search, Sound Toggle, Layer Mode
+         ───────────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 96,
+          right: 14,
+          zIndex: 800,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+        }}
+      >
+        {/* Compass Needle */}
+        <button
+          type="button"
+          onClick={() => {
+            if (mapRef.current && lastPosRef.current) {
+              mapRef.current.setView(lastPosRef.current, mapRef.current.getZoom(), { animate: true });
+            }
+          }}
+          title="Align Compass North"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            background: 'rgba(15, 23, 42, 0.88)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+        >
+          {/* Compass Dial with Red North needle */}
+          <div
+            style={{
+              width: 22,
+              height: 22,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transform: `rotate(${-compassHeading}deg)`,
+              transition: 'transform 0.3s ease-out',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <polygon points="12,2 16,12 12,9 8,12" fill="#EF4444" />
+              <polygon points="12,22 16,12 12,15 8,12" fill="#F8FAFC" />
+            </svg>
+          </div>
+        </button>
+
+        {/* Search / Route Inspect FAB */}
+        <button
+          type="button"
+          onClick={() => setShowQuickSearch(prev => !prev)}
+          title="Inspect Route Stops"
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            background: 'rgba(15, 23, 42, 0.88)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#FFFFFF',
+          }}
+        >
+          <Search size={19} />
+        </button>
+
+        {/* Audio Mute / Unmute FAB */}
+        <button
+          type="button"
+          onClick={() => {
+            const next = !soundEnabled;
+            setSoundEnabled(next);
+            if (next) speakInstruction('Voice guidance active');
+          }}
+          title={soundEnabled ? 'Mute Voice' : 'Unmute Voice'}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: '50%',
+            background: 'rgba(15, 23, 42, 0.88)',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: soundEnabled ? '#00E5FF' : '#94A3B8',
+          }}
+        >
+          {soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}
+        </button>
+
+        {/* Layer Mode Pill (Dark Nav / Satellite) */}
+        <div
+          style={{
+            background: 'rgba(15, 23, 42, 0.88)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: 22,
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => switchLayer('navigation')}
+            style={{
+              padding: '8px',
+              fontSize: 10,
+              fontWeight: 800,
+              color: layerType === 'navigation' ? '#00E5FF' : '#94A3B8',
+              background: layerType === 'navigation' ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+            }}
+          >
+            Night
           </button>
           <button
             type="button"
             onClick={() => switchLayer('satellite')}
             style={{
-              padding: '5px 11px', fontSize: 11.5, fontWeight: 700,
-              border: 'none', cursor: 'pointer',
-              background: layerType === 'satellite' ? '#166B3A' : 'transparent',
-              color: layerType === 'satellite' ? '#ffffff' : '#182018',
+              padding: '8px',
+              fontSize: 10,
+              fontWeight: 800,
+              color: layerType === 'satellite' ? '#00E5FF' : '#94A3B8',
+              background: layerType === 'satellite' ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              textTransform: 'uppercase',
             }}
           >
-            Satellite
+            Sat
           </button>
         </div>
-      )}
+      </div>
 
-      {/* Skeleton/shimmer loading state — a broken map and a loading map
-          previously looked identical (both a flat gray box), which is part
-          of why a real rendering bug went unnoticed for a while. */}
-      {!ready && (
-        <div style={{
-          position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #eef1ee 25%, #e4e8e4 37%, #eef1ee 63%)',
-          backgroundSize: '400% 100%', animation: 'cropify-shimmer 1.4s ease infinite',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <style>{`@keyframes cropify-shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }`}</style>
-          <p style={{ fontSize: 12, color: '#9ca3af', fontWeight: 600 }}>Loading map…</p>
+      {/* ─────────────────────────────────────────────────────────────
+          QUICK SEARCH / WAYPOINT INSPECTOR DRAWER
+         ───────────────────────────────────────────────────────────── */}
+      {showQuickSearch && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 96,
+            right: 68,
+            zIndex: 850,
+            background: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(14px)',
+            borderRadius: 16,
+            padding: '12px 14px',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
+            width: 240,
+            color: '#FFFFFF',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#00E5FF' }}>WAYPOINTS & CARGO</span>
+            <button
+              type="button"
+              onClick={() => setShowQuickSearch(false)}
+              style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer' }}
+            >
+              <X size={15} />
+            </button>
+          </div>
+          <div style={{ fontSize: 11.5, color: '#E2E8F0', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div>📍 <b>From:</b> {pickupDistrict}</div>
+            <div>🏁 <b>To:</b> {dropoffDistrict}</div>
+            {cargoType && <div>📦 <b>Cargo:</b> {cargoKg ? `${cargoKg}kg · ` : ''}{cargoType}</div>}
+            <div>⏱ <b>Speed Avg:</b> ~38 km/h</div>
+          </div>
         </div>
       )}
 
-      {/* Recenter FAB — only once the user has manually panned away from
-          the tracked vehicle, Google Maps' own convention rather than
-          fighting their pan with a forced re-center every poll. */}
+      {/* ─────────────────────────────────────────────────────────────
+          DRIVER LIVE STATUS BUBBLE
+          "Hectic night but we roll 😂 GM"
+         ───────────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 128,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 800,
+          maxWidth: '85%',
+          pointerEvents: 'auto',
+        }}
+      >
+        <div
+          style={{
+            background: 'rgba(15, 23, 42, 0.85)',
+            backdropFilter: 'blur(12px)',
+            borderRadius: 16,
+            padding: '8px 16px',
+            color: '#FFFFFF',
+            fontSize: 13,
+            fontWeight: 700,
+            textAlign: 'center',
+            boxShadow: '0 6px 20px rgba(0,0,0,0.4)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#00E5FF', boxShadow: '0 0 6px #00E5FF' }} />
+          <span>{activeDriverNote}</span>
+        </div>
+      </div>
+
+      {/* Floating Animated Emojis */}
+      <div style={{ position: 'absolute', bottom: 120, right: 40, pointerEvents: 'none', zIndex: 950 }}>
+        {flyingEmojis.map(item => (
+          <div
+            key={item.id}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: item.x,
+              fontSize: 26,
+              animation: 'float-emoji 1.8s ease-out forwards',
+            }}
+          >
+            {item.char}
+          </div>
+        ))}
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          FLOATING "▲ Re-center" BUTTON (Bottom-Left)
+          Visible when user drags map away from the vehicle
+         ───────────────────────────────────────────────────────────── */}
       {ready && showRecenter && (
         <button
           type="button"
           onClick={recenter}
-          aria-label="Recenter on driver"
+          aria-label="Re-center on vehicle"
           style={{
-            position: 'absolute', bottom: 14, left: 14, zIndex: 500,
-            width: 40, height: 40, borderRadius: '50%', border: 'none', cursor: 'pointer',
-            background: '#fff', boxShadow: '0 2px 10px rgba(0,0,0,0.22)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            position: 'absolute',
+            bottom: 126,
+            left: 14,
+            zIndex: 800,
+            height: 38,
+            padding: '0 15px',
+            borderRadius: 999,
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            cursor: 'pointer',
+            background: 'rgba(15, 23, 42, 0.92)',
+            backdropFilter: 'blur(10px)',
+            color: '#FFFFFF',
+            fontSize: 12.5,
+            fontWeight: 800,
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
           }}
         >
-          <Locate size={18} style={{ color: '#0EA5E9' }} />
+          <span style={{ fontSize: 10, color: '#00E5FF' }}>▲</span> Re-center
         </button>
       )}
+
+      {/* ─────────────────────────────────────────────────────────────
+          QUICK CHAT & EMOJI REACTION BAR
+          "Reply" input + 😍 😂 ❤️
+         ───────────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 74,
+          left: 14,
+          right: 14,
+          zIndex: 800,
+          background: 'rgba(15, 23, 42, 0.9)',
+          backdropFilter: 'blur(14px)',
+          borderRadius: 999,
+          padding: '6px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Reply to driver…"
+          value={replyText}
+          onChange={e => setReplyText(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && replyText.trim()) {
+              triggerEmojiReaction('💬');
+              setReplyText('');
+            }
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            color: '#FFFFFF',
+            fontSize: 13,
+            fontWeight: 600,
+            flex: 1,
+            paddingRight: 10,
+          }}
+        />
+
+        {/* Quick Reaction Emoji Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            type="button"
+            onClick={() => triggerEmojiReaction('😍')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: 0 }}
+          >
+            😍
+          </button>
+          <button
+            type="button"
+            onClick={() => triggerEmojiReaction('😂')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: 0 }}
+          >
+            😂
+          </button>
+          <button
+            type="button"
+            onClick={() => triggerEmojiReaction('❤️')}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 18,
+              padding: 0,
+              color: '#EF4444',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <Heart size={19} fill="#EF4444" />
+          </button>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          BOTTOM ETA NAVIGATION CARD & ACTION CONTROLS
+          Gold ETA "20 min", "18 km · 1:02 AM", Back, Recent
+         ───────────────────────────────────────────────────────────── */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 800,
+          background: 'linear-gradient(180deg, rgba(7, 13, 20, 0.95) 0%, #05090F 100%)',
+          backdropFilter: 'blur(16px)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          padding: '10px 16px 14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        {/* Back Button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (isFullscreen) {
+              setIsFullscreen(false);
+            } else if (onClose) {
+              onClose();
+            }
+          }}
+          style={{
+            padding: '7px 18px',
+            borderRadius: 10,
+            background: '#FFFFFF',
+            color: '#0F172A',
+            border: 'none',
+            fontSize: 13,
+            fontWeight: 800,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
+          Back
+        </button>
+
+        {/* Central Bold Gold / Amber ETA Display */}
+        <div style={{ textAlign: 'center' }}>
+          <div
+            style={{
+              fontSize: 22,
+              fontWeight: 900,
+              color: '#FBBF24',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+              textShadow: '0 0 12px rgba(251, 191, 36, 0.35)',
+            }}
+          >
+            {etaMinutes} min
+          </div>
+          <div
+            style={{
+              fontSize: 11.5,
+              fontWeight: 700,
+              color: 'rgba(255, 255, 255, 0.75)',
+              marginTop: 2,
+            }}
+          >
+            {distanceRemainingKm.toFixed(0)} km · {arrivalTimeStr}
+          </div>
+        </div>
+
+        {/* Recent / Details Button */}
+        <button
+          type="button"
+          onClick={() => {
+            if (onToggleDetails) {
+              onToggleDetails();
+            } else if (driverPhone) {
+              window.location.href = `tel:${driverPhone}`;
+            } else {
+              setShowQuickSearch(prev => !prev);
+            }
+          }}
+          style={{
+            padding: '7px 18px',
+            borderRadius: 10,
+            background: '#FFFFFF',
+            color: '#0F172A',
+            border: 'none',
+            fontSize: 13,
+            fontWeight: 800,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}
+        >
+          Recent
+        </button>
+      </div>
     </div>
   );
 }

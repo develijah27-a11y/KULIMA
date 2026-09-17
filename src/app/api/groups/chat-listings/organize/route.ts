@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Enter a valid asking price per kg' }, { status: 400 });
   }
 
-  const { data: myProfile } = await supabase.from('profiles').select('full_name, location').eq('user_id', user.id).single();
+  const { data: myProfile } = await supabase.from('profiles').select('id, full_name, location').eq('user_id', user.id).single();
   if (!(myProfile as any)?.location) {
     return NextResponse.json({ error: 'Set your district in Business Profile before publishing a listing' }, { status: 400 });
   }
@@ -70,6 +70,7 @@ export async function POST(req: Request) {
   }
 
   const totalKg = pending.reduce((s: number, p: any) => s + Number(p.quantity_kg), 0);
+  const memberCount = new Set(pending.map((p: any) => p.sender_id)).size;
 
   const { data: listing, error: listingErr } = await (supabase.from as any)('group_listings').insert({
     admin_id:          user.id,
@@ -78,13 +79,31 @@ export async function POST(req: Request) {
     asking_price:      +askingPrice,
     district:          (myProfile as any).location,
     notes:             notes || null,
-    member_count:      new Set(pending.map((p: any) => p.sender_id)).size,
+    member_count:      memberCount,
     status:            'active',
   }).select().single();
 
   if (listingErr || !listing) {
     console.error('[/api/groups/chat-listings/organize POST]', listingErr);
     return NextResponse.json({ error: 'Failed to publish listing. Please try again.' }, { status: 500 });
+  }
+
+  // Also syndicate into main marketplace `listings` table so all Cropify buyers can discover and purchase the collective lot
+  if (myProfile?.id) {
+    try {
+      await (supabase.from as any)('listings').insert({
+        farmer_id:      myProfile.id,
+        crop_type:      cropType,
+        quantity_kg:    totalKg,
+        asking_price:   +askingPrice,
+        available_from: new Date().toISOString().split('T')[0],
+        district:       (myProfile as any).location,
+        status:         'active',
+        notes:          notes ? `[Group Collective Lot] ${notes}` : `[Group Collective Lot] Aggregated from ${memberCount} group members.`,
+      });
+    } catch (pubErr) {
+      console.warn('[/api/groups/chat-listings/organize POST] Marketplace syndication note:', pubErr);
+    }
   }
 
   const listingIds = pending.map((p: any) => p.id);

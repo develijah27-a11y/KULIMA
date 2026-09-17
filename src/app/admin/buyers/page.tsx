@@ -28,7 +28,7 @@ async function BuyersList() {
   const supabase = await createClient();
   const { data: buyers } = await (supabase.from as any)('profiles')
     .select('id, user_id, full_name, phone_number, location, created_at, verification_level, primary_crop')
-    .eq('role', 'buyer')
+    .or('role.eq.buyer,roles.cs.{"buyer"}')
     .order('created_at', { ascending: false });
 
   const rows = buyers ?? [];

@@ -562,5 +562,347 @@ REVOKE ALL ON FUNCTION debit_wallet(UUID, NUMERIC) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION debit_wallet(UUID, NUMERIC) TO service_role;
 
 -- ============================================================================
+-- 2026-09-12: Database Linter Security Hardening
+-- Remediates:
+-- 1. function_search_path_mutable on prune_system_logs
+-- 2. anon_security_definer_function_executable on 21 public functions
+-- 3. authenticated_security_definer_function_executable on 22 public functions
+-- ============================================================================
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
+  REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.prune_system_logs()
+RETURNS void LANGUAGE sql SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+  DELETE FROM system_logs WHERE created_at < NOW() - INTERVAL '30 days';
+$$;
+
+REVOKE ALL ON FUNCTION public.prune_system_logs() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.prune_system_logs() TO service_role;
+
+CREATE OR REPLACE FUNCTION public.prevent_self_admin_promotion()
+RETURNS TRIGGER LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public, pg_catalog
+AS $$
+BEGIN
+  IF NEW.role = 'admin' AND OLD.role IS DISTINCT FROM 'admin' AND auth.role() <> 'service_role' THEN
+    RAISE EXCEPTION 'Cannot self-assign admin role';
+  END IF;
+
+  IF NEW.roles @> ARRAY['admin']::text[]
+     AND NOT (COALESCE(OLD.roles, ARRAY[]::text[]) @> ARRAY['admin']::text[])
+     AND auth.role() <> 'service_role' THEN
+    RAISE EXCEPTION 'Cannot self-assign admin role';
+  END IF;
+
+  IF auth.role() <> 'service_role' THEN
+    NEW.verification_level        := OLD.verification_level;
+    NEW.role_verification_levels  := OLD.role_verification_levels;
+    NEW.trust_score               := OLD.trust_score;
+    NEW.reliability_score         := OLD.reliability_score;
+    NEW.completed_deals           := OLD.completed_deals;
+    NEW.dispute_count             := OLD.dispute_count;
+    NEW.subscription_tier         := OLD.subscription_tier;
+    NEW.role_subscription_tiers   := OLD.role_subscription_tiers;
+    NEW.phone_verified            := OLD.phone_verified;
+    NEW.is_active                 := OLD.is_active;
+  END IF;
+
+  RETURN NEW;
+END; $$;
+
+REVOKE ALL ON FUNCTION public.prevent_self_admin_promotion() FROM PUBLIC, anon;
+
+CREATE OR REPLACE FUNCTION public.prevent_order_field_tampering()
+RETURNS trigger LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public, pg_catalog
+AS $function$
+BEGIN
+  IF auth.role() <> 'service_role' THEN
+    NEW.offer_id             := OLD.offer_id;
+    NEW.listing_id           := OLD.listing_id;
+    NEW.buyer_id             := OLD.buyer_id;
+    NEW.seller_id            := OLD.seller_id;
+    NEW.quantity_kg          := OLD.quantity_kg;
+    NEW.total_price          := OLD.total_price;
+    NEW.farmer_profile_id    := OLD.farmer_profile_id;
+    NEW.escrow_id            := OLD.escrow_id;
+    NEW.group_listing_id     := OLD.group_listing_id;
+    NEW.invoice_number       := OLD.invoice_number;
+    NEW.delivery_req_id      := OLD.delivery_req_id;
+    NEW.delivery_request_id  := OLD.delivery_request_id;
+    NEW.pickup_district      := OLD.pickup_district;
+    NEW.dropoff_district     := OLD.dropoff_district;
+    NEW.paid_at              := OLD.paid_at;
+
+    IF NEW.confirmed_at IS DISTINCT FROM OLD.confirmed_at THEN
+      NEW.confirmed_at := NOW();
+    END IF;
+    IF NEW.dispatched_at IS DISTINCT FROM OLD.dispatched_at THEN
+      NEW.dispatched_at := NOW();
+    END IF;
+    IF NEW.delivered_at IS DISTINCT FROM OLD.delivered_at THEN
+      NEW.delivered_at := NOW();
+    END IF;
+    IF NEW.cancelled_at IS DISTINCT FROM OLD.cancelled_at THEN
+      NEW.cancelled_at := NOW();
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END; $function$;
+
+REVOKE ALL ON FUNCTION public.prevent_order_field_tampering() FROM PUBLIC, anon;
+
+CREATE OR REPLACE FUNCTION public.transfer_between_wallets(
+  p_to_account_number TEXT,
+  p_amount NUMERIC,
+  p_note TEXT DEFAULT NULL,
+  p_from_user_id UUID DEFAULT NULL
+)
+RETURNS TABLE (
+  from_transaction_id UUID,
+  to_transaction_id UUID,
+  new_balance NUMERIC
+)
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_catalog
+AS $$
+DECLARE
+  v_from_user_id  UUID := COALESCE(p_from_user_id, auth.uid());
+  v_from_wallet   wallets%ROWTYPE;
+  v_to_wallet     wallets%ROWTYPE;
+  v_from_txn_id   UUID;
+  v_to_txn_id     UUID;
+  v_from_name     TEXT;
+  v_to_name       TEXT;
+BEGIN
+  IF v_from_user_id IS NULL THEN
+    RAISE EXCEPTION 'Sender user ID required';
+  END IF;
+
+  IF p_amount IS NULL OR p_amount <= 0 THEN
+    RAISE EXCEPTION 'Transfer amount must be greater than zero';
+  END IF;
+
+  SELECT * INTO v_from_wallet FROM wallets WHERE user_id = v_from_user_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Sender wallet not found';
+  END IF;
+
+  SELECT * INTO v_to_wallet FROM wallets WHERE account_number = UPPER(TRIM(p_to_account_number)) FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'No wallet found for account number %', p_to_account_number;
+  END IF;
+
+  IF v_from_wallet.id = v_to_wallet.id THEN
+    RAISE EXCEPTION 'Cannot transfer to your own account';
+  END IF;
+
+  IF v_from_wallet.balance < p_amount THEN
+    RAISE EXCEPTION 'Insufficient balance';
+  END IF;
+
+  UPDATE wallets SET balance = balance - p_amount, updated_at = NOW() WHERE id = v_from_wallet.id;
+  UPDATE wallets SET balance = balance + p_amount, updated_at = NOW() WHERE id = v_to_wallet.id;
+
+  SELECT full_name INTO v_from_name FROM profiles WHERE user_id = v_from_user_id;
+  SELECT full_name INTO v_to_name FROM profiles WHERE user_id = v_to_wallet.user_id;
+
+  INSERT INTO wallet_transactions (wallet_id, user_id, type, amount, status, reference, description, metadata)
+  VALUES (
+    v_from_wallet.id, v_from_user_id, 'transfer_out', p_amount, 'completed',
+    v_to_wallet.account_number,
+    COALESCE(p_note, 'Transfer to ' || COALESCE(v_to_name, v_to_wallet.account_number)),
+    jsonb_build_object('counterparty_account_number', v_to_wallet.account_number, 'counterparty_name', v_to_name, 'note', p_note)
+  )
+  RETURNING id INTO v_from_txn_id;
+
+  INSERT INTO wallet_transactions (wallet_id, user_id, type, amount, status, reference, description, metadata)
+  VALUES (
+    v_to_wallet.id, v_to_wallet.user_id, 'transfer_in', p_amount, 'completed',
+    v_from_wallet.account_number,
+    COALESCE(p_note, 'Transfer from ' || COALESCE(v_from_name, v_from_wallet.account_number)),
+    jsonb_build_object('counterparty_account_number', v_from_wallet.account_number, 'counterparty_name', v_from_name, 'note', p_note)
+  )
+  RETURNING id INTO v_to_txn_id;
+
+  RETURN QUERY SELECT v_from_txn_id, v_to_txn_id, v_from_wallet.balance - p_amount;
+END; $$;
+
+REVOKE ALL ON FUNCTION public.transfer_between_wallets(TEXT, NUMERIC, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.transfer_between_wallets(TEXT, NUMERIC, TEXT, UUID) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.transfer_between_wallets(TEXT, NUMERIC, TEXT, UUID) TO service_role;
+
+-- Revoke anon and authenticated access on all sensitive RPCs
+ALTER FUNCTION public.check_rate_limit(TEXT, INT, INT) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.check_rate_limit(TEXT, INT, INT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.check_rate_limit(TEXT, INT, INT) TO service_role;
+
+ALTER FUNCTION public.claim_consultation_payment(UUID, UUID, NUMERIC, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_consultation_payment(UUID, UUID, NUMERIC, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_consultation_payment(UUID, UUID, NUMERIC, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.claim_delivery_payment(UUID, UUID, UUID, NUMERIC, NUMERIC, NUMERIC, UUID) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_delivery_payment(UUID, UUID, UUID, NUMERIC, NUMERIC, NUMERIC, UUID) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_delivery_payment(UUID, UUID, UUID, NUMERIC, NUMERIC, NUMERIC, UUID) TO service_role;
+
+ALTER FUNCTION public.claim_deposit(UUID, UUID, NUMERIC, TEXT, TEXT, JSONB) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_deposit(UUID, UUID, NUMERIC, TEXT, TEXT, JSONB) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_deposit(UUID, UUID, NUMERIC, TEXT, TEXT, JSONB) TO service_role;
+
+ALTER FUNCTION public.claim_escrow_fund(UUID, UUID, UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_escrow_fund(UUID, UUID, UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_escrow_fund(UUID, UUID, UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.claim_escrow_fund_offer(UUID, UUID, UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_escrow_fund_offer(UUID, UUID, UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_escrow_fund_offer(UUID, UUID, UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.claim_escrow_fund_supplier_order(UUID, UUID, UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_escrow_fund_supplier_order(UUID, UUID, UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_escrow_fund_supplier_order(UUID, UUID, UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.claim_group_listing_stock(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_group_listing_stock(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_group_listing_stock(UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.claim_group_wallet_debit(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_group_wallet_debit(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_group_wallet_debit(UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.claim_listing_stock(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_listing_stock(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_listing_stock(UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.claim_product_stock(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_product_stock(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_product_stock(UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.claim_wallet_debit(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.claim_wallet_debit(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_wallet_debit(UUID, NUMERIC) TO service_role;
+
+CREATE OR REPLACE FUNCTION public.debit_wallet(p_wallet_id UUID, p_amount NUMERIC)
+RETURNS BOOLEAN
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
+BEGIN
+  IF p_amount IS NULL OR p_amount <= 0 THEN
+    RAISE EXCEPTION 'Amount must be greater than zero';
+  END IF;
+
+  UPDATE wallets SET balance = balance - p_amount, updated_at = NOW()
+  WHERE id = p_wallet_id AND balance >= p_amount;
+
+  RETURN FOUND;
+END; $$;
+
+REVOKE ALL ON FUNCTION public.debit_wallet(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.debit_wallet(UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.create_pos_sale(UUID, UUID, JSONB, TEXT, TEXT, TEXT, NUMERIC, UUID) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.create_pos_sale(UUID, UUID, JSONB, TEXT, TEXT, TEXT, NUMERIC, UUID) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.create_pos_sale(UUID, UUID, JSONB, TEXT, TEXT, TEXT, NUMERIC, UUID) TO service_role;
+
+ALTER FUNCTION public.credit_group_wallet(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.credit_group_wallet(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.credit_group_wallet(UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.credit_wallet(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.credit_wallet(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.credit_wallet(UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.receive_purchase_order(UUID) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.receive_purchase_order(UUID) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.receive_purchase_order(UUID) TO service_role;
+
+ALTER FUNCTION public.release_group_listing_stock(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.release_group_listing_stock(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.release_group_listing_stock(UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.release_listing_stock(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.release_listing_stock(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.release_listing_stock(UUID, NUMERIC) TO service_role;
+
+ALTER FUNCTION public.release_product_stock(UUID, NUMERIC) SET search_path = public, pg_catalog;
+REVOKE ALL ON FUNCTION public.release_product_stock(UUID, NUMERIC) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.release_product_stock(UUID, NUMERIC) TO service_role;
+
+-- ============================================================================
+-- 2026-09-12: Consolidate support_ticket_replies RLS policies
+-- Resolves multiple_permissive_policies on support_ticket_replies (12 findings)
+-- ============================================================================
+
+DROP POLICY IF EXISTS "admins_all_replies" ON public.support_ticket_replies;
+DROP POLICY IF EXISTS "users_own_ticket_replies_read" ON public.support_ticket_replies;
+DROP POLICY IF EXISTS "users_own_ticket_replies_insert" ON public.support_ticket_replies;
+DROP POLICY IF EXISTS "support_ticket_replies_select" ON public.support_ticket_replies;
+DROP POLICY IF EXISTS "support_ticket_replies_insert" ON public.support_ticket_replies;
+DROP POLICY IF EXISTS "support_ticket_replies_update" ON public.support_ticket_replies;
+DROP POLICY IF EXISTS "support_ticket_replies_delete" ON public.support_ticket_replies;
+
+CREATE POLICY "support_ticket_replies_select" ON public.support_ticket_replies
+  FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.user_id = (SELECT auth.uid()) AND profiles.role = 'admin'
+    )
+    OR
+    EXISTS (
+      SELECT 1 FROM public.support_tickets
+      WHERE support_tickets.id = support_ticket_replies.ticket_id
+        AND support_tickets.user_id = (SELECT auth.uid())
+    )
+  );
+
+CREATE POLICY "support_ticket_replies_insert" ON public.support_ticket_replies
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    sender_id = (SELECT auth.uid())
+    AND (
+      EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE profiles.user_id = (SELECT auth.uid()) AND profiles.role = 'admin'
+      )
+      OR
+      EXISTS (
+        SELECT 1 FROM public.support_tickets
+        WHERE support_tickets.id = support_ticket_replies.ticket_id
+          AND support_tickets.user_id = (SELECT auth.uid())
+      )
+    )
+  );
+
+CREATE POLICY "support_ticket_replies_update" ON public.support_ticket_replies
+  FOR UPDATE TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.user_id = (SELECT auth.uid()) AND profiles.role = 'admin'
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.user_id = (SELECT auth.uid()) AND profiles.role = 'admin'
+    )
+  );
+
+CREATE POLICY "support_ticket_replies_delete" ON public.support_ticket_replies
+  FOR DELETE TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.user_id = (SELECT auth.uid()) AND profiles.role = 'admin'
+    )
+  );
+
+-- ============================================================================
 -- Done. All pending migrations applied.
 -- ============================================================================
+

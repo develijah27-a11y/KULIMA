@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getPendingCount, flushQueue } from '@/lib/db';
+import { getPendingCount, flushQueue, onQueueChanged } from '@/lib/db';
+import { getQueuedFarms, onFarmQueueChanged, syncQueuedFarms } from '@/lib/offline-farm-queue';
 
 export type NetworkStatus = 'online' | 'offline' | 'syncing';
 
@@ -11,17 +12,23 @@ export function useNetworkStatus() {
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
 
   const refreshCount = useCallback(async () => {
-    const count = await getPendingCount();
-    setPendingCount(count);
+    const queueCount = await getPendingCount();
+    const farmCount = getQueuedFarms().length;
+    setPendingCount(queueCount + farmCount);
   }, []);
 
   const sync = useCallback(async () => {
     setStatus('syncing');
-    const { synced } = await flushQueue();
+    const [farmRes, queueRes] = await Promise.allSettled([
+      syncQueuedFarms(),
+      flushQueue(),
+    ]);
+    const farmsSynced = farmRes.status === 'fulfilled' ? farmRes.value.synced : 0;
+    const recordsSynced = queueRes.status === 'fulfilled' ? queueRes.value.synced : 0;
     await refreshCount();
     setLastSynced(new Date());
     setStatus('online');
-    return synced;
+    return farmsSynced + recordsSynced;
   }, [refreshCount]);
 
   useEffect(() => {
@@ -40,9 +47,14 @@ export function useNetworkStatus() {
     window.addEventListener('online', goOnline);
     window.addEventListener('offline', goOffline);
 
+    const unsubQueue = onQueueChanged(refreshCount);
+    const unsubFarms = onFarmQueueChanged(refreshCount);
+
     return () => {
       window.removeEventListener('online', goOnline);
       window.removeEventListener('offline', goOffline);
+      unsubQueue();
+      unsubFarms();
     };
   }, [sync, refreshCount]);
 

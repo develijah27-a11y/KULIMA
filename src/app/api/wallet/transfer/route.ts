@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { rateLimit } from '@/lib/rate-limit';
 import { verifyPin, isValidPinFormat } from '@/lib/wallet-pin';
 import { logSystemEvent } from '@/lib/system-log';
@@ -44,7 +45,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Incorrect PIN', code: 'PIN_INCORRECT' }, { status: 403 });
   }
 
-  const { data, error } = await (supabase.rpc as any)('transfer_between_wallets', {
+  const admin = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  const { data, error } = await (admin.rpc as any)('transfer_between_wallets', {
+    p_from_user_id: user.id,
     p_to_account_number: accountNumber.trim(),
     p_amount: amount,
     p_note: note ?? null,

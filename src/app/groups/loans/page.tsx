@@ -9,7 +9,10 @@ export default async function GroupLoansPage() {
 
   const { data: myProfile } = await supabase.from('profiles').select('id').eq('user_id', user.id).single();
   const { data: group } = myProfile
-    ? await (supabase.from as any)('farmer_groups').select('id, name, wallet_balance').eq('leader_id', myProfile.id).maybeSingle()
+    ? await (supabase.from as any)('farmer_groups')
+        .select('id, name, wallet_balance')
+        .or(`leader_id.eq.${myProfile.id},created_by.eq.${user.id}`)
+        .maybeSingle()
     : { data: null };
 
   return <LoansClient groupId={group?.id ?? null} groupWalletBalance={Number(group?.wallet_balance ?? 0)} />;

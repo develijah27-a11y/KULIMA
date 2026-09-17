@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   MessageCircle, Search, ChevronRight, Clock,
   CheckCircle2, AlertCircle, XCircle, RefreshCw, Send,
-  User, Shield, X,
+  User, Shield, X, Phone, Mail, ExternalLink, Check, Copy, Sparkles,
 } from 'lucide-react';
 
 type TicketStatus = 'open' | 'in_progress' | 'pending_user' | 'resolved' | 'closed';
@@ -31,10 +31,41 @@ interface Reply {
   created_at: string;
 }
 
+interface UserProfile {
+  user_id: string;
+  full_name: string | null;
+  phone_number: string | null;
+  location: string | null;
+  role: string | null;
+}
+
 interface TicketDetail extends Ticket {
   description: string;
   screenshot_url?: string;
 }
+
+const CANNED_TEMPLATES = [
+  {
+    label: 'Issue Resolved',
+    text: 'Hello, we have investigated and resolved this issue on your account. Please check and let us know if everything is working smoothly.',
+    nextStatus: 'resolved',
+  },
+  {
+    label: 'Request Details',
+    text: 'Thank you for reaching out. Could you please share more details, transaction reference, or a screenshot so we can assist you quickly?',
+    nextStatus: 'pending_user',
+  },
+  {
+    label: 'Under Investigation',
+    text: 'Our team is actively investigating this matter with our operations and engineering team. We will provide an update shortly.',
+    nextStatus: 'in_progress',
+  },
+  {
+    label: 'Payment Reconciled',
+    text: 'We have reconciled your payment with the mobile money network. Your wallet balance has been credited accordingly.',
+    nextStatus: 'resolved',
+  },
+];
 
 const CATEGORIES = ['payments','marketplace','logistics','kyc','technical','account','other'];
 const CAT_LABELS: Record<string, string> = {
@@ -81,20 +112,24 @@ function timeAgo(iso: string) {
 // ─── Ticket Detail Panel ──────────────────────────────────────────────────────
 function TicketPanel({ ticketId, onClose, onUpdated }: { ticketId: string; onClose: () => void; onUpdated: () => void }) {
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [replyText, setReplyText] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
+  const [copiedPhone, setCopiedPhone] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await fetch(`/api/support/${ticketId}`);
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
+      if (!res.ok) throw new Error(json.error ?? 'Failed to load ticket');
       setTicket(json.ticket);
+      setUserProfile(json.userProfile ?? null);
       setReplies(json.replies ?? []);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load');
@@ -106,26 +141,46 @@ function TicketPanel({ ticketId, onClose, onUpdated }: { ticketId: string; onClo
   async function updateTicket(patch: Partial<{ status: string; priority: string }>) {
     setUpdating(true);
     try {
-      await fetch('/api/admin/support', {
+      const res = await fetch('/api/admin/support', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticketId, ...patch }),
       });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error ?? 'Failed to update ticket');
+      }
       await load();
       onUpdated();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to update ticket');
     } finally { setUpdating(false); }
   }
 
-  async function sendReply() {
-    if (!replyText.trim() || sending) return;
+  async function sendReply(overrideText?: string, nextStatus?: string) {
+    const textToSend = (overrideText ?? replyText).trim();
+    if (!textToSend || sending) return;
     setSending(true);
+    setError('');
     try {
       const res = await fetch(`/api/admin/support/${ticketId}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: replyText.trim() }),
+        body: JSON.stringify({ message: textToSend }),
       });
-      if (!res.ok) throw new Error((await res.json()).error);
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error ?? 'Failed to send reply');
+      }
+
+      if (nextStatus && nextStatus !== ticket?.status) {
+        await fetch('/api/admin/support', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticketId, status: nextStatus }),
+        });
+      }
+
       setReplyText('');
       await load();
       onUpdated();
@@ -134,98 +189,255 @@ function TicketPanel({ ticketId, onClose, onUpdated }: { ticketId: string; onClo
     } finally { setSending(false); }
   }
 
+  function handleCopyPhone(phone: string) {
+    navigator.clipboard.writeText(phone);
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2000);
+  }
+
   const C = { text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', card: 'var(--d-card)', shadow: 'var(--d-shadow-card)' };
 
   if (loading) return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}>
       <div style={{ background: C.card, borderRadius: 16, padding: 32, width: '100%', maxWidth: 640, maxHeight: '90vh', overflow: 'auto', boxShadow: 'var(--shadow-modal)' }}>
-        {[1,2,3].map(i => <div key={i} className="dash-skeleton" style={{ height: 40, borderRadius: 10, marginBottom: 12 }} />)}
+        {[1,2,3,4].map(i => <div key={i} className="dash-skeleton" style={{ height: 40, borderRadius: 10, marginBottom: 12 }} />)}
       </div>
     </div>
   );
 
   if (!ticket) return null;
 
-  const st = STATUS_CFG[ticket.status];
-  const pt = PRIORITY_CFG[ticket.priority];
+  const st = STATUS_CFG[ticket.status] ?? STATUS_CFG.open;
+  const pt = PRIORITY_CFG[ticket.priority] ?? PRIORITY_CFG.medium;
   const role = ROLE_CFG[ticket.user_role] ?? ROLE_CFG.farmer;
+  const phone = userProfile?.phone_number ?? '';
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  const waUrl = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hello ${ticket.user_name}, this is Cropify Support regarding ticket #${ticket.id.slice(0,8)}: "${ticket.subject}".`)}` : null;
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-end', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
-      <div style={{ background: C.card, width: '100%', maxWidth: 640, height: '100vh', overflow: 'auto', boxShadow: '-8px 0 40px rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: C.card, width: '100%', maxWidth: 680, height: '100vh', overflow: 'auto', boxShadow: '-8px 0 40px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'flex-start', gap: 12, flexShrink: 0 }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'flex-start', gap: 12, flexShrink: 0, background: 'var(--color-surface-2)' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 14, fontWeight: 800, color: C.text, margin: '0 0 6px', letterSpacing: '-0.02em' }}>{ticket.subject}</p>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <p style={{ fontSize: 15, fontWeight: 800, color: C.text, margin: '0 0 6px', letterSpacing: '-0.02em' }}>{ticket.subject}</p>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: role.bg, color: role.color, textTransform: 'capitalize' }}>{ticket.user_name} · {ticket.user_role}</span>
               <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: st.bg, color: st.color, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{st.icon}{st.label}</span>
               <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 99, background: pt.bg, color: pt.color, textTransform: 'capitalize' }}>{ticket.priority}</span>
-              <span style={{ fontSize: 10, color: C.muted }}>{CAT_LABELS[ticket.category] ?? ticket.category}</span>
+              <span style={{ fontSize: 11, color: C.muted }}>{CAT_LABELS[ticket.category] ?? ticket.category}</span>
+              <span style={{ fontSize: 11, color: C.muted }}>· #{ticket.id.slice(0,8)}</span>
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex', minHeight: 'unset', minWidth: 'unset' }}><X size={18}/></button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex' }}><X size={20}/></button>
         </div>
 
-        {/* Admin controls */}
-        <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
-          <select defaultValue={ticket.status} onChange={e => updateTicket({ status: e.target.value })} disabled={updating} className="app-input" style={{ width: 'auto', fontSize: 12, padding: '6px 10px', minHeight: 'unset', cursor: 'pointer' }}>
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="pending_user">Pending User</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
-          </select>
-          <select defaultValue={ticket.priority} onChange={e => updateTicket({ priority: e.target.value })} disabled={updating} className="app-input" style={{ width: 'auto', fontSize: 12, padding: '6px 10px', minHeight: 'unset', cursor: 'pointer' }}>
-            <option value="low">Low priority</option>
-            <option value="medium">Medium priority</option>
-            <option value="high">High priority</option>
-            <option value="urgent">Urgent</option>
-          </select>
-          <span style={{ fontSize: 11, color: C.muted, alignSelf: 'center' }}>Opened {fmtDate(ticket.created_at)} · #{ticket.id.slice(0,8)}</span>
+        {/* User Contact Card & Quick Outreach */}
+        <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, background: 'var(--color-primary-bg)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 13, flexShrink: 0 }}>
+              <User size={16} />
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 800, color: C.text, margin: 0 }}>
+                {userProfile?.full_name ?? ticket.user_name}
+                {userProfile?.location && <span style={{ fontSize: 11, fontWeight: 500, color: C.muted, marginLeft: 6 }}>({userProfile.location})</span>}
+              </p>
+              <p style={{ fontSize: 11, color: C.muted, margin: '1px 0 0' }}>
+                {phone ? phone : 'No phone recorded'}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {phone && (
+              <>
+                {waUrl && (
+                  <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 8, background: '#25D366', color: '#fff', fontSize: 11, fontWeight: 700, textDecoration: 'none' }}>
+                    <ExternalLink size={11}/> WhatsApp
+                  </a>
+                )}
+                <a href={`tel:${phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 8, background: 'var(--color-surface-2)', border: `1px solid ${C.border}`, color: C.text, fontSize: 11, fontWeight: 700, textDecoration: 'none' }}>
+                  <Phone size={11}/> Call
+                </a>
+                <button onClick={() => handleCopyPhone(phone)} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 8, background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, fontSize: 11, cursor: 'pointer' }}>
+                  {copiedPhone ? <Check size={11} style={{ color: 'var(--color-success)' }}/> : <Copy size={11}/>}
+                  {copiedPhone ? 'Copied' : 'Copy'}
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Resolution Buttons & Admin Controls */}
+        <div style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => updateTicket({ status: 'resolved' })}
+                disabled={updating || ticket.status === 'resolved'}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8,
+                  background: ticket.status === 'resolved' ? 'var(--color-success-bg)' : 'var(--color-success)',
+                  color: ticket.status === 'resolved' ? 'var(--color-success)' : '#fff',
+                  border: `1px solid var(--color-success)`, fontSize: 12, fontWeight: 700, cursor: updating ? 'not-allowed' : 'pointer',
+                }}>
+                <CheckCircle2 size={12} /> {ticket.status === 'resolved' ? 'Resolved ✓' : 'Mark Resolved'}
+              </button>
+              <button
+                onClick={() => updateTicket({ status: 'in_progress' })}
+                disabled={updating || ticket.status === 'in_progress'}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8,
+                  background: ticket.status === 'in_progress' ? 'var(--color-harvest-bg)' : 'var(--color-surface-2)',
+                  color: ticket.status === 'in_progress' ? 'var(--color-harvest)' : C.text,
+                  border: `1px solid ${C.border}`, fontSize: 12, fontWeight: 700, cursor: updating ? 'not-allowed' : 'pointer',
+                }}>
+                <RefreshCw size={12} /> In Progress
+              </button>
+              <button
+                onClick={() => updateTicket({ status: 'pending_user' })}
+                disabled={updating || ticket.status === 'pending_user'}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8,
+                  background: ticket.status === 'pending_user' ? 'var(--color-warning-bg)' : 'var(--color-surface-2)',
+                  color: ticket.status === 'pending_user' ? 'var(--color-warning)' : C.text,
+                  border: `1px solid ${C.border}`, fontSize: 12, fontWeight: 700, cursor: updating ? 'not-allowed' : 'pointer',
+                }}>
+                <AlertCircle size={12} /> Request Info
+              </button>
+              {ticket.status !== 'closed' ? (
+                <button
+                  onClick={() => updateTicket({ status: 'closed' })}
+                  disabled={updating}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8,
+                    background: 'transparent', color: C.muted, border: `1px solid ${C.border}`, fontSize: 12, fontWeight: 600, cursor: updating ? 'not-allowed' : 'pointer',
+                  }}>
+                  <XCircle size={12} /> Close
+                </button>
+              ) : (
+                <button
+                  onClick={() => updateTicket({ status: 'open' })}
+                  disabled={updating}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5, padding: '6px 12px', borderRadius: 8,
+                    background: 'var(--color-sky-bg)', color: 'var(--color-sky)', border: `1px solid var(--color-sky)`, fontSize: 12, fontWeight: 700, cursor: updating ? 'not-allowed' : 'pointer',
+                  }}>
+                  Reopen Ticket
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: C.muted }}>Priority:</span>
+              <select value={ticket.priority} onChange={e => updateTicket({ priority: e.target.value })} disabled={updating} className="app-input" style={{ width: 'auto', fontSize: 11, padding: '4px 8px', minHeight: 'unset', cursor: 'pointer' }}>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Description */}
-        <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 8px' }}>Description</p>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, flexShrink: 0 }}>
+          <p style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>Description</p>
           <p style={{ fontSize: 13, color: C.text, margin: 0, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{ticket.description}</p>
         </div>
 
-        {/* Replies */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        {/* Conversation Replies Feed */}
+        <div style={{ flex: 1, overflow: 'auto', padding: '12px 0' }}>
           {replies.length === 0 ? (
-            <div style={{ padding: '32px 20px', textAlign: 'center' }}>
-              <MessageCircle size={28} style={{ margin: '0 auto 8px', color: C.muted }} />
-              <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>No replies yet.</p>
+            <div style={{ padding: '36px 20px', textAlign: 'center' }}>
+              <MessageCircle size={32} style={{ margin: '0 auto 8px', color: C.muted }} />
+              <p style={{ fontSize: 13, color: C.muted, margin: 0 }}>No replies in this thread yet.</p>
+              <p style={{ fontSize: 11, color: C.muted, margin: '4px 0 0' }}>Send an official message to the user below.</p>
             </div>
-          ) : replies.map(r => {
-            const isAdmin = r.sender_type === 'admin';
-            return (
-              <div key={r.id} style={{ padding: '14px 20px', borderBottom: `1px solid ${C.border}`, background: isAdmin ? 'var(--color-primary-bg)' : 'transparent' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <div style={{ width: 26, height: 26, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, flexShrink: 0, background: isAdmin ? 'var(--color-primary)' : 'var(--color-surface-2)', color: isAdmin ? '#fff' : C.text }}>
-                    {isAdmin ? <Shield size={12}/> : <User size={12}/>}
+          ) : (
+            replies.map(r => {
+              const isAdmin = r.sender_type === 'admin';
+              return (
+                <div key={r.id} style={{ padding: '12px 20px', borderBottom: `1px solid ${C.border}`, background: isAdmin ? 'var(--color-primary-bg)' : 'transparent' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                    <div style={{ width: 24, height: 24, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, flexShrink: 0, background: isAdmin ? 'var(--color-primary)' : 'var(--color-surface-2)', color: isAdmin ? '#fff' : C.text }}>
+                      {isAdmin ? <Shield size={12}/> : <User size={12}/>}
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{r.sender_name}</span>
+                    {isAdmin && <span style={{ fontSize: 9, padding: '1px 6px', borderRadius: 99, background: 'var(--color-primary)', color: '#fff', fontWeight: 800, letterSpacing: '0.04em' }}>SUPPORT STAFF</span>}
+                    <span style={{ fontSize: 11, color: C.muted, marginLeft: 'auto' }}>{fmtTime(r.created_at)}</span>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{r.sender_name}</span>
-                  {isAdmin && <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 99, background: 'var(--color-primary)', color: '#fff', fontWeight: 700 }}>STAFF</span>}
-                  <span style={{ fontSize: 11, color: C.muted, marginLeft: 'auto' }}>{fmtTime(r.created_at)}</span>
+                  <p style={{ fontSize: 13, color: C.text, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap', paddingLeft: 32 }}>{r.message}</p>
                 </div>
-                <p style={{ fontSize: 13, color: C.text, margin: 0, lineHeight: 1.6, whiteSpace: 'pre-wrap', paddingLeft: 34 }}>{r.message}</p>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
-        {/* Reply box */}
-        {ticket.status !== 'closed' && (
-          <div style={{ padding: '14px 20px', borderTop: `1px solid ${C.border}`, flexShrink: 0 }}>
-            {error && <p style={{ fontSize: 12, color: 'var(--color-danger)', marginBottom: 8 }}>{error}</p>}
-            <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Type your reply to the user…" rows={3} className="app-input" style={{ resize: 'vertical', marginBottom: 8 }} onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendReply(); }} />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <button onClick={sendReply} disabled={!replyText.trim() || sending} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 16px', fontSize: 13 }}>
-                <Send size={13}/>{sending ? 'Sending…' : 'Send Reply'}
-              </button>
+        {/* Reply & Communication Section */}
+        {ticket.status !== 'closed' ? (
+          <div style={{ padding: '14px 20px', borderTop: `1px solid ${C.border}`, background: 'var(--color-surface-2)', flexShrink: 0 }}>
+            {error && <p style={{ fontSize: 12, color: 'var(--color-danger)', margin: '0 0 8px' }}>{error}</p>}
+
+            {/* Canned Templates */}
+            <div style={{ marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 6 }}>
+                <Sparkles size={11} style={{ color: 'var(--color-primary)' }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: C.muted }}>Quick Response Templates:</span>
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {CANNED_TEMPLATES.map(t => (
+                  <button
+                    key={t.label}
+                    onClick={() => setReplyText(t.text)}
+                    type="button"
+                    style={{
+                      padding: '4px 9px', borderRadius: 7, border: `1px solid ${C.border}`,
+                      background: 'var(--d-card)', color: C.text, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                    }}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            <textarea
+              value={replyText}
+              onChange={e => setReplyText(e.target.value)}
+              placeholder="Type your official response to the user…"
+              rows={3}
+              className="app-input"
+              style={{ resize: 'vertical', marginBottom: 8, background: 'var(--d-card)' }}
+              onKeyDown={e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendReply(); }}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, color: C.muted }}>Ctrl+Enter to send</span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => sendReply(replyText, 'resolved')}
+                  disabled={!replyText.trim() || sending}
+                  className="btn-ghost"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 14px', fontSize: 12, fontWeight: 700 }}>
+                  <CheckCircle2 size={12}/> Reply & Resolve
+                </button>
+                <button
+                  onClick={() => sendReply()}
+                  disabled={!replyText.trim() || sending}
+                  className="btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', fontSize: 12, fontWeight: 700 }}>
+                  <Send size={12}/> {sending ? 'Sending…' : 'Send Reply'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ padding: '14px 20px', borderTop: `1px solid ${C.border}`, background: 'var(--color-surface-2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ fontSize: 12, color: C.muted, margin: 0 }}>This ticket is marked as closed.</p>
+            <button onClick={() => updateTicket({ status: 'open' })} className="btn-ghost" style={{ padding: '6px 12px', fontSize: 12 }}>
+              Reopen to Reply
+            </button>
           </div>
         )}
       </div>

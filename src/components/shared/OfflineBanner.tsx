@@ -1,43 +1,49 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { WifiOff, Loader2 } from 'lucide-react';
+import { WifiOff, Loader2, CloudUpload } from 'lucide-react';
+import { getPendingCount, onQueueChanged } from '@/lib/db';
+import { getQueuedFarms, onFarmQueueChanged } from '@/lib/offline-farm-queue';
 
-// Mounted once in the root layout, alongside ServiceWorkerRegistrar and
-// OfflineSyncManager. Covers the common real-world case — a farmer already
-// using the app loses signal mid-session — with a plain online/offline
-// listener, no service worker involved. This deliberately does NOT attempt
-// to replace the browser's own native "can't connect" interstitial on a
-// cold load with zero connectivity; that would require a service worker
-// intercepting the failed navigation, and that exact mechanism has already
-// caused two real outages in this app (navigation hijacking, then a stale
-// worker serving the "can't connect" state itself) — skipped by explicit
-// choice rather than attempted again here.
 export function OfflineBanner() {
-  const [isOffline, setIsOffline] = useState(false); // safe default for SSR
+  const [isOffline, setIsOffline] = useState(false);
   const [showSyncing, setShowSyncing] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     setIsOffline(!navigator.onLine);
 
+    async function updateCount() {
+      const dbPending = await getPendingCount();
+      const farmPending = getQueuedFarms().length;
+      setPendingCount(dbPending + farmPending);
+    }
+    updateCount();
+
+    const unsubQueue = onQueueChanged(updateCount);
+    const unsubFarms = onFarmQueueChanged(updateCount);
+
     function onOffline() {
       setIsOffline(true);
       setShowSyncing(false);
+      updateCount();
     }
+
     function onOnline() {
       setIsOffline(false);
-      // Genuinely true, not just a reassuring phrase — coming back online
-      // is exactly when OfflineSyncManager replays any farm records queued
-      // while offline (see offline-farm-queue.ts).
       setShowSyncing(true);
-      setTimeout(() => setShowSyncing(false), 4000);
+      setTimeout(() => setShowSyncing(false), 4500);
+      updateCount();
     }
 
     window.addEventListener('offline', onOffline);
     window.addEventListener('online', onOnline);
+
     return () => {
       window.removeEventListener('offline', onOffline);
       window.removeEventListener('online', onOnline);
+      unsubQueue();
+      unsubFarms();
     };
   }, []);
 
@@ -48,24 +54,52 @@ export function OfflineBanner() {
       role="status"
       aria-live="polite"
       style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 2000,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        padding: '9px 16px',
-        background: isOffline ? 'var(--color-harvest)' : 'var(--color-success)',
-        color: '#fff',
-        fontSize: 13, fontWeight: 700,
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 2000,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        padding: '8px 16px',
+        background: isOffline ? 'var(--color-harvest, #D97706)' : 'var(--color-success, #166B3A)',
+        color: '#FFFFFF',
+        fontSize: 12.5,
+        fontWeight: 700,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
         transition: 'background-color 0.2s',
       }}
     >
       {isOffline ? (
         <>
           <WifiOff size={14} />
-          <span>You're offline — some features won't work until you're back online</span>
+          <span>
+            {pendingCount > 0
+              ? `You're offline — ${pendingCount} change${pendingCount === 1 ? '' : 's'} saved on device`
+              : "You're offline — actions will save locally until signal returns"}
+          </span>
+          {pendingCount > 0 && (
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                background: 'rgba(0,0,0,0.2)',
+                padding: '2px 8px',
+                borderRadius: 12,
+                fontSize: 11,
+              }}
+            >
+              <CloudUpload size={11} /> Queued
+            </span>
+          )}
         </>
       ) : (
         <>
           <Loader2 size={14} className="animate-spin" />
-          <span>Back online — syncing…</span>
+          <span>Back online — syncing saved records…</span>
         </>
       )}
     </div>
