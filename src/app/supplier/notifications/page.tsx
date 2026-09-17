@@ -11,7 +11,7 @@ export default async function SupplierNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
-    .or('role.eq.supplier,role.is.null')
+    .eq('role', 'supplier')
     .order('created_at', { ascending: false })
     .limit(60);
 

@@ -84,8 +84,12 @@ export async function POST(req: Request) {
   // Calculate fare automatically based on route + type + weight
   const fare = calcFare(pickup_district, dropoff_district, parseFloat(cargo_kg), delivery_type as DeliveryType);
 
+  const { data: userProfile } = await supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle();
+  const requesterRole = body.requester_role || userProfile?.role || 'buyer';
+
   const { data, error } = await (supabase.from as any)('delivery_requests').insert({
     requester_id:     user.id,
+    requester_role:   requesterRole,
     offer_id:         offer_id ?? null,
     pickup_district,
     pickup_location:  pickup_location || pickup_district,
@@ -213,7 +217,7 @@ export async function PATCH(req: Request) {
       if (delivery?.requester_id) {
         await (admin.from as any)('notifications').insert({
           user_id: delivery.requester_id,
-          role:    delivery.requester_role ?? null,
+          role:    delivery.requester_role || 'buyer',
           type:    'delivery',
           title:   'Delivery Arrived!',
           body:    `Your goods have been delivered. Please confirm and pay UGX ${Number(delivery.estimated_fare).toLocaleString()} to release the driver.`,

@@ -11,7 +11,7 @@ export default async function TransporterNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
-    .or('role.eq.transporter,role.is.null')
+    .eq('role', 'transporter')
     .order('created_at', { ascending: false })
     .limit(60);
 

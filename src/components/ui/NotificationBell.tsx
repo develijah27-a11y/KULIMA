@@ -94,17 +94,16 @@ export function NotificationBell({ initialUnreadCount = 0, currentRole }: Notifi
           { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
           (payload: any) => {
             const n = payload.new as any;
-            // Realtime can only filter on user_id server-side (no OR/IS NULL
-            // support) — a role-tagged row meant for a different dashboard
-            // still arrives here, so drop it client-side before it shows.
-            if (n.role && currentRole && n.role !== currentRole) return;
+            // Realtime can only filter on user_id server-side.
+            // Enforce strict dashboard isolation: only notifications for this dashboard role are accepted.
+            if (currentRole && n.role !== currentRole) return;
             // Add to the drawer list
             setNotifications(prev => [{
               id: n.id,
               title: n.title,
               body: n.body,
               read: false,
-              createdAt: n.created_at ?? new Date().toISOString(),
+              createdAt: n.created_at || (n as any).createdAt || n.sent_at || new Date().toISOString(),
               type: n.type,
             }, ...prev]);
             setUnreadCount(c => c + 1);
@@ -125,12 +124,12 @@ export function NotificationBell({ initialUnreadCount = 0, currentRole }: Notifi
       const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) return;
       const json = await res.json();
-      const items: Notification[] = (json.data ?? []).map((n: ApiNotif) => ({
+      const items: Notification[] = (json.data ?? []).map((n: any) => ({
         id: n.id,
         title: n.title,
         body: n.body,
         read: n.read,
-        createdAt: n.sentAt,
+        createdAt: n.created_at || n.createdAt || n.sentAt || new Date().toISOString(),
         type: n.type as Notification['type'],
       }));
       setNotifications(items);

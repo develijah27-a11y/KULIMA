@@ -11,7 +11,7 @@ export default async function FarmerNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
-    .or('role.eq.farmer,role.is.null')
+    .eq('role', 'farmer')
     .order('created_at', { ascending: false })
     .limit(60);
 

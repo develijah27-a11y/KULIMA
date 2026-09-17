@@ -41,15 +41,19 @@ const TYPE_ICONS: Record<string, JSX.Element> = {
   payment:  <CreditCard size={17} />,
 };
 
-function formatTime(iso: string): string {
+function formatTime(iso?: string | null): string {
+  if (!iso) return 'Just now';
   try {
-    const diff = Date.now() - new Date(iso).getTime();
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return 'Recently';
+    const diff = Date.now() - d.getTime();
+    if (diff < 0) return 'Just now';
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return 'Just now';
     if (mins < 60) return `${mins}m ago`;
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}h ago`;
-    return new Date(iso).toLocaleDateString('en-UG', {
+    return d.toLocaleDateString('en-UG', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -157,7 +161,8 @@ export function InteractiveNotificationsView({
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
         (payload: any) => {
           const n = payload.new as any;
-          if (n.role && role && n.role !== role) return;
+          // Strict dashboard role isolation: if a notification does not match this dashboard, drop it
+          if (role && n.role !== role) return;
 
           setItems(prev => {
             const exists = prev.some(item => item.id === n.id);
@@ -352,7 +357,7 @@ export function InteractiveNotificationsView({
                       {n.title ?? n.message ?? 'Notification'}
                     </p>
                     <span style={{ fontSize: 11, color: 'var(--d-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                      {formatTime(n.created_at)}
+                      {formatTime(n.created_at || (n as any).createdAt || (n as any).sentAt)}
                     </span>
                   </div>
 

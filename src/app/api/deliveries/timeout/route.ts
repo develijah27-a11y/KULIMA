@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
       // Notify requester
       await notifyUser(admin, {
         userId: dr.requester_id,
-        role: dr.requester_role ?? null,
+        role: dr.requester_role === 'farmer' ? 'farmer' : 'buyer',
         type: 'delivery',
         title: 'Delivery request cancelled',
         body: `Your delivery request was cancelled due to non-payment. The driver has been released.${isAbusive ? ' Your account has been flagged for repeated non-payment. Future timeouts may be shorter.' : ''}`,
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
 
       await notifyUser(admin, {
         userId: dr.requester_id,
-        role: dr.requester_role ?? null,
+        role: dr.requester_role === 'farmer' ? 'farmer' : 'buyer',
         type: 'delivery',
         title: 'Payment required',
         body: `Your delivery will be cancelled in ${minsLeft} minute${minsLeft !== 1 ? 's' : ''} if payment is not completed. Pay now to keep your driver.`,
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
     if (phase === 'remind_1' && !reminderSent) {
       await notifyUser(admin, {
         userId: dr.requester_id,
-        role: dr.requester_role ?? null,
+        role: dr.requester_role === 'farmer' ? 'farmer' : 'buyer',
         type: 'delivery',
         title: 'Your driver is waiting',
         body: `Complete payment for your ${dr.cargo_kg} kg delivery to confirm your driver. They cannot start until payment is received.`,

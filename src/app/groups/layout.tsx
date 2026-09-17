@@ -46,7 +46,7 @@ export default async function GroupsLayout({ children }: { children: React.React
 
   const [profileRes, unreadRes] = await Promise.all([
     supabase.from('profiles').select('id, full_name, location, role, roles').eq('user_id', user.id).single(),
-    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false).or('role.eq.groups,role.is.null'),
+    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false).eq('role', 'groups'),
   ]);
 
   if (profileRes.data) {

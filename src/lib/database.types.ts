@@ -400,6 +400,7 @@ export interface Database {
           id: string
           farmer_id: string | null
           user_id: string | null
+          role: string | null
           type: string
           title: string
           body: string
@@ -412,6 +413,7 @@ export interface Database {
           id?: string
           farmer_id?: string | null
           user_id?: string | null
+          role?: string | null
           type: string
           title: string
           body: string
@@ -424,6 +426,7 @@ export interface Database {
           id?: string
           farmer_id?: string | null
           user_id?: string | null
+          role?: string | null
           type?: string
           title?: string
           body?: string

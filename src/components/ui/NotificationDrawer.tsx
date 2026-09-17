@@ -32,13 +32,25 @@ const TYPE_ICONS: Record<string, JSX.Element> = {
 
 function groupByDate(notifications: Notification[]) {
   const today = new Date().toDateString();
-  const todayItems = notifications.filter(n => new Date(n.createdAt).toDateString() === today);
-  const earlierItems = notifications.filter(n => new Date(n.createdAt).toDateString() !== today);
+  const todayItems = notifications.filter(n => {
+    if (!n.createdAt) return false;
+    const d = new Date(n.createdAt);
+    return !isNaN(d.getTime()) && d.toDateString() === today;
+  });
+  const earlierItems = notifications.filter(n => {
+    if (!n.createdAt) return true;
+    const d = new Date(n.createdAt);
+    return isNaN(d.getTime()) || d.toDateString() !== today;
+  });
   return { todayItems, earlierItems };
 }
 
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+function timeAgo(dateStr?: string | null): string {
+  if (!dateStr) return 'just now';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return 'recently';
+  const diff = Date.now() - d.getTime();
+  if (diff < 0) return 'just now';
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m ago`;

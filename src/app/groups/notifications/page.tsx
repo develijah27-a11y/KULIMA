@@ -11,7 +11,7 @@ export default async function GroupsNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
-    .or('role.eq.groups,role.is.null')
+    .eq('role', 'groups')
     .order('created_at', { ascending: false })
     .limit(50);
 

@@ -125,7 +125,7 @@ export async function POST(req: Request) {
 
     await (admin.from as any)('notifications').insert({
       user_id: delivery.requester_id,
-      role:    delivery.requester_role ?? null,
+      role:    delivery.requester_role === 'farmer' ? 'farmer' : 'buyer',
       type:    'delivery',
       title:   'Driver Accepted Your Delivery',
       body:    `${typeLabel} driver is on the way for your ${delivery.cargo_kg}kg shipment from ${delivery.pickup_district} → ${delivery.dropoff_district}.`,

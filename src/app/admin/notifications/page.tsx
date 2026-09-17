@@ -30,7 +30,7 @@ export default async function AdminNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
-    .or('role.eq.admin,role.is.null')
+    .eq('role', 'admin')
     .order('created_at', { ascending: false })
     .limit(60);
 
@@ -38,7 +38,7 @@ export default async function AdminNotificationsPage() {
   const unread = notifications.filter(n => !n.read).length;
 
   if (unread > 0) {
-    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false).or('role.eq.admin,role.is.null');
+    await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false).eq('role', 'admin');
   }
 
   return (

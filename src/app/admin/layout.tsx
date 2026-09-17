@@ -82,7 +82,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('read', false)
-      .or('role.eq.admin,role.is.null');
+      .eq('role', 'admin');
     unreadCount = count ?? 0;
   }
 

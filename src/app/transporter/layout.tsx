@@ -46,7 +46,7 @@ export default async function TransporterLayout({ children }: { children: React.
 
   const [profileRes, unreadRes, vehicleRes] = await Promise.all([
     supabase.from('profiles').select('id, full_name, location, role, roles').eq('user_id', user.id).single(),
-    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false).or('role.eq.transporter,role.is.null'),
+    supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false).eq('role', 'transporter'),
     (supabase.from as any)('vehicles').select('is_available').eq('user_id', user.id).maybeSingle(),
   ]);
 

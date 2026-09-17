@@ -1,7 +1,8 @@
-﻿import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getOrCreateProfile } from '@/lib/supabase/get-profile';
 import { notifyUser } from '@/lib/notify';
+import { areDistrictsEqual, getProfileDistrict } from '@/lib/district';
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
   // notification) in one follow-up query.
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, full_name, location, phone_number')
+    .select('id, full_name, location, district, phone_number')
     .eq('id', baseProfile.id)
     .single();
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 500 });
@@ -32,9 +33,11 @@ export async function POST(req: Request) {
 
   // Same-district check — collecting produce for one shipment only works
   // if everyone contributing is actually local to the group.
-  if (group.district && (profile as any).location && group.district !== (profile as any).location) {
+  // Performs case-insensitive, whitespace-trimmed, and suffix-tolerant comparison.
+  const userDistrict = getProfileDistrict(profile);
+  if (group.district && userDistrict && !areDistrictsEqual(group.district, userDistrict)) {
     return NextResponse.json({
-      error: `${group.name} is based in ${group.district}, but your profile is in ${(profile as any).location}. Groups only accept members from their own district.`,
+      error: `${group.name} is based in ${group.district}, but your profile is in ${userDistrict}. Groups only accept members from their own district.`,
     }, { status: 400 });
   }
 

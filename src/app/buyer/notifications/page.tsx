@@ -11,7 +11,7 @@ export default async function BuyerNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
-    .or('role.eq.buyer,role.is.null')
+    .eq('role', 'buyer')
     .order('created_at', { ascending: false })
     .limit(60);
 

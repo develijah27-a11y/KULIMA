@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
+import { areDistrictsEqual, getProfileDistrict } from '@/lib/district';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -52,7 +53,7 @@ export async function POST(req: Request, { params }: Ctx) {
   // Find the profile by phone (try both formats)
   const { data: found } = await supabase
     .from('profiles')
-    .select('id, user_id, full_name, phone_number, location')
+    .select('id, user_id, full_name, phone_number, location, district')
     .or(`phone_number.eq.${normalizedPhone},phone_number.eq.+256${normalizedPhone.slice(1)}`)
     .limit(1)
     .single();
@@ -64,9 +65,10 @@ export async function POST(req: Request, { params }: Ctx) {
 
   // Same-district check — collecting produce for one shipment only works
   // if everyone contributing is actually local to the group.
-  if (group?.district && (found as any).location && group.district !== (found as any).location) {
+  const memberDistrict = getProfileDistrict(found);
+  if (group?.district && memberDistrict && !areDistrictsEqual(group.district, memberDistrict)) {
     return NextResponse.json({
-      error: `${found.full_name} is registered in ${(found as any).location}, not ${group.district}. Group members must be in the same district.`,
+      error: `${found.full_name} is registered in ${memberDistrict}, not ${group.district}. Group members must be in the same district.`,
     }, { status: 400 });
   }
 

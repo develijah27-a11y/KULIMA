@@ -90,7 +90,7 @@ export async function POST(_req: Request, { params }: Params) {
   // Notify requester
   await notifyUser(admin, {
     userId: dr.requester_id,
-    role:   dr.requester_role ?? null,
+    role:   dr.requester_role === 'farmer' ? 'farmer' : 'buyer',
     type:   'delivery',
     title:  `Driver assigned — ${dr.cargo_type ?? 'cargo'}`,
     body:   `A transporter has accepted your delivery of ${dr.cargo_kg} kg from ${dr.pickup_district}.`,
@@ -133,7 +133,7 @@ export async function PATCH(req: Request, { params }: Params) {
       .eq('delivery_request_id', id);
     await notifyUser(admin, {
       userId: dr.requester_id,
-      role:   dr.requester_role ?? null,
+      role:   dr.requester_role === 'farmer' ? 'farmer' : 'buyer',
       type:   'delivery',
       title:  `Your ${dr.cargo_type} is on the way!`,
       body:   `The transporter has picked up your ${dr.cargo_kg} kg.`,
@@ -148,7 +148,7 @@ export async function PATCH(req: Request, { params }: Params) {
       .eq('delivery_request_id', id);
     await notifyUser(admin, {
       userId: dr.requester_id,
-      role:   dr.requester_role ?? null,
+      role:   dr.requester_role === 'farmer' ? 'farmer' : 'buyer',
       type:   'delivery',
       title:  `Delivered — ${dr.cargo_type}`,
       body:   dr.estimated_fare

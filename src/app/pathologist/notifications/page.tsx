@@ -11,7 +11,7 @@ export default async function PathologistNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
-    .or('role.eq.pathologist,role.is.null')
+    .eq('role', 'pathologist')
     .order('created_at', { ascending: false })
     .limit(50);
 

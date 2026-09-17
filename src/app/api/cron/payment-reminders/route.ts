@@ -65,11 +65,19 @@ export async function GET(req: Request) {
     if (already) continue;
 
     const body = `Your delivery request for ${d.cargo_kg}kg of ${d.cargo_type} (UGX ${Math.round(d.estimated_fare ?? 0).toLocaleString()}) is still awaiting payment. Unpaid delivery requests can be cancelled — pay now so a driver can be assigned.`;
+    const targetRole = d.requester_role === 'farmer' ? 'farmer' : 'buyer';
+    const targetUrl = targetRole === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries';
+
     await (supabase.from as any)('notifications').insert({
-      user_id: d.requester_id, role: d.requester_role ?? null, type: 'payment', title, body, read: false,
-      data: { delivery_id: d.id },
+      user_id: d.requester_id,
+      role: targetRole,
+      type: 'payment',
+      title,
+      body,
+      read: false,
+      data: { delivery_id: d.id, url: targetUrl },
     });
-    await sendPushToUsers([d.requester_id], { title, body, url: '/farmer/deliveries' });
+    await sendPushToUsers([d.requester_id], { title, body, url: targetUrl });
     deliveriesReminded++;
   }
 

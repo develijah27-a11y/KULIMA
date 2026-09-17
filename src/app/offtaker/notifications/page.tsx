@@ -11,7 +11,7 @@ export default async function OfftakerNotificationsPage() {
     .from('notifications')
     .select('*')
     .eq('user_id', user.id)
-    .or('role.eq.offtaker,role.is.null')
+    .eq('role', 'offtaker')
     .order('created_at', { ascending: false })
     .limit(50);
 
