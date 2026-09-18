@@ -32,7 +32,7 @@ const serwist = new Serwist({
       handler: new NetworkFirst({
         cacheName: 'cropify-weather-v2',
         networkTimeoutSeconds: 4, // Adaptive 4s for rural 2G
-        plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 1800 })],
+        plugins: [new ExpirationPlugin({ maxEntries: 25, maxAgeSeconds: 3600 })],
       }),
     },
     {
@@ -42,8 +42,19 @@ const serwist = new Serwist({
         url.pathname.startsWith('/api/cash-crop-prices')
       ),
       handler: new StaleWhileRevalidate({
-        cacheName: 'cropify-prices',
-        plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 300 })],
+        cacheName: 'cropify-prices-v2',
+        plugins: [new ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 86400 * 7 })], // 7-day snapshot cache for rural markets
+      }),
+    },
+    {
+      matcher: ({ url }) => (
+        url.pathname.startsWith('/api/planting') ||
+        url.pathname.startsWith('/api/diseases') ||
+        url.pathname.startsWith('/api/farms')
+      ),
+      handler: new StaleWhileRevalidate({
+        cacheName: 'cropify-agri-data-v2',
+        plugins: [new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 86400 * 7 })],
       }),
     },
 
@@ -65,21 +76,39 @@ const serwist = new Serwist({
   ],
 });
 
-// Cache the offline fallback page during service worker installation
+// Precache offline fallback and critical farmer tools during service worker installation
+const CRITICAL_OFFLINE_ROUTES = [
+  '/offline',
+  '/farmer/planting',
+  '/farmer/prices',
+  '/farmer/doctor',
+  '/farmer/farm',
+];
+
 self.addEventListener('install', (event: ExtendableEvent) => {
   event.waitUntil(
-    caches.open(OFFLINE_FALLBACK_CACHE).then((cache) => {
-      return cache.add('/offline').catch((err) => {
-        console.warn('[sw] Could not precache /offline during install:', err);
-      });
+    caches.open(OFFLINE_FALLBACK_CACHE).then(async (cache) => {
+      for (const route of CRITICAL_OFFLINE_ROUTES) {
+        try {
+          await cache.add(route);
+        } catch (err) {
+          console.warn('[sw] Could not precache route during install:', route, err);
+        }
+      }
     })
   );
 });
 
-// Provide /offline fallback when navigation fails completely
+// Provide cached route or /offline fallback when navigation fails completely
 serwist.setCatchHandler(async ({ request }) => {
   if (request.destination === 'document' || (request as any).mode === 'navigate') {
     const offlineCache = await caches.open(OFFLINE_FALLBACK_CACHE);
+    try {
+      const url = new URL(request.url);
+      const matched = await offlineCache.match(url.pathname);
+      if (matched) return matched;
+    } catch {}
+
     const fallback = await offlineCache.match('/offline');
     if (fallback) return fallback;
   }

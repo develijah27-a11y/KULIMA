@@ -14,6 +14,8 @@ import {
   PlusCircle,
   CloudUpload,
   CheckCircle2,
+  Calendar,
+  TrendingUp,
 } from 'lucide-react';
 import { getPendingCount, onQueueChanged } from '@/lib/db';
 import { getQueuedFarms, onFarmQueueChanged } from '@/lib/offline-farm-queue';
@@ -31,6 +33,24 @@ const C = {
 };
 
 const OFFLINE_TOOLS = [
+  {
+    title: 'Ugandan Planting Calendar & Seasons',
+    desc: 'First & Second Wet Seasons, optimal planting dates & crop windows',
+    href: '/farmer/planting',
+    icon: <Calendar size={20} className="text-emerald-600" />,
+  },
+  {
+    title: 'Market & Commodity Price Snapshots',
+    desc: 'Browse cached wholesale & retail crop prices across Uganda',
+    href: '/farmer/prices',
+    icon: <TrendingUp size={20} className="text-amber-600" />,
+  },
+  {
+    title: 'Plant Doctor Field Guide',
+    desc: 'Browse symptoms & treatments for Uganda crop diseases',
+    href: '/farmer/doctor',
+    icon: <Microscope size={20} className="text-purple-600" />,
+  },
   {
     title: 'My Farms & GPS Boundaries',
     desc: 'View field boundaries and acreage cached on this phone',
@@ -54,12 +74,6 @@ const OFFLINE_TOOLS = [
     desc: 'Track bags in storage and update stock quantities',
     href: '/farmer/inventory',
     icon: <Package size={20} className="text-blue-600" />,
-  },
-  {
-    title: 'Plant Doctor Field Guide',
-    desc: 'Browse symptoms & treatments for Uganda crop diseases',
-    href: '/farmer/doctor',
-    icon: <Microscope size={20} className="text-purple-600" />,
   },
 ];
 
