@@ -69,7 +69,7 @@ export function getPrimePayBaseUrl(): string {
   return (
     process.env.PRIMEPAY_BASE_URL ||
     process.env.PAYMENT_GATEWAY_URL ||
-    'https://api.nylonpay.nilesquad.com/api/services'
+    'https://zraavqlyoqmapkdypdht.supabase.co/functions/v1'
   ).trim().replace(/\/+$/, '');
 }
 
