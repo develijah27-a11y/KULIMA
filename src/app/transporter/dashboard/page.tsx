@@ -11,6 +11,7 @@ import { VerificationBanner } from '@/components/trust/VerificationBanner';
 import { type VerificationLevel } from '@/lib/trust';
 import { BiometricSetupBanner } from '@/components/settings/BiometricSetupBanner';
 import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
+import { ActiveTripLocationStreamer } from '@/components/delivery/ActiveTripLocationStreamer';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)', cardBg: 'var(--d-card)',
@@ -363,6 +364,9 @@ async function LiveJobMap({ userId }: { userId: string }) {
           <p className="text-xs mt-0.5" style={{ color: C.muted }}>{job.pickup_district} → {job.dropoff_district}</p>
         </div>
         <Link href="/transporter/active" prefetch={true} className="text-xs font-semibold" style={{ color: C.greenMed }}>Manage →</Link>
+      </div>
+      <div className="px-4 pt-3 pb-0">
+        <ActiveTripLocationStreamer deliveryId={job.id} status={job.status} />
       </div>
       <div style={{ height: 280, padding: 12 }}>
         <DeliveryTrackingMap

@@ -4,9 +4,9 @@ import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle, Navigation2, Navigation, Phone } from 'lucide-react';
 import { NavigateButton } from '@/components/delivery/NavigateButton';
-import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { DriverTrackingSheet } from '@/components/delivery/DriverTrackingSheet';
 import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
+import { ActiveTripLocationStreamer } from '@/components/delivery/ActiveTripLocationStreamer';
 import { ShowPaymentQR } from '@/components/delivery/ShowPaymentQR';
 import { getTelUri, openPhoneDialer, getWhatsAppUri, formatPhoneDisplay } from '@/lib/phone-dialer';
 
@@ -402,6 +402,8 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
         </p>
         <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>Your earnings · paid after delivery confirmed</p>
       </div>
+
+      <ActiveTripLocationStreamer deliveryId={d.id} status={d.status} tripPhase={d.trip_phase} />
 
       {(d.pickup_location || d.dropoff_location) && (
         <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>
