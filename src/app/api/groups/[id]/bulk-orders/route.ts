@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { notifyUser } from '@/lib/notify';
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -91,10 +91,16 @@ export async function POST(req: Request, { params }: Ctx) {
   }
 
   try {
-    const { data: supplierProfile } = await (supabase.from as any)('profiles').select('user_id').eq('id', product.supplier_id).single();
-    if (supplierProfile?.user_id) {
+    const admin = createServiceRoleClient();
+    const { data: supplierProfile } = await (admin.from as any)('profiles')
+      .select('id, user_id')
+      .or(`id.eq.${product.supplier_id},user_id.eq.${product.supplier_id}`)
+      .maybeSingle();
+
+    const targetUserId = supplierProfile?.user_id || supplierProfile?.id;
+    if (targetUserId) {
       await notifyUser(supabase, {
-        userId: supplierProfile.user_id,
+        userId: targetUserId,
         role: 'supplier',
         type: 'order',
         title: `Bulk order request — ${product.name}`,

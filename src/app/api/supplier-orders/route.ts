@@ -14,7 +14,8 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: profile } = await supabase.from('profiles').select('id, full_name, district, location').eq('user_id', user.id).single();
+  const admin = createServiceRoleClient();
+  const { data: profile } = await admin.from('profiles').select('id, full_name, district, location').eq('user_id', user.id).single();
   if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
 
   const { productId, quantity, notes } = await req.json();
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'productId and a valid quantity are required' }, { status: 400 });
   }
 
-  const { data: product } = await (supabase.from as any)('supplier_products')
+  const { data: product } = await (admin.from as any)('supplier_products')
     .select('id, supplier_id, name, unit, price_per_unit, stock_qty, min_order_qty, is_available, is_flash_deal, flash_price_ugx, flash_ends_at')
     .eq('id', productId)
     .single();
@@ -35,16 +36,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Only ${product.stock_qty} ${product.unit} left in stock` }, { status: 400 });
   }
 
-  const { data: supplierProfile } = await (supabase.from as any)('profiles').select('user_id, full_name, business_name').eq('id', product.supplier_id).single();
-  if (!supplierProfile?.user_id) return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
+  // Look up the supplier profile using service role to bypass RLS
+  let { data: supplierProfile } = await (admin.from as any)('profiles')
+    .select('id, user_id, full_name, business_name')
+    .eq('id', product.supplier_id)
+    .maybeSingle();
 
-  // Block the purchase up front if the buyer's own wallet is frozen — the
-  // escrow-fund RPC below would otherwise happily debit a frozen wallet.
-  const { data: buyerWalletCheck } = await (supabase.from as any)('wallets')
-    .select('is_frozen').eq('user_id', user.id).single();
-  if (buyerWalletCheck?.is_frozen) {
-    return NextResponse.json({ error: 'This wallet has been frozen. Contact support.' }, { status: 403 });
+  if (!supplierProfile) {
+    const { data: byUserId } = await (admin.from as any)('profiles')
+      .select('id, user_id, full_name, business_name')
+      .eq('user_id', product.supplier_id)
+      .maybeSingle();
+    supplierProfile = byUserId;
   }
+
+  if (!supplierProfile) {
+    console.error('[/api/supplier-orders POST] Supplier profile not found for supplier_id:', product.supplier_id);
+    return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
+  }
+
+  const supplierUserId = supplierProfile.user_id || supplierProfile.id;
+  const supplierProfileId = supplierProfile.id || product.supplier_id;
 
   // Charge the live flash price when a deal is actually active — computed
   // fresh from the DB (never trusted from the client, which doesn't send a
@@ -54,7 +66,33 @@ export async function POST(req: Request) {
   const unitPrice = flashActive ? Number(product.flash_price_ugx) : Number(product.price_per_unit);
   const total = +quantity * unitPrice;
 
-  const admin = createServiceRoleClient();
+  // Ensure buyer wallet exists and check balance + frozen status
+  let { data: buyerWalletCheck } = await (admin.from as any)('wallets')
+    .select('id, is_frozen, balance').eq('user_id', user.id).maybeSingle();
+  if (!buyerWalletCheck) {
+    const { data: newWallet } = await (admin.from as any)('wallets')
+      .insert({ user_id: user.id, profile_id: profile.id, balance: 0 })
+      .select('id, is_frozen, balance')
+      .maybeSingle();
+    buyerWalletCheck = newWallet;
+  }
+  if (buyerWalletCheck?.is_frozen) {
+    return NextResponse.json({ error: 'This wallet has been frozen. Contact support.' }, { status: 403 });
+  }
+  if (Number(buyerWalletCheck?.balance || 0) < total) {
+    return NextResponse.json({
+      error: `Insufficient wallet balance. Need UGX ${total.toLocaleString()}. Please top up your wallet.`,
+    }, { status: 400 });
+  }
+
+  // Ensure supplier wallet exists so payouts and releases can be credited
+  const { data: sellerWalletCheck } = await (admin.from as any)('wallets')
+    .select('id').eq('user_id', supplierUserId).maybeSingle();
+  if (!sellerWalletCheck) {
+    await (admin.from as any)('wallets')
+      .insert({ user_id: supplierUserId, profile_id: supplierProfileId, balance: 0 })
+      .maybeSingle();
+  }
 
   // Atomic conditional decrement (UPDATE ... WHERE stock_qty >= requested,
   // single row lock) — closes the race where two concurrent orders on the
@@ -69,8 +107,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: `Only ${product.stock_qty} ${product.unit} left in stock. Please refresh and try again.` }, { status: 409 });
   }
 
-  const { data: order, error } = await (supabase.from as any)('supplier_orders').insert({
-    supplier_id:  product.supplier_id,
+  const { data: order, error } = await (admin.from as any)('supplier_orders').insert({
+    supplier_id:  supplierProfileId,
     buyer_id:     user.id,
     buyer_name:   (profile as any).full_name ?? null,
     product_id:   product.id,
@@ -97,7 +135,7 @@ export async function POST(req: Request) {
   const { data: escrowId, error: escrowErr } = await (admin as any).rpc('claim_escrow_fund_supplier_order', {
     p_supplier_order_id: order.id,
     p_buyer_user_id: user.id,
-    p_seller_user_id: supplierProfile.user_id,
+    p_seller_user_id: supplierUserId,
     p_amount: total,
   });
   if (escrowErr || !escrowId) {
@@ -116,7 +154,7 @@ export async function POST(req: Request) {
   await (admin.from as any)('supplier_orders').update({ escrow_id: escrowId, payment_status: 'escrowed' }).eq('id', order.id);
 
   await notifyUser(supabase, {
-    userId: supplierProfile.user_id,
+    userId: supplierUserId,
     role: 'supplier',
     type: 'order',
     title: `New input order — ${product.name}`,
@@ -169,13 +207,9 @@ export async function GET(req: Request) {
     .order('created_at', { ascending: false });
 
   if (role === 'farmer') {
-    // buyer_id is the raw auth uid (matches the supplier_orders_select RLS
-    // check and the buyer_id convention used by offers/orders) — not
-    // profiles.id, which this used to compare against and so could never
-    // match a single row.
-    query = query.eq('buyer_id', user.id);
+    query = query.or(`buyer_id.eq.${user.id},buyer_id.eq.${profile.id}`);
   } else {
-    query = query.eq('supplier_id', profile.id);
+    query = query.or(`supplier_id.eq.${profile.id},supplier_id.eq.${user.id}`);
   }
 
   if (status && status !== 'all') query = query.eq('status', status);
@@ -215,12 +249,26 @@ export async function PATCH(req: Request) {
       // escrow here, before flipping status, so a failed payment leaves the
       // quote untouched instead of marking an unpaid order "confirmed."
       if (status === 'confirmed') {
-        const { data: dealerProfileForPay } = await (supabase.from as any)('profiles')
-          .select('user_id').eq('id', (buyerOwned as any).supplier_id).single();
-        if (!dealerProfileForPay?.user_id) {
+        let { data: dealerProfileForPay } = await (admin.from as any)('profiles')
+          .select('id, user_id, full_name, business_name')
+          .eq('id', (buyerOwned as any).supplier_id)
+          .maybeSingle();
+
+        if (!dealerProfileForPay) {
+          const { data: byUserId } = await (admin.from as any)('profiles')
+            .select('id, user_id, full_name, business_name')
+            .eq('user_id', (buyerOwned as any).supplier_id)
+            .maybeSingle();
+          dealerProfileForPay = byUserId;
+        }
+
+        if (!dealerProfileForPay) {
           return NextResponse.json({ error: 'Supplier not found' }, { status: 404 });
         }
-        const { data: buyerWalletCheck } = await (supabase.from as any)('wallets')
+
+        const dealerUserId = dealerProfileForPay.user_id || dealerProfileForPay.id;
+
+        const { data: buyerWalletCheck } = await (admin.from as any)('wallets')
           .select('is_frozen').eq('user_id', user.id).single();
         if (buyerWalletCheck?.is_frozen) {
           return NextResponse.json({ error: 'This wallet has been frozen. Contact support.' }, { status: 403 });
@@ -228,7 +276,7 @@ export async function PATCH(req: Request) {
         const { data: claimedId, error: escrowErr } = await (admin as any).rpc('claim_escrow_fund_supplier_order', {
           p_supplier_order_id: id,
           p_buyer_user_id: user.id,
-          p_seller_user_id: dealerProfileForPay.user_id,
+          p_seller_user_id: dealerUserId,
           p_amount: Number((buyerOwned as any).amount),
         });
         if (escrowErr || !claimedId) {
@@ -256,8 +304,10 @@ export async function PATCH(req: Request) {
       // order isn't a real purchase until the buyer accepts the dealer's quote.
       if (status === 'confirmed' && user.email) {
         const [{ data: dealerProfile }, { data: buyerProfile }] = await Promise.all([
-          (supabase.from as any)('profiles').select('full_name, business_name').eq('id', (buyerOwned as any).supplier_id).maybeSingle(),
-          supabase.from('profiles').select('full_name').eq('id', profile.id).maybeSingle(),
+          (admin.from as any)('profiles').select('full_name, business_name')
+            .or(`id.eq.${(buyerOwned as any).supplier_id},user_id.eq.${(buyerOwned as any).supplier_id}`)
+            .maybeSingle(),
+          admin.from('profiles').select('full_name').eq('id', profile.id).maybeSingle(),
         ]);
         await sendEmail(
           user.email,

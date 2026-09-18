@@ -53,7 +53,7 @@ export async function POST(req: Request) {
   const { data: order } = await (supabase.from as any)('supplier_orders')
     .select('id, supplier_id, status, quantity, unit, product_name')
     .eq('id', order_id)
-    .eq('buyer_id', profile.id)
+    .or(`buyer_id.eq.${user.id},buyer_id.eq.${profile.id}`)
     .single();
 
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });

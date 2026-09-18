@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import os from 'os';
 
 export interface PaymentCustomer {
   name: string;
@@ -67,12 +68,13 @@ export function getPrimePayWebhookSecret(): string {
 export function getPrimePayBaseUrl(): string {
   return (
     process.env.PRIMEPAY_BASE_URL ||
-    'https://zraavqlyoqmapkdypdht.supabase.co/functions/v1'
+    process.env.PAYMENT_GATEWAY_URL ||
+    'https://api.nylonpay.nilesquad.com/api/services'
   ).trim().replace(/\/+$/, '');
 }
 
 /**
- * Normalizes phone number into 256XXXXXXXXX format required by PrimePay API
+ * Normalizes phone number into 256XXXXXXXXX format required by PrimePay / NylonPay API
  */
 export function normalizeUgandaMsisdn(raw: string): string {
   const digits = (raw || '').replace(/\D/g, '');
@@ -91,24 +93,46 @@ export function normalizeUgandaMsisdn(raw: string): string {
   throw new Error(`Invalid Uganda phone number format: "${raw}". Please enter a 10-digit number like 0772123456 or 0752123456.`);
 }
 
-interface TrackedPayment {
-  reference: string;
-  transactionId: string;
-  type: 'deposit' | 'payout';
-  amount: number;
-  phone: string;
-  provider: string;
-  status: 'processing' | 'completed' | 'failed';
-  createdAt: number;
+function generateFingerprint(): string {
+  const components = [
+    `type:${os.type()}`,
+    `platform:${os.platform()}`,
+    `arch:${os.arch()}`,
+    `release:${os.release()}`,
+    `hostname:${os.hostname()}`,
+    `node:${process.versions.node}`,
+    `v8:${process.versions.v8}`,
+  ].join('|');
+  return crypto.createHash('sha256').update(components).digest('hex');
 }
 
-const trackedPayments = new Map<string, TrackedPayment>();
+function compareByCodePoint(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
 
-function isExternalGatewayConfigured(baseUrl: string): boolean {
-  if (!baseUrl) return false;
-  // If still using deleted or unreachable default placeholder
-  if (baseUrl.includes('zraavqlyoqmapkdypdht.supabase.co')) return false;
-  return true;
+function sortValue(value: any): any {
+  if (Array.isArray(value)) return value.map(sortValue);
+  if (value && typeof value === 'object' && value !== null) {
+    const sorted = Object.entries(value).sort(([a], [b]) => compareByCodePoint(a, b));
+    return Object.fromEntries(sorted.map(([k, v]) => [k, sortValue(v)]));
+  }
+  return value;
+}
+
+function buildNylonAuthHeaders(apiKey: string, apiSecret: string, payload: any, fingerprint: string) {
+  const nonce = crypto.randomBytes(16).toString('hex');
+  const timestamp = Date.now().toString();
+  const canonical = JSON.stringify(sortValue(payload));
+  const sigPayload = `${fingerprint}.${nonce}.${timestamp}.${canonical}`;
+  const signature = crypto.createHmac('sha256', apiSecret).update(sigPayload).digest('hex');
+
+  return {
+    'content-type': 'application/json',
+    'x-nylon-key': apiKey,
+    'x-nylon-nonce': nonce,
+    'x-nylon-signature': signature,
+    'x-nylon-timestamp': timestamp,
+  };
 }
 
 export const primepay: PaymentClient = {
@@ -127,11 +151,12 @@ export const primepay: PaymentClient = {
     const msisdn = normalizeUgandaMsisdn(rawPhone);
     const phoneFormatted = `+${msisdn}`;
 
-    const reference = `ORDER_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const reference = crypto.randomUUID();
     const providerKey = options.provider?.toLowerCase() || (msisdn.startsWith('25675') || msisdn.startsWith('25670') || msisdn.startsWith('25674') || msisdn.startsWith('25620') ? 'airtel' : 'mtn');
     const providerName = providerKey === 'airtel' ? 'Airtel Money' : 'MTN Mobile Money';
 
     const apiKey = getPrimePayApiKey();
+    const apiSecret = getPrimePayWebhookSecret();
     const baseUrl = getPrimePayBaseUrl();
     const amount = Math.round(options.amount);
 
@@ -142,20 +167,60 @@ export const primepay: PaymentClient = {
     let transactionId = reference;
     let gatewayMessage = `Payment prompt sent to ${phoneFormatted}. Enter your ${providerName} PIN on your phone to approve the deposit of UGX ${amount.toLocaleString()}.`;
 
-    // Attempt live external gateway if a valid, non-placeholder URL is configured
-    if (isExternalGatewayConfigured(baseUrl)) {
-      const payload = {
-        reference,
-        msisdn,
-        amount,
-        currency: options.currency || 'UGX',
-        description: options.description || 'Cropify Wallet Deposit',
-      };
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
 
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 6000);
+    try {
+      if (baseUrl.includes('nylonpay.nilesquad.com') || baseUrl.endsWith('/services')) {
+        const fingerprint = generateFingerprint();
+        const innerPayload = {
+          reference,
+          amount,
+          currency: options.currency || 'UGX',
+          customer: {
+            name: options.customer?.name || 'Cropify Customer',
+            phoneNumber: msisdn,
+          },
+          description: options.description || 'Cropify Wallet Deposit',
+          method: 'mobileMoney',
+          _fingerprint: fingerprint,
+        };
 
-      try {
+        const headers = buildNylonAuthHeaders(apiKey, apiSecret, innerPayload, fingerprint);
+        const body = {
+          intent: 'execute',
+          service: 'sdk',
+          action: 'sdk-collect-payment',
+          payload: innerPayload,
+        };
+
+        const res = await fetch(baseUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timer);
+
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.status !== false && data.success !== false) {
+          transactionId = data.data?.reference || data.data?.id || data.reference || reference;
+          if (data.message) gatewayMessage = data.message;
+        } else {
+          const errMsg = data.message || data.error || `Payment gateway rejected deposit (HTTP ${res.status})`;
+          console.error('[Cropify Payment Provider Error]:', errMsg, data);
+          throw new Error(errMsg);
+        }
+      } else {
+        const payload = {
+          reference,
+          msisdn,
+          amount,
+          currency: options.currency || 'UGX',
+          description: options.description || 'Cropify Wallet Deposit',
+        };
+
         const res = await fetch(`${baseUrl}/primepay-collect`, {
           method: 'POST',
           headers: {
@@ -168,44 +233,20 @@ export const primepay: PaymentClient = {
 
         clearTimeout(timer);
 
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          if (data.success !== false) {
-            transactionId = data.transaction_id || data.transactionId || reference;
-            if (data.message) gatewayMessage = data.message;
-          }
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success !== false && data.status !== false) {
+          transactionId = data.transaction_id || data.transactionId || reference;
+          if (data.message) gatewayMessage = data.message;
         } else {
-          console.warn(`[Cropify PrimePay] Live gateway returned HTTP ${res.status}, continuing in resilient mode`);
+          const errMsg = data.message || data.error || `Payment gateway rejected deposit (HTTP ${res.status})`;
+          console.error('[Cropify Payment Provider Error]:', errMsg, data);
+          throw new Error(errMsg);
         }
-      } catch (err: any) {
-        clearTimeout(timer);
-        console.warn(`[Cropify PrimePay] Gateway connection attempt skipped (${err.message}), continuing in resilient mode`);
       }
-    }
-
-    // Register transaction for verification
-    trackedPayments.set(reference, {
-      reference,
-      transactionId,
-      type: 'deposit',
-      amount,
-      phone: phoneFormatted,
-      provider: providerName,
-      status: 'processing',
-      createdAt: Date.now(),
-    });
-
-    if (transactionId !== reference) {
-      trackedPayments.set(transactionId, {
-        reference,
-        transactionId,
-        type: 'deposit',
-        amount,
-        phone: phoneFormatted,
-        provider: providerName,
-        status: 'processing',
-        createdAt: Date.now(),
-      });
+    } catch (err: any) {
+      clearTimeout(timer);
+      console.error('[Cropify Payment Provider Dispatch Failed]:', err.message);
+      throw err;
     }
 
     return {
@@ -221,8 +262,9 @@ export const primepay: PaymentClient = {
     const msisdn = normalizeUgandaMsisdn(rawPhone);
     const phoneFormatted = `+${msisdn}`;
 
-    const reference = `PAYOUT_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const reference = crypto.randomUUID();
     const apiKey = getPrimePayApiKey();
+    const apiSecret = getPrimePayWebhookSecret();
     const baseUrl = getPrimePayBaseUrl();
     const amount = Math.round(options.amount);
 
@@ -233,19 +275,63 @@ export const primepay: PaymentClient = {
     let transactionId = reference;
     let gatewayMessage = `Withdrawal of UGX ${amount.toLocaleString()} initiated to ${phoneFormatted}. Funds will arrive shortly.`;
 
-    if (isExternalGatewayConfigured(baseUrl)) {
-      const payload = {
-        reference,
-        msisdn,
-        amount,
-        currency: options.currency || 'UGX',
-        description: options.description || 'Cropify Wallet Withdrawal',
-      };
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
 
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 6000);
+    try {
+      if (baseUrl.includes('nylonpay.nilesquad.com') || baseUrl.endsWith('/services')) {
+        const fingerprint = generateFingerprint();
+        const innerPayload = {
+          reference,
+          amount,
+          currency: options.currency || 'UGX',
+          customer: {
+            name: options.customer?.name || options.destination?.accountHolderName || 'Cropify Customer',
+            phoneNumber: msisdn,
+          },
+          destination: {
+            accountHolderName: options.destination?.accountHolderName || options.customer?.name || 'Cropify Customer',
+            accountNumber: msisdn,
+          },
+          description: options.description || 'Cropify Wallet Withdrawal',
+          _fingerprint: fingerprint,
+        };
 
-      try {
+        const headers = buildNylonAuthHeaders(apiKey, apiSecret, innerPayload, fingerprint);
+        const body = {
+          intent: 'execute',
+          service: 'sdk',
+          action: 'sdk-make-payout',
+          payload: innerPayload,
+        };
+
+        const res = await fetch(baseUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timer);
+
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.status !== false && data.success !== false) {
+          transactionId = data.data?.reference || data.data?.id || data.reference || reference;
+          if (data.message) gatewayMessage = data.message;
+        } else {
+          const errMsg = data.message || data.error || `Payment gateway rejected withdrawal (HTTP ${res.status})`;
+          console.error('[Cropify Payment Provider Payout Error]:', errMsg, data);
+          throw new Error(errMsg);
+        }
+      } else {
+        const payload = {
+          reference,
+          msisdn,
+          amount,
+          currency: options.currency || 'UGX',
+          description: options.description || 'Cropify Wallet Withdrawal',
+        };
+
         const res = await fetch(`${baseUrl}/primepay-send`, {
           method: 'POST',
           headers: {
@@ -258,29 +344,21 @@ export const primepay: PaymentClient = {
 
         clearTimeout(timer);
 
-        if (res.ok) {
-          const data = await res.json().catch(() => ({}));
-          if (data.success !== false) {
-            transactionId = data.transaction_id || data.transactionId || reference;
-            if (data.message) gatewayMessage = data.message;
-          }
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success !== false && data.status !== false) {
+          transactionId = data.transaction_id || data.transactionId || reference;
+          if (data.message) gatewayMessage = data.message;
+        } else {
+          const errMsg = data.message || data.error || `Payment gateway rejected withdrawal (HTTP ${res.status})`;
+          console.error('[Cropify Payment Provider Payout Error]:', errMsg, data);
+          throw new Error(errMsg);
         }
-      } catch (err: any) {
-        clearTimeout(timer);
-        console.warn(`[Cropify PrimePay] Payout live connection skipped (${err.message}), continuing in resilient mode`);
       }
+    } catch (err: any) {
+      clearTimeout(timer);
+      console.error('[Cropify Payout Dispatch Failed]:', err.message);
+      throw err;
     }
-
-    trackedPayments.set(reference, {
-      reference,
-      transactionId,
-      type: 'payout',
-      amount,
-      phone: phoneFormatted,
-      provider: 'Mobile Money',
-      status: 'processing',
-      createdAt: Date.now(),
-    });
 
     return {
       reference,
@@ -293,25 +371,67 @@ export const primepay: PaymentClient = {
   async checkPaymentStatus(transactionIdOrReference: string): Promise<{ status: 'completed' | 'processing' | 'failed'; amount?: number; message?: string; provider?: string }> {
     const baseUrl = getPrimePayBaseUrl();
     const apiKey = getPrimePayApiKey();
+    const apiSecret = getPrimePayWebhookSecret();
 
-    // 1. If a live external gateway is configured, check it first
-    if (isExternalGatewayConfigured(baseUrl)) {
-      try {
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 4000);
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 6000);
+
+      if (baseUrl.includes('nylonpay.nilesquad.com') || baseUrl.endsWith('/services')) {
+        const fingerprint = generateFingerprint();
+        const innerPayload = {
+          reference: transactionIdOrReference,
+          _fingerprint: fingerprint,
+        };
+        const headers = buildNylonAuthHeaders(apiKey, apiSecret, innerPayload, fingerprint);
+        const body = {
+          intent: 'execute',
+          service: 'sdk',
+          action: 'sdk-get-status',
+          payload: innerPayload,
+        };
+
+        const res = await fetch(baseUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timer);
+
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          const payload = data.data || data;
+          const rawStatus = (payload.status || '').toLowerCase();
+          if (rawStatus === 'successful' || rawStatus === 'completed' || rawStatus === 'success') {
+            return {
+              status: 'completed',
+              amount: Number(payload.amount),
+              provider: payload.provider || 'Mobile Money',
+              message: 'Payment completed successfully.',
+            };
+          }
+          if (rawStatus === 'failed' || rawStatus === 'cancelled' || rawStatus === 'expired' || rawStatus === 'declined') {
+            return {
+              status: 'failed',
+              message: payload.failure_reason || payload.failureReason || 'Payment was cancelled or failed.',
+            };
+          }
+        }
+      } else {
         const url = `${baseUrl}/primepay-status?transaction_id=${encodeURIComponent(transactionIdOrReference)}`;
-
         const res = await fetch(url, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
           },
           signal: controller.signal,
-        }).catch(() => null);
+        });
 
         clearTimeout(timer);
 
-        if (res && res.ok) {
+        if (res.ok) {
           const data = await res.json().catch(() => ({}));
           const rawStatus = (data.status || '').toLowerCase();
           if (rawStatus === 'success' || rawStatus === 'successful' || rawStatus === 'completed') {
@@ -329,36 +449,9 @@ export const primepay: PaymentClient = {
             };
           }
         }
-      } catch {
-        // Fall through to resilient verifier
       }
-    }
-
-    // 2. Check local transaction store
-    const tracked = trackedPayments.get(transactionIdOrReference);
-    const now = Date.now();
-
-    let createdAt = tracked?.createdAt;
-    if (!createdAt) {
-      // Extract timestamp from reference if structured ORDER_1725648... or PAYOUT_1725648...
-      const match = transactionIdOrReference.match(/(?:ORDER|PAYOUT|PWP)[\-_](\d{12,14})/);
-      if (match) {
-        createdAt = parseInt(match[1], 10);
-      }
-    }
-
-    // Allow 3 seconds for USSD prompt delivery and user PIN confirmation
-    const APPROVAL_WINDOW_MS = 3000;
-    if (createdAt && (now - createdAt >= APPROVAL_WINDOW_MS)) {
-      if (tracked) {
-        tracked.status = 'completed';
-      }
-      return {
-        status: 'completed',
-        amount: tracked?.amount,
-        provider: tracked?.provider || 'Mobile Money',
-        message: 'Mobile Money transaction approved and confirmed.',
-      };
+    } catch {
+      // Network timeout or uncontactable gateway — stays processing awaiting handset approval
     }
 
     return {
@@ -371,7 +464,7 @@ export const primepay: PaymentClient = {
     try {
       const apiKey = getPrimePayApiKey();
       const baseUrl = getPrimePayBaseUrl();
-      if (isExternalGatewayConfigured(baseUrl)) {
+      if (!baseUrl.includes('nylonpay.nilesquad.com')) {
         const res = await fetch(`${baseUrl}/primepay-balance?currency=UGX`, {
           method: 'GET',
           headers: {

@@ -53,22 +53,9 @@ export async function GET(req: Request) {
     });
   }
 
-  // If still processing or pending, inquire with PrimePay payment gateway
+  // If still processing or pending, inquire with live payment gateway
   const statusLookupId = momoReq.provider_ref || reference;
-  let inquiry = await primepay.checkPaymentStatus(statusLookupId);
-
-  // If still processing but prompt was dispatched >= 3.5 seconds ago, confirm deposit
-  if (inquiry.status === 'processing' && momoReq.created_at) {
-    const ageMs = Date.now() - new Date(momoReq.created_at).getTime();
-    if (ageMs >= 3500) {
-      inquiry = {
-        status: 'completed',
-        amount: Number(momoReq.amount),
-        provider: momoReq.provider,
-        message: 'Deposit confirmed and approved via handset PIN.',
-      };
-    }
-  }
+  const inquiry = await primepay.checkPaymentStatus(statusLookupId);
 
   if (inquiry.status === 'completed') {
     if (momoReq.type === 'deposit') {
@@ -211,20 +198,7 @@ export async function POST(req: Request) {
   }
 
   const statusLookupId = momoReq.provider_ref || reference;
-  let inquiry = await primepay.checkPaymentStatus(statusLookupId);
-
-  // If still processing but prompt was dispatched >= 3.5 seconds ago, confirm deposit
-  if (inquiry.status === 'processing' && momoReq.created_at) {
-    const ageMs = Date.now() - new Date(momoReq.created_at).getTime();
-    if (ageMs >= 3500) {
-      inquiry = {
-        status: 'completed',
-        amount: Number(momoReq.amount),
-        provider: momoReq.provider,
-        message: 'Deposit confirmed and approved via handset PIN.',
-      };
-    }
-  }
+  const inquiry = await primepay.checkPaymentStatus(statusLookupId);
 
   if (inquiry.status === 'completed') {
     if (momoReq.type === 'deposit') {
