@@ -2,18 +2,24 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { CopilotChat } from '@/components/copilot/CopilotChat';
 
+export const metadata = {
+  title: 'Cropify Copilot | Farmer AI Assistant',
+  description: 'Instant agricultural guidance, market prices, order tracking, and escrow status.',
+};
+
 export default async function FarmerAssistantPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/signin');
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
-      <div>
-        <h1 style={{ fontSize: 22, fontWeight: 800, color: 'var(--d-text)', letterSpacing: '-0.03em', marginBottom: 4 }}>Copilot</h1>
-        <p style={{ fontSize: 13, color: 'var(--d-muted)' }}>Ask about your orders, escrow, crop prices, or get planting/pest guidance.</p>
+    <div className="max-w-4xl lg:max-w-5xl mx-auto w-full h-[calc(100vh-110px)] md:h-[calc(100vh-130px)] min-h-[600px] flex flex-col">
+      <header className="sr-only">
+        <h1>Cropify Farmer Copilot — AI Agronomy & Market Assistant</h1>
+      </header>
+      <div className="flex-1 min-h-0 w-full flex flex-col">
+        <CopilotChat role="farmer" />
       </div>
-      <CopilotChat role="farmer" />
     </div>
   );
 }

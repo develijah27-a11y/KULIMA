@@ -152,7 +152,7 @@ function Hero() {
                   marginBottom: 10,
                 }}
               >
-                Cropify — Smart Farm Management for Uganda
+                Cropify — Smart Farm Management & Agri-Trade Platform
               </span>
               Farm smarter.<br />
               <span style={{ color: GREEN }}>Get paid,&nbsp;</span>

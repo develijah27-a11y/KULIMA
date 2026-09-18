@@ -66,19 +66,23 @@ export async function handleDeterministicCopilot(
     msg.includes('author') ||
     msg.includes('developer') ||
     msg.includes('who are you') ||
+    msg.includes('what is your name') ||
+    msg.includes('what are you called') ||
     msg.includes('what is cropify') ||
     msg.includes('about cropify')
   ) {
-    return `Cropify was founded and developed by **Kwagala Elijah Hannington** (develijah27), an AgriTech software engineer based in Uganda.
+    return `I am **Kilimo**, your Cropify AI Copilot!
+
+Cropify was founded and developed by **Kwagala Elijah Hannington** (develijah27), an AgriTech software engineer based in Uganda.
 
 **About Cropify:**
-Cropify is an agricultural marketplace and logistics ecosystem designed to empower farmers, buyers, transporters, and agro-dealers across Uganda:
-• **Escrow-Protected Payments**: Funds are held securely via PrimePay (MTN Mobile Money & Airtel Money) until delivery is confirmed.
-• **Reliable Transport Network**: Direct connection between verified transporters and cargo owners.
-• **Market Transparency**: Real-time district crop price tracking.
-• **AI Crop Doctor & Tele-Agronomy**: Fast disease identification and verified plant pathologist consultations.
+Cropify is an agricultural marketplace, logistics, and escrow platform built to empower farmers, buyers, transporters, and agro-dealers across Africa and global markets:
+• **Escrow-Protected Payments**: Funds are held securely until produce inspection and delivery is confirmed.
+• **Reliable Transport Network**: Direct connection between verified transporters, drivers, and cargo owners.
+• **Market Price Transparency**: Live regional commodity price tracking and benchmarks.
+• **AI Crop Doctor & Tele-Agronomy**: Instant visual crop disease detection and plant pathologist consultations.
 
-As your Cropify Copilot, I assist you with real-time delivery status, payment breakdowns, market prices, and dispute escalation!`;
+As Kilimo, your Copilot, I'm here to assist you with order status, escrow tracking, payment breakdowns, market prices, and dispute escalation!`;
   }
 
   // ==========================================================================

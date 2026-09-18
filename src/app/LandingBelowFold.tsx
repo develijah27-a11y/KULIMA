@@ -490,7 +490,7 @@ function Footer() {
 
         <div style={{ borderTop: `1px solid ${LINE}`, paddingTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
           <p style={{ fontSize: 12, color: INK_MUTE, margin: 0 }}>© 2026 Cropify. All rights reserved.</p>
-          <p style={{ fontSize: 12, color: INK_MUTE, margin: 0 }}>Built for Ugandan farmers.</p>
+          <p style={{ fontSize: 12, color: INK_MUTE, margin: 0 }}>Empowering farmers, buyers, and transporters across Africa.</p>
         </div>
       </div>
     </footer>

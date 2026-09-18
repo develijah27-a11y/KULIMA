@@ -40,9 +40,9 @@ const plexMono  = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400","500"], var
 // this from what auth is actually configured for silently breaks
 // biometric sign-in for anyone who lands here via search/shared links.
 const SITE_URL = "https://www.cropifyapp.com";
-const SITE_TITLE = "Cropify — Smart Farm Management for Uganda";
+const SITE_TITLE = "Cropify — Smart Farm Management & Agri-Trade Platform";
 const SITE_DESCRIPTION =
-  "Real-time weather forecasts, market prices, crop disease detection, and buyer connections — all in one platform for Ugandan smallholder farmers.";
+  "Real-time weather forecasts, commodity prices, crop disease detection, logistics, and escrow-protected trade — all in one unified platform for farmers, buyers, and transporters.";
 
 export const metadata: Metadata = {
   title: SITE_TITLE,

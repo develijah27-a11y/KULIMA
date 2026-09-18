@@ -1,7 +1,7 @@
 {
   "name": "Cropify — Smart Farm Management",
   "short_name": "Cropify",
-  "description": "Real-time weather, market prices, crop disease detection, and buyer connections for Ugandan smallholder farmers.",
+  "description": "Real-time weather, commodity market prices, crop disease detection, logistics dispatch, and escrow connections for farmers, buyers, and transporters.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#166B3A",
