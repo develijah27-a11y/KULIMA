@@ -267,6 +267,7 @@ function DeliveryRow({ d, vehicle, photoUrl, showPay }: { d: any; vehicle?: any;
               cargoType={d.cargo_type}
               cargoKg={d.cargo_kg}
               deliveryType={d.delivery_type}
+              viewerRole="requester"
             />
           </div>
         )}

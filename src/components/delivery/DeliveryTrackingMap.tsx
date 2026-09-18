@@ -4,10 +4,10 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Marker as LMarker, Polyline as LPolyline } from 'leaflet';
 import {
   Volume2, VolumeX, Search, Maximize2, Minimize2, Heart, X, Phone,
-  Plus, Minus, Crosshair, Navigation,
+  Plus, Minus, Crosshair, Navigation, MessageSquare,
 } from 'lucide-react';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
-import { openPhoneDialer, formatPhoneDisplay } from '@/lib/phone-dialer';
+import { openPhoneDialer, formatPhoneDisplay, getWhatsAppUri } from '@/lib/phone-dialer';
 import {
   DARK_NAV_TILE_URL,
   DARK_NAV_TILE_OPTIONS,
@@ -60,6 +60,8 @@ interface Props {
   onToggleDetails?: () => void;
   fullscreenByDefault?: boolean;
   compact?: boolean;
+  viewerRole?: 'transporter' | 'requester';
+  localDriverCoords?: { lat: number; lng: number; heading?: number | null } | null;
 }
 
 // OpenRouteService geometry proxy
@@ -174,10 +176,13 @@ export function DeliveryTrackingMap({
   onToggleDetails,
   fullscreenByDefault = false,
   compact = false,
+  viewerRole,
+  localDriverCoords,
 }: Props) {
   const mapRef = useRef<LMap | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const liveMarkerRef = useRef<LMarker | null>(null);
+  const requesterMarkerRef = useRef<LMarker | null>(null);
   const routeLineRef = useRef<LPolyline | null>(null);
   const routeGlowRef = useRef<LPolyline | null>(null);
   const traveledLineRef = useRef<LPolyline | null>(null);
@@ -198,6 +203,8 @@ export function DeliveryTrackingMap({
   const [nextManeuverDistance, setNextManeuverDistance] = useState<string>('17 km to ↰');
   const [showQuickSearch, setShowQuickSearch] = useState(false);
   const [compassHeading, setCompassHeading] = useState(0);
+  const [activeViewerRole, setActiveViewerRole] = useState<'transporter' | 'requester'>(viewerRole || 'requester');
+  const [activeTripPhase, setActiveTripPhase] = useState<string | null>(null);
 
   const districtPickup = UGANDA_DISTRICTS[pickupDistrict];
   const districtDropoff = UGANDA_DISTRICTS[dropoffDistrict];
@@ -384,7 +391,7 @@ export function DeliveryTrackingMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Poll driver position & animate smoothly along road
+  // Poll driver & requester positions & animate smoothly along road
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
@@ -394,92 +401,145 @@ export function DeliveryTrackingMap({
         const res = await fetch(`/api/deliveries/${deliveryId}/location`);
         const json = await res.json();
         if (cancelled || !mapRef.current) return;
-        const loc = json.location;
-        onPosition?.(loc ? { lat: loc.lat, lng: loc.lng, updatedAt: loc.updated_at } : null);
-        if (!loc) return;
+
+        const effectiveRole = viewerRole || json.viewerRole || 'requester';
+        setActiveViewerRole(effectiveRole);
+        if (json.tripPhase) setActiveTripPhase(json.tripPhase);
+
+        // Driver position is always the truck/vehicle's coordinates
+        const driverLoc = (effectiveRole === 'transporter' && localDriverCoords)
+          ? { lat: localDriverCoords.lat, lng: localDriverCoords.lng, updated_at: new Date().toISOString() }
+          : (json.driverLocation || (effectiveRole === 'requester' ? json.location : null));
+
+        // Requester position (if shared)
+        const requesterLoc = json.requesterLocation || (effectiveRole === 'transporter' ? json.location : null);
+
+        onPosition?.(driverLoc ? { lat: driverLoc.lat, lng: driverLoc.lng, updatedAt: driverLoc.updated_at } : null);
 
         const L = await import('leaflet');
-        const nextPos: [number, number] = [loc.lat, loc.lng];
-        const prevPos = lastPosRef.current;
 
-        if (prevPos && (prevPos[0] !== nextPos[0] || prevPos[1] !== nextPos[1])) {
-          const bearing = bearingDeg(prevPos, nextPos);
-          headingRef.current = bearing;
-          setCompassHeading(Math.round(bearing));
-        }
+        // 1. DRIVER VEHICLE (3D Car / Truck Marker)
+        if (driverLoc) {
+          const nextPos: [number, number] = [driverLoc.lat, driverLoc.lng];
+          const prevPos = lastPosRef.current;
 
-        // Calculate distance remaining
-        const target = dropoff || pickup;
-        if (target) {
-          const distKm = haversineKm(nextPos[0], nextPos[1], target.lat, target.lng);
-          setDistanceRemainingKm(Math.max(0.5, distKm));
-          const mins = Math.max(1, Math.round((distKm / 38) * 60));
-          setEtaMinutes(mins);
-          if (distKm < 1) {
-            setNextManeuverDistance(`${Math.round(distKm * 1000)} m to destination`);
-          } else {
-            setNextManeuverDistance(`${distKm.toFixed(1)} km to ↰`);
+          if (prevPos && (prevPos[0] !== nextPos[0] || prevPos[1] !== nextPos[1])) {
+            const bearing = localDriverCoords?.heading ?? bearingDeg(prevPos, nextPos);
+            headingRef.current = bearing;
+            setCompassHeading(Math.round(bearing));
+          }
+
+          // Target destination for distance remaining & ETA:
+          const target = (effectiveRole === 'transporter' && json.tripPhase === 'heading_to_pickup')
+            ? pickup
+            : (requesterLoc ? { lat: requesterLoc.lat, lng: requesterLoc.lng } : (dropoff || pickup));
+
+          if (target) {
+            const distKm = haversineKm(nextPos[0], nextPos[1], target.lat, target.lng);
+            setDistanceRemainingKm(Math.max(0.2, distKm));
+            const mins = Math.max(1, Math.round((distKm / 38) * 60));
+            setEtaMinutes(mins);
+            if (distKm < 0.5) {
+              setNextManeuverDistance(`${Math.round(distKm * 1000)} m to arrival`);
+            } else if (distKm < 1) {
+              setNextManeuverDistance(`${Math.round(distKm * 1000)} m to destination`);
+            } else {
+              setNextManeuverDistance(`${distKm.toFixed(1)} km to ↰`);
+            }
+          }
+
+          const vehiclePopupLabel = effectiveRole === 'transporter'
+            ? '<b>🚚 Your Vehicle</b><br/>Broadcasting Live GPS'
+            : `<b>🚗 Driver (${otherPartyLabel})</b><br/>Live on route`;
+
+          // Create or animate 3D car marker
+          if (!liveMarkerRef.current) {
+            const icon = L.divIcon({
+              className: '',
+              iconSize: [56, 56],
+              iconAnchor: [28, 28],
+              html: carMarkerHtml(headingRef.current),
+            });
+            liveMarkerRef.current = L.marker(nextPos, { icon, zIndexOffset: 1200 })
+              .addTo(mapRef.current)
+              .bindPopup(vehiclePopupLabel);
+            lastPosRef.current = nextPos;
+          } else if (prevPos) {
+            if (animRef.current) cancelAnimationFrame(animRef.current);
+            const marker = liveMarkerRef.current;
+            const icon = L.divIcon({
+              className: '',
+              iconSize: [56, 56],
+              iconAnchor: [28, 28],
+              html: carMarkerHtml(headingRef.current),
+            });
+            marker.setIcon(icon);
+
+            const start = performance.now();
+            const DURATION = 950;
+            const step = (now: number) => {
+              const t = Math.min(1, (now - start) / DURATION);
+              const eased = 1 - (1 - t) * (1 - t);
+              const lat = prevPos[0] + (nextPos[0] - prevPos[0]) * eased;
+              const lng = prevPos[1] + (nextPos[1] - prevPos[1]) * eased;
+              marker.setLatLng([lat, lng]);
+              if (!userPannedRef.current && mapRef.current) {
+                mapRef.current.panTo([lat, lng], { animate: false });
+              }
+              if (t < 1) {
+                animRef.current = requestAnimationFrame(step);
+              } else {
+                lastPosRef.current = nextPos;
+              }
+            };
+            animRef.current = requestAnimationFrame(step);
+          }
+
+          // Split route into Traveled (slate road) & Ahead (glowing cyan)
+          const path = routePathRef.current;
+          if (path && mapRef.current) {
+            const idx = nearestPathIndex(path, nextPos);
+            const traveled = path.slice(0, idx + 1);
+            if (traveled.length >= 2) {
+              if (traveledLineRef.current) {
+                traveledLineRef.current.setLatLngs(traveled);
+              } else {
+                traveledLineRef.current = L.polyline(traveled, {
+                  color: '#334155',
+                  weight: 5,
+                  opacity: 0.8,
+                  lineCap: 'round',
+                  lineJoin: 'round',
+                }).addTo(mapRef.current);
+              }
+            }
           }
         }
 
-        // Create or animate 3D car marker
-        if (!liveMarkerRef.current) {
-          const icon = L.divIcon({
-            className: '',
-            iconSize: [56, 56],
-            iconAnchor: [28, 28],
-            html: carMarkerHtml(headingRef.current),
-          });
-          liveMarkerRef.current = L.marker(nextPos, { icon, zIndexOffset: 1200 }).addTo(mapRef.current).bindPopup(otherPartyLabel);
-          lastPosRef.current = nextPos;
-        } else if (prevPos) {
-          if (animRef.current) cancelAnimationFrame(animRef.current);
-          const marker = liveMarkerRef.current;
-          const icon = L.divIcon({
-            className: '',
-            iconSize: [56, 56],
-            iconAnchor: [28, 28],
-            html: carMarkerHtml(headingRef.current),
-          });
-          marker.setIcon(icon);
+        // 2. REQUESTER LIVE PIN (Blue Pulsing Location Beacon)
+        if (requesterLoc) {
+          const reqPos: [number, number] = [requesterLoc.lat, requesterLoc.lng];
+          const reqPopup = effectiveRole === 'transporter'
+            ? `<b>📍 Requester (${otherPartyLabel})</b><br/>Waiting at this live GPS spot`
+            : `<b>📍 Your Location</b><br/>Shared live with driver`;
 
-          const start = performance.now();
-          const DURATION = 950;
-          const step = (now: number) => {
-            const t = Math.min(1, (now - start) / DURATION);
-            const eased = 1 - (1 - t) * (1 - t);
-            const lat = prevPos[0] + (nextPos[0] - prevPos[0]) * eased;
-            const lng = prevPos[1] + (nextPos[1] - prevPos[1]) * eased;
-            marker.setLatLng([lat, lng]);
-            if (!userPannedRef.current && mapRef.current) {
-              mapRef.current.panTo([lat, lng], { animate: false });
-            }
-            if (t < 1) {
-              animRef.current = requestAnimationFrame(step);
-            } else {
-              lastPosRef.current = nextPos;
-            }
-          };
-          animRef.current = requestAnimationFrame(step);
-        }
-
-        // Split route into Traveled (slate road) & Ahead (glowing cyan)
-        const path = routePathRef.current;
-        if (path && mapRef.current) {
-          const idx = nearestPathIndex(path, nextPos);
-          const traveled = path.slice(0, idx + 1);
-          if (traveled.length >= 2) {
-            if (traveledLineRef.current) {
-              traveledLineRef.current.setLatLngs(traveled);
-            } else {
-              traveledLineRef.current = L.polyline(traveled, {
-                color: '#334155',
-                weight: 5,
-                opacity: 0.8,
-                lineCap: 'round',
-                lineJoin: 'round',
-              }).addTo(mapRef.current);
-            }
+          if (!requesterMarkerRef.current) {
+            const requesterIcon = L.divIcon({
+              className: '',
+              iconSize: [34, 34],
+              iconAnchor: [17, 17],
+              html: `
+                <div style="position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;">
+                  <div style="position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(59,130,246,0.35);animation:cropify-pulse 2s infinite;"></div>
+                  <div style="width:20px;height:20px;border-radius:50%;background:#3B82F6;border:3px solid #FFFFFF;box-shadow:0 0 14px #3B82F6;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;">📍</div>
+                </div>
+              `,
+            });
+            requesterMarkerRef.current = L.marker(reqPos, { icon: requesterIcon, zIndexOffset: 1100 })
+              .addTo(mapRef.current)
+              .bindPopup(reqPopup);
+          } else {
+            requesterMarkerRef.current.setLatLng(reqPos);
           }
         }
       } catch {
@@ -493,7 +553,7 @@ export function DeliveryTrackingMap({
       cancelled = true;
       clearInterval(interval);
     };
-  }, [ready, deliveryId, otherPartyLabel, pollMs, onPosition, dropoff, pickup]);
+  }, [ready, deliveryId, otherPartyLabel, pollMs, onPosition, dropoff, pickup, viewerRole, localDriverCoords]);
 
   // Compute calculated arrival time
   const arrivalTimeStr = (() => {
@@ -673,13 +733,13 @@ export function DeliveryTrackingMap({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 22,
+                fontSize: activeViewerRole === 'transporter' ? 22 : 20,
                 fontWeight: 900,
                 color: '#A7F3D0',
                 flexShrink: 0,
               }}
             >
-              ↰
+              {activeViewerRole === 'transporter' ? '↰' : '🚚'}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
               <h2
@@ -697,14 +757,26 @@ export function DeliveryTrackingMap({
                   WebkitBoxOrient: 'vertical',
                 }}
               >
-                {roadTitle}
+                {activeViewerRole === 'transporter'
+                  ? roadTitle
+                  : (activeTripPhase === 'pickup_en_route'
+                      ? 'Driver Heading to Farm Pickup'
+                      : activeTripPhase === 'cargo_loaded'
+                      ? 'Cargo Loaded · Dispatched'
+                      : activeTripPhase === 'delivery_en_route'
+                      ? 'Driver En Route to You'
+                      : activeTripPhase === 'delivered'
+                      ? 'Cargo Arrived · Delivered'
+                      : `Driver (${otherPartyLabel}) · Live on Route`)}
               </h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 13, fontWeight: 800, color: '#FCD34D' }}>
-                  {nextManeuverDistance}
+                  {activeViewerRole === 'transporter' ? nextManeuverDistance : `~${etaMinutes} min away`}
                 </span>
                 <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.85)' }}>
-                  · Towards {dropoffDistrict}
+                  {activeViewerRole === 'transporter'
+                    ? `· Towards ${dropoffDistrict}`
+                    : `· ${distanceRemainingKm.toFixed(1)} km remaining`}
                 </span>
               </div>
             </div>
@@ -714,7 +786,12 @@ export function DeliveryTrackingMap({
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
             <button
               type="button"
-              onClick={() => speakInstruction(`${roadTitle}. In ${nextManeuverDistance.replace('to ↰', 'turn ahead')}`)}
+              onClick={() => {
+                const voiceMsg = activeViewerRole === 'transporter'
+                  ? `${roadTitle}. In ${nextManeuverDistance.replace('to ↰', 'turn ahead')}`
+                  : `Driver ${otherPartyLabel} is en route, approximately ${etaMinutes} minutes away towards ${dropoffDistrict}.`;
+                speakInstruction(voiceMsg);
+              }}
               title="Spoken Maneuver Guidance"
               style={{
                 width: 40,
@@ -1140,6 +1217,36 @@ export function DeliveryTrackingMap({
               >
                 <Phone size={14} /> Call
               </button>
+            )}
+
+            {driverPhone && (
+              <a
+                href={getWhatsAppUri(
+                  driverPhone,
+                  activeViewerRole === 'transporter'
+                    ? `Hello ${otherPartyLabel}, this is your Cropify driver regarding delivery #${deliveryId.slice(0, 8)}.`
+                    : `Hello ${otherPartyLabel}, I am tracking my Cropify order #${deliveryId.slice(0, 8)}.`
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '8px 14px',
+                  borderRadius: 10,
+                  background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+                  color: '#FFFFFF',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  boxShadow: '0 2px 10px rgba(37, 211, 102, 0.4)',
+                  flexShrink: 0,
+                }}
+                title={`WhatsApp chat with ${otherPartyLabel}: ${formatPhoneDisplay(driverPhone)}`}
+              >
+                <MessageSquare size={14} /> WhatsApp
+              </a>
             )}
           </div>
         </div>

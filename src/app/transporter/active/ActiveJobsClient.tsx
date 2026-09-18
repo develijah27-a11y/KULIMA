@@ -368,6 +368,7 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
   setTrackingId: (id: string | null) => void;
   updateDelivery: (id: string, action: TripAction) => void;
 }) {
+  const [driverCoords, setDriverCoords] = useState<{ lat: number; lng: number; heading?: number | null } | null>(null);
   const tm     = TYPE_META[d.delivery_type] ?? TYPE_META.standard;
   const isBusy = busy === d.id;
   const isAssigned  = d.status === 'assigned';
@@ -403,7 +404,12 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
         <p style={{ fontSize: 10, color: C.muted, margin: '2px 0 0' }}>Your earnings · paid after delivery confirmed</p>
       </div>
 
-      <ActiveTripLocationStreamer deliveryId={d.id} status={d.status} tripPhase={d.trip_phase} />
+      <ActiveTripLocationStreamer
+        deliveryId={d.id}
+        status={d.status}
+        tripPhase={d.trip_phase}
+        onPositionUpdate={(coords) => setDriverCoords({ lat: coords.lat, lng: coords.lng, heading: coords.heading })}
+      />
 
       {(d.pickup_location || d.dropoff_location) && (
         <div style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>
@@ -482,6 +488,9 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
           pickupCoords={d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null}
           dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
           otherPartyLabel={d.requester?.full_name ?? 'Requester'}
+          driverPhone={d.requester?.phone_number}
+          viewerRole="transporter"
+          localDriverCoords={driverCoords}
           compact={true}
           onToggleDetails={() => setTrackingId(d.id)}
         />

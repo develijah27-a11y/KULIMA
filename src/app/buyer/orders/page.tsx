@@ -424,6 +424,29 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
               <p style={{ fontSize: 11.5, color: C.muted, margin: 0, lineHeight: 1.5 }}>
                 {guide.desc}
               </p>
+
+              {['paid', 'dispatched', 'in_transit'].includes(order.status) && (
+                <div style={{ marginTop: 10 }}>
+                  <Link
+                    href="/buyer/deliveries"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '7px 14px',
+                      borderRadius: 8,
+                      background: 'var(--color-primary, #166B3A)',
+                      color: '#FFFFFF',
+                      fontSize: 12,
+                      fontWeight: 800,
+                      textDecoration: 'none',
+                      boxShadow: '0 2px 8px rgba(22, 107, 58, 0.3)',
+                    }}
+                  >
+                    <Truck size={13} /> Open Live GPS Tracking Map ➔
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         );

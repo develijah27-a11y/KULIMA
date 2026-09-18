@@ -114,6 +114,7 @@ export function DriverTrackingSheet({ open, onClose, delivery, otherParty, share
           driverPhone={otherParty.phone}
           cargoType={delivery.cargo_type}
           cargoKg={delivery.cargo_kg}
+          viewerRole={otherParty.role === 'driver' ? 'requester' : 'transporter'}
           onPosition={handlePosition}
           onClose={onClose}
         />
