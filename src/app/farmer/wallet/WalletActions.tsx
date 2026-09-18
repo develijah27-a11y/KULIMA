@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Lock, Smartphone, RefreshCw, Check, AlertCircle, Sparkles } from 'lucide-react';
+import { CheckCircle2, Lock, Smartphone, RefreshCw, Check, AlertCircle } from 'lucide-react';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -207,7 +207,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
           {isDepositConfirmed
             ? 'Deposit Confirmed & Credited!'
             : mode === 'deposit'
-            ? 'Awaiting PIN on Your Handset'
+            ? 'Awaiting Mobile Money PIN'
             : mode === 'send'
             ? 'Money Sent Successfully'
             : 'Withdrawal Initiated'}
@@ -215,40 +215,25 @@ export function WalletActions({ balance, escrowBalance }: Props) {
 
         <p style={{ color: C.muted, fontSize: 13.5, lineHeight: 1.5, maxWidth: 380, margin: '4px auto 16px' }}>
           {isDepositConfirmed
-            ? `Your wallet balance has been updated with UGX ${parseFloat(amount || '0').toLocaleString()}.`
+            ? `UGX ${parseFloat(amount || '0').toLocaleString()} has been credited to your wallet balance.`
+            : mode === 'deposit'
+            ? `Payment prompt dispatched automatically to ${phone}. Enter your PIN on your phone.`
             : success}
         </p>
 
         {mode === 'deposit' && !isDepositConfirmed && (
-          <div style={{ background: 'var(--color-surface-2)', borderRadius: 14, padding: '14px 16px', maxWidth: 400, margin: '0 auto 16px', textAlign: 'left', border: `1px solid ${C.border}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <Sparkles size={16} color="#10B981" />
-              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Automatic Verification Active</span>
+          <div style={{ background: 'var(--color-surface-2)', borderRadius: 14, padding: '16px 18px', maxWidth: 400, margin: '0 auto 16px', textAlign: 'center', border: `1px solid ${C.border}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10B981', display: 'inline-block', boxShadow: '0 0 10px #10B981' }} className="animate-pulse" />
+              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>Automated Network Sync Active</span>
             </div>
-            <div style={{ fontSize: 12.5, color: C.muted, lineHeight: 1.5, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <p style={{ margin: 0 }}>
-                1. Look at your phone for the <strong>{provider === 'airtel' ? 'Airtel Money' : 'MTN MoMo'}</strong> PIN prompt.
-              </p>
-              <p style={{ margin: 0 }}>
-                2. Enter your PIN to authorize the payment.
-              </p>
-              <p style={{ margin: 0, padding: '6px 8px', background: 'rgba(0,0,0,0.04)', borderRadius: 6 }}>
-                <span style={{ fontWeight: 600, color: C.text }}>No pop-up?</span> Dial{' '}
-                <strong style={{ color: provider === 'airtel' ? '#EF4444' : '#F59E0B' }}>
-                  {provider === 'airtel' ? '*185# → Pending Approvals' : '*165# → My Account → Approvals'}
-                </strong>
-              </p>
-              <p style={{ margin: 0, color: C.greenMed, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Check size={14} /> As soon as you enter your PIN, the system will detect the payment automatically.
-              </p>
+            <p style={{ fontSize: 12.5, color: C.muted, margin: '0 0 12px', lineHeight: 1.5 }}>
+              Connected directly to <strong>{provider === 'airtel' ? 'Airtel Money' : 'MTN Mobile Money'}</strong>. As soon as you enter your PIN, your wallet will automatically credit instantly.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: C.greenMed, fontSize: 12.5, fontWeight: 600 }}>
+              <RefreshCw size={14} className="animate-spin" />
+              <span>Awaiting handset approval...</span>
             </div>
-          </div>
-        )}
-
-        {isAwaitingPin && !isDepositConfirmed && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: C.greenMed, fontSize: 13, fontWeight: 600, marginBottom: 16 }}>
-            <RefreshCw size={14} className="animate-spin" />
-            <span>Listening for PIN approval on your handset...</span>
           </div>
         )}
 
