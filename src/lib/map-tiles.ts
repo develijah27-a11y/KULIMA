@@ -7,17 +7,18 @@ const MAPBOX_TOKEN =
       process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN)) ||
   '';
 
-// Clean high-resolution satellite imagery (pure imagery, no Google Maps / Leaflet watermarks)
+// Clean high-resolution satellite imagery (pure imagery, no watermarks)
 export const SATELLITE_TILE_URL = MAPBOX_TOKEN
   ? `https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v12/tiles/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`
   : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
-// Clean street/terrain fallback
-export const STREETS_TILE_URL = MAPBOX_TOKEN
-  ? `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`
-  : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+// Fast, crystal-clear road navigation tiles (CartoDB Voyager: crisp roads, districts, labels, 100% open CORS)
+export const STREETS_TILE_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
-// Google hybrid and streets tile URLs — blazing fast CDN, full Uganda road network and labels
+// High-detail street/terrain fallback
+export const ESRI_STREETS_TILE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
+
+// Google hybrid and streets tile URLs with auto-fallback
 export const GOOGLE_HYBRID_TILE_URL = 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
 export const GOOGLE_STREETS_TILE_URL = 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
 
@@ -29,16 +30,16 @@ export const OSM_TILE_OPTIONS = {
   maxZoom: 19,
 };
 
-// Primary default tile URL across the application — pristine satellite view
-export const MAP_TILE_URL = SATELLITE_TILE_URL;
+// Primary default tile URL across the application
+export const MAP_TILE_URL = STREETS_TILE_URL;
 
-// Zero-attribution tile options so no "Leaflet", "Google Maps", or "OpenStreetMap" displays on the screen
+// Zero-attribution tile options
 export const MAP_TILE_OPTIONS = {
   attribution: '',
-  subdomains: '0123',
+  subdomains: 'abcd',
   maxZoom: 20,
   detectRetina: true,
-  crossOrigin: true,
+  crossOrigin: false,
 };
 
 export const HYBRID_TILE_OPTIONS = {
@@ -46,7 +47,7 @@ export const HYBRID_TILE_OPTIONS = {
   subdomains: '0123',
   maxZoom: 20,
   detectRetina: true,
-  crossOrigin: true,
+  crossOrigin: false,
 };
 
 // Ultra-clean high contrast dark night GPS navigation tiles (CartoDB Dark Matter)
@@ -56,7 +57,8 @@ export const DARK_NAV_TILE_OPTIONS = {
   subdomains: 'abcd',
   maxZoom: 20,
   detectRetina: true,
-  crossOrigin: true,
+  crossOrigin: false,
 };
+
 
 

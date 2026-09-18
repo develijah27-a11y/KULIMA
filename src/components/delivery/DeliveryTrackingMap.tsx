@@ -6,23 +6,26 @@ import {
   Volume2, VolumeX, Search, Maximize2, Minimize2, Heart, X, Phone,
   Plus, Minus, Crosshair, Navigation, MessageSquare,
 } from 'lucide-react';
-import { UGANDA_DISTRICTS } from '@/lib/districts';
+import { UGANDA_DISTRICTS, getDistrict } from '@/lib/districts';
 import { openPhoneDialer, formatPhoneDisplay, getWhatsAppUri } from '@/lib/phone-dialer';
 import {
+  STREETS_TILE_URL,
+  ESRI_STREETS_TILE_URL,
   DARK_NAV_TILE_URL,
   DARK_NAV_TILE_OPTIONS,
-  GOOGLE_STREETS_TILE_URL,
-  GOOGLE_HYBRID_TILE_URL,
+  SATELLITE_TILE_URL,
   MAP_TILE_OPTIONS,
   HYBRID_TILE_OPTIONS,
+  OSM_TILE_URL,
+  OSM_TILE_OPTIONS,
 } from '@/lib/map-tiles';
 
-// Reliable tile layer with auto-fallback to high-uptime Google road tiles if any network blocks occur
+// Reliable tile layer with auto-fallback to high-uptime global CDN tiles
 function createReliableTileLayer(L: any, type: 'navigation' | 'satellite' | 'streets') {
-  let url = GOOGLE_STREETS_TILE_URL;
-  let opts = MAP_TILE_OPTIONS;
+  let url = STREETS_TILE_URL;
+  let opts: any = MAP_TILE_OPTIONS;
   if (type === 'satellite') {
-    url = GOOGLE_HYBRID_TILE_URL;
+    url = SATELLITE_TILE_URL;
     opts = HYBRID_TILE_OPTIONS;
   } else if (type === 'navigation') {
     url = DARK_NAV_TILE_URL;
@@ -34,12 +37,14 @@ function createReliableTileLayer(L: any, type: 'navigation' | 'satellite' | 'str
       error.tile.dataset.fallbackTried = 'true';
       const c = error.coords;
       if (c) {
-        error.tile.src = `https://mt1.google.com/vt/lyrs=m&x=${c.x}&y=${c.y}&z=${c.z}`;
+        // Fall back to Esri World Street Map or OSM directly
+        error.tile.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${c.z}/${c.y}/${c.x}`;
       }
     }
   });
   return layer;
 }
+
 
 interface Props {
   deliveryId: string;
@@ -206,10 +211,10 @@ export function DeliveryTrackingMap({
   const [activeViewerRole, setActiveViewerRole] = useState<'transporter' | 'requester'>(viewerRole || 'requester');
   const [activeTripPhase, setActiveTripPhase] = useState<string | null>(null);
 
-  const districtPickup = UGANDA_DISTRICTS[pickupDistrict];
-  const districtDropoff = UGANDA_DISTRICTS[dropoffDistrict];
-  const pickup = pickupCoords ? { lat: pickupCoords.lat, lng: pickupCoords.lng } : districtPickup;
-  const dropoff = dropoffCoords ? { lat: dropoffCoords.lat, lng: dropoffCoords.lng } : districtDropoff;
+  const districtPickup = pickupDistrict ? getDistrict(pickupDistrict.trim()) ?? UGANDA_DISTRICTS[pickupDistrict] : undefined;
+  const districtDropoff = dropoffDistrict ? getDistrict(dropoffDistrict.trim()) ?? UGANDA_DISTRICTS[dropoffDistrict] : undefined;
+  const pickup = pickupCoords?.lat && pickupCoords?.lng ? { lat: pickupCoords.lat, lng: pickupCoords.lng } : districtPickup ?? { lat: 0.3476, lng: 32.5825 };
+  const dropoff = dropoffCoords?.lat && dropoffCoords?.lng ? { lat: dropoffCoords.lat, lng: dropoffCoords.lng } : districtDropoff ?? { lat: 0.3533, lng: 32.7559 };
 
   // Derive realistic highway or corridor name with un-truncated formatting
   const roadTitle = pickupDistrict && dropoffDistrict
@@ -239,6 +244,15 @@ export function DeliveryTrackingMap({
     mapRef.current.panTo(lastPosRef.current, { animate: true, duration: 0.6 });
   }, []);
 
+  // Invalidate map size on fullscreen toggle
+  useEffect(() => {
+    if (mapRef.current) {
+      const t1 = setTimeout(() => mapRef.current?.invalidateSize(), 60);
+      const t2 = setTimeout(() => mapRef.current?.invalidateSize(), 250);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [isFullscreen]);
+
   // Toggle map layer
   const switchLayer = async (nextType: 'navigation' | 'satellite' | 'streets') => {
     if (nextType === layerType || !mapRef.current) return;
@@ -256,6 +270,8 @@ export function DeliveryTrackingMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     let mounted = true;
+    let ro: ResizeObserver | null = null;
+    let timers: NodeJS.Timeout[] = [];
 
     import('leaflet').then(L => {
       if (!mounted || !containerRef.current || mapRef.current) return;
@@ -276,9 +292,22 @@ export function DeliveryTrackingMap({
       }).setView(center, initialZoom);
       mapRef.current = map;
 
-      // Default: Crystal-clear Google road navigation tiles with automatic network fallback
+      // Default: Fast, crystal-clear road navigation tiles with automatic CDN fallback
       const tile = createReliableTileLayer(L, 'streets').addTo(map);
       tileLayerRef.current = tile;
+
+      // Handle container resize & sheet opening
+      try {
+        ro = new ResizeObserver(() => {
+          map.invalidateSize();
+        });
+        if (containerRef.current) ro.observe(containerRef.current);
+      } catch {}
+
+      timers.push(setTimeout(() => map.invalidateSize(), 100));
+      timers.push(setTimeout(() => map.invalidateSize(), 300));
+      timers.push(setTimeout(() => map.invalidateSize(), 800));
+      timers.push(setTimeout(() => map.invalidateSize(), 1600));
 
       map.on('dragstart', () => {
         userPannedRef.current = true;
@@ -384,6 +413,8 @@ export function DeliveryTrackingMap({
 
     return () => {
       mounted = false;
+      ro?.disconnect();
+      timers.forEach(clearTimeout);
       if (animRef.current) cancelAnimationFrame(animRef.current);
       mapRef.current?.remove();
       mapRef.current = null;
@@ -564,9 +595,13 @@ export function DeliveryTrackingMap({
 
   const activeDriverNote = driverNotes?.trim() || null;
 
-  const destTarget = dropoff || (dropoffDistrict ? UGANDA_DISTRICTS[dropoffDistrict] : null);
-  const googleMapsNavUrl = destTarget
-    ? `https://www.google.com/maps/dir/?api=1&destination=${destTarget.lat},${destTarget.lng}&travelmode=driving`
+  const isHeadingToPickup = activeTripPhase === 'heading_to_pickup' || activeTripPhase === 'assigned';
+  const navTarget = (activeViewerRole === 'transporter' && isHeadingToPickup)
+    ? pickup
+    : dropoff;
+
+  const googleMapsNavUrl = navTarget
+    ? `https://www.google.com/maps/dir/?api=1&destination=${navTarget.lat},${navTarget.lng}&travelmode=driving`
     : (dropoffDistrict ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dropoffDistrict + ', Uganda')}` : null);
 
   return (
@@ -611,10 +646,6 @@ export function DeliveryTrackingMap({
         }}
       />
 
-      {/* ─────────────────────────────────────────────────────────────
-          TOP TURN-BY-TURN HUD MANEUVER CARD (Emerald Dark Banner)
-          Matches user image: "Stay on Mbarara - Masaka Rd", "17 km to ↰", Google Mic
-         ───────────────────────────────────────────────────────────── */}
       {/* ─────────────────────────────────────────────────────────────
           COMPACT MODE OVERLAY: Sleek route preview & expand button
          ───────────────────────────────────────────────────────────── */}
@@ -664,37 +695,69 @@ export function DeliveryTrackingMap({
             ~{etaMinutes} min · {distanceRemainingKm.toFixed(0)} km
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              if (onToggleDetails) onToggleDetails();
-              else setIsFullscreen(true);
-            }}
-            title="Expand Fullscreen GPS"
+          <div
             style={{
               position: 'absolute',
               top: 10,
               right: 10,
               zIndex: 800,
-              background: 'rgba(7, 13, 20, 0.88)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: 8,
-              padding: '5px 10px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              cursor: 'pointer',
-              color: '#FFFFFF',
-              fontSize: 11,
-              fontWeight: 700,
               display: 'flex',
               alignItems: 'center',
-              gap: 5,
-              boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
+              gap: 6,
             }}
           >
-            <Maximize2 size={12} /> Expand
-          </button>
+            {googleMapsNavUrl && (
+              <a
+                href={googleMapsNavUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Open Turn-by-Turn GPS Directions in Google Maps"
+                style={{
+                  background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                  borderRadius: 8,
+                  padding: '5px 10px',
+                  color: '#FFFFFF',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 10px rgba(37,99,235,0.45)',
+                }}
+              >
+                <Navigation size={12} /> Google Maps
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (onToggleDetails) onToggleDetails();
+                else setIsFullscreen(true);
+              }}
+              title="Expand Fullscreen GPS"
+              style={{
+                background: 'rgba(7, 13, 20, 0.88)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 8,
+                padding: '5px 10px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                cursor: 'pointer',
+                color: '#FFFFFF',
+                fontSize: 11,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                boxShadow: '0 2px 10px rgba(0,0,0,0.4)',
+              }}
+            >
+              <Maximize2 size={12} /> Expand
+            </button>
+          </div>
         </>
       )}
+
 
       {/* ─────────────────────────────────────────────────────────────
           TOP TURN-BY-TURN HUD MANEUVER CARD (Emerald Dark Banner)

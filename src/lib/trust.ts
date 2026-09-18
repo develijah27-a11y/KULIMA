@@ -11,10 +11,9 @@ export const BADGE_CONFIG = {
 
 export const LEVEL_ORDER: VerificationLevel[] = ['grey', 'green', 'blue', 'gold'];
 
-// What a user could upgrade to next, from wherever they currently are.
-// 'gold' has no entry — it's the max tier, nothing further to offer.
+// Direct single-flow verification: Phone -> Full KYC Verified (Blue) -> Enterprise (Gold)
 export const NEXT_LEVEL: Partial<Record<VerificationLevel, 'green' | 'blue' | 'gold'>> = {
-  none: 'green', grey: 'green', green: 'blue', blue: 'gold',
+  none: 'blue', grey: 'blue', green: 'blue', blue: 'gold',
 };
 
 export function canUpgradeTo(current: VerificationLevel, target: 'green' | 'blue' | 'gold'): boolean {
@@ -35,10 +34,11 @@ export function getTrustLabel(score: number): string {
   return 'New User';
 }
 
-interface DocRequirement {
+export interface DocRequirement {
   key: string;
   label: string;
   accept: string;
+  hint?: string;
 }
 
 export function getRequiredDocs(level: 'green' | 'blue' | 'gold', role: string): DocRequirement[] {
@@ -47,26 +47,28 @@ export function getRequiredDocs(level: 'green' | 'blue' | 'gold', role: string):
   }
   if (level === 'blue') {
     const base: DocRequirement[] = [
-      { key: 'national_id', label: 'National ID or Passport (front)', accept: 'image/*,application/pdf' },
-      { key: 'selfie',      label: 'Selfie Photo (with ID)',                 accept: 'image/*' },
+      { key: 'national_id', label: 'National ID or Passport (front)', accept: 'image/*,application/pdf', hint: 'Clear photo or PDF of government-issued ID' },
+      { key: 'selfie',      label: 'Live Selfie (Photo with ID)',     accept: 'image/*', hint: 'Quick live photo showing your face matching your ID' },
     ];
-    if (role === 'buyer' || role === 'supplier')
-      base.push({ key: 'business_reg', label: 'Business Registration', accept: 'image/*,application/pdf' });
-    if (role === 'transporter') {
-      base.push({ key: 'driving_permit', label: 'Driving Permit',        accept: 'image/*,application/pdf' });
-      base.push({ key: 'vehicle_reg',    label: 'Vehicle Registration (logbook)', accept: 'image/*,application/pdf' });
-      base.push({ key: 'insurance_cert', label: 'Insurance Certificate', accept: 'image/*,application/pdf' });
-      base.push({ key: 'vehicle_photo',  label: 'Photo of vehicle (plate visible)', accept: 'image/*' });
+    if (role === 'buyer' || role === 'supplier' || role === 'offtaker') {
+      base.push({ key: 'business_reg', label: 'Business Registration / Trading License', accept: 'image/*,application/pdf', hint: 'URSB registration or local trading license (optional for individual buyers)' });
     }
-    if (role === 'pathologist')
-      base.push({ key: 'qualifications', label: 'Professional Qualifications', accept: 'image/*,application/pdf' });
+    if (role === 'transporter') {
+      base.push({ key: 'driving_permit', label: 'Valid Driving Permit',            accept: 'image/*,application/pdf', hint: 'Current Uganda driving license (front)' });
+      base.push({ key: 'vehicle_reg',    label: 'Vehicle Registration (Logbook)',  accept: 'image/*,application/pdf', hint: 'URA vehicle registration certificate / logbook' });
+      base.push({ key: 'insurance_cert', label: 'Motor Third Party / Comprehensive Insurance', accept: 'image/*,application/pdf', hint: 'Valid vehicle insurance certificate' });
+      base.push({ key: 'vehicle_photo',  label: 'Vehicle Photo (Plate visible)',   accept: 'image/*', hint: 'Clear photo showing your vehicle and license plate' });
+    }
+    if (role === 'pathologist') {
+      base.push({ key: 'qualifications', label: 'Agronomy / Pathology License or Degree', accept: 'image/*,application/pdf', hint: 'Official agricultural or plant pathology qualification' });
+    }
     return base;
   }
   // gold - enterprise
   return [
-    { key: 'national_id',   label: 'National ID or Passport (front)', accept: 'image/*,application/pdf' },
-    { key: 'selfie',        label: 'Selfie Photo (with ID)',                 accept: 'image/*' },
-    { key: 'business_reg',  label: 'Business Registration',                  accept: 'image/*,application/pdf' },
+    { key: 'national_id',   label: 'National ID or Passport of Director', accept: 'image/*,application/pdf', hint: 'Authorized company representative ID' },
+    { key: 'selfie',        label: 'Live Selfie of Director',            accept: 'image/*', hint: 'Live face verification of representative' },
+    { key: 'business_reg',  label: 'Certificate of Incorporation / URSB', accept: 'image/*,application/pdf', hint: 'Official registration with Uganda Registration Services Bureau' },
   ];
 }
 

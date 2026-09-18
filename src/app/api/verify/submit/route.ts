@@ -29,20 +29,36 @@ export async function POST(req: Request) {
     // Use Service Role client to bypass any client-side RLS insert restrictions
     const admin = createServiceRoleClient();
 
+    // Carry forward any previously submitted or verified documents if not re-uploaded in this submission
+    const { data: previousDocs } = await (admin.from as any)('verifications')
+      .select('national_id_url, selfie_url, business_reg_url, driving_permit_url, vehicle_reg_url, insurance_url, vehicle_photo_url, qualifications_url')
+      .eq('user_id', user.id)
+      .order('submitted_at', { ascending: false })
+      .limit(5);
+
+    const resolveDoc = (key: string, colName?: string): string | null => {
+      if (urls[key]) return urls[key];
+      const col = colName || `${key}_url`;
+      for (const prev of previousDocs ?? []) {
+        if (prev[col]) return prev[col];
+      }
+      return null;
+    };
+
     const verificationPayload = {
       user_id:            user.id,
       profile_id:         profileId,
       level,
       role,
       status:             'pending',
-      national_id_url:    urls.national_id    ?? null,
-      selfie_url:         urls.selfie         ?? null,
-      business_reg_url:   urls.business_reg   ?? null,
-      driving_permit_url: urls.driving_permit ?? null,
-      vehicle_reg_url:    urls.vehicle_reg    ?? null,
-      insurance_url:      urls.insurance_cert ?? null,
-      vehicle_photo_url:  urls.vehicle_photo  ?? null,
-      qualifications_url: urls.qualifications ?? null,
+      national_id_url:    resolveDoc('national_id', 'national_id_url'),
+      selfie_url:         resolveDoc('selfie', 'selfie_url'),
+      business_reg_url:   resolveDoc('business_reg', 'business_reg_url'),
+      driving_permit_url: resolveDoc('driving_permit', 'driving_permit_url'),
+      vehicle_reg_url:    resolveDoc('vehicle_reg', 'vehicle_reg_url'),
+      insurance_url:      resolveDoc('insurance_cert', 'insurance_url'),
+      vehicle_photo_url:  resolveDoc('vehicle_photo', 'vehicle_photo_url'),
+      qualifications_url: resolveDoc('qualifications', 'qualifications_url'),
       submitted_at:       new Date().toISOString(),
     };
 

@@ -3,10 +3,10 @@
 import { useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import {
-  BADGE_CONFIG, getLevelDetails, getRequiredDocs, canUpgradeTo,
+  BADGE_CONFIG, getLevelDetails, getRequiredDocs,
   type VerificationLevel,
 } from '@/lib/trust';
-import { Clock, CheckCircle2, Check, Diamond, Star, Paperclip, AlertTriangle, Camera } from 'lucide-react';
+import { Clock, CheckCircle2, Check, Diamond, Star, Paperclip, AlertTriangle, Camera, ShieldCheck, RefreshCw } from 'lucide-react';
 import { SelfieCameraCapture } from './SelfieCameraCapture';
 
 const C = {
@@ -15,7 +15,7 @@ const C = {
   cardShadow: 'var(--d-shadow-card)',
 };
 
-type TargetLevel = 'green' | 'blue' | 'gold';
+type TargetLevel = 'blue' | 'gold';
 
 interface Props {
   userId: string;
@@ -23,90 +23,109 @@ interface Props {
   role: string;
   currentLevel: VerificationLevel;
   hasPending: boolean;
+  existingDocs?: Record<string, string>;
   rejection?: { level: string; reason: string | null } | null;
 }
 
-export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending, rejection }: Props) {
-  const [step, setStep]           = useState<'choose' | 'upload' | 'done'>(hasPending ? 'done' : 'choose');
-  const [target, setTarget]       = useState<TargetLevel | null>(null);
-  const [files, setFiles]         = useState<Record<string, File | null>>({});
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
-  const [error, setError]         = useState('');
-  const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+export function VerifyWizard({
+  userId,
+  profileId,
+  role,
+  currentLevel,
+  hasPending,
+  existingDocs = {},
+  rejection,
+}: Props) {
+  const isAlreadyBlue = currentLevel === 'blue';
+  const defaultTarget: TargetLevel = isAlreadyBlue ? 'gold' : 'blue';
 
-  const supabase = createClient();
-  const levels: TargetLevel[] = ['green', 'blue', 'gold'];
+  const [step, setStep]                     = useState<'upload' | 'done'>(hasPending ? 'done' : 'upload');
+  const [target, setTarget]                 = useState<TargetLevel>(defaultTarget);
+  const [files, setFiles]                   = useState<Record<string, File | null>>({});
+  const [retakeSelfie, setRetakeSelfie]     = useState(false);
+  const [uploading, setUploading]           = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 });
+  const [error, setError]                   = useState('');
+  const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const cameraRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  const supabase = createClient();
+  const docs = getRequiredDocs(target, role);
+
   async function handleSubmit() {
-    if (!target) return;
-    const docs = getRequiredDocs(target, role);
-    for (const doc of docs) {
-      if (!files[doc.key]) { setError(`Please upload: ${doc.label}`); return; }
-    }
-    setUploading(true);
     setError('');
-    setUploadProgress({ done: 0, total: docs.length });
 
-    // The kyc-documents bucket is private — we store the storage path here,
-    // not a public URL. Admin review generates short-lived signed URLs from
-    // this path on demand via the service-role client.
-    //
-    // Uploaded in parallel, not one at a time — a gold-tier submission can
-    // require up to 8 documents, and awaiting each upload sequentially
-    // before starting the next meant total wait time was the *sum* of every
-    // file's transfer time. On the slow/limited connections this was
-    // reported against, that stacked up to several minutes. Running them
-    // concurrently means the wall-clock time is roughly the slowest single
-    // file, not the sum of all of them.
+    // Check which required documents are missing (not uploaded AND not already on file)
+    const missing: string[] = [];
+    for (const doc of docs) {
+      const hasNewFile = !!files[doc.key];
+      const hasExisting = !!existingDocs[doc.key];
+      if (!hasNewFile && !hasExisting) {
+        missing.push(doc.label);
+      }
+    }
+
+    if (missing.length > 0) {
+      setError(`Please provide: ${missing.join(', ')}`);
+      return;
+    }
+
+    setUploading(true);
+
+    // List of docs that actually need a new upload
+    const docsToUpload = docs.filter(d => !!files[d.key]);
+    setUploadProgress({ done: 0, total: docsToUpload.length });
+
     const urls: Record<string, string> = {};
+
+    // 1. Carry forward any documents already verified on file
+    for (const doc of docs) {
+      if (!files[doc.key] && existingDocs[doc.key]) {
+        urls[doc.key] = existingDocs[doc.key];
+      }
+    }
+
     try {
-      // Firing several parallel requests can race a near-expiry access
-      // token: if it lapses mid-batch, whichever upload happens to land
-      // after the refresh swaps it out can momentarily carry an invalid
-      // token, which storage's RLS check reports as a generic "new row
-      // violates row-level security policy" — indistinguishable from an
-      // actual permissions problem, and only some uploads in the batch,
-      // not all, which is exactly the intermittent "used to work, now it
-      // doesn't" pattern this was reported as. Forcing a session check
-      // (supabase-js refreshes internally if near/past expiry) before the
-      // batch starts means every parallel request shares one guaranteed-
-      // fresh token instead of racing a refresh mid-flight.
-      await supabase.auth.getSession();
-      const results = await Promise.all(docs.map(async (doc) => {
-        const file = files[doc.key]!;
-        const ext = file.name.split('.').pop() ?? 'jpg';
-        const path = `${userId}/${target}/${doc.key}.${ext}`;
+      if (docsToUpload.length > 0) {
+        await supabase.auth.getSession();
+        const results = await Promise.all(docsToUpload.map(async (doc) => {
+          const file = files[doc.key]!;
+          const ext = file.name.split('.').pop() ?? 'jpg';
+          const path = `${userId}/${target}/${doc.key}.${ext}`;
 
-        // 1. Attempt direct storage upload
-        const { error: upErr } = await supabase.storage
-          .from('kyc-documents')
-          .upload(path, file, { upsert: true });
+          // Direct client storage upload
+          const { error: upErr } = await supabase.storage
+            .from('kyc-documents')
+            .upload(path, file, { upsert: true });
 
-        if (upErr) {
-          // 2. Fall back to secure server-side upload if direct client upload encountered an issue
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('target', target);
-          formData.append('docKey', doc.key);
+          if (upErr) {
+            // Fall back to server-side upload proxy if client storage had an issue
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('target', target);
+            formData.append('docKey', doc.key);
 
-          const serverRes = await fetch('/api/verify/upload', {
-            method: 'POST',
-            body: formData,
-          });
+            const serverRes = await fetch('/api/verify/upload', {
+              method: 'POST',
+              body: formData,
+            });
 
-          if (!serverRes.ok) {
-            const errJson = await serverRes.json().catch(() => ({}));
-            throw new Error(`Upload failed for ${doc.label}: ${errJson.error || upErr.message}`);
+            if (!serverRes.ok) {
+              const errJson = await serverRes.json().catch(() => ({}));
+              throw new Error(`Upload failed for ${doc.label}: ${errJson.error || upErr.message}`);
+            }
           }
+
+          setUploadProgress(p => ({ ...p, done: p.done + 1 }));
+          return { key: doc.key, path };
+        }));
+
+        for (const { key, path } of results) {
+          urls[key] = path;
         }
+      }
 
-        setUploadProgress(p => ({ ...p, done: p.done + 1 }));
-        return { key: doc.key, path };
-      }));
-      for (const { key, path } of results) urls[key] = path;
-
+      // Submit verification payload with all document references preserved
       const submitRes = await fetch('/api/verify/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -131,193 +150,314 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
     }
   }
 
-  /* ─── DONE / PENDING STATE ─── */
+  /* ─── DONE / PENDING REVIEW STATE ─── */
   if (step === 'done') {
     return (
-      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: 32, textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: C.muted }}><Clock size={48} /></div>
+      <div style={{ background: C.cardBg, borderRadius: 16, padding: 32, textAlign: 'center', maxWidth: 480, margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16, color: 'var(--color-primary)' }}>
+          <Clock size={48} />
+        </div>
         <h2 style={{ color: C.text, fontWeight: 800, fontSize: 20, margin: '0 0 8px', letterSpacing: '-0.02em' }}>
           Verification Under Review
         </h2>
-        <p style={{ color: C.muted, fontSize: 14, margin: '0 0 24px' }}>
-          Our team will review your documents and respond within{' '}
-          <strong style={{ color: C.text }}>1–3 business days</strong>.
-          You'll receive a notification once approved.
+        <p style={{ color: C.muted, fontSize: 14, margin: '0 0 20px', lineHeight: 1.5 }}>
+          Our verification team is reviewing your documents. Reviews are typically completed within{' '}
+          <strong style={{ color: C.text }}>1 business day</strong>.
+          You'll receive a notification the moment your account is approved.
         </p>
         <div style={{ background: 'var(--color-primary-bg)', borderRadius: 12, padding: '12px 16px', display: 'inline-block' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-success)', fontSize: 13, fontWeight: 600 }}>
-            <CheckCircle2 size={14} />Documents submitted successfully
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-success)', fontSize: 13, fontWeight: 700 }}>
+            <CheckCircle2 size={15} /> All documents safely submitted
           </div>
         </div>
       </div>
     );
   }
 
-  /* ─── STEP 1: CHOOSE LEVEL ─── */
-  if (step === 'choose') {
-    return (
-      <div style={{ maxWidth: 600, margin: '0 auto' }}>
-        {rejection && (
-          <div style={{ marginBottom: 20, padding: '14px 16px', background: 'var(--color-danger-bg)', borderRadius: 12, border: '1px solid var(--color-danger)' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-              <AlertTriangle size={16} style={{ color: 'var(--color-danger)', flexShrink: 0, marginTop: 1 }} />
-              <div>
-                <p style={{ color: 'var(--color-danger)', fontWeight: 700, fontSize: 14, margin: 0 }}>
-                  Your last submission was not approved
-                </p>
-                <p style={{ color: C.text, fontSize: 13, margin: '4px 0 0' }}>
-                  {rejection.reason ?? 'Please double-check your documents are clear and match your legal name, then resubmit.'}
-                </p>
-              </div>
+  /* ─── UNIFIED ROLE KYC VERIFICATION FORM ─── */
+  const roleCopy = getLevelDetails(target, role);
+
+  return (
+    <div style={{ maxWidth: 540, margin: '0 auto' }}>
+      {rejection && (
+        <div style={{ marginBottom: 20, padding: '14px 16px', background: 'var(--color-danger-bg)', borderRadius: 12, border: '1px solid var(--color-danger)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+            <AlertTriangle size={16} style={{ color: 'var(--color-danger)', flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <p style={{ color: 'var(--color-danger)', fontWeight: 700, fontSize: 14, margin: 0 }}>
+                Your last submission was not approved
+              </p>
+              <p style={{ color: C.text, fontSize: 13, margin: '4px 0 0' }}>
+                {rejection.reason ?? 'Please double-check your documents are clear and match your legal name, then resubmit.'}
+              </p>
             </div>
           </div>
-        )}
-        <h2 style={{ color: C.text, fontWeight: 800, fontSize: 20, marginBottom: 6, letterSpacing: '-0.02em' }}>
-          Choose Verification Level
-        </h2>
-        <p style={{ color: C.muted, fontSize: 14, marginBottom: 24 }}>
-          Higher verification unlocks more features, better trust scores, and access to financing.
-        </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {levels.map((lvl) => {
-            const cfg    = BADGE_CONFIG[lvl];
-            const detail = getLevelDetails(lvl, role);
-            const locked = !canUpgradeTo(currentLevel, lvl);
-            const sel    = target === lvl;
-            return (
-              <button
-                key={lvl}
-                onClick={() => !locked && setTarget(lvl)}
-                disabled={locked}
-                style={{
-                  background:  locked ? '#F9FAFB' : sel ? cfg.bg : C.cardBg,
-                  border:      `2px solid ${sel ? cfg.border : locked ? C.border : C.border}`,
-                  borderRadius: 14,
-                  padding:     '16px 20px',
-                  textAlign:   'left',
-                  cursor:      locked ? 'not-allowed' : 'pointer',
-                  opacity:     locked ? 0.5 : 1,
-                  boxShadow:   sel ? `0 0 0 3px ${cfg.border}` : 'none',
-                  transition:  'all 0.15s',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 4,
-                    padding: '3px 10px', borderRadius: 999,
-                    background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-                    fontSize: 12, fontWeight: 700,
-                  }}>
-                    {lvl === 'green' ? <Check size={12} /> : lvl === 'blue' ? <Diamond size={12} /> : <Star size={12} />} {cfg.label}
-                  </span>
-                  {locked && (
-                    <span style={{ fontSize: 11, color: C.muted }}>
-                      Already at this level or above
-                    </span>
-                  )}
-                </div>
-                <p style={{ color: C.text, fontWeight: 700, fontSize: 15, margin: '0 0 4px' }}>{detail.title}</p>
-                <p style={{ color: C.muted, fontSize: 13, margin: '0 0 8px' }}>{detail.description}</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {detail.benefits.map(b => (
-                    <span key={b} style={{ fontSize: 11, color: cfg.color, background: cfg.bg, padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>
-                      {b}
-                    </span>
-                  ))}
-                </div>
-                <p style={{ fontSize: 11, color: C.muted, margin: '8px 0 0' }}>Review time: {detail.time}</p>
-              </button>
-            );
-          })}
         </div>
-        <button
-          onClick={() => target && setStep('upload')}
-          disabled={!target}
-          style={{
-            marginTop: 24, width: '100%', padding: '14px',
-            background: target ? C.green : C.border,
-            color: target ? '#fff' : C.muted,
-            border: 'none', borderRadius: 12,
-            fontWeight: 700, fontSize: 15, cursor: target ? 'pointer' : 'not-allowed',
-          }}
-        >
-          Continue →
-        </button>
+      )}
+
+      {/* Header & Role Context */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 6 }}>
+          <h2 style={{ color: C.text, fontWeight: 800, fontSize: 20, margin: 0, letterSpacing: '-0.02em' }}>
+            {roleCopy.title}
+          </h2>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+            padding: '4px 10px', borderRadius: 999,
+            background: target === 'gold' ? '#FEF3C7' : 'var(--color-sky-bg)',
+            color: target === 'gold' ? '#D97706' : '#0284C7',
+            fontSize: 11.5, fontWeight: 800,
+          }}>
+            {target === 'gold' ? <Star size={12} /> : <Diamond size={12} />}
+            {target === 'gold' ? 'Enterprise Tier' : 'Official Verification'}
+          </span>
+        </div>
+        <p style={{ color: C.muted, fontSize: 13.5, margin: '0 0 14px', lineHeight: 1.5 }}>
+          {roleCopy.description}
+        </p>
+
+        {/* Benefits Pill Badges */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {roleCopy.benefits.map(b => (
+            <span key={b} style={{
+              fontSize: 11.5,
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 999,
+              background: 'var(--color-surface-2)',
+              color: 'var(--color-primary)',
+              border: '1px solid var(--d-border)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+            }}>
+              <Check size={11} /> {b}
+            </span>
+          ))}
+        </div>
       </div>
-    );
-  }
 
-  /* ─── STEP 2: UPLOAD DOCUMENTS ─── */
-  const docs = target ? getRequiredDocs(target, role) : [];
-  return (
-    <div style={{ maxWidth: 520, margin: '0 auto' }}>
-      <button
-        onClick={() => setStep('choose')}
-        style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontSize: 13, padding: 0, marginBottom: 16 }}
-      >
-        ← Back
-      </button>
-      <h2 style={{ color: C.text, fontWeight: 800, fontSize: 20, marginBottom: 6, letterSpacing: '-0.02em' }}>
-        Upload Documents
-      </h2>
-      <p style={{ color: C.muted, fontSize: 14, marginBottom: 24 }}>
-        Upload clear photos or PDFs. Files must be under 10 MB each.
-      </p>
+      {/* Optional Enterprise Toggle (Only if account is already blue or for business roles) */}
+      {(isAlreadyBlue || role === 'buyer' || role === 'supplier' || role === 'offtaker') && (
+        <div style={{
+          display: 'flex',
+          background: 'var(--color-surface-2)',
+          padding: 4,
+          borderRadius: 12,
+          marginBottom: 20,
+          border: '1px solid var(--d-border)',
+        }}>
+          <button
+            type="button"
+            onClick={() => setTarget('blue')}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: 9,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 12.5,
+              fontWeight: 700,
+              background: target === 'blue' ? C.cardBg : 'transparent',
+              color: target === 'blue' ? C.text : C.muted,
+              boxShadow: target === 'blue' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.15s',
+            }}
+          >
+            Standard KYC
+          </button>
+          <button
+            type="button"
+            onClick={() => setTarget('gold')}
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              borderRadius: 9,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 12.5,
+              fontWeight: 700,
+              background: target === 'gold' ? C.cardBg : 'transparent',
+              color: target === 'gold' ? '#D97706' : C.muted,
+              boxShadow: target === 'gold' ? '0 1px 4px rgba(0,0,0,0.08)' : 'none',
+              transition: 'all 0.15s',
+            }}
+          >
+            Enterprise Tier
+          </button>
+        </div>
+      )}
 
+      {/* Document Upload Checklist */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {docs.map((doc) => {
           const file = files[doc.key];
+          const hasExisting = !!existingDocs[doc.key];
+          const isSatisfied = !!file || (hasExisting && (!retakeSelfie || doc.key !== 'selfie'));
 
-          // Selfie is camera-only — a live front-camera capture, not a file
-          // picker. Uploading an existing photo would defeat the point of
-          // the check (nothing stops it from being a photo of a photo).
+          // Live Selfie camera capture
           if (doc.key === 'selfie') {
+            if (hasExisting && !retakeSelfie && !file) {
+              return (
+                <div
+                  key={doc.key}
+                  style={{
+                    background: 'var(--color-primary-bg)',
+                    border: '1.5px solid var(--color-primary-muted)',
+                    borderRadius: 14,
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-success)' }}>
+                      <ShieldCheck size={20} />
+                    </div>
+                    <div>
+                      <p style={{ color: C.text, fontWeight: 700, fontSize: 14, margin: 0 }}>
+                        {doc.label}
+                      </p>
+                      <p style={{ color: 'var(--color-success)', fontSize: 12, fontWeight: 700, margin: '2px 0 0' }}>
+                        Verified photo on file · No need to re-take
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRetakeSelfie(true)}
+                    style={{
+                      background: 'none',
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 8,
+                      padding: '6px 12px',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: C.muted,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <RefreshCw size={12} /> Re-take
+                  </button>
+                </div>
+              );
+            }
+
             return (
-              <div key={doc.key} style={{ background: file ? 'var(--color-primary-bg)' : C.cardBg, border: `2px dashed ${file ? 'var(--color-primary-muted)' : C.border}`, borderRadius: 12, padding: '16px 20px', transition: 'all 0.15s' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                  <p style={{ color: C.text, fontWeight: 600, fontSize: 14, margin: 0, flex: 1 }}>{doc.label}</p>
+              <div
+                key={doc.key}
+                style={{
+                  background: file ? 'var(--color-primary-bg)' : C.cardBg,
+                  border: `2px dashed ${file ? 'var(--color-primary-muted)' : C.border}`,
+                  borderRadius: 14,
+                  padding: '16px 20px',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div>
+                    <p style={{ color: C.text, fontWeight: 700, fontSize: 14, margin: 0 }}>{doc.label}</p>
+                    <p style={{ color: C.muted, fontSize: 12, margin: '2px 0 0' }}>Live front-camera photo confirming identity</p>
+                  </div>
                   {file && <CheckCircle2 size={20} style={{ color: 'var(--color-success)' }} />}
                 </div>
                 <SelfieCameraCapture
                   capturedFile={file ?? null}
-                  onCapture={(f) => setFiles(prev => ({ ...prev, selfie: f }))}
+                  onCapture={(f) => {
+                    setFiles(prev => ({ ...prev, selfie: f }));
+                    setRetakeSelfie(false);
+                  }}
                 />
               </div>
             );
           }
 
+          // File / document item
           const isPhoto = doc.accept.includes('image/');
           function onFile(e: React.ChangeEvent<HTMLInputElement>) {
             const f = e.target.files?.[0] ?? null;
             setFiles(prev => ({ ...prev, [doc.key]: f }));
           }
+
           return (
-            <div key={doc.key} style={{ background: file ? 'var(--color-primary-bg)' : C.cardBg, border: `2px dashed ${file ? 'var(--color-primary-muted)' : C.border}`, borderRadius: 12, padding: '16px 20px', transition: 'all 0.15s' }}>
-              {/* Hidden inputs */}
-              <input ref={el => { fileRefs.current[doc.key] = el; }} type="file" accept={doc.accept} style={{ display: 'none' }} onChange={onFile} />
+            <div
+              key={doc.key}
+              style={{
+                background: isSatisfied ? 'var(--color-primary-bg)' : C.cardBg,
+                border: `1.5px solid ${isSatisfied ? 'var(--color-primary-muted)' : C.border}`,
+                borderRadius: 14,
+                padding: '16px 20px',
+                transition: 'all 0.15s',
+              }}
+            >
+              {/* Hidden file & camera inputs */}
+              <input
+                ref={el => { fileRefs.current[doc.key] = el; }}
+                type="file"
+                accept={doc.accept}
+                style={{ display: 'none' }}
+                onChange={onFile}
+              />
               {isPhoto && (
-                <input ref={el => { cameraRefs.current[doc.key] = el; }} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={onFile} />
+                <input
+                  ref={el => { cameraRefs.current[doc.key] = el; }}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: 'none' }}
+                  onChange={onFile}
+                />
               )}
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ color: C.text, fontWeight: 600, fontSize: 14, margin: 0 }}>{doc.label}</p>
-                  <p style={{ color: C.muted, fontSize: 12, margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {file ? file.name : 'JPG, PNG or PDF · max 10 MB'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <p style={{ color: C.text, fontWeight: 700, fontSize: 14, margin: 0 }}>{doc.label}</p>
+                    {isSatisfied && (
+                      <span style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-success)', background: 'rgba(16,185,129,0.12)', padding: '1px 7px', borderRadius: 999 }}>
+                        {file ? 'New file selected' : 'On file'}
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ color: C.muted, fontSize: 12, margin: '3px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {file
+                      ? file.name
+                      : hasExisting
+                      ? 'Previously verified · Kept automatically'
+                      : doc.hint || 'JPG, PNG or PDF · max 10 MB'}
                   </p>
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
-                  {file && <CheckCircle2 size={20} style={{ color: 'var(--color-success)' }} />}
+                  {isSatisfied && <CheckCircle2 size={18} style={{ color: 'var(--color-success)' }} />}
                   {isPhoto && (
-                    <button type="button" onClick={() => cameraRefs.current[doc.key]?.click()}
-                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.cardBg, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.text }}>
-                      <Camera size={14} /> Camera
+                    <button
+                      type="button"
+                      onClick={() => cameraRefs.current[doc.key]?.click()}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px',
+                        borderRadius: 8, border: `1.5px solid ${C.border}`,
+                        background: C.cardBg, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.text,
+                      }}
+                    >
+                      <Camera size={13} /> Camera
                     </button>
                   )}
-                  <button type="button" onClick={() => fileRefs.current[doc.key]?.click()}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 8, border: `1.5px solid ${C.border}`, background: C.cardBg, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.text }}>
-                    <Paperclip size={14} /> {file ? 'Change' : 'Upload'}
+                  <button
+                    type="button"
+                    onClick={() => fileRefs.current[doc.key]?.click()}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px',
+                      borderRadius: 8, border: `1.5px solid ${C.border}`,
+                      background: C.cardBg, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: C.text,
+                    }}
+                  >
+                    <Paperclip size={13} /> {isSatisfied ? 'Change' : 'Upload'}
                   </button>
                 </div>
               </div>
@@ -328,10 +468,13 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
 
       {error && (
         <div style={{ marginTop: 16, padding: '10px 14px', background: 'var(--color-danger-bg)', borderRadius: 10, border: '1px solid var(--color-danger)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-danger)', fontSize: 13 }}><AlertTriangle size={14} />{error}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-danger)', fontSize: 13 }}>
+            <AlertTriangle size={15} /> {error}
+          </div>
         </div>
       )}
 
+      {/* One-Click Submit Button */}
       <button
         onClick={handleSubmit}
         disabled={uploading}
@@ -340,13 +483,20 @@ export function VerifyWizard({ userId, profileId, role, currentLevel, hasPending
           background: uploading ? C.border : C.green,
           color: uploading ? C.muted : '#fff',
           border: 'none', borderRadius: 12,
-          fontWeight: 700, fontSize: 15, cursor: uploading ? 'not-allowed' : 'pointer',
+          fontWeight: 800, fontSize: 15, cursor: uploading ? 'not-allowed' : 'pointer',
+          boxShadow: uploading ? 'none' : '0 4px 14px rgba(22, 163, 74, 0.3)',
+          transition: 'all 0.15s',
         }}
       >
         {uploading
-          ? (uploadProgress.total > 0 ? `Uploading… ${uploadProgress.done}/${uploadProgress.total}` : 'Uploading…')
-          : 'Submit for Review'}
+          ? (uploadProgress.total > 0 ? `Submitting… ${uploadProgress.done}/${uploadProgress.total}` : 'Submitting documents…')
+          : 'Submit Verification'}
       </button>
+
+      <p style={{ textAlign: 'center', fontSize: 12, color: C.muted, margin: '14px 0 0' }}>
+        Documents are encrypted and reviewed strictly for identity and compliance verification.
+      </p>
     </div>
   );
 }
+

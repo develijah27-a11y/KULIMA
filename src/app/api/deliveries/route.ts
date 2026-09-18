@@ -164,9 +164,22 @@ export async function PATCH(req: Request) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
   );
 
+  // Verify delivery exists and user is assigned transporter (or admin)
+  const { data: dr } = await (admin.from as any)('delivery_requests')
+    .select('id, status, trip_phase, transporter_id, requester_id, requester_role, cargo_type, cargo_kg, pickup_district, pickup_location, dropoff_district, dropoff_location, estimated_fare, distance_km, delivery_type, assigned_vehicle_id')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (!dr) return NextResponse.json({ error: 'Delivery not found' }, { status: 404 });
+
+  const { data: profile } = await supabase.from('profiles').select('role, roles, full_name, phone_number').eq('user_id', user.id).maybeSingle();
+  const isAdmin = (profile as any)?.role === 'admin' || ((profile as any)?.roles ?? []).includes('admin');
+  const isDriver = dr.transporter_id === user.id || isAdmin;
+
   // 1. DRIVER SETS OFF TO PICKUP (assigned -> heading_to_pickup)
   if (action === 'start_pickup_trip') {
-    // Graceful update: include trip_phase & started_pickup_at
+    if (!isDriver) return NextResponse.json({ error: 'You are not assigned to this delivery' }, { status: 403 });
+
     const updatePayload: Record<string, any> = {
       trip_phase: 'heading_to_pickup',
       started_pickup_at: new Date().toISOString(),
@@ -175,17 +188,12 @@ export async function PATCH(req: Request) {
 
     let { error } = await (admin.from as any)('delivery_requests')
       .update(updatePayload)
-      .eq('id', id)
-      .eq('transporter_id', user.id)
-      .eq('status', 'assigned');
+      .eq('id', id);
 
-    if (error && error.message?.includes('column')) {
-      // If trip_phase column not yet present in unmigrated database
+    if (error && (error.message?.includes('column') || error.message?.includes('trip_phase'))) {
       const fallback = await (admin.from as any)('delivery_requests')
         .update({ updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .eq('transporter_id', user.id)
-        .eq('status', 'assigned');
+        .eq('id', id);
       error = fallback.error;
     }
 
@@ -196,20 +204,15 @@ export async function PATCH(req: Request) {
 
     // Send human-written live update to requester
     try {
-      const [{ data: delivery }, { data: driverProfile }] = await Promise.all([
-        (admin.from as any)('delivery_requests').select('requester_id, requester_role, cargo_type, pickup_district, pickup_location').eq('id', id).single(),
-        admin.from('profiles').select('full_name').eq('user_id', user.id).maybeSingle(),
-      ]);
-
-      if (delivery?.requester_id) {
-        const driverName = (driverProfile as any)?.full_name ?? 'Your driver';
-        const loc = delivery.pickup_location ? `${delivery.pickup_location}, ${delivery.pickup_district}` : delivery.pickup_district;
+      if (dr.requester_id) {
+        const driverName = (profile as any)?.full_name ?? 'Your driver';
+        const loc = dr.pickup_location ? `${dr.pickup_location}, ${dr.pickup_district}` : dr.pickup_district;
         await (admin.from as any)('notifications').insert({
-          user_id: delivery.requester_id,
-          role: delivery.requester_role || 'buyer',
+          user_id: dr.requester_id,
+          role: dr.requester_role || 'buyer',
           type: 'delivery',
           title: 'Driver on the way to pickup',
-          body: `${driverName} has set off and is heading to collect the ${delivery.cargo_type || 'produce'} from ${loc}. Live map tracking is now active.`,
+          body: `${driverName} has set off and is heading to collect the ${dr.cargo_type || 'produce'} from ${loc}. Live map tracking is now active.`,
           read: false,
         });
       }
@@ -220,6 +223,8 @@ export async function PATCH(req: Request) {
 
   // 2. DRIVER ARRIVED AT PICKUP POINT (heading_to_pickup -> arrived_pickup)
   if (action === 'arrive_pickup') {
+    if (!isDriver) return NextResponse.json({ error: 'You are not assigned to this delivery' }, { status: 403 });
+
     const updatePayload: Record<string, any> = {
       trip_phase: 'arrived_pickup',
       arrived_pickup_at: new Date().toISOString(),
@@ -228,15 +233,12 @@ export async function PATCH(req: Request) {
 
     let { error } = await (admin.from as any)('delivery_requests')
       .update(updatePayload)
-      .eq('id', id)
-      .eq('transporter_id', user.id)
-      .eq('status', 'assigned');
+      .eq('id', id);
 
-    if (error && error.message?.includes('column')) {
+    if (error && (error.message?.includes('column') || error.message?.includes('trip_phase'))) {
       const fallback = await (admin.from as any)('delivery_requests')
         .update({ updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .eq('transporter_id', user.id);
+        .eq('id', id);
       error = fallback.error;
     }
 
@@ -244,6 +246,7 @@ export async function PATCH(req: Request) {
       console.error('[/api/deliveries PATCH arrive_pickup]', error);
       return NextResponse.json({ error: 'Failed to record arrival at pickup.' }, { status: 500 });
     }
+
 
     try {
       const { data: delivery } = await (admin.from as any)('delivery_requests')

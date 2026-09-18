@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle, Navigation2, Navigation, Phone } from 'lucide-react';
 import { NavigateButton } from '@/components/delivery/NavigateButton';
@@ -54,13 +54,18 @@ export function ActiveJobsClient({
 }) {
   const router = useRouter();
   const tabs   = ['pending', 'active', 'completed'] as const;
-  const [tab, setTab]     = useState<'pending' | 'active' | 'completed'>('active');
-  const [busy, setBusy]   = useState<string | null>(null);
-  const [error, setError] = useState('');
+  const [tab, setTab]         = useState<'pending' | 'active' | 'completed'>('active');
+  const [busy, setBusy]       = useState<string | null>(null);
+  const [error, setError]     = useState('');
   const [trackingId, setTrackingId] = useState<string | null>(null);
-  const trackedDelivery = active.find((d: any) => d.id === trackingId) ?? null;
+  const [activeJobs, setActiveJobs] = useState<any[]>(active);
 
-  const counts = { pending: pending.length, active: active.length, completed: completed.length };
+  useEffect(() => {
+    setActiveJobs(active);
+  }, [active]);
+
+  const trackedDelivery = activeJobs.find((d: any) => d.id === trackingId) ?? null;
+  const counts = { pending: pending.length, active: activeJobs.length, completed: completed.length };
 
   async function respondToDelivery(deliveryId: string, act: 'accept' | 'decline') {
     setBusy(deliveryId); setError('');
@@ -82,6 +87,35 @@ export function ActiveJobsClient({
 
   async function updateDelivery(deliveryId: string, act: TripAction) {
     setBusy(deliveryId); setError('');
+    const prevJobs = [...activeJobs];
+
+    // 1. Instant optimistic state update so buttons respond immediately
+    let nextPhase = 'heading_to_pickup';
+    let nextStatus: string | undefined = undefined;
+
+    if (act === 'start_pickup_trip') {
+      nextPhase = 'heading_to_pickup';
+    } else if (act === 'arrive_pickup') {
+      nextPhase = 'arrived_pickup';
+    } else if (act === 'start_transit' || act === 'start_delivery_trip') {
+      nextPhase = 'in_transit';
+      nextStatus = 'in_transit';
+    } else if (act === 'arrive_dropoff') {
+      nextPhase = 'arrived_delivery';
+    } else if (act === 'complete') {
+      nextPhase = 'delivered';
+      nextStatus = 'delivered';
+    }
+
+    setActiveJobs(prev => prev.map(d => {
+      if (d.id !== deliveryId) return d;
+      return {
+        ...d,
+        trip_phase: nextPhase,
+        ...(nextStatus ? { status: nextStatus } : {}),
+      };
+    }));
+
     try {
       const res  = await fetch('/api/deliveries', {
         method: 'PATCH',
@@ -90,13 +124,26 @@ export function ActiveJobsClient({
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Update failed');
+
+      if (json.trip_phase || json.status) {
+        setActiveJobs(prev => prev.map(d => {
+          if (d.id !== deliveryId) return d;
+          return {
+            ...d,
+            ...(json.trip_phase ? { trip_phase: json.trip_phase } : {}),
+            ...(json.status ? { status: json.status } : {}),
+          };
+        }));
+      }
       router.refresh();
     } catch (err: any) {
+      setActiveJobs(prevJobs);
       setError(err.message);
     } finally {
       setBusy(null);
     }
   }
+
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -259,10 +306,10 @@ export function ActiveJobsClient({
 
       {/* ── ACTIVE TAB ───────────────────────────────────────────────────────── */}
       {tab === 'active' && (
-        active.length === 0 ? (
+        activeJobs.length === 0 ? (
           <EmptyState icon={<Car size={48} />} title="No active deliveries" body="Accept a pending request to start earning." />
         ) : (
-          <ActiveJobsList active={active} busy={busy} setTrackingId={setTrackingId} updateDelivery={updateDelivery} />
+          <ActiveJobsList active={activeJobs} busy={busy} setTrackingId={setTrackingId} updateDelivery={updateDelivery} />
         )
       )}
 

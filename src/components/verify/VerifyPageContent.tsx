@@ -88,7 +88,7 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
     );
   }
 
-  const [{ data: pending }, { data: latest }] = await Promise.all([
+  const [{ data: pending }, { data: latest }, { data: allUserVerifications }] = await Promise.all([
     (supabase.from as any)('verifications')
       .select('id, level, status, submitted_at')
       .eq('user_id', user.id)
@@ -97,9 +97,7 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
       .order('submitted_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
-    // Most recent submission overall for THIS role — if it was rejected and
-    // nothing newer has been submitted since, show the reason so the user
-    // knows what to fix.
+    // Most recent submission overall for THIS role
     (supabase.from as any)('verifications')
       .select('id, level, status, rejection_reason, submitted_at')
       .eq('user_id', user.id)
@@ -107,25 +105,44 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
       .order('submitted_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // Query all prior document URLs across submissions for this user to enable zero-duplicate re-uploading
+    (supabase.from as any)('verifications')
+      .select(`
+        national_id_url, selfie_url, business_reg_url,
+        driving_permit_url, vehicle_reg_url, insurance_url,
+        vehicle_photo_url, qualifications_url
+      `)
+      .eq('user_id', user.id)
+      .order('submitted_at', { ascending: false })
+      .limit(10),
   ]);
+
+  const existingDocs: Record<string, string> = {};
+  for (const v of allUserVerifications ?? []) {
+    if (v.national_id_url && !existingDocs.national_id) existingDocs.national_id = v.national_id_url;
+    if (v.selfie_url && !existingDocs.selfie) existingDocs.selfie = v.selfie_url;
+    if (v.business_reg_url && !existingDocs.business_reg) existingDocs.business_reg = v.business_reg_url;
+    if (v.driving_permit_url && !existingDocs.driving_permit) existingDocs.driving_permit = v.driving_permit_url;
+    if (v.vehicle_reg_url && !existingDocs.vehicle_reg) existingDocs.vehicle_reg = v.vehicle_reg_url;
+    if (v.insurance_url && !existingDocs.insurance_cert) existingDocs.insurance_cert = v.insurance_url;
+    if (v.vehicle_photo_url && !existingDocs.vehicle_photo) existingDocs.vehicle_photo = v.vehicle_photo_url;
+    if (v.qualifications_url && !existingDocs.qualifications) existingDocs.qualifications = v.qualifications_url;
+  }
 
   const rejection = latest?.status === 'rejected' ? latest : null;
 
-  // The flat verification_level column is only meaningful for the account's
-  // primary role (see admin/verify-kyc/route.ts) — any other role reads its
-  // own entry from the per-role map, defaulting to 'grey' (nothing submitted
-  // for that role yet) rather than borrowing a level earned under a
-  // different hat.
   const roleLevels = ((profile as any)?.role_verification_levels ?? {}) as Record<string, VerificationLevel>;
   const currentLevel: VerificationLevel = role === primaryRole
     ? (roleLevels[role] ?? (profile as any)?.verification_level ?? 'grey')
     : (roleLevels[role] ?? 'grey');
   const trustScore   = (profile as any)?.trust_score ?? 50;
   const deals        = (profile as any)?.completed_deals ?? 0;
-  const currentIdx   = LEVELS.indexOf(currentLevel);
   const header       = ROLE_HEADER[role] ?? DEFAULT_HEADER;
   const phoneVerified = (profile as any)?.phone_verified ?? false;
   const phoneNumber   = (profile as any)?.phone_number ?? null;
+
+  const isKycDone = currentLevel === 'blue' || currentLevel === 'gold';
+  const isEnterpriseDone = currentLevel === 'gold';
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -148,7 +165,7 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
           padding: '14px 20px',
         }}>
           <p style={{ fontSize: 11, fontWeight: 800, color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '0.12em', margin: 0 }}>
-            Your Status
+            Account Trust Status
           </p>
         </div>
 
@@ -158,87 +175,120 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
             {/* Left: badge */}
             <div>
               <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                Level
+                Active Badge
               </p>
               <VerificationBadge level={currentLevel} size="md" />
-              <p style={{ fontSize: 11, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 11.5, color: C.muted, marginTop: 8, lineHeight: 1.5 }}>
                 {BADGE_CONFIG[currentLevel].description}
               </p>
             </div>
 
-            {/* Right: trust ring — vertical layout fits any column width */}
+            {/* Right: trust ring */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.08em', alignSelf: 'flex-start' }}>
-                Trust
+                Trust Score
               </p>
               <TrustScore score={trustScore} deals={deals} size="sm" />
             </div>
           </div>
 
-          {/* Progress path — full width below the grid */}
+          {/* Clean 3-Stage Trust Milestone Path */}
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16 }}>
             <p style={{ fontSize: 11, fontWeight: 700, color: C.muted, marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Verification Path
+              Verification Journey
             </p>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              {LEVELS.map((lvl, i) => {
-                const cfg    = BADGE_CONFIG[lvl];
-                const done   = i <= currentIdx;
-                const isCurr = lvl === currentLevel;
-                return (
-                  <div key={lvl} style={{ display: 'flex', alignItems: 'center', flex: i < LEVELS.length - 1 ? 1 : 'none' }}>
-                    <div style={{
-                      width: 36, height: 36, borderRadius: '50%',
-                      background: done ? cfg.bg : 'var(--color-surface-2)',
-                      border: `2px solid ${done ? cfg.border : C.border}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: done ? cfg.color : C.muted,
-                      fontWeight: 800, flexShrink: 0,
-                      boxShadow: isCurr ? `0 0 0 4px ${cfg.border}` : 'none',
-                      transition: 'box-shadow 200ms ease',
-                    }}>
-                      {done
-                        ? (lvl === 'grey'  ? <Smartphone size={15} />
-                          : lvl === 'green' ? <Check size={15} />
-                          : lvl === 'blue'  ? <Gem size={15} />
-                          : <Star size={15} />)
-                        : <span style={{ fontSize: 13 }}>{i + 1}</span>}
-                    </div>
-                    {i < LEVELS.length - 1 && (
-                      <div style={{ flex: 1, height: 3, borderRadius: 2, background: done && i < currentIdx ? cfg.color : C.border }} />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {/* Labels below stepper — readable font size */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-              {LEVELS.map((lvl, i) => (
-                <p key={lvl} style={{
-                  fontSize: 10, fontWeight: 700, color: i <= currentIdx ? BADGE_CONFIG[lvl].color : C.muted,
-                  textTransform: 'uppercase', letterSpacing: '0.04em',
-                  width: 36, textAlign: 'center',
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {/* Step 1: Phone */}
+              <div style={{
+                background: phoneVerified ? 'var(--color-primary-bg)' : 'var(--color-surface-2)',
+                border: `1.5px solid ${phoneVerified ? 'var(--color-primary-muted)' : C.border}`,
+                borderRadius: 12,
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: phoneVerified ? 'var(--color-primary)' : 'var(--color-surface-3)',
+                  color: phoneVerified ? '#fff' : C.muted,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 6px',
                 }}>
-                  {lvl === 'grey' ? 'Phone' : lvl === 'green' ? 'ID' : lvl === 'blue' ? 'KYC' : 'Gold'}
+                  {phoneVerified ? <Check size={14} /> : <Smartphone size={14} />}
+                </div>
+                <p style={{ fontSize: 11.5, fontWeight: 800, color: phoneVerified ? 'var(--color-primary)' : C.text, margin: 0 }}>
+                  1. Phone Confirmed
                 </p>
-              ))}
+                <p style={{ fontSize: 10.5, color: C.muted, margin: '2px 0 0' }}>
+                  {phoneVerified ? 'Verified' : 'Pending'}
+                </p>
+              </div>
+
+              {/* Step 2: Role KYC */}
+              <div style={{
+                background: isKycDone ? 'var(--color-sky-bg)' : pending ? '#FEF3C7' : 'var(--color-surface-2)',
+                border: `1.5px solid ${isKycDone ? '#BFDBFE' : pending ? '#FDE68A' : C.border}`,
+                borderRadius: 12,
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: isKycDone ? '#0284C7' : pending ? '#D97706' : 'var(--color-surface-3)',
+                  color: isKycDone || pending ? '#fff' : C.muted,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 6px',
+                }}>
+                  {isKycDone ? <Check size={14} /> : <Gem size={14} />}
+                </div>
+                <p style={{ fontSize: 11.5, fontWeight: 800, color: isKycDone ? '#0284C7' : pending ? '#D97706' : C.text, margin: 0 }}>
+                  2. Role KYC
+                </p>
+                <p style={{ fontSize: 10.5, color: C.muted, margin: '2px 0 0' }}>
+                  {isKycDone ? 'Verified' : pending ? 'In Review' : 'Next Step'}
+                </p>
+              </div>
+
+              {/* Step 3: Enterprise */}
+              <div style={{
+                background: isEnterpriseDone ? '#FEF3C7' : 'var(--color-surface-2)',
+                border: `1.5px solid ${isEnterpriseDone ? '#FDE68A' : C.border}`,
+                borderRadius: 12,
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: '50%',
+                  background: isEnterpriseDone ? '#D97706' : 'var(--color-surface-3)',
+                  color: isEnterpriseDone ? '#fff' : C.muted,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 6px',
+                }}>
+                  {isEnterpriseDone ? <Check size={14} /> : <Star size={14} />}
+                </div>
+                <p style={{ fontSize: 11.5, fontWeight: 800, color: isEnterpriseDone ? '#D97706' : C.text, margin: 0 }}>
+                  3. Enterprise
+                </p>
+                <p style={{ fontSize: 10.5, color: C.muted, margin: '2px 0 0' }}>
+                  {isEnterpriseDone ? 'Certified' : 'For Fleets & Coops'}
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Phone step — a prerequisite shown ahead of the document wizard
-          rather than gating it outright, so someone who's already mid-KYC
-          isn't blocked by a feature that didn't exist until now. */}
+      {/* Phone step */}
       {!phoneVerified && <PhoneVerifyStep initialPhone={phoneNumber} />}
 
-      {/* Wizard */}
+      {/* Unified Role KYC Document Verification Wizard */}
       <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '24px' }}>
         {currentLevel === 'gold' ? (
           <div style={{ textAlign: 'center', padding: '32px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', color: 'var(--color-harvest)' }}><svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-            <p style={{ color: C.text, fontWeight: 700, fontSize: 18, margin: '12px 0 4px' }}>Enterprise Verified</p>
-            <p style={{ color: C.muted, fontSize: 14 }}>You have the highest verification level on Cropify.</p>
+            <div style={{ display: 'flex', justifyContent: 'center', color: '#D97706', marginBottom: 12 }}>
+              <Star size={44} />
+            </div>
+            <p style={{ color: C.text, fontWeight: 800, fontSize: 18, margin: '0 0 4px' }}>Enterprise Verified</p>
+            <p style={{ color: C.muted, fontSize: 14, margin: 0 }}>You hold the highest verified trust level on Cropify.</p>
           </div>
         ) : (
           <VerifyWizard
@@ -247,6 +297,7 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
             role={role}
             currentLevel={currentLevel}
             hasPending={!!pending}
+            existingDocs={existingDocs}
             rejection={rejection ? { level: rejection.level, reason: rejection.rejection_reason ?? null } : null}
           />
         )}
@@ -254,3 +305,4 @@ export async function VerifyPageContent({ role: roleProp }: Props = {}) {
     </div>
   );
 }
+
