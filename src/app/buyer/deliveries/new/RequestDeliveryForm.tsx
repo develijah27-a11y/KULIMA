@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   Truck, Zap, Snowflake, MapPin, Clock, CheckCircle2, Megaphone, AlertTriangle,
   Loader2, ShoppingBag, ArrowRight, Repeat, Sparkles, Store, Lock, ShieldCheck,
+  Calendar, FileText,
 } from 'lucide-react';
 import { calcFare, type DeliveryType, type FareBreakdown } from '@/lib/delivery-pricing';
 import { DISTRICT_NAMES } from '@/lib/districts';
@@ -669,39 +670,170 @@ export function RequestDeliveryForm({ prefilledOffer, successRedirect = '/buyer/
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div>
-          <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
+      {/* Pickup Date & Scheduling */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Calendar size={14} style={{ color: 'var(--color-primary)' }} />
             Pickup Date *
           </label>
-          <input
-            type="date"
-            value={pickupDate}
-            onChange={e => setPickupDate(e.target.value)}
-            min={new Date().toISOString().split('T')[0]}
-            required
-            style={{
-              width: '100%', padding: '11px 13px', borderRadius: 10,
-              border: `1px solid ${C.border}`, fontSize: 14, outline: 'none',
-              boxSizing: 'border-box', background: 'var(--d-input-bg, #fff)', color: C.text,
-            }}
-          />
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => setPickupDate(new Date().toISOString().split('T')[0])}
+              style={{
+                padding: '3px 9px',
+                borderRadius: 7,
+                fontSize: 11,
+                fontWeight: 600,
+                border: `1px solid ${pickupDate === new Date().toISOString().split('T')[0] ? 'var(--color-primary)' : C.border}`,
+                background: pickupDate === new Date().toISOString().split('T')[0] ? 'var(--color-primary-bg)' : 'transparent',
+                color: pickupDate === new Date().toISOString().split('T')[0] ? 'var(--color-primary)' : C.muted,
+                cursor: 'pointer',
+              }}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                setPickupDate(tomorrow.toISOString().split('T')[0]);
+              }}
+              style={{
+                padding: '3px 9px',
+                borderRadius: 7,
+                fontSize: 11,
+                fontWeight: 600,
+                border: `1px solid ${pickupDate === (() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + 1);
+                  return d.toISOString().split('T')[0];
+                })() ? 'var(--color-primary)' : C.border}`,
+                background: pickupDate === (() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + 1);
+                  return d.toISOString().split('T')[0];
+                })() ? 'var(--color-primary-bg)' : 'transparent',
+                color: pickupDate === (() => {
+                  const d = new Date();
+                  d.setDate(d.getDate() + 1);
+                  return d.toISOString().split('T')[0];
+                })() ? 'var(--color-primary)' : C.muted,
+                cursor: 'pointer',
+              }}
+            >
+              Tomorrow
+            </button>
+          </div>
         </div>
-        <div>
-          <label style={{ fontSize: 13, fontWeight: 600, color: C.text, display: 'block', marginBottom: 6 }}>
-            Special Instructions <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span>
+        <input
+          type="date"
+          value={pickupDate}
+          onChange={e => setPickupDate(e.target.value)}
+          min={new Date().toISOString().split('T')[0]}
+          required
+          style={{
+            width: '100%', padding: '12px 14px', borderRadius: 12,
+            border: `1.5px solid ${pickupDate ? 'var(--color-primary)' : C.border}`,
+            fontSize: 14, fontWeight: 600, outline: 'none',
+            boxSizing: 'border-box', background: 'var(--d-input-bg, #fff)', color: C.text,
+          }}
+        />
+      </div>
+
+      {/* Special Instructions for Transporter - Dedicated Full-Width Section */}
+      <div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <label style={{ fontSize: 13, fontWeight: 700, color: C.text, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <FileText size={14} style={{ color: 'var(--color-primary)' }} />
+            Special Instructions for Transporter
+            <span style={{ color: C.muted, fontWeight: 400, fontSize: 11 }}>(optional)</span>
           </label>
-          <input
-            type="text"
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="e.g. Call upon arrival, fragile produce..."
-            style={{
-              width: '100%', padding: '11px 13px', borderRadius: 10,
-              border: `1px solid ${C.border}`, fontSize: 13, outline: 'none',
-              boxSizing: 'border-box', background: 'var(--d-input-bg, #fff)', color: C.text,
-            }}
-          />
+          {notes.trim().length > 0 && (
+            <span style={{ fontSize: 11, color: C.muted, fontWeight: 500 }}>
+              {notes.length} characters
+            </span>
+          )}
+        </div>
+        <p style={{ fontSize: 11.5, color: C.muted, margin: '0 0 8px', lineHeight: 1.4 }}>
+          {requesterRole === 'farmer'
+            ? 'Provide helpful landmark details, farm gate directions, road access conditions, or loading instructions for the driver.'
+            : 'Add gate pass instructions, delivery bay / warehouse hints, receiving hours, or fragile cargo handling notes.'}
+        </p>
+        <textarea
+          rows={3}
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          placeholder={requesterRole === 'farmer'
+            ? 'e.g. Turn right at the trading centre mill, farm gate is 500m down the dirt road. Call when approaching. Fragile produce, needs careful handling.'
+            : 'e.g. Call driver upon arrival at warehouse gate, check in at dock 2, fragile cargo...'}
+          style={{
+            width: '100%',
+            padding: '12px 14px',
+            borderRadius: 12,
+            border: `1.5px solid ${notes ? 'var(--color-primary)' : C.border}`,
+            fontSize: 13.5,
+            lineHeight: 1.5,
+            outline: 'none',
+            boxSizing: 'border-box',
+            background: 'var(--d-input-bg, #fff)',
+            color: C.text,
+            resize: 'vertical',
+            minHeight: 80,
+            fontFamily: 'inherit',
+          }}
+        />
+
+        {/* Quick Tap Suggestion Chips */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+          {(requesterRole === 'farmer' ? [
+            'Call upon arrival',
+            'Off-tarmac farm road',
+            'Fragile / perishable produce',
+            'Loading help available',
+            'Call before leaving town',
+          ] : [
+            'Call upon arrival',
+            'Deliver to receiving dock',
+            'Fragile cargo',
+            'Inspect before offloading',
+            'Contact warehouse supervisor',
+          ]).map(chip => {
+            const isSelected = notes.toLowerCase().includes(chip.toLowerCase());
+            return (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => {
+                  setNotes(prev => {
+                    const trimmed = prev.trim();
+                    if (!trimmed) return chip;
+                    if (trimmed.toLowerCase().includes(chip.toLowerCase())) return trimmed;
+                    return `${trimmed}, ${chip}`;
+                  });
+                }}
+                style={{
+                  padding: '5px 10px',
+                  borderRadius: 8,
+                  border: `1px solid ${isSelected ? 'var(--color-primary)' : C.border}`,
+                  background: isSelected ? 'var(--color-primary-bg)' : 'var(--color-surface-2, transparent)',
+                  color: isSelected ? 'var(--color-primary)' : C.text,
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {isSelected && <CheckCircle2 size={11} />}
+                {chip}
+              </button>
+            );
+          })}
         </div>
       </div>
 

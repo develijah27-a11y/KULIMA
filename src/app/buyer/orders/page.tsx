@@ -290,6 +290,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
     });
   }
 
+  const [showCancelModal, setShowCancelModal]   = useState(false);
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [disputeReason, setDisputeReason] = useState('poor_quality');
   const [disputeNote, setDisputeNote] = useState('');
@@ -561,7 +562,7 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
           )}
           {canCancel && (
             <button
-              onClick={cancelOrder}
+              onClick={() => setShowCancelModal(true)}
               disabled={pending}
               style={{
                 padding: '10px 16px', borderRadius: 12, border: `1px solid ${C.border}`,
@@ -575,11 +576,154 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
         </div>
       )}
 
+      {/* Centered Order Cancellation Confirmation Modal */}
+      {showCancelModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            background: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+          }}
+          onClick={() => !pending && setShowCancelModal(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Confirm Order Cancellation"
+            style={{
+              background: C.cardBg,
+              borderRadius: 20,
+              maxWidth: 440,
+              width: '100%',
+              padding: 24,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
+              border: `1px solid ${C.border}`,
+              position: 'relative',
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setShowCancelModal(false)}
+              disabled={pending}
+              style={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: 'var(--color-surface-2, #f3f4f6)',
+                border: 'none',
+                borderRadius: '50%',
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: pending ? 'not-allowed' : 'pointer',
+                color: C.muted,
+              }}
+            >
+              <X size={16} />
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: C.redBg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: C.red,
+                  flexShrink: 0,
+                }}
+              >
+                <AlertTriangle size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: 17, fontWeight: 800, color: C.text, margin: 0, letterSpacing: '-0.02em' }}>
+                  Cancel This Order?
+                </h3>
+                <p style={{ fontSize: 12, color: C.muted, margin: '2px 0 0' }}>
+                  Order #{order.id.slice(0, 8)} · {order.crop_type} ({order.quantity_kg} kg)
+                </p>
+              </div>
+            </div>
+
+            <div
+              style={{
+                background: C.redBg,
+                borderRadius: 12,
+                padding: '12px 14px',
+                marginBottom: 16,
+                border: `1px solid rgba(239, 68, 68, 0.2)`,
+              }}
+            >
+              <p style={{ fontSize: 12.5, color: C.text, margin: 0, lineHeight: 1.5 }}>
+                Are you sure you want to cancel this order? Any payment currently locked in escrow will be immediately refunded back to your wallet.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                type="button"
+                onClick={async () => {
+                  await cancelOrder();
+                  setShowCancelModal(false);
+                }}
+                disabled={pending}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: pending ? C.redBg : C.red,
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: 14,
+                  cursor: pending ? 'wait' : 'pointer',
+                  boxShadow: '0 4px 14px rgba(239, 68, 68, 0.3)',
+                }}
+              >
+                {pending ? 'Cancelling Order…' : 'Yes, Confirm Cancellation'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                disabled={pending}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: 12,
+                  border: `1.5px solid ${C.border}`,
+                  background: 'transparent',
+                  color: C.text,
+                  fontWeight: 700,
+                  fontSize: 13.5,
+                  cursor: pending ? 'not-allowed' : 'pointer',
+                }}
+              >
+                No, Keep This Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Structured Dispute & Quality Reporting Modal */}
       {showDisputeModal && (
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 1100,
-          background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
         }} onClick={() => setShowDisputeModal(false)}>
           <div style={{

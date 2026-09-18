@@ -36,7 +36,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
+    <div className="fixed inset-0 z-[99998] flex items-end sm:items-center justify-center p-0 sm:p-4 pb-20 sm:pb-4">
       {/* backdrop */}
       <div
         className="absolute inset-0 bg-soil/75 backdrop-blur-sm"
@@ -51,8 +51,8 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
         aria-modal="true"
         aria-label={title ?? 'Dialog'}
         className={cn(
-          'relative z-10 w-full max-w-[92vw] rounded-t-2xl bg-surface border-t border-surface2',
-          'shadow-[var(--shadow-modal)] p-5'
+          'relative z-10 w-full max-w-[92vw] sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-surface border-t sm:border border-surface2',
+          'shadow-[var(--shadow-modal)] p-5 sm:p-6'
         )}
         style={{ animation: 'modalSheetIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
       >
