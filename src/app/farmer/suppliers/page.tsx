@@ -195,13 +195,13 @@ export default async function FarmerSuppliersPage({
           <p style={{ color: C.muted, fontSize: 14, marginTop: 4 }}>Try adjusting your filters or check back later.</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 content-auto">
           {rows.map((p: any) => {
             const supp = p.supplier ?? {};
             const flashActive = !!p.is_flash_deal && !!p.flash_ends_at && new Date(p.flash_ends_at) > new Date();
             const effectivePrice = flashActive ? Number(p.flash_price_ugx) : Number(p.price_per_unit);
             return (
-              <div key={p.id} style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div key={p.id} className="content-auto-card" style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 {/* Photo header */}
                 <div style={{
                   height: 130, position: 'relative', overflow: 'hidden',

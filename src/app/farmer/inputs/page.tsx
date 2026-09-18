@@ -206,7 +206,7 @@ export default function FarmerInputsPage() {
       </div>
 
       {/* Orders */}
-      <div style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow }}>
+      <div className="content-auto" style={{ background: C.cardBg, borderRadius: 14, boxShadow: C.cardShadow }}>
         {loading ? (
           <div style={{ padding: '40px 24px', textAlign: 'center', color: C.muted, fontSize: 14 }}>Loading your inputs…</div>
         ) : filtered.length === 0 ? (

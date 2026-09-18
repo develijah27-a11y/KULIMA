@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -56,6 +56,7 @@ export function EscrowFundButton({ offerId, amount, cropType, balance }: Props) 
       <button
         onClick={fund}
         disabled={loading || !canFund}
+        className="tap-bounce"
         style={{
           width: '100%', padding: '10px', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: canFund ? 'pointer' : 'not-allowed',
           background: loading || !canFund ? 'var(--color-surface-2)' : C.green,

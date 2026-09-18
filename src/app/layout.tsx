@@ -147,6 +147,7 @@ export default function RootLayout({
             cap preconnect count) only resolves the name, not the handshake. */}
         <link rel="preconnect" href="https://hjvnkintvjogwljchwcq.supabase.co" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://hjvnkintvjogwljchwcq.supabase.co" />
+        <link rel="preconnect" href="https://api.openweathermap.org" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://api.openweathermap.org" />
       </head>
       <body
@@ -164,6 +165,8 @@ export default function RootLayout({
             alt="Cropify"
             width={120}
             height={120}
+            fetchPriority="high"
+            decoding="async"
             style={{ borderRadius: '22%', background: '#FFFFFF', padding: '6px' }}
           />
           <span className="app-splash-word"><Wordmark color="#FFFFFF" leafColor="#8BE9A8" style={{ fontSize: 'inherit' }} /></span>

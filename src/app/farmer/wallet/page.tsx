@@ -134,7 +134,7 @@ export default async function FarmerWalletPage() {
       )}
 
       {/* Transaction history */}
-      <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
+      <div className="content-auto" style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow }}>
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}` }}>
           <p className="text-sm font-bold" style={{ color: C.text }}>Transaction History</p>
         </div>

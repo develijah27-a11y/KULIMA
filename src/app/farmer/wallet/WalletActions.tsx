@@ -406,6 +406,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
           {(['airtel', 'mtn'] as const).map(p => (
             <button
               key={p} type="button" onClick={() => setProvider(p)}
+              className="tap-bounce"
               style={{
                 flex: 1, padding: '10px 8px', borderRadius: 8,
                 border: `2px solid ${provider === p ? (p === 'airtel' ? '#EF4444' : '#F59E0B') : C.border}`,
@@ -429,7 +430,18 @@ export function WalletActions({ balance, escrowBalance }: Props) {
             {provider === 'airtel' ? 'Airtel Phone Number' : 'MTN Phone Number'}
           </label>
           <input
-            type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+            type="tel"
+            value={phone}
+            onChange={e => {
+              const val = e.target.value;
+              setPhone(val);
+              const clean = val.replace(/\D/g, '');
+              if (clean.startsWith('075') || clean.startsWith('070') || clean.startsWith('074') || clean.startsWith('25675') || clean.startsWith('25670') || clean.startsWith('25674')) {
+                setProvider('airtel');
+              } else if (clean.startsWith('077') || clean.startsWith('078') || clean.startsWith('076') || clean.startsWith('25677') || clean.startsWith('25678') || clean.startsWith('25676')) {
+                setProvider('mtn');
+              }
+            }}
             placeholder={provider === 'airtel' ? 'e.g. 0752123456 or 0702123456' : 'e.g. 0772123456 or 0782123456'}
             style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: 'var(--d-input-bg)' }}
           />
@@ -444,6 +456,30 @@ export function WalletActions({ balance, escrowBalance }: Props) {
             placeholder="Min: 500"
             style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1.5px solid ${C.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', color: C.text, background: 'var(--d-input-bg)' }}
           />
+          {isDeposit && (
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+              {[5000, 20000, 50000, 100000].map(val => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setAmount(String(val))}
+                  className="tap-bounce"
+                  style={{
+                    padding: '5px 10px',
+                    borderRadius: 6,
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    border: `1px solid ${amount === String(val) ? C.green : C.border}`,
+                    background: amount === String(val) ? 'var(--color-primary-bg)' : 'var(--color-surface-2)',
+                    color: amount === String(val) ? C.green : C.muted,
+                    cursor: 'pointer',
+                  }}
+                >
+                  UGX {val.toLocaleString()}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {!isDeposit && (
@@ -485,6 +521,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
     <div style={{ display: 'flex', gap: 10 }}>
       <button
         onClick={() => setMode('deposit')}
+        className="tap-bounce"
         style={{ flex: 1, padding: '11px', background: C.green, color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: 'pointer', boxShadow: '0 2px 6px rgba(10,92,54,0.2)' }}
       >
         + Deposit
@@ -492,6 +529,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
       <button
         onClick={() => setMode('send')}
         disabled={balance <= 0}
+        className="tap-bounce"
         style={{ flex: 1, padding: '11px', background: balance > 0 ? 'var(--color-sky-bg)' : 'var(--color-surface-2)', color: balance > 0 ? 'var(--color-sky)' : C.muted, border: `1px solid ${balance > 0 ? 'var(--color-sky-muted)' : C.border}`, borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: balance > 0 ? 'pointer' : 'not-allowed' }}
       >
         Send
@@ -499,6 +537,7 @@ export function WalletActions({ balance, escrowBalance }: Props) {
       <button
         onClick={() => setMode('withdraw')}
         disabled={balance <= 0}
+        className="tap-bounce"
         style={{ flex: 1, padding: '11px', background: balance > 0 ? 'var(--color-primary-bg)' : 'var(--color-surface-2)', color: balance > 0 ? C.greenMed : C.muted, border: `1px solid ${balance > 0 ? 'var(--color-primary-muted)' : C.border}`, borderRadius: 10, fontWeight: 700, fontSize: 13, cursor: balance > 0 ? 'pointer' : 'not-allowed' }}
       >
         Withdraw

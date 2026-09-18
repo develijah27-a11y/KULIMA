@@ -1080,4 +1080,86 @@ input.auth-input:-webkit-autofill:active {
   background: #0A0F1D !important;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   MODERN WEB GUIDANCE: PERFORMANCE & INTERACTION OPTIMIZATIONS
+   ═══════════════════════════════════════════════════════════════════ */
 
+/* 1. Native View Transitions — Smooth Cross-Fade Navigation */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: 90ms cubic-bezier(0.4, 0, 1, 1) both vt-fade-out;
+}
+::view-transition-new(root) {
+  animation: 180ms cubic-bezier(0, 0, 0.2, 1) 40ms both vt-fade-in;
+}
+
+@keyframes vt-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 2. Zero-Delay Touch Interactions: Eliminates 300ms mobile tap delay */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+.interactive-chip,
+.press-link {
+  touch-action: manipulation;
+}
+
+/* 3. Remove mobile blue tap highlight artifact */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 4. CSS Containment: Skips layout/paint calculation for offscreen subtrees */
+.content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
+.content-auto-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 180px;
+}
+
+.contain-paint {
+  contain: paint;
+}
+
+.contain-layout-paint {
+  contain: layout paint;
+}
+
+/* 5. GPU-Accelerated Micro-Interactions */
+.tap-bounce {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease;
+}
+.tap-bounce:active {
+  transform: scale(0.97);
+}
+
+/* 6. Respect Reduced Motion Preferences */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
