@@ -62,10 +62,14 @@ export async function POST() {
   await notifyUser(admin, {
     userId: user.id,
     role,
-    type: 'system',
+    type: 'verification',
     title: VERIFY_REMINDER_TITLE,
     body: 'Submit your national ID and other required documents to unlock jobs, payouts, and escrow-protected deals.',
     url: role && VERIFY_URL[role] ? VERIFY_URL[role] : undefined,
+    actions: [
+      { action: 'verify_id', title: 'Verify ID' },
+      { action: 'open_app', title: 'Open App' },
+    ],
   });
 
   return NextResponse.json({ notified: true });

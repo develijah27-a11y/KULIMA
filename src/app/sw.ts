@@ -153,13 +153,21 @@ self.addEventListener('push', (event: PushEvent) => {
   try { payload = event.data.json(); } catch { payload = { body: event.data.text() }; }
 
   const rawTitle = payload.title ?? 'Cropify';
-  const cleanTitle = rawTitle.replace(/kulima/gi, 'Cropify').replace(/agrinova/gi, 'Cropify');
+  const cleanTitle = rawTitle
+    .replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '')
+    .replace(/kulima/gi, 'Cropify')
+    .replace(/agrinova/gi, 'Cropify')
+    .replace(/\s+/g, ' ')
+    .trim();
   const title = cleanTitle.toLowerCase().includes('cropify')
     ? cleanTitle
     : `Cropify · ${cleanTitle}`;
   const cleanBody = (payload.body ?? '')
+    .replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '')
     .replace(/kulima/gi, 'Cropify')
-    .replace(/agrinova/gi, 'Cropify');
+    .replace(/agrinova/gi, 'Cropify')
+    .replace(/\s+/g, ' ')
+    .trim();
   const rawUrl = payload.url ?? '/dashboard';
 
   // Always bind the target URL to the official production domain or local origin
@@ -169,54 +177,157 @@ self.addEventListener('push', (event: PushEvent) => {
 
   const fullUrl = rawUrl.startsWith('http') ? rawUrl : new URL(rawUrl, origin).href;
 
-  // Custom action buttons based on notification type so Android / Chrome NEVER shows the weird "Unsubscribe" button!
+  // Custom action buttons based on notification type without emojis
   let actions = payload.actions;
-  if (!actions || actions.length === 0) {
-    const combinedText = `${title} ${cleanBody} ${payload.type ?? ''}`.toLowerCase();
+  if (actions && actions.length > 0) {
+    actions = actions.map(a => ({
+      ...a,
+      title: (a.title || '').replace(/[\p{Emoji}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim() || a.title,
+    }));
+  } else {
+    const textType = (payload.type ?? '').toLowerCase();
+    const textUrl = fullUrl.toLowerCase();
+    const textTitle = title.toLowerCase();
+    const textBody = cleanBody.toLowerCase();
+
+    // 1. Account verification & KYC documents
     if (
-      combinedText.includes('delivery') ||
-      combinedText.includes('job') ||
-      combinedText.includes('driver') ||
-      combinedText.includes('pickup') ||
-      combinedText.includes('transit')
+      textType.includes('verify') ||
+      textType.includes('verification') ||
+      textType.includes('kyc') ||
+      textUrl.includes('/verify') ||
+      textUrl.includes('/verification') ||
+      textTitle.includes('verify') ||
+      textTitle.includes('verification') ||
+      textTitle.includes('national id') ||
+      textTitle.includes('kyc') ||
+      textBody.includes('national id') ||
+      textBody.includes('verify your account') ||
+      textBody.includes('submit your national') ||
+      textBody.includes('documents to unlock')
     ) {
       actions = [
-        { action: 'view_job', title: '👀 View Job' },
-        { action: 'open_app', title: '🚀 Open Cropify' },
+        { action: 'verify_id', title: 'Verify ID' },
+        { action: 'open_app', title: 'Open App' },
       ];
     } else if (
-      combinedText.includes('chat') ||
-      combinedText.includes('message') ||
-      combinedText.includes('group') ||
-      combinedText.includes('reply')
+      textType.includes('group') ||
+      textUrl.includes('/groups') ||
+      textTitle.includes('group') ||
+      textTitle.includes('cooperative') ||
+      textBody.includes('group message') ||
+      textBody.includes('group chat') ||
+      textBody.includes('cooperative')
     ) {
+      // 2. Farmer Groups & Co-operatives
       actions = [
-        { action: 'open_chat', title: '💬 Open Chat' },
-        { action: 'open_app', title: '🚀 Open Cropify' },
+        { action: 'open_group', title: 'Open Group' },
+        { action: 'open_app', title: 'Open App' },
       ];
     } else if (
-      combinedText.includes('order') ||
-      combinedText.includes('purchase') ||
-      combinedText.includes('offer')
+      textType.includes('chat') ||
+      textType.includes('message') ||
+      textUrl.includes('/chat') ||
+      textUrl.includes('/messages') ||
+      textUrl.includes('/direct') ||
+      textTitle.includes('chat') ||
+      textTitle.includes('message')
     ) {
+      // 3. Direct Messages & Chat
       actions = [
-        { action: 'view_order', title: '📦 View Order' },
-        { action: 'open_app', title: '🚀 Open Cropify' },
+        { action: 'open_chat', title: 'View Message' },
+        { action: 'open_app', title: 'Open App' },
       ];
     } else if (
-      combinedText.includes('wallet') ||
-      combinedText.includes('loan') ||
-      combinedText.includes('payment') ||
-      combinedText.includes('paid')
+      textType.includes('delivery') ||
+      textUrl.includes('/transporter/job') ||
+      textUrl.includes('/transporter/active') ||
+      textUrl.includes('/transporter/deliveries') ||
+      textTitle.includes('delivery request') ||
+      textTitle.includes('new delivery') ||
+      textTitle.includes('pickup job') ||
+      textTitle.includes('delivery assigned') ||
+      textBody.includes('delivery request') ||
+      textBody.includes('pickup ready') ||
+      textBody.includes('cargo delivery')
     ) {
+      // 4. Delivery & Transporter Jobs
       actions = [
-        { action: 'view_wallet', title: '💰 View Details' },
-        { action: 'open_app', title: '🚀 Open Cropify' },
+        { action: 'view_job', title: 'View Job' },
+        { action: 'open_app', title: 'Open App' },
+      ];
+    } else if (
+      textType.includes('order') ||
+      textType.includes('offer') ||
+      textUrl.includes('/orders') ||
+      textUrl.includes('/order') ||
+      textTitle.includes('order') ||
+      textTitle.includes('purchase') ||
+      textTitle.includes('offer') ||
+      textBody.includes('new order') ||
+      textBody.includes('order confirmed') ||
+      textBody.includes('order placed')
+    ) {
+      // 5. Orders & Purchases
+      actions = [
+        { action: 'view_order', title: 'View Order' },
+        { action: 'open_app', title: 'Open App' },
+      ];
+    } else if (
+      textType.includes('wallet') ||
+      textType.includes('loan') ||
+      textType.includes('payment') ||
+      textType.includes('escrow') ||
+      textType.includes('payout') ||
+      textUrl.includes('/wallet') ||
+      textTitle.includes('payment') ||
+      textTitle.includes('escrow') ||
+      textTitle.includes('wallet') ||
+      textTitle.includes('payout') ||
+      textBody.includes('payment received') ||
+      textBody.includes('escrow released')
+    ) {
+      // 6. Payments & Wallet
+      actions = [
+        { action: 'view_wallet', title: 'View Wallet' },
+        { action: 'open_app', title: 'Open App' },
+      ];
+    } else if (
+      textType.includes('pest') ||
+      textType.includes('disease') ||
+      textType.includes('diagnosis') ||
+      textUrl.includes('/pathologist') ||
+      textTitle.includes('pest') ||
+      textTitle.includes('disease') ||
+      textTitle.includes('diagnosis')
+    ) {
+      // 7. Pest & Diagnosis
+      actions = [
+        { action: 'view_diagnosis', title: 'View Diagnosis' },
+        { action: 'open_app', title: 'Open App' },
+      ];
+    } else if (
+      textType.includes('weather') ||
+      textType.includes('planting') ||
+      textType.includes('season') ||
+      textType.includes('price') ||
+      textUrl.includes('/weather') ||
+      textUrl.includes('/planting') ||
+      textUrl.includes('/prices') ||
+      textTitle.includes('weather') ||
+      textTitle.includes('rain') ||
+      textTitle.includes('planting')
+    ) {
+      // 8. Alerts
+      actions = [
+        { action: 'view_alert', title: 'View Alert' },
+        { action: 'open_app', title: 'Open App' },
       ];
     } else {
+      // 9. Default Fallback
       actions = [
-        { action: 'view', title: '👀 View' },
-        { action: 'open_app', title: '🚀 Open Cropify' },
+        { action: 'view_details', title: 'View Details' },
+        { action: 'open_app', title: 'Open App' },
       ];
     }
   }
@@ -250,7 +361,12 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
     ? self.location.origin
     : 'https://www.cropifyapp.com';
 
-  const targetUrl = notifData?.url || `${origin}/dashboard`;
+  // If user clicked "Open App", take them directly to the app dashboard;
+  // otherwise navigate to the specific action/page destination URL.
+  let targetUrl = notifData?.url || `${origin}/dashboard`;
+  if (event.action === 'open_app') {
+    targetUrl = `${origin}/dashboard`;
+  }
 
   event.waitUntil(
     (async () => {

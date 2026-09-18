@@ -271,8 +271,8 @@ export async function notifyNearbyDrivers(
         tag: `delivery-${deliveryId}`,
         type: 'delivery',
         actions: [
-          { action: 'view_job', title: '👀 View Job' },
-          { action: 'accept_job', title: '⚡ Accept Now' },
+          { action: 'view_job', title: 'View Job' },
+          { action: 'open_app', title: 'Open App' },
         ],
       });
     } catch (pushErr) {

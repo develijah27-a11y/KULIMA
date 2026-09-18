@@ -319,7 +319,17 @@ function NotifItem({
                 gap: 3,
               }}
             >
-              {n.href.includes('/transporter') ? 'View Job' : n.href.includes('/order') ? 'View Order' : n.href.includes('/chat') || n.href.includes('/groups') ? 'Open Chat' : 'View'} →
+              {(() => {
+                const h = (n.href || '').toLowerCase();
+                const t = (n.type || '').toLowerCase();
+                if (h.includes('/verify') || t.includes('verify') || t.includes('kyc')) return 'Verify ID';
+                if (h.includes('/transporter/job') || h.includes('/transporter/active') || t === 'delivery') return 'View Job';
+                if (h.includes('/order') || t === 'order') return 'View Order';
+                if (h.includes('/groups') || t.includes('group')) return 'Open Group';
+                if (h.includes('/chat') || h.includes('/messages') || t === 'message') return 'View Message';
+                if (h.includes('/wallet') || t === 'payment' || t === 'escrow') return 'View Wallet';
+                return 'View';
+              })()} →
             </span>
           )}
         </div>

@@ -67,13 +67,16 @@ function formatTime(iso?: string | null): string {
 function getNotificationActionLabel(type?: string, href?: string): string | null {
   if (!href) return null;
   const h = href.toLowerCase();
-  if (h.includes('/transporter') || type === 'delivery') return '👀 View Job';
-  if (h.includes('/orders') || type === 'offer') return '📦 View Order';
-  if (h.includes('/groups') || h.includes('/chat') || type === 'message') return '💬 Open Chat';
-  if (h.includes('/wallet') || type === 'payment' || type === 'loan') return '💰 View Details';
-  if (type === 'pest' || type === 'disease') return '🔬 View Diagnosis';
-  if (type === 'price') return '📈 View Market';
-  return '👀 View Details';
+  const t = (type || '').toLowerCase();
+  if (h.includes('/verify') || t.includes('verify') || t.includes('kyc')) return 'Verify ID';
+  if (h.includes('/transporter/job') || h.includes('/transporter/active') || t === 'delivery') return 'View Job';
+  if (h.includes('/orders') || t === 'order' || t === 'offer') return 'View Order';
+  if (h.includes('/groups') || t.includes('group')) return 'Open Group';
+  if (h.includes('/chat') || t === 'message') return 'View Message';
+  if (h.includes('/wallet') || t === 'payment' || t === 'loan' || t === 'escrow' || t === 'payout') return 'View Wallet';
+  if (t === 'pest' || t === 'disease') return 'View Diagnosis';
+  if (t === 'price' || t === 'weather' || t === 'planting') return 'View Alert';
+  return 'View Details';
 }
 
 export function InteractiveNotificationsView({
