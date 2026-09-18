@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Leaf, ClipboardList, CheckCircle2, Truck, Package, Star, X, AlertTriangle, FileText, Check, Info, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
+import { Leaf, ClipboardList, CheckCircle2, Truck, Package, Star, X, AlertTriangle, FileText, Check, Info, ChevronDown, ChevronUp, ShieldCheck, Smartphone } from 'lucide-react';
 import { getCropColor } from '@/lib/crop-photos';
 
 const C = {
@@ -235,6 +235,7 @@ function Toast({ msg, ok }: { msg: string; ok: boolean }) {
 function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) {
   const [pending, startT] = useTransition();
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [topUpPrompt, setTopUpPrompt] = useState<string | null>(null);
   const farmer = order.farmer;
 
   function showToast(msg: string, ok: boolean) {
@@ -263,8 +264,16 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
         body: JSON.stringify({ action: 'fund', orderId: order.id }),
       });
       const json = await res.json();
-      if (json.success) { showToast('Payment secured — arranging a driver now', true); onAction(); }
-      else showToast(json.error ?? 'Payment failed', false);
+      if (json.success) {
+        setTopUpPrompt(null);
+        showToast('Payment secured — arranging a driver now', true);
+        onAction();
+      } else {
+        if (json.error?.toLowerCase().includes('insufficient') || json.error?.toLowerCase().includes('balance')) {
+          setTopUpPrompt(json.error);
+        }
+        showToast(json.error ?? 'Payment failed', false);
+      }
     });
   }
 
@@ -465,6 +474,41 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
             >
               {pending ? 'Processing…' : `Pay UGX ${Math.round(order.total_amount).toLocaleString()} — Arrange Delivery`}
             </button>
+          )}
+
+          {topUpPrompt && (
+            <div style={{
+              padding: '12px 14px',
+              borderRadius: 12,
+              background: 'var(--color-harvest-bg, #FEF3C7)',
+              border: '1px solid var(--color-harvest, #F59E0B)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+              flexWrap: 'wrap',
+            }}>
+              <div style={{ fontSize: 12, color: 'var(--d-text)', fontWeight: 600 }}>
+                ⚠️ {topUpPrompt}
+              </div>
+              <Link
+                href="/buyer/wallet"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '7px 14px',
+                  borderRadius: 8,
+                  background: 'var(--color-primary, #166B3A)',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 800,
+                  textDecoration: 'none',
+                }}
+              >
+                <Smartphone size={13} /> Top Up via MTN / Airtel ➔
+              </Link>
+            </div>
           )}
           {canComplete && (
             <button
