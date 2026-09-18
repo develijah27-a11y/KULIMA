@@ -6,6 +6,14 @@ const isDev = process.env.NODE_ENV === 'development';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: {
+    NEXT_PUBLIC_MAPBOX_TOKEN:
+      process.env.NEXT_PUBLIC_MAPBOX_TOKEN ||
+      process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ||
+      process.env.MAPBOX_TOKEN ||
+      process.env.MAPBOX_ACCESS_TOKEN ||
+      '',
+  },
   compress: true,
   // Suppress Turbopack warning when no turbopack config is needed
   turbopack: {},
@@ -70,9 +78,9 @@ const nextConfig = {
       "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
       "font-src 'self' https://fonts.gstatic.com",
-      // Include ArcGIS servers (used by map-tiles.ts as default satellite & street basemaps)
-      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org https://tiles.stadiamaps.com https://api.mapbox.com https://*.basemaps.cartocdn.com https://server.arcgisonline.com https://*.arcgisonline.com https://*.google.com https://*.googleapis.com https://mt0.google.com https://mt1.google.com https://mt2.google.com https://mt3.google.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openweathermap.org https://api.open-meteo.com https://cloudflareinsights.com",
+      // Include ArcGIS servers, OpenStreetMap, Mapbox, Stadia, and Google tile CDNs
+      "img-src 'self' data: blob: https://*.supabase.co https://images.unsplash.com https://plus.unsplash.com https://unpkg.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://tiles.stadiamaps.com https://*.stadiamaps.com https://api.mapbox.com https://*.mapbox.com https://*.basemaps.cartocdn.com https://server.arcgisonline.com https://*.arcgisonline.com https://*.google.com https://*.googleapis.com https://mt0.google.com https://mt1.google.com https://mt2.google.com https://mt3.google.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openweathermap.org https://api.open-meteo.com https://cloudflareinsights.com https://api.mapbox.com https://*.mapbox.com https://events.mapbox.com https://router.project-osrm.org",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

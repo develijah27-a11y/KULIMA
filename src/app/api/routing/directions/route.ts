@@ -18,8 +18,12 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 });
   }
 
-  const apiKey = process.env.OPENROUTESERVICE_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: 'Routing is not configured yet.' }, { status: 503 });
+  const mapboxToken =
+    process.env.MAPBOX_TOKEN ||
+    process.env.NEXT_PUBLIC_MAPBOX_TOKEN ||
+    process.env.MAPBOX_ACCESS_TOKEN ||
+    process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+  const orsKey = process.env.OPENROUTESERVICE_API_KEY;
 
   const { searchParams } = new URL(req.url);
   const fromLat = parseFloat(searchParams.get('fromLat') ?? '');
@@ -30,29 +34,87 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'fromLat, fromLng, toLat, toLng are all required numbers' }, { status: 400 });
   }
 
-  try {
-    const url = `https://api.openrouteservice.org/v2/directions/driving-car?start=${fromLng},${fromLat}&end=${toLng},${toLat}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(url, { headers: { Authorization: apiKey }, signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) return NextResponse.json({ error: 'Could not compute a route.' }, { status: 502 });
-
-    const json = await res.json();
-    const feature = json?.features?.[0];
-    const coords: [number, number][] | undefined = feature?.geometry?.coordinates;
-    if (!Array.isArray(coords) || coords.length < 2) {
-      return NextResponse.json({ error: 'No route found between those points.' }, { status: 404 });
+  // 1. Try Mapbox Directions API first if token is available
+  if (mapboxToken) {
+    try {
+      const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${fromLng},${fromLat};${toLng},${toLat}?geometries=geojson&overview=full&access_token=${mapboxToken}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const json = await res.json();
+        const route = json?.routes?.[0];
+        const coords: [number, number][] | undefined = route?.geometry?.coordinates;
+        if (Array.isArray(coords) && coords.length >= 2) {
+          return NextResponse.json({
+            path: coords.map(([lng, lat]) => [lat, lng]),
+            distanceMeters: route.distance ?? null,
+            durationSeconds: route.duration ?? null,
+            provider: 'mapbox',
+          });
+        }
+      }
+    } catch {
+      // Continue to next provider
     }
-
-    // GeoJSON is [lng, lat] — Leaflet wants [lat, lng].
-    const path = coords.map(([lng, lat]) => [lat, lng]);
-    return NextResponse.json({
-      path,
-      distanceMeters: feature.properties?.summary?.distance ?? null,
-      durationSeconds: feature.properties?.summary?.duration ?? null,
-    });
-  } catch {
-    return NextResponse.json({ error: 'Routing request failed. Please try again.' }, { status: 502 });
   }
+
+  // 2. Try OpenRouteService if API key is configured
+  if (orsKey) {
+    try {
+      const url = `https://api.openrouteservice.org/v2/directions/driving-car?start=${fromLng},${fromLat}&end=${toLng},${toLat}`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 6000);
+      const res = await fetch(url, { headers: { Authorization: orsKey }, signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const json = await res.json();
+        const feature = json?.features?.[0];
+        const coords: [number, number][] | undefined = feature?.geometry?.coordinates;
+        if (Array.isArray(coords) && coords.length >= 2) {
+          return NextResponse.json({
+            path: coords.map(([lng, lat]) => [lat, lng]),
+            distanceMeters: feature.properties?.summary?.distance ?? null,
+            durationSeconds: feature.properties?.summary?.duration ?? null,
+            provider: 'openrouteservice',
+          });
+        }
+      }
+    } catch {
+      // Continue to next provider
+    }
+  }
+
+  // 3. Bulletproof fallback: OSRM global routing engine
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 7000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (res.ok) {
+      const json = await res.json();
+      const route = json?.routes?.[0];
+      const coords: [number, number][] | undefined = route?.geometry?.coordinates;
+      if (Array.isArray(coords) && coords.length >= 2) {
+        return NextResponse.json({
+          path: coords.map(([lng, lat]) => [lat, lng]),
+          distanceMeters: route.distance ?? null,
+          durationSeconds: route.duration ?? null,
+          provider: 'osrm',
+        });
+      }
+    }
+  } catch {
+    // Continue to fallback
+  }
+
+  // 4. Ultimate resilient fallback: 2-point straight path
+  return NextResponse.json({
+    path: [[fromLat, fromLng], [toLat, toLng]],
+    distanceMeters: null,
+    durationSeconds: null,
+    provider: 'fallback',
+  });
 }

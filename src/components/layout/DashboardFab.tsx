@@ -18,6 +18,11 @@ const SUPPRESSED_PATTERNS = [
   '/support',
   '/new',
   '/edit',
+  '/active',
+  '/deliveries',
+  '/tracking',
+  '/map',
+  '/job-queue',
 ];
 
 export function DashboardFab({ href, ariaLabel, children }: Props) {

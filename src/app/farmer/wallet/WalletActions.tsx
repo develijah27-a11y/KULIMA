@@ -187,21 +187,18 @@ export function WalletActions({ balance, escrowBalance }: Props) {
   if (success) {
     return (
       <div style={{ textAlign: 'center', padding: '16px 0' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: isDepositConfirmed ? 'var(--color-success)' : '#10B981' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12, color: isDepositConfirmed ? 'var(--color-success)' : 'var(--color-primary)' }}>
           {isDepositConfirmed ? (
-            <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(16, 185, 129, 0.3)' }}>
-              <Check size={36} color="#10B981" />
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--color-success-bg, #ECFDF5)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+              <Check size={32} color="#10B981" />
             </div>
           ) : mode === 'deposit' ? (
-            <div style={{ position: 'relative', width: 60, height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(16, 185, 129, 0.2)' }} className="animate-ping" />
-              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Smartphone size={30} color="#10B981" />
-              </div>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--color-primary-bg, #EAF6EE)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(22, 107, 58, 0.15)' }}>
+              <Smartphone size={28} color="var(--color-primary, #166B3A)" />
             </div>
           ) : (
-            <div style={{ width: 60, height: 60, borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CheckCircle2 size={36} color="#10B981" />
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--color-primary-bg, #EAF6EE)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(22, 107, 58, 0.15)' }}>
+              <CheckCircle2 size={32} color="var(--color-primary, #166B3A)" />
             </div>
           )}
         </div>

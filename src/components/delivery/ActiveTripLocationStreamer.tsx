@@ -116,10 +116,7 @@ export function ActiveTripLocationStreamer({ deliveryId, status, tripPhase, onPo
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
         {gpsStatus === 'streaming' && (
-          <span style={{ position: 'relative', display: 'flex', height: 8, width: 8 }}>
-            <span className="animate-ping" style={{ position: 'absolute', display: 'inline-flex', height: '100%', width: '100%', borderRadius: '50%', backgroundColor: '#10B981', opacity: 0.75 }} />
-            <span style={{ position: 'relative', display: 'inline-flex', borderRadius: '50%', height: 8, width: 8, backgroundColor: '#059669' }} />
-          </span>
+          <span style={{ display: 'inline-flex', borderRadius: '50%', height: 8, width: 8, backgroundColor: '#059669' }} />
         )}
         {gpsStatus === 'acquiring' && (
           <Radio size={14} className="animate-spin text-amber-500" />

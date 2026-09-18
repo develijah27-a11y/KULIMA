@@ -33,12 +33,18 @@ function createReliableTileLayer(L: any, type: 'navigation' | 'satellite' | 'str
   }
   const layer = L.tileLayer(url, opts);
   layer.on('tileerror', function (error: any) {
-    if (error?.tile && !error.tile.dataset.fallbackTried) {
-      error.tile.dataset.fallbackTried = 'true';
+    if (error?.tile) {
+      const tried = parseInt(error.tile.dataset.fallbackTried || '0', 10);
       const c = error.coords;
-      if (c) {
-        // Fall back to Esri World Street Map or OSM directly
-        error.tile.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/${c.z}/${c.y}/${c.x}`;
+      if (!c) return;
+      if (tried === 0) {
+        error.tile.dataset.fallbackTried = '1';
+        // Primary fallback: OpenStreetMap standard tiles
+        error.tile.src = `https://tile.openstreetmap.org/${c.z}/${c.x}/${c.y}.png`;
+      } else if (tried === 1) {
+        error.tile.dataset.fallbackTried = '2';
+        // Bulletproof secondary fallback: Google Maps Road tiles
+        error.tile.src = `https://mt1.google.com/vt/lyrs=m&x=${c.x}&y=${c.y}&z=${c.z}`;
       }
     }
   });
@@ -316,16 +322,19 @@ export function DeliveryTrackingMap({
 
       const bounds: [number, number][] = [];
 
-      // Pickup Marker (Glowing Emerald with Label Badge)
+      // Pickup Marker (Clean solid emerald navigation pin)
       if (pickup) {
         const pickupIcon = L.divIcon({
           className: '',
-          iconSize: [28, 28],
-          iconAnchor: [14, 14],
+          iconSize: [28, 36],
+          iconAnchor: [14, 36],
+          popupAnchor: [0, -36],
           html: `
-            <div style="position:relative;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
-              <div style="position:absolute;width:28px;height:28px;border-radius:50%;background:rgba(16,185,129,0.35);animation:cropify-pulse 2s infinite;"></div>
-              <div style="width:16px;height:16px;border-radius:50%;background:#10B981;border:3px solid #FFFFFF;box-shadow:0 0 12px #10B981;"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.35));cursor:pointer;">
+              <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+                <path d="M14 0C6.268 0 0 6.268 0 14c0 9.75 14 22 14 22s14-12.25 14-22c0-7.732-6.268-14-14-14z" fill="#059669"/>
+                <circle cx="14" cy="13" r="5" fill="#FFFFFF"/>
+              </svg>
             </div>
           `,
         });
@@ -334,16 +343,19 @@ export function DeliveryTrackingMap({
         bounds.push([pickup.lat, pickup.lng]);
       }
 
-      // Dropoff Marker (Neon Coral Red with Label Badge)
+      // Dropoff Marker (Clean solid crimson destination pin)
       if (dropoff) {
         const dropoffIcon = L.divIcon({
           className: '',
-          iconSize: [28, 28],
-          iconAnchor: [14, 14],
+          iconSize: [28, 36],
+          iconAnchor: [14, 36],
+          popupAnchor: [0, -36],
           html: `
-            <div style="position:relative;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
-              <div style="position:absolute;width:28px;height:28px;border-radius:50%;background:rgba(239,68,68,0.35);animation:cropify-pulse 2s infinite;"></div>
-              <div style="width:16px;height:16px;border-radius:50%;background:#EF4444;border:3px solid #FFFFFF;box-shadow:0 0 12px #EF4444;"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.35));cursor:pointer;">
+              <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+                <path d="M14 0C6.268 0 0 6.268 0 14c0 9.75 14 22 14 22s14-12.25 14-22c0-7.732-6.268-14-14-14z" fill="#DC2626"/>
+                <rect x="9.5" y="8.5" width="9" height="9" rx="1.5" fill="#FFFFFF"/>
+              </svg>
             </div>
           `,
         });
@@ -352,22 +364,25 @@ export function DeliveryTrackingMap({
         bounds.push([dropoff.lat, dropoff.lng]);
       }
 
-      // Route lines: Neon Cyan Glowing Path
+      // Route lines: High-contrast navigation route
       if (pickup && dropoff) {
-        // Fallback straight line while road polyline loads
+        // Road casing outline
         routeGlowRef.current = L.polyline([[pickup.lat, pickup.lng], [dropoff.lat, dropoff.lng]], {
-          color: '#00E5FF',
-          weight: 10,
-          opacity: 0.25,
+          color: '#1D4ED8',
+          weight: 6,
+          opacity: 0.7,
           lineCap: 'round',
+          lineJoin: 'round',
         }).addTo(map);
 
+        // Navigation road core
         routeLineRef.current = L.polyline([[pickup.lat, pickup.lng], [dropoff.lat, dropoff.lng]], {
-          color: '#00F0FF',
+          color: '#3B82F6',
           weight: 4,
-          opacity: 0.85,
-          dashArray: '3 8',
+          opacity: 0.95,
+          dashArray: '4 8',
           lineCap: 'round',
+          lineJoin: 'round',
         }).addTo(map);
 
         fetchRoadRoute(pickup, dropoff).then(route => {
@@ -376,20 +391,20 @@ export function DeliveryTrackingMap({
           routeGlowRef.current?.remove();
           routeLineRef.current?.remove();
 
-          // Outer glowing aura
+          // Dark blue road casing outline for crisp edge contrast
           routeGlowRef.current = L.polyline(route.path, {
-            color: '#00E5FF',
-            weight: 10,
-            opacity: 0.35,
+            color: '#1E40AF',
+            weight: 7,
+            opacity: 0.9,
             lineCap: 'round',
             lineJoin: 'round',
           }).addTo(map);
 
-          // Inner vibrant neon cyan road core
+          // Solid navigation blue highway surface
           routeLineRef.current = L.polyline(route.path, {
-            color: '#00F0FF',
+            color: '#2563EB',
             weight: 4.5,
-            opacity: 0.95,
+            opacity: 1.0,
             lineCap: 'round',
             lineJoin: 'round',
           }).addTo(map);
@@ -536,9 +551,9 @@ export function DeliveryTrackingMap({
                 traveledLineRef.current.setLatLngs(traveled);
               } else {
                 traveledLineRef.current = L.polyline(traveled, {
-                  color: '#334155',
-                  weight: 5,
-                  opacity: 0.8,
+                  color: '#475569',
+                  weight: 4.5,
+                  opacity: 0.9,
                   lineCap: 'round',
                   lineJoin: 'round',
                 }).addTo(mapRef.current);
@@ -557,12 +572,15 @@ export function DeliveryTrackingMap({
           if (!requesterMarkerRef.current) {
             const requesterIcon = L.divIcon({
               className: '',
-              iconSize: [34, 34],
-              iconAnchor: [17, 17],
+              iconSize: [28, 36],
+              iconAnchor: [14, 36],
+              popupAnchor: [0, -36],
               html: `
-                <div style="position:relative;width:34px;height:34px;display:flex;align-items:center;justify-content:center;">
-                  <div style="position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(59,130,246,0.35);animation:cropify-pulse 2s infinite;"></div>
-                  <div style="width:20px;height:20px;border-radius:50%;background:#3B82F6;border:3px solid #FFFFFF;box-shadow:0 0 14px #3B82F6;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;">📍</div>
+                <div style="display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.35));cursor:pointer;">
+                  <svg width="28" height="36" viewBox="0 0 28 36" fill="none">
+                    <path d="M14 0C6.268 0 0 6.268 0 14c0 9.75 14 22 14 22s14-12.25 14-22c0-7.732-6.268-14-14-14z" fill="#2563EB"/>
+                    <circle cx="14" cy="12" r="4.5" fill="#FFFFFF"/>
+                  </svg>
                 </div>
               `,
             });
@@ -622,13 +640,7 @@ export function DeliveryTrackingMap({
       <link rel="stylesheet" href="/leaflet/leaflet.css" />
       <style>{`
         .leaflet-container {
-          background: #0A0F1D !important;
-        }
-        .cropify-pulse { animation: cropify-pulse 2s ease-out infinite; }
-        @keyframes cropify-pulse {
-          0% { transform: scale(0.6); opacity: 0.8; }
-          70% { transform: scale(2.2); opacity: 0; }
-          100% { transform: scale(2.2); opacity: 0; }
+          background: #E2E8F0 !important;
         }
         .cropify-turn-card {
           backdrop-filter: blur(12px);
@@ -870,12 +882,7 @@ export function DeliveryTrackingMap({
                 transition: 'transform 0.15s ease',
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" fill="#4285F4"/>
-                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" fill="#34A853"/>
-                <path d="M12 14c.77 0 1.48-.3 2-.8l-2-2-2 2c.52.5 1.23.8 2 .8z" fill="#EA4335"/>
-                <path d="M12 16.5c1.4 0 2.67-.57 3.58-1.48l-1.42-1.42c-.55.55-1.32.9-2.16.9s-1.61-.35-2.16-.9L8.42 15.02C9.33 15.93 10.6 16.5 12 16.5z" fill="#FBBC05"/>
-              </svg>
+              <Volume2 size={18} color="#0F172A" />
             </button>
 
             <button

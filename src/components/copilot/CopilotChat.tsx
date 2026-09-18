@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Sparkles,
   AlertCircle,
@@ -594,17 +595,15 @@ export function CopilotChat({ role }: { role: string }) {
             <span className="hidden sm:inline">New chat</span>
           </button>
 
-          {/* Live Support Escalation */}
-          <a
-            href="https://wa.me/256758984224"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Chat with Human Agent on WhatsApp"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--d-border)] bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D366] text-xs font-semibold transition-colors cursor-pointer"
+          {/* In-App Support Ticket Desk */}
+          <Link
+            href={`/${role === 'agro_dealer' ? 'supplier' : role}/support`}
+            title="Open Support Ticket"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[var(--d-border)] bg-emerald-500/10 hover:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-semibold transition-colors cursor-pointer"
           >
             <MessageCircle size={14} />
             <span className="hidden sm:inline">Support</span>
-          </a>
+          </Link>
         </div>
       </div>
 
