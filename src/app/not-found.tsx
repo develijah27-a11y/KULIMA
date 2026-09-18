@@ -30,9 +30,9 @@ export default function NotFound() {
         404
       </p>
 
-      <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-text)', marginBottom: 8 }}>
-        Page not found
-      </p>
+      <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--color-text)', marginBottom: 8, letterSpacing: '-0.02em', fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>
+        Page Not Found — Cropify
+      </h1>
 
       <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 32, maxWidth: 360, lineHeight: 1.6 }}>
         The page you're looking for doesn't exist or has been moved.

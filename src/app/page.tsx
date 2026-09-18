@@ -127,8 +127,33 @@ function Hero() {
               <Sparkles size={13} color={GOLD} strokeWidth={2} /> Uganda&rsquo;s escrow-protected farm marketplace
             </div>
 
-            {/* Headline */}
-            <h1 className="landing-fade-up" style={{ fontSize: 'clamp(2.6rem,6.2vw,4.2rem)', fontWeight: 700, fontFamily: HEAD_FONT, letterSpacing: '-0.048em', lineHeight: 1.03, margin: '0 0 22px', color: INK, animationDelay: '65ms' }}>
+            {/* Headline with Core Topic and Keywords for Bingbot & Search Visibility */}
+            <h1
+              className="landing-fade-up"
+              style={{
+                fontSize: 'clamp(2.4rem, 5.6vw, 4rem)',
+                fontWeight: 700,
+                fontFamily: HEAD_FONT,
+                letterSpacing: '-0.045em',
+                lineHeight: 1.08,
+                margin: '0 0 22px',
+                color: INK,
+                animationDelay: '65ms',
+              }}
+            >
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: 'clamp(0.95rem, 1.8vw, 1.25rem)',
+                  fontWeight: 800,
+                  color: GREEN_DEEP,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                  marginBottom: 10,
+                }}
+              >
+                Cropify — Smart Farm Management for Uganda
+              </span>
               Farm smarter.<br />
               <span style={{ color: GREEN }}>Get paid,&nbsp;</span>
               <span style={{ color: GOLD }}>guaranteed.</span>
@@ -439,11 +464,15 @@ export default function Home() {
           .why-different-row > div:first-child { border-right: none !important; }
         }
       `}</style>
-      <Nav />
-      <Hero />
-      <PriceTicker />
-      <ProofBar />
-      <LandingBelowFold />
+      <header role="banner">
+        <Nav />
+      </header>
+      <main id="main-content" role="main">
+        <Hero />
+        <PriceTicker />
+        <ProofBar />
+        <LandingBelowFold />
+      </main>
     </div>
   );
 }
