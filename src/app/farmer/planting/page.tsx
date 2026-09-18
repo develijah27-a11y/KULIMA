@@ -38,9 +38,9 @@ const ALERT_TYPE_ICON: Record<string, JSX.Element> = {
 };
 
 const SEASON_TEXT: Record<string, string> = {
-  rains1: 'March–May rains',
-  rains2: 'September–November rains',
-  irrigated: 'irrigated/dry season',
+  rains1: 'First Wet Season (March–May)',
+  rains2: 'Second Wet Season (August–November)',
+  irrigated: 'Dry Season (Irrigated)',
 };
 
 const PHASE_CFG: Record<string, { bg: string; color: string; icon: JSX.Element }> = {
@@ -86,8 +86,8 @@ function MonthBar({ cal, currentMonth }: { cal: PlantingWindow; currentMonth: nu
       'harvest-1': { bg: 'var(--color-harvest-bg)', border: '#FCD34D' },
       'plant-2':   { bg: 'var(--color-sky-bg)', border: '#93C5FD' },
       'weed-2':    { bg: 'var(--color-cyan-bg)', border: '#67E8F9' },
-      'harvest-2': { bg: '#FDE8D8', border: '#FDBA74' },
-      'empty':     { bg: '#F9FAFB', border: 'var(--d-border)' },
+      'harvest-2': { bg: 'rgba(251, 146, 60, 0.15)', border: '#FDBA74' },
+      'empty':     { bg: 'var(--color-surface-2)', border: 'var(--d-border)' },
     };
 
     const cfg = colors[type];
@@ -244,7 +244,7 @@ export default async function PlantingPage() {
                     style={{
                       display: 'flex', alignItems: 'flex-start', gap: '14px',
                       padding: '14px 20px',
-                      background: alert.urgency === 'high' ? '#FFFAF0' : 'transparent',
+                      background: alert.urgency === 'high' ? 'rgba(239, 68, 68, 0.08)' : 'transparent',
                     }}
                   >
                     <div
@@ -258,8 +258,8 @@ export default async function PlantingPage() {
                       {typeIcon}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
-                        <p style={{ fontSize: '14px', fontWeight: 700, color: C.text }}>{alert.title}</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px', flexWrap: 'wrap' }}>
+                        <p style={{ fontSize: '14px', fontWeight: 700, color: C.text, margin: 0 }}>{alert.title}</p>
                         <span
                           style={{
                             fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px',
@@ -276,8 +276,18 @@ export default async function PlantingPage() {
                         >
                           {alert.type.replace(/_/g, ' ')}
                         </span>
+                        {alert.windowDates && (
+                          <span
+                            style={{
+                              fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '20px',
+                              background: 'rgba(74, 222, 128, 0.12)', color: 'var(--color-primary)',
+                            }}
+                          >
+                            📅 {alert.windowDates}
+                          </span>
+                        )}
                       </div>
-                      <p style={{ fontSize: '13px', color: C.muted, lineHeight: '1.5' }}>{alert.message}</p>
+                      <p style={{ fontSize: '13px', color: C.muted, lineHeight: '1.5', margin: '2px 0 0' }}>{alert.message}</p>
                       <p style={{ fontSize: '12px', color: C.muted, marginTop: '4px' }}>
                         {SEASON_TEXT[alert.season] ?? alert.season}
                         {alert.daysUntil > 0 ? ` · Starts in ${alert.daysUntil} days` : ' · Action required now'}
@@ -293,12 +303,12 @@ export default async function PlantingPage() {
         {/* Calendar legend */}
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
           {[
-            { color: 'var(--color-success-bg)', border: '#34D399', label: 'Plant (Mar–May rains)' },
-            { color: 'var(--color-lime-bg)', border: '#A3E635', label: 'Weed (Mar–May rains)' },
-            { color: 'var(--color-harvest-bg)', border: '#FCD34D', label: 'Harvest (Mar–May rains)' },
-            { color: 'var(--color-sky-bg)', border: '#93C5FD', label: 'Plant (Sep–Nov rains)' },
-            { color: 'var(--color-cyan-bg)', border: '#67E8F9', label: 'Weed (Sep–Nov rains)' },
-            { color: '#FDE8D8', border: '#FDBA74', label: 'Harvest (Sep–Nov rains)' },
+            { color: 'var(--color-success-bg)', border: '#34D399', label: 'Plant (First Wet Season: Mar–May)' },
+            { color: 'var(--color-lime-bg)', border: '#A3E635', label: 'Weed (First Wet Season: Mar–May)' },
+            { color: 'var(--color-harvest-bg)', border: '#FCD34D', label: 'Harvest (First Wet Season: Mar–May)' },
+            { color: 'var(--color-sky-bg)', border: '#93C5FD', label: 'Plant (Second Wet Season: Aug–Nov)' },
+            { color: 'var(--color-cyan-bg)', border: '#67E8F9', label: 'Weed (Second Wet Season: Aug–Nov)' },
+            { color: 'rgba(251, 146, 60, 0.15)', border: '#FDBA74', label: 'Harvest (Second Wet Season: Aug–Nov)' },
           ].map((item) => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: item.color, border: `1.5px solid ${item.border}` }} />
@@ -306,7 +316,7 @@ export default async function PlantingPage() {
             </div>
           ))}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: '#F9FAFB', border: `2px solid ${C.green}` }} />
+            <div style={{ width: '16px', height: '16px', borderRadius: '4px', background: 'var(--color-surface-2)', border: `2px solid ${C.green}` }} />
             <span style={{ fontSize: '12px', color: C.muted }}>Current month</span>
           </div>
         </div>

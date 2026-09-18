@@ -46,8 +46,7 @@ const getFarmsCount = cache(async (userId: string) => {
   const supabase = await createClient();
   const { count } = await (supabase.from as any)('farms')
     .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('is_active', true);
+    .eq('user_id', userId);
   return count ?? 0;
 });
 
@@ -622,7 +621,7 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
   const supabase = await createClient();
   const profile = await getProfile(userId);
   const farmsRes = await (supabase.from as any)('farms')
-    .select('crop_types').eq('user_id', userId).eq('is_active', true);
+    .select('crop_types').eq('user_id', userId);
 
   const farmCrops: string[] = (farmsRes.data ?? []).flatMap((f: any) => f.crop_types ?? []);
   if (profile?.primary_crop) farmCrops.push(profile.primary_crop);
@@ -673,6 +672,12 @@ async function PlantingAlertsWidget({ userId }: { userId: string }) {
                     style={{ background: cfg.bg, color: cfg.color }}>
                     {alert.urgency.toUpperCase()}
                   </span>
+                  {alert.windowDates && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: 'rgba(74, 222, 128, 0.12)', color: 'var(--color-primary)' }}>
+                      📅 {alert.windowDates}
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs leading-snug" style={{ color: C.muted }}>{alert.message}</p>
               </div>
@@ -847,19 +852,23 @@ function QuickActions() {
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Quick Actions</p>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 p-4">
+      <div className="grid grid-cols-3 sm:grid-cols-7 gap-2.5 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
           <Link
             key={label}
             href={href}
             prefetch={true}
-            className="flex flex-col items-center gap-2 py-4 rounded-xl transition-opacity hover:opacity-85 active:scale-95"
-            style={{ background: bg, textDecoration: 'none' }}
+            className="press-link flex flex-col items-center gap-2.5 py-4 px-1.5 rounded-xl transition-all"
+            style={{
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--d-border)',
+              textDecoration: 'none'
+            }}
           >
-            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'var(--tile-icon-bg)', color }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm" style={{ background: bg, color }}>
               {icon}
             </div>
-            <span className="text-[10px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
+            <span className="text-[11px] font-bold text-center px-1 leading-tight tracking-tight" style={{ color: 'var(--d-text)' }}>{label}</span>
           </Link>
         ))}
       </div>
@@ -896,7 +905,21 @@ async function VerifyPrompt({ userId }: { userId: string }) {
 
 async function CropPrompt({ userId }: { userId: string }) {
   const profile = await getProfile(userId);
-  if (profile?.primary_crop) return null;
+  if (profile?.primary_crop && profile.primary_crop.trim() !== '') return null;
+
+  // Also check if farmer has already registered any farm with crop types
+  const supabase = await createClient();
+  const { data: farms } = await (supabase.from as any)('farms')
+    .select('crop_types')
+    .eq('user_id', userId)
+    .limit(5);
+
+  const hasFarmCrops = farms?.some((f: any) => {
+    if (Array.isArray(f.crop_types)) return f.crop_types.length > 0;
+    return typeof f.crop_types === 'string' && f.crop_types.trim().length > 0;
+  });
+
+  if (hasFarmCrops) return null;
   return (
     <div
       style={{
@@ -976,6 +999,44 @@ export default async function FarmerDashboardPage() {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Warning strike banner for Strikes 1 & 2 */}
+      {!profile?.is_suspended && (profile?.quality_strikes ?? 0) > 0 && (
+        <div
+          className="rounded-2xl p-4 sm:p-5 border"
+          style={{
+            background: 'var(--color-harvest-bg)',
+            borderColor: 'var(--color-warning-border)',
+            boxShadow: 'var(--d-shadow-card)',
+          }}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'var(--color-harvest)', color: '#fff' }}
+              >
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: 'var(--color-harvest)', margin: 0 }}>
+                  Quality Notice: {profile.quality_strikes} of 3 Strikes Recorded
+                </p>
+                <p className="text-xs mt-1" style={{ color: C.text, margin: 0, lineHeight: 1.5 }}>
+                  A buyer reported substandard or under-grade produce on your order. Cropify requires accurate grading. Reaching 3 quality strikes will result in automatic temporary suspension of your seller privileges.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/farmer/support?category=quality_dispute"
+              className="px-4 py-2 rounded-lg text-xs font-bold shrink-0 text-white"
+              style={{ background: 'var(--color-harvest)', textDecoration: 'none', textAlign: 'center' }}
+            >
+              Contact Support →
+            </Link>
           </div>
         </div>
       )}

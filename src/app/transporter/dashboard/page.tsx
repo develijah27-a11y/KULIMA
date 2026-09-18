@@ -114,15 +114,23 @@ function QuickActions() {
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
         <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Quick Actions</p>
       </div>
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 p-4">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5 p-4">
         {actions.map(({ label, href, icon, bg, color }) => (
           <Link key={label} href={href} prefetch={true}
-            className="press-link flex flex-col items-center gap-2 py-4 rounded-xl"
-            style={{ background: bg, textDecoration: 'none' }}>
-            <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: 'var(--tile-icon-bg)', color }}>
+            className="press-link flex flex-col items-center gap-2.5 py-4 px-2 rounded-xl transition-all"
+            style={{
+              background: 'var(--color-surface-2)',
+              border: '1px solid var(--d-border)',
+              textDecoration: 'none'
+            }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+              style={{ background: bg, color }}>
               {icon}
             </div>
-            <span className="text-[11px] font-bold text-center px-1 leading-tight" style={{ color }}>{label}</span>
+            <span className="text-[11.5px] font-bold text-center px-1 leading-tight tracking-tight"
+              style={{ color: 'var(--d-text)' }}>
+              {label}
+            </span>
           </Link>
         ))}
       </div>
@@ -180,12 +188,18 @@ async function VehicleCard({ userId }: { userId: string }) {
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999,
+          <span style={{
+            fontSize: 11,
+            fontWeight: 700,
+            padding: '4px 10px',
+            borderRadius: 999,
             background: vehicle.is_available ? 'var(--color-success-bg)' : 'var(--color-danger-bg)',
-            color: vehicle.is_available ? 'var(--color-success)' : C.red }}>
+            color: vehicle.is_available ? 'var(--color-success)' : 'var(--color-danger)',
+            border: `1px solid ${vehicle.is_available ? 'var(--color-success-border)' : 'var(--color-danger-border)'}`,
+          }}>
             {vehicle.is_available ? '● Available' : '● Busy'}
           </span>
-          <Link href="/transporter/vehicle" style={{ fontSize: 11, color: C.greenMed, fontWeight: 600, textDecoration: 'none' }}>Edit vehicle</Link>
+          <Link href="/transporter/vehicle" style={{ fontSize: 11.5, color: 'var(--d-muted)', fontWeight: 600, textDecoration: 'none' }}>Edit vehicle</Link>
         </div>
       </div>
     </Card>

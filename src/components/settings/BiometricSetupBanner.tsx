@@ -45,6 +45,11 @@ export function BiometricSetupBanner() {
 
       try {
         const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.user_metadata?.biometric_enabled || user?.user_metadata?.passkey_enrolled) {
+          try { localStorage.setItem(CONFIGURED_KEY, 'true'); } catch {}
+          return;
+        }
         // Check Supabase MFA WebAuthn factors
         const { data: factorData } = await supabase.auth.mfa.listFactors();
         const hasWebAuthn = factorData?.all?.some(f => f.factor_type === 'webauthn' && f.status === 'verified');
@@ -54,7 +59,7 @@ export function BiometricSetupBanner() {
         }
         setVisible(true);
       } catch {
-        setVisible(true);
+        setVisible(false);
       }
     })();
   }, []);
@@ -63,6 +68,7 @@ export function BiometricSetupBanner() {
     setVisible(false);
     try {
       localStorage.setItem(DISMISS_KEY, 'true');
+      localStorage.setItem(CONFIGURED_KEY, 'true');
     } catch { /* ignore */ }
   }
 

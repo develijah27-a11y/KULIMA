@@ -174,31 +174,31 @@
   --color-surface-2:     #263449;
   --color-surface-3:     #2F3F5C;
 
-  --color-primary:       #7CC576;   /* Cropify Fresh Green — brighter for dark-surface legibility */
-  --color-primary-hover: #2FA34F;   /* Cropify Secondary Green */
-  --color-primary-muted: #1F5C34;
-  --color-primary-bg:    #0F2B1C;
+  --color-primary:       #4ADE80;   /* Cropify Emerald — balanced readability on dark */
+  --color-primary-hover: #22C55E;   /* Cropify Secondary Green */
+  --color-primary-muted: #166534;
+  --color-primary-bg:    rgba(34, 197, 94, 0.12);
   --color-primary-dark:  #BBF7D0;
 
-  --color-harvest:       #FFA726;   /* Cropify Harvest Orange — already legible on dark */
-  --color-harvest-hover: #FFB74D;
-  --color-harvest-muted: #FB8C00;
-  --color-harvest-bg:    #2A1B05;
+  --color-harvest:       #FBBF24;   /* Balanced warm amber */
+  --color-harvest-hover: #FCD34D;
+  --color-harvest-muted: #D97706;
+  --color-harvest-bg:    rgba(245, 158, 11, 0.12);
 
-  --color-sky:           #38BDF8;
+  --color-sky:           #38BDF8;   /* Soft sky cyan */
   --color-sky-hover:     #7DD3FC;
-  --color-sky-muted:     #0EA5E9;
-  --color-sky-bg:        #0B1A24;
+  --color-sky-muted:     #0284C7;
+  --color-sky-bg:        rgba(14, 165, 233, 0.12);
 
-  --color-purple:        #A78BFA;   /* brighter for dark-surface legibility */
+  --color-purple:        #A78BFA;   /* Soft violet */
   --color-purple-hover:  #C4B5FD;
   --color-purple-muted:  #7C3AED;
-  --color-purple-bg:     #1E1B3D;
+  --color-purple-bg:     rgba(139, 92, 246, 0.12);
 
   --color-cyan:          #22D3EE;
   --color-cyan-hover:    #67E8F9;
   --color-cyan-muted:    #0891B2;
-  --color-cyan-bg:       #0A2A30;
+  --color-cyan-bg:       rgba(6, 182, 212, 0.12);
 
   --color-lime:          #A3E635;
   --color-lime-hover:    #BEF264;
@@ -270,9 +270,8 @@
   --d-placeholder: var(--color-text-hint);
   --d-row-hover:   var(--color-surface-2);
   --d-subtle:      var(--color-surface-2);
-  /* A bright white circle on a dark tinted tile reads as a glaring, washed-out
-     blob — swap it for a soft translucent highlight instead, same idea as
-     the glass surfaces used elsewhere in dark mode. */
+  /* Balanced translucent highlight for icon chips inside tinted tiles */
+  --tile-icon-bg:  rgba(255, 255, 255, 0.08);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -1014,6 +1013,25 @@ input.auth-input:-webkit-autofill:active {
   background: var(--color-primary-hover);
   box-shadow: 0 8px 28px rgba(34, 197, 94, 0.55), 0 4px 10px rgba(0,0,0,0.14) !important;
 }
+.dark .fab-primary {
+  background: linear-gradient(135deg, #16A34A 0%, #15803D 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.32), 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.dark .fab-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%) !important;
+  box-shadow: 0 6px 22px rgba(34, 197, 94, 0.42), 0 3px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Dark Mode Action Tile Typography: High-contrast legible labels */
+.dark .press-link span {
+  color: var(--d-text) !important;
+  font-weight: 600 !important;
+}
+.dark .press-link {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
 
 .fab-harvest { background: var(--color-harvest); color: #fff; }
 .fab-harvest:hover:not(:disabled) { background: var(--color-harvest-hover); }
@@ -1056,6 +1074,10 @@ input.auth-input:-webkit-autofill:active {
 
 .leaflet-container {
   font-family: var(--font-body) !important;
+}
+
+.dark .leaflet-container {
+  background: #0A0F1D !important;
 }
 
 

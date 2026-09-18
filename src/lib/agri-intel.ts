@@ -217,10 +217,10 @@ export function getContinentalSeason(month: number, loc?: LocationContext): {
   };
 
   const NAMES: Record<'A' | 'B' | 'dry1' | 'dry2', string> = {
-    A: 'Season A (March–May Main Rains)',
-    dry1: 'Dry Season 1 (June–August)',
-    B: 'Season B (September–November Second Rains)',
-    dry2: 'Dry Season 2 (December–February)',
+    A: 'First Wet Season (March–May Main Rains)',
+    dry1: 'Mid-Year Dry Season (June–July)',
+    B: 'Second Wet Season (August–November Second Rains)',
+    dry2: 'Main Dry Season (December–February)',
   };
 
   const codes: ('A' | 'B' | 'dry1' | 'dry2')[] = ['A', 'dry1', 'B', 'dry2'];
@@ -405,26 +405,26 @@ export function buildSeasonalPlan(
   }> = {
     A: {
       recommendedCrops: ['Maize', 'Beans', 'Groundnuts', 'Sunflower', 'Sorghum', 'Soybeans'],
-      currentTask: 'Season A land prep and planting. Apply basal fertilizer (DAP/NPK) before first rains.',
+      currentTask: 'First Wet Season land prep and planting. Apply basal fertilizer (DAP/NPK) before first rains.',
       nextTask: 'Top-dress with nitrogen (CAN/Urea) at knee height (~3 weeks post-germination).',
       urgency: 'positive',
     },
     B: {
       recommendedCrops: ['Cassava', 'Sweet Potato', 'Sorghum', 'Tomato', 'Cabbage', 'Beans'],
-      currentTask: 'Season B planting of short-cycle crops. Mulch heavily to retain soil moisture.',
+      currentTask: 'Second Wet Season planting of short-cycle crops. Mulch heavily to retain soil moisture.',
       nextTask: 'Monitor for late blight and fall armyworm. Begin harvesting short-cycle vegetables.',
       urgency: 'info',
     },
     dry1: {
       recommendedCrops: ['Sweet Potato', 'Cassava', 'Watermelon (irrigated)', 'Vegetables'],
-      currentTask: 'Harvest Season A crops. Dry and store maize at <13% moisture to prevent aflatoxin.',
-      nextTask: 'Prepare nurseries and field beds for Season B rains arriving in September.',
+      currentTask: 'Harvest First Wet Season crops. Dry and store maize at <13% moisture to prevent aflatoxin.',
+      nextTask: 'Prepare nurseries and field beds for Second Wet Season rains arriving in August.',
       urgency: 'info',
     },
     dry2: {
       recommendedCrops: ['Onion', 'Tomato (irrigated)', 'Capsicum', 'Watermelon'],
-      currentTask: 'Dry season irrigation. Harvest September–November Season B crops and dry thoroughly.',
-      nextTask: 'Procure certified inputs and prepare land for the March Season A rains.',
+      currentTask: 'Main dry season irrigation. Harvest August–November Second Wet Season crops and dry thoroughly.',
+      nextTask: 'Procure certified inputs and prepare land for the March First Wet Season rains.',
       urgency: 'warning',
     },
   };

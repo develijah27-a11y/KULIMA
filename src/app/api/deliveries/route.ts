@@ -159,45 +159,245 @@ export async function PATCH(req: Request) {
   const { id, action } = await req.json();
   if (!id || !action) return NextResponse.json({ error: 'id and action required' }, { status: 400 });
 
-  // Transporter marks cargo as picked up (assigned → in_transit)
-  if (action === 'start_transit') {
-    const { error } = await (supabase.from as any)('delivery_requests')
-      .update({ status: 'in_transit', picked_up_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+  const admin = createAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  // 1. DRIVER SETS OFF TO PICKUP (assigned -> heading_to_pickup)
+  if (action === 'start_pickup_trip') {
+    // Graceful update: include trip_phase & started_pickup_at
+    const updatePayload: Record<string, any> = {
+      trip_phase: 'heading_to_pickup',
+      started_pickup_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    let { error } = await (admin.from as any)('delivery_requests')
+      .update(updatePayload)
       .eq('id', id)
       .eq('transporter_id', user.id)
       .eq('status', 'assigned');
+
+    if (error && error.message?.includes('column')) {
+      // If trip_phase column not yet present in unmigrated database
+      const fallback = await (admin.from as any)('delivery_requests')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('transporter_id', user.id)
+        .eq('status', 'assigned');
+      error = fallback.error;
+    }
+
+    if (error) {
+      console.error('[/api/deliveries PATCH start_pickup_trip]', error);
+      return NextResponse.json({ error: 'Failed to start trip to pickup. Please try again.' }, { status: 500 });
+    }
+
+    // Send human-written live update to requester
+    try {
+      const [{ data: delivery }, { data: driverProfile }] = await Promise.all([
+        (admin.from as any)('delivery_requests').select('requester_id, requester_role, cargo_type, pickup_district, pickup_location').eq('id', id).single(),
+        admin.from('profiles').select('full_name').eq('user_id', user.id).maybeSingle(),
+      ]);
+
+      if (delivery?.requester_id) {
+        const driverName = (driverProfile as any)?.full_name ?? 'Your driver';
+        const loc = delivery.pickup_location ? `${delivery.pickup_location}, ${delivery.pickup_district}` : delivery.pickup_district;
+        await (admin.from as any)('notifications').insert({
+          user_id: delivery.requester_id,
+          role: delivery.requester_role || 'buyer',
+          type: 'delivery',
+          title: 'Driver on the way to pickup',
+          body: `${driverName} has set off and is heading to collect the ${delivery.cargo_type || 'produce'} from ${loc}. Live map tracking is now active.`,
+          read: false,
+        });
+      }
+    } catch { /* non-critical */ }
+
+    return NextResponse.json({ success: true, trip_phase: 'heading_to_pickup' });
+  }
+
+  // 2. DRIVER ARRIVED AT PICKUP POINT (heading_to_pickup -> arrived_pickup)
+  if (action === 'arrive_pickup') {
+    const updatePayload: Record<string, any> = {
+      trip_phase: 'arrived_pickup',
+      arrived_pickup_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    let { error } = await (admin.from as any)('delivery_requests')
+      .update(updatePayload)
+      .eq('id', id)
+      .eq('transporter_id', user.id)
+      .eq('status', 'assigned');
+
+    if (error && error.message?.includes('column')) {
+      const fallback = await (admin.from as any)('delivery_requests')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('transporter_id', user.id);
+      error = fallback.error;
+    }
+
+    if (error) {
+      console.error('[/api/deliveries PATCH arrive_pickup]', error);
+      return NextResponse.json({ error: 'Failed to record arrival at pickup.' }, { status: 500 });
+    }
+
+    try {
+      const { data: delivery } = await (admin.from as any)('delivery_requests')
+        .select('requester_id, requester_role, cargo_type, pickup_district, pickup_location')
+        .eq('id', id)
+        .single();
+
+      if (delivery?.requester_id) {
+        const loc = delivery.pickup_location ? `${delivery.pickup_location}, ${delivery.pickup_district}` : delivery.pickup_district;
+        await (admin.from as any)('notifications').insert({
+          user_id: delivery.requester_id,
+          role: delivery.requester_role || 'buyer',
+          type: 'delivery',
+          title: 'Driver arrived at pickup location',
+          body: `Your driver has arrived at ${loc} and is currently checking and loading your cargo.`,
+          read: false,
+        });
+      }
+    } catch { /* non-critical */ }
+
+    return NextResponse.json({ success: true, trip_phase: 'arrived_pickup' });
+  }
+
+  // 3. CARGO LOADED & TRIP TO DELIVERY STARTS (assigned -> in_transit)
+  if (action === 'start_transit' || action === 'start_delivery_trip') {
+    const updatePayload: Record<string, any> = {
+      status: 'in_transit',
+      trip_phase: 'in_transit',
+      picked_up_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    let { error } = await (admin.from as any)('delivery_requests')
+      .update(updatePayload)
+      .eq('id', id)
+      .eq('transporter_id', user.id)
+      .eq('status', 'assigned');
+
+    if (error && error.message?.includes('column')) {
+      const fallback = await (admin.from as any)('delivery_requests')
+        .update({ status: 'in_transit', picked_up_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('transporter_id', user.id)
+        .eq('status', 'assigned');
+      error = fallback.error;
+    }
+
     if (error) {
       console.error('[/api/deliveries PATCH start_transit]', error);
       return NextResponse.json({ error: 'Failed to start transit. Please try again.' }, { status: 500 });
     }
-    return NextResponse.json({ success: true });
+
+    try {
+      const { data: delivery } = await (admin.from as any)('delivery_requests')
+        .select('requester_id, requester_role, cargo_type, cargo_kg, dropoff_district, dropoff_location')
+        .eq('id', id)
+        .single();
+
+      if (delivery?.requester_id) {
+        const dest = delivery.dropoff_location ? `${delivery.dropoff_location}, ${delivery.dropoff_district}` : delivery.dropoff_district;
+        const cargoDesc = delivery.cargo_kg ? `${delivery.cargo_kg}kg of ${delivery.cargo_type || 'produce'}` : (delivery.cargo_type || 'cargo');
+        await (admin.from as any)('notifications').insert({
+          user_id: delivery.requester_id,
+          role: delivery.requester_role || 'buyer',
+          type: 'delivery',
+          title: 'Cargo loaded — on the road to destination',
+          body: `Your ${cargoDesc} has been securely loaded. The driver is now travelling towards ${dest}.`,
+          read: false,
+        });
+      }
+    } catch { /* non-critical */ }
+
+    return NextResponse.json({ success: true, trip_phase: 'in_transit' });
   }
 
-  // Transporter marks delivery as done (in_transit → delivered)
-  if (action === 'complete') {
-    const { error } = await (supabase.from as any)('delivery_requests')
-      .update({ status: 'delivered', delivered_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+  // 4. DRIVER REACHES DROPOFF LOCATION (in_transit -> arrived_delivery)
+  if (action === 'arrive_dropoff') {
+    const updatePayload: Record<string, any> = {
+      trip_phase: 'arrived_delivery',
+      arrived_delivery_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    let { error } = await (admin.from as any)('delivery_requests')
+      .update(updatePayload)
       .eq('id', id)
       .eq('transporter_id', user.id)
       .eq('status', 'in_transit');
+
+    if (error && error.message?.includes('column')) {
+      const fallback = await (admin.from as any)('delivery_requests')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('transporter_id', user.id);
+      error = fallback.error;
+    }
+
+    if (error) {
+      console.error('[/api/deliveries PATCH arrive_dropoff]', error);
+      return NextResponse.json({ error: 'Failed to record arrival at delivery.' }, { status: 500 });
+    }
+
+    try {
+      const { data: delivery } = await (admin.from as any)('delivery_requests')
+        .select('requester_id, requester_role, dropoff_district, dropoff_location')
+        .eq('id', id)
+        .single();
+
+      if (delivery?.requester_id) {
+        const dest = delivery.dropoff_location ? `${delivery.dropoff_location}, ${delivery.dropoff_district}` : delivery.dropoff_district;
+        await (admin.from as any)('notifications').insert({
+          user_id: delivery.requester_id,
+          role: delivery.requester_role || 'buyer',
+          type: 'delivery',
+          title: 'Driver arrived with your delivery',
+          body: `Your driver has arrived at ${dest}. Please meet them to inspect your produce and receive the delivery.`,
+          read: false,
+        });
+      }
+    } catch { /* non-critical */ }
+
+    return NextResponse.json({ success: true, trip_phase: 'arrived_delivery' });
+  }
+
+  // 5. TRANSPORTER COMPLETES DELIVERY (in_transit / arrived_delivery -> delivered)
+  if (action === 'complete') {
+    const updatePayload: Record<string, any> = {
+      status: 'delivered',
+      trip_phase: 'delivered',
+      delivered_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    let { error } = await (admin.from as any)('delivery_requests')
+      .update(updatePayload)
+      .eq('id', id)
+      .eq('transporter_id', user.id)
+      .eq('status', 'in_transit');
+
+    if (error && error.message?.includes('column')) {
+      const fallback = await (admin.from as any)('delivery_requests')
+        .update({ status: 'delivered', delivered_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('transporter_id', user.id)
+        .eq('status', 'in_transit');
+      error = fallback.error;
+    }
+
     if (error) {
       console.error('[/api/deliveries PATCH complete]', error);
       return NextResponse.json({ error: 'Failed to complete delivery. Please try again.' }, { status: 500 });
     }
 
-    const admin = createAdmin(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
-
-    // Free the vehicle the moment the job is physically done — not only when
-    // /api/deliveries/pay happens to run while status is already 'delivered'.
-    // Payment is allowed as early as 'assigned' (see that route's own
-    // comment), so a delivery paid before completion would otherwise never
-    // release the driver's vehicle here, leaving them permanently marked
-    // unavailable after every such delivery. Setting is_available:true twice
-    // (here and, redundantly, in the pay route for the pay-after case) is
-    // harmless.
+    // Free the vehicle the moment the job is physically done
     await (admin.from as any)('vehicles')
       .update({ is_available: true, updated_at: new Date().toISOString() })
       .eq('user_id', user.id);
@@ -219,13 +419,12 @@ export async function PATCH(req: Request) {
           user_id: delivery.requester_id,
           role:    delivery.requester_role || 'buyer',
           type:    'delivery',
-          title:   'Delivery Arrived!',
-          body:    `Your goods have been delivered. Please confirm and pay UGX ${Number(delivery.estimated_fare).toLocaleString()} to release the driver.`,
+          title:   'Delivery completed successfully',
+          body:    `All items have been delivered safely. Please inspect the produce and release payment of UGX ${Number(delivery.estimated_fare).toLocaleString()} to your driver.`,
           read:    false,
         });
 
-        // Thank-you email with delivery details — best-effort, only actually
-        // sends once RESEND_API_KEY/EMAIL_FROM are configured (see lib/email.ts).
+        // Thank-you email with delivery details
         const [{ data: authUser }, { data: requesterProfile }, { data: driverProfile }, { data: vehicle }] = await Promise.all([
           admin.auth.admin.getUserById(delivery.requester_id),
           admin.from('profiles').select('full_name, phone_number').eq('user_id', delivery.requester_id).maybeSingle(),
@@ -266,7 +465,7 @@ export async function PATCH(req: Request) {
       }
     } catch { /* non-critical */ }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, trip_phase: 'delivered' });
   }
 
   // Requester cancels (any status before in_transit)

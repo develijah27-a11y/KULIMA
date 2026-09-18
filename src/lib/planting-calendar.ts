@@ -277,12 +277,19 @@ export interface PlantingAlert {
   urgency: 'high' | 'medium' | 'low';
   daysUntil: number;
   season: 'rains1' | 'rains2' | 'irrigated';
+  windowDates?: string;
+  daysRemaining?: number;
+}
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function formatMonthWindow(startMonth: number, endMonth: number): string {
+  return `${MONTH_NAMES[startMonth]} – ${MONTH_NAMES[endMonth]}`;
 }
 
 const SEASON_LABEL: Record<'rains1' | 'rains2' | 'irrigated', string> = {
-  rains1: 'March–May rains',
-  rains2: 'September–November rains',
-  irrigated: 'irrigated/dry-season',
+  rains1: 'First Wet Season (March–May)',
+  rains2: 'Second Wet Season (August–November)',
+  irrigated: 'Dry Season (Irrigated)',
 };
 
 export function generatePlantingAlerts(
@@ -458,6 +465,9 @@ export function generatePlantingAlerts(
 
       const { plantStart, plantEnd, weedStart, weedEnd, harvestStart, harvestEnd } = window;
       const label = SEASON_LABEL[seasonKey];
+      const plantDates = formatMonthWindow(plantStart, plantEnd);
+      const weedDates = formatMonthWindow(weedStart, weedEnd);
+      const harvestDates = formatMonthWindow(harvestStart, harvestEnd);
 
       // Is it currently planting time?
       if (isInWindow(month, plantStart, plantEnd)) {
@@ -465,11 +475,15 @@ export function generatePlantingAlerts(
         alerts.push({
           crop: cal.crop, emoji: cal.emoji,
           type: 'plant_now',
-          title: `Plant ${capitalize(cal.crop)} Now`,
-          message: `${label}: planting window is open — ${daysLeft} days remaining. ${cal.notes}`,
+          title: daysLeft <= 10
+            ? `Plant ${capitalize(cal.crop)} Now (${daysLeft}d left)`
+            : `Plant ${capitalize(cal.crop)} Now`,
+          message: `${label} (${plantDates}) · ${daysLeft} days remaining in planting window. ${cal.notes}`,
           urgency: daysLeft <= 14 ? 'high' : 'medium',
           daysUntil: 0,
           season: seasonKey,
+          windowDates: plantDates,
+          daysRemaining: daysLeft,
         });
       }
       // Is planting window coming up in 3 weeks?
@@ -481,11 +495,13 @@ export function generatePlantingAlerts(
             type: daysUntilPlant <= 7 ? 'plant_soon' : 'prepare',
             title: daysUntilPlant <= 7 ? `Prepare to Plant ${capitalize(cal.crop)}` : `${capitalize(cal.crop)} planting in ${daysUntilPlant} days`,
             message: daysUntilPlant <= 7
-              ? `Planting window opens in ${daysUntilPlant} days (${label}). Get seeds and prepare land now.`
-              : `Start land preparation. Buy ${cal.crop} seeds. ${cal.notes}`,
+              ? `Planting window opens in ${daysUntilPlant} days (${plantDates} · ${label}). Get seeds and prepare land now.`
+              : `Start land preparation for ${plantDates} window. Buy certified ${cal.crop} seeds. ${cal.notes}`,
             urgency: daysUntilPlant <= 7 ? 'high' : 'low',
             daysUntil: daysUntilPlant,
             season: seasonKey,
+            windowDates: plantDates,
+            daysRemaining: daysUntilPlant,
           });
         }
       }
@@ -496,11 +512,13 @@ export function generatePlantingAlerts(
         alerts.push({
           crop: cal.crop, emoji: cal.emoji,
           type: 'weed_now',
-          title: `Weed Your ${capitalize(cal.crop)}`,
-          message: `${label}: this is the critical weeding window — ${daysLeft} days left. Weeding now protects your yield the most.`,
+          title: `Weed Your ${capitalize(cal.crop)} (${daysLeft}d left)`,
+          message: `${label} (${weedDates}) · Critical weeding window closes in ${daysLeft} days. Weeding now protects maximum yield.`,
           urgency: daysLeft <= 7 ? 'high' : 'medium',
           daysUntil: 0,
           season: seasonKey,
+          windowDates: weedDates,
+          daysRemaining: daysLeft,
         });
       }
 
@@ -510,11 +528,13 @@ export function generatePlantingAlerts(
         alerts.push({
           crop: cal.crop, emoji: cal.emoji,
           type: 'harvest_now',
-          title: `Harvest ${capitalize(cal.crop)}`,
-          message: `${label} crop should be ready. Check for maturity signs. ${daysLeft} days left in window.`,
+          title: `Harvest ${capitalize(cal.crop)} (${daysLeft}d left)`,
+          message: `${label} (${harvestDates}) · Crop is mature. ${daysLeft} days left in harvest window. Dry thoroughly to prevent mold.`,
           urgency: 'medium',
           daysUntil: 0,
           season: seasonKey,
+          windowDates: harvestDates,
+          daysRemaining: daysLeft,
         });
       }
     }
@@ -688,15 +708,15 @@ export function getCurrentSeasonSummary(month: number, loc?: LocationContext): {
   }
 
   // Tropical Africa (Uganda, Kenya, Rwanda, Tanzania bimodal cycle)
-  const isRains1 = month >= 2 && month <= 4;   // Mar–May (Season A)
-  const isDry1   = month >= 5 && month <= 7;   // Jun–Aug (Dry Season 1)
-  const isRains2 = month >= 8 && month <= 10;  // Sep–Nov (Season B)
-  // Dry Season 2: Dec–Feb (11, 0, 1)
+  const isRains1 = month >= 2 && month <= 4;   // Mar–May (First Wet Season)
+  const isDry1   = month >= 5 && month <= 7;   // Jun–Aug (Mid-Year Dry Season)
+  const isRains2 = month >= 8 && month <= 10;  // Sep–Nov (Second Wet Season)
+  // Main Dry Season: Dec–Feb (11, 0, 1)
 
   if (isRains1) {
     const phase: 'planting' | 'weeding' | 'harvest' = month <= 2 ? 'planting' : month <= 3 ? 'weeding' : 'harvest';
     return {
-      name: 'Season A (March–May Main Rains)',
+      name: 'First Wet Season (March–May Main Rains)',
       phase,
       crops: ['Maize', 'Beans', 'Groundnuts', 'Sunflower', 'Sorghum', 'Soybeans'],
       action: phase === 'planting'
@@ -704,7 +724,7 @@ export function getCurrentSeasonSummary(month: number, loc?: LocationContext): {
         : phase === 'weeding'
         ? 'Weed and top-dress maize with CAN/Urea at knee height (~3 weeks post-germination).'
         : 'Begin harvesting early maize and beans. Sun-dry thoroughly to <13% moisture.',
-      nextSeason: 'Dry Season 1 (June–August)',
+      nextSeason: 'Mid-Year Dry Season (June–July)',
       daysToNextSeason: Math.max(0, Math.round((new Date(new Date().getFullYear(), 5, 1).getTime() - Date.now()) / 86400000)),
       climateZone: 'tropical_africa',
       zoneName: 'East Africa / Equatorial Belt',
@@ -714,15 +734,15 @@ export function getCurrentSeasonSummary(month: number, loc?: LocationContext): {
   if (isRains2) {
     const phase: 'planting' | 'weeding' | 'harvest' = month <= 8 ? 'planting' : month <= 9 ? 'weeding' : 'harvest';
     return {
-      name: 'Season B (September–November Second Rains)',
+      name: 'Second Wet Season (August–November Second Rains)',
       phase,
       crops: ['Beans', 'Sweet Potato', 'Cassava', 'Sorghum', 'Tomato', 'Cabbage'],
       action: phase === 'planting'
-        ? 'Season B planting of short-cycle crops (beans, sweet potatoes) and vegetable transplants. Mulch to retain soil moisture.'
+        ? 'Second Wet Season planting of short-cycle crops (beans, sweet potatoes) and vegetable transplants. Mulch to retain soil moisture.'
         : phase === 'weeding'
         ? 'Weed and mulch fields. Monitor for late blight on tomatoes and armyworm on cereals.'
         : 'Harvest beans and short-cycle vegetables. Sun-dry grain thoroughly to prevent aflatoxin.',
-      nextSeason: 'Dry Season 2 (December–February)',
+      nextSeason: 'Main Dry Season (December–February)',
       daysToNextSeason: Math.max(0, Math.round((new Date(new Date().getFullYear(), 11, 1).getTime() - Date.now()) / 86400000)),
       climateZone: 'tropical_africa',
       zoneName: 'East Africa / Equatorial Belt',
@@ -731,26 +751,26 @@ export function getCurrentSeasonSummary(month: number, loc?: LocationContext): {
 
   if (isDry1) {
     return {
-      name: 'Dry Season 1 (June–August)',
+      name: 'Mid-Year Dry Season (June–July)',
       phase: 'dry',
       crops: ['Tomato (irrigated)', 'Onion', 'Watermelon', 'Sweet Potato'],
-      action: 'Harvest Season A crops. Dry and store maize at <13% moisture. Prepare nurseries and beds for Season B rains arriving in September.',
-      nextSeason: 'Season B (September–November Second Rains)',
+      action: 'Harvest First Wet Season crops. Dry and store maize at <13% moisture. Prepare nurseries and beds for Second Wet Season rains arriving in August.',
+      nextSeason: 'Second Wet Season (August–November Second Rains)',
       daysToNextSeason: Math.max(0, Math.round((new Date(new Date().getFullYear(), 8, 1).getTime() - Date.now()) / 86400000)),
       climateZone: 'tropical_africa',
       zoneName: 'East Africa / Equatorial Belt',
     };
   }
 
-  // Dec–Feb (Dry Season 2)
+  // Dec–Feb (Main Dry Season)
   const now = new Date();
   const targetYear = month === 11 ? now.getFullYear() + 1 : now.getFullYear();
   return {
-    name: 'Dry Season 2 (December–February)',
+    name: 'Main Dry Season (December–February)',
     phase: 'dry',
     crops: ['Onion (irrigated)', 'Tomato (irrigated)', 'Watermelon', 'Chili'],
-    action: 'Harvest Season B crops and dry thoroughly. Protect stored produce from pests. Procure seeds and fertilizer for the March Season A rains.',
-    nextSeason: 'Season A (March–May Main Rains)',
+    action: 'Harvest Second Wet Season crops and dry thoroughly. Protect stored produce from pests. Procure certified seeds and fertilizer for the March First Wet Season rains.',
+    nextSeason: 'First Wet Season (March–May Main Rains)',
     daysToNextSeason: Math.max(0, Math.round((new Date(targetYear, 2, 1).getTime() - Date.now()) / 86400000)),
     climateZone: 'tropical_africa',
     zoneName: 'East Africa / Equatorial Belt',

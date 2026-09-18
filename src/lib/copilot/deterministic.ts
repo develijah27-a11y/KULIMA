@@ -616,22 +616,98 @@ ${escRes.released_at ? `• Released on: ${new Date(escRes.released_at).toLocale
   }
 
   // ==========================================================================
+  // 9b. UGANDA SEASONAL PLANTING ADVISORY & WHAT TO PLANT
+  // ==========================================================================
+  const isPlantingQuery =
+    msg.includes('what should i plant') ||
+    msg.includes('what to plant') ||
+    msg.includes('which crop to plant') ||
+    msg.includes('which crops to plant') ||
+    msg.includes('what can i plant') ||
+    msg.includes('crops to grow') ||
+    msg.includes('what should i grow') ||
+    msg.includes('planting advice') ||
+    msg.includes('planting season') ||
+    msg.includes('best crops this season') ||
+    msg.includes('crops for this season') ||
+    msg.includes('can i plant now') ||
+    msg.includes('when to plant');
+
+  if (isPlantingQuery) {
+    const currentMonth = new Date().getMonth(); // 0-indexed: 8 = Sept
+    const isFirstWet = currentMonth >= 2 && currentMonth <= 4;   // Mar–May
+    const isMidDry = currentMonth >= 5 && currentMonth <= 6;     // Jun–Jul
+    const isSecondWet = currentMonth >= 7 && currentMonth <= 10; // Aug–Nov
+    const isMainDry = currentMonth === 11 || currentMonth <= 1;  // Dec–Feb
+
+    if (isSecondWet) {
+      return `🌱 **Second Wet Season Planting Advisory (August – November):**
+
+We are currently in Uganda's **Second Wet Season**. Here is the recommended planting guidance:
+
+• **Best Crops to Plant Right Now:**
+  1. **Bush & Climbing Beans (NABE 4, NABE 15, Yellow Beans)**: 65–75 day maturity. High market demand in urban centers.
+  2. **High-Value Vegetables (Tomatoes, Cabbage, Onions, Green Pepper)**: Transplant now with mulching to harvest during high-price November–December holiday markets.
+  3. **Sweet Potato Vines & Cassava**: Establish quickly in current soil moisture and tolerate the December dry spell.
+  4. **Short-Cycle Maize (Longe 5 / Quick Hybrids)**: If planting maize now, ensure you use certified early-maturing seed. Avoid long-cycle maize this late to prevent moisture stress in late November.
+
+⏱ **Planting Window & Dates:**
+• **Optimal Window**: **August 15 – September 30**.
+• **Window Status**: **Active**. You still have time to plant beans, sweet potato vines, and nursery-raised vegetables.
+• **Agronomic Tip**: Apply well-composted manure or basal DAP at planting, and space properly for easy weeding.
+
+Would you like current market price trends for any of these crops (e.g. maize, beans, tomatoes), or check your [Planting Calendar](/farmer/planting)?`;
+    }
+
+    if (isFirstWet) {
+      return `🌱 **First Wet Season Planting Advisory (March – May Main Rains):**
+
+We are in Uganda's **First Wet Season** — the primary agricultural season across the country.
+
+• **Recommended Crops:**
+  1. **Maize (Longe Series, Bazooka)**: Main grain crop of the year.
+  2. **Beans & Groundnuts (Serenut series)**: Intercropped or pure stand.
+  3. **Upland Rice & Soybeans**: High yield potential with steady March–May rains.
+  4. **Sunflower & Sorghum**: Ideal for northern and eastern districts.
+
+⏱ **Planting Window & Dates:**
+• **Optimal Window**: **March 1 – April 15**.
+• **Agronomic Tip**: Plant within 2–3 days after the first steady soaking rain. Apply basal fertilizer (DAP/NPK) and prepare for first weeding at 3 weeks.`;
+    }
+
+    if (isMidDry) {
+      return `☀️ **Mid-Year Dry Season Advisory (June – July):**
+
+Uganda is experiencing the mid-year dry spell between the two rainy seasons.
+
+• **Best Practices Right Now:**
+  1. **Harvest & Grain Drying**: Dry First Wet Season maize and beans to **<13.5% moisture** to prevent aflatoxin and mold in storage.
+  2. **Irrigated Horticulture**: If you have access to drip irrigation or a valley dam, plant high-value tomatoes, onions, or watermelons — off-season prices peak in August!
+  3. **Land Preparation**: Begin clearing, plowing, and procuring certified seeds for the **Second Wet Season rains arriving in August**.`;
+    }
+
+    // Main Dry Season (Dec–Feb)
+    return `☀️ **Main Dry Season Advisory (December – February):**
+
+Uganda is in the main dry season. Rain-fed grain planting should pause until the First Wet Season rains begin in March.
+
+• **Best Practices Right Now:**
+  1. **Irrigated Vegetables**: Watermelon, tomatoes, onions, and leafy greens command premium dry-season prices.
+  2. **Post-Harvest Storage**: Treat stored grains against weevils and store on wooden pallets away from damp walls.
+  3. **Input Procurement**: Procure certified seeds and fertilizers from registered agro-dealers on Cropify ahead of the March planting rush!`;
+  }
+
+  // ==========================================================================
   // 10. GREETINGS & UGANDAN LOCAL CONVERSATION
   // ==========================================================================
-  if (
-    msg.includes('hello') ||
-    msg.includes('hi') ||
-    msg.includes('hey') ||
-    msg.includes('good morning') ||
-    msg.includes('good afternoon') ||
-    msg.includes('good evening') ||
-    msg.includes('oli otya') ||
-    msg.includes('ki kati') ||
-    msg.includes('gyebale ko') ||
-    msg.includes('tusanyukidde') ||
-    msg.includes('wasuze otya') ||
-    msg.includes('osiibye otya')
-  ) {
+  const isGreeting =
+    /^(hi|hello|hey|greetings|howdy)\b/i.test(msg) ||
+    /\b(good morning|good afternoon|good evening|oli otya|ki kati|gyebale ko|tusanyukidde|wasuze otya|osiibye otya)\b/i.test(msg) ||
+    msg === 'hi' ||
+    msg === 'hello' ||
+    msg === 'hey';
+
+  if (isGreeting) {
     const roleIntros: Record<string, string> = {
       transporter: `I can help you review your active delivery assignments, look up past trips, inspect driver earnings breakdowns, or file a route/support complaint.`,
       farmer: `I can help you track order statuses, verify escrow payments, check market crop prices across districts, or get agronomic advice.`,

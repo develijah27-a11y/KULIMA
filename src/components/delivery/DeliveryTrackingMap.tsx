@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import type { Map as LMap, Marker as LMarker, Polyline as LPolyline } from 'leaflet';
 import {
   Volume2, VolumeX, Search, Maximize2, Minimize2, Heart, X, Phone,
+  Plus, Minus, Crosshair, Navigation,
 } from 'lucide-react';
 import { UGANDA_DISTRICTS } from '@/lib/districts';
 import { openPhoneDialer, formatPhoneDisplay } from '@/lib/phone-dialer';
@@ -15,6 +16,30 @@ import {
   MAP_TILE_OPTIONS,
   HYBRID_TILE_OPTIONS,
 } from '@/lib/map-tiles';
+
+// Reliable tile layer with auto-fallback to high-uptime Google road tiles if any network blocks occur
+function createReliableTileLayer(L: any, type: 'navigation' | 'satellite' | 'streets') {
+  let url = GOOGLE_STREETS_TILE_URL;
+  let opts = MAP_TILE_OPTIONS;
+  if (type === 'satellite') {
+    url = GOOGLE_HYBRID_TILE_URL;
+    opts = HYBRID_TILE_OPTIONS;
+  } else if (type === 'navigation') {
+    url = DARK_NAV_TILE_URL;
+    opts = DARK_NAV_TILE_OPTIONS;
+  }
+  const layer = L.tileLayer(url, opts);
+  layer.on('tileerror', function (error: any) {
+    if (error?.tile && !error.tile.dataset.fallbackTried) {
+      error.tile.dataset.fallbackTried = 'true';
+      const c = error.coords;
+      if (c) {
+        error.tile.src = `https://mt1.google.com/vt/lyrs=m&x=${c.x}&y=${c.y}&z=${c.z}`;
+      }
+    }
+  });
+  return layer;
+}
 
 interface Props {
   deliveryId: string;
@@ -165,7 +190,7 @@ export function DeliveryTrackingMap({
 
   const [ready, setReady] = useState(false);
   const [showRecenter, setShowRecenter] = useState(false);
-  const [layerType, setLayerType] = useState<'navigation' | 'satellite' | 'streets'>('navigation');
+  const [layerType, setLayerType] = useState<'navigation' | 'satellite' | 'streets'>('streets');
   const [isFullscreen, setIsFullscreen] = useState(fullscreenByDefault);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [etaMinutes, setEtaMinutes] = useState<number>(20);
@@ -179,12 +204,12 @@ export function DeliveryTrackingMap({
   const pickup = pickupCoords ? { lat: pickupCoords.lat, lng: pickupCoords.lng } : districtPickup;
   const dropoff = dropoffCoords ? { lat: dropoffCoords.lat, lng: dropoffCoords.lng } : districtDropoff;
 
-  // Derive realistic highway or corridor name
+  // Derive realistic highway or corridor name with un-truncated formatting
   const roadTitle = pickupDistrict && dropoffDistrict
     ? (pickupDistrict.toLowerCase() === dropoffDistrict.toLowerCase()
-        ? `Stay on ${pickupDistrict} Corridor`
-        : `Stay on ${pickupDistrict} - ${dropoffDistrict} Rd`)
-    : 'Stay on Main Highway';
+        ? `${pickupDistrict} Route Corridor`
+        : `${pickupDistrict} — ${dropoffDistrict} Highway`)
+    : 'Main Highway Route';
 
   // Audio Speech Synthesis for Turn Guidance
   const speakInstruction = useCallback((text: string) => {
@@ -214,14 +239,7 @@ export function DeliveryTrackingMap({
     if (tileLayerRef.current) {
       mapRef.current.removeLayer(tileLayerRef.current);
     }
-    let newLayer;
-    if (nextType === 'navigation') {
-      newLayer = L.tileLayer(DARK_NAV_TILE_URL, DARK_NAV_TILE_OPTIONS);
-    } else if (nextType === 'satellite') {
-      newLayer = L.tileLayer(GOOGLE_HYBRID_TILE_URL, HYBRID_TILE_OPTIONS);
-    } else {
-      newLayer = L.tileLayer(GOOGLE_STREETS_TILE_URL, MAP_TILE_OPTIONS);
-    }
+    const newLayer = createReliableTileLayer(L, nextType);
     newLayer.addTo(mapRef.current);
     tileLayerRef.current = newLayer;
     setLayerType(nextType);
@@ -251,8 +269,8 @@ export function DeliveryTrackingMap({
       }).setView(center, initialZoom);
       mapRef.current = map;
 
-      // Default: Ultra-clean Dark Night GPS tiles
-      const tile = L.tileLayer(DARK_NAV_TILE_URL, DARK_NAV_TILE_OPTIONS).addTo(map);
+      // Default: Crystal-clear Google road navigation tiles with automatic network fallback
+      const tile = createReliableTileLayer(L, 'streets').addTo(map);
       tileLayerRef.current = tile;
 
       map.on('dragstart', () => {
@@ -262,39 +280,39 @@ export function DeliveryTrackingMap({
 
       const bounds: [number, number][] = [];
 
-      // Pickup Marker (Glowing Emerald)
+      // Pickup Marker (Glowing Emerald with Label Badge)
       if (pickup) {
         const pickupIcon = L.divIcon({
           className: '',
-          iconSize: [22, 22],
-          iconAnchor: [11, 11],
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
           html: `
-            <div style="position:relative;width:22px;height:22px;display:flex;align-items:center;justify-content:center;">
-              <div style="position:absolute;width:22px;height:22px;border-radius:50%;background:rgba(16,185,129,0.35);animation:cropify-pulse 2s infinite;"></div>
-              <div style="width:14px;height:14px;border-radius:50%;background:#10B981;border:3px solid #FFFFFF;box-shadow:0 0 10px #10B981;"></div>
+            <div style="position:relative;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
+              <div style="position:absolute;width:28px;height:28px;border-radius:50%;background:rgba(16,185,129,0.35);animation:cropify-pulse 2s infinite;"></div>
+              <div style="width:16px;height:16px;border-radius:50%;background:#10B981;border:3px solid #FFFFFF;box-shadow:0 0 12px #10B981;"></div>
             </div>
           `,
         });
         L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(map)
-          .bindPopup(`<b>Pickup:</b> ${pickupDistrict}`);
+          .bindPopup(`<b>📍 Farm Pickup:</b> ${pickupDistrict}`);
         bounds.push([pickup.lat, pickup.lng]);
       }
 
-      // Dropoff Marker (Neon Coral Red)
+      // Dropoff Marker (Neon Coral Red with Label Badge)
       if (dropoff) {
         const dropoffIcon = L.divIcon({
           className: '',
-          iconSize: [22, 22],
-          iconAnchor: [11, 11],
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
           html: `
-            <div style="position:relative;width:22px;height:22px;display:flex;align-items:center;justify-content:center;">
-              <div style="position:absolute;width:22px;height:22px;border-radius:50%;background:rgba(239,68,68,0.35);animation:cropify-pulse 2s infinite;"></div>
-              <div style="width:14px;height:14px;border-radius:50%;background:#EF4444;border:3px solid #FFFFFF;box-shadow:0 0 10px #EF4444;"></div>
+            <div style="position:relative;width:28px;height:28px;display:flex;align-items:center;justify-content:center;">
+              <div style="position:absolute;width:28px;height:28px;border-radius:50%;background:rgba(239,68,68,0.35);animation:cropify-pulse 2s infinite;"></div>
+              <div style="width:16px;height:16px;border-radius:50%;background:#EF4444;border:3px solid #FFFFFF;box-shadow:0 0 12px #EF4444;"></div>
             </div>
           `,
         });
         L.marker([dropoff.lat, dropoff.lng], { icon: dropoffIcon }).addTo(map)
-          .bindPopup(`<b>Destination:</b> ${dropoffDistrict}`);
+          .bindPopup(`<b>🏁 Destination:</b> ${dropoffDistrict}`);
         bounds.push([dropoff.lat, dropoff.lng]);
       }
 
@@ -486,6 +504,11 @@ export function DeliveryTrackingMap({
 
   const activeDriverNote = driverNotes?.trim() || null;
 
+  const destTarget = dropoff || (dropoffDistrict ? UGANDA_DISTRICTS[dropoffDistrict] : null);
+  const googleMapsNavUrl = destTarget
+    ? `https://www.google.com/maps/dir/?api=1&destination=${destTarget.lat},${destTarget.lng}&travelmode=driving`
+    : (dropoffDistrict ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dropoffDistrict + ', Uganda')}` : null);
+
   return (
     <div
       style={{
@@ -503,6 +526,9 @@ export function DeliveryTrackingMap({
     >
       <link rel="stylesheet" href="/leaflet/leaflet.css" />
       <style>{`
+        .leaflet-container {
+          background: #0A0F1D !important;
+        }
         .cropify-pulse { animation: cropify-pulse 2s ease-out infinite; }
         @keyframes cropify-pulse {
           0% { transform: scale(0.6); opacity: 0.8; }
@@ -619,40 +645,68 @@ export function DeliveryTrackingMap({
           className="cropify-turn-card"
           style={{
             position: 'absolute',
-            top: 14,
-            left: 14,
-            right: 14,
+            top: 12,
+            left: 12,
+            right: 12,
             zIndex: 800,
-            background: 'linear-gradient(135deg, #005C4B 0%, #004D40 100%)',
-            borderRadius: 20,
-            padding: '14px 18px',
+            background: 'linear-gradient(135deg, rgba(6, 78, 59, 0.96) 0%, rgba(4, 47, 46, 0.96) 100%)',
+            backdropFilter: 'blur(16px)',
+            borderRadius: 18,
+            padding: '12px 16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             color: '#FFFFFF',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.45)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
+            boxShadow: '0 10px 28px rgba(0, 0, 0, 0.45)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            gap: 12,
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0, paddingRight: 10 }}>
-            <h2
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+            <div
               style={{
-                fontSize: 18,
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
-                margin: 0,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                color: '#FFFFFF',
+                width: 44,
+                height: 44,
+                borderRadius: 13,
+                background: 'rgba(255, 255, 255, 0.16)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 22,
+                fontWeight: 900,
+                color: '#A7F3D0',
+                flexShrink: 0,
               }}
             >
-              {roadTitle}
-            </h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 14.5, fontWeight: 700, color: 'rgba(255, 255, 255, 0.95)' }}>
-                {nextManeuverDistance}
-              </span>
+              ↰
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
+              <h2
+                style={{
+                  fontSize: 15.5,
+                  fontWeight: 800,
+                  letterSpacing: '-0.02em',
+                  margin: 0,
+                  lineHeight: 1.25,
+                  color: '#FFFFFF',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                }}
+              >
+                {roadTitle}
+              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: '#FCD34D' }}>
+                  {nextManeuverDistance}
+                </span>
+                <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.85)' }}>
+                  · Towards {dropoffDistrict}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -663,8 +717,8 @@ export function DeliveryTrackingMap({
               onClick={() => speakInstruction(`${roadTitle}. In ${nextManeuverDistance.replace('to ↰', 'turn ahead')}`)}
               title="Spoken Maneuver Guidance"
               style={{
-                width: 42,
-                height: 42,
+                width: 40,
+                height: 40,
                 borderRadius: '50%',
                 background: '#FFFFFF',
                 border: 'none',
@@ -676,7 +730,7 @@ export function DeliveryTrackingMap({
                 transition: 'transform 0.15s ease',
               }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" fill="#4285F4"/>
                 <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" fill="#34A853"/>
                 <path d="M12 14c.77 0 1.48-.3 2-.8l-2-2-2 2c.52.5 1.23.8 2 .8z" fill="#EA4335"/>
@@ -708,7 +762,7 @@ export function DeliveryTrackingMap({
       )}
 
       {/* ─────────────────────────────────────────────────────────────
-          RIGHT FLOATING HUD CONTROLS (Compass, Search, Sound, Layer Toggle)
+          RIGHT FLOATING HUD CONTROLS (Recenter, Zoom, Sound, Layer Toggle)
          ───────────────────────────────────────────────────────────── */}
       {!compact && (
         <div
@@ -722,69 +776,103 @@ export function DeliveryTrackingMap({
             gap: 10,
           }}
         >
-          {/* Compass Needle */}
+          {/* Recenter on Vehicle */}
           <button
             type="button"
-            onClick={() => {
-              if (mapRef.current && lastPosRef.current) {
-                mapRef.current.setView(lastPosRef.current, mapRef.current.getZoom(), { animate: true });
-              }
-            }}
-            title="Align Compass North"
+            onClick={recenter}
+            title="Center on My Vehicle"
             style={{
               width: 44,
               height: 44,
               borderRadius: '50%',
-              background: 'rgba(15, 23, 42, 0.88)',
+              background: 'rgba(15, 23, 42, 0.90)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              position: 'relative',
+              color: '#10B981',
             }}
           >
-            <div
+            <Crosshair size={20} />
+          </button>
+
+          {/* Zoom In & Zoom Out Controls */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            borderRadius: 22,
+            overflow: 'hidden',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
+            background: 'rgba(15, 23, 42, 0.90)',
+            backdropFilter: 'blur(10px)',
+          }}>
+            <button
+              type="button"
+              onClick={() => mapRef.current?.zoomIn()}
+              title="Zoom In"
               style={{
-                width: 22,
-                height: 22,
+                width: 44,
+                height: 40,
+                background: 'transparent',
+                border: 'none',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+                color: '#FFFFFF',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transform: `rotate(${-compassHeading}deg)`,
-                transition: 'transform 0.3s ease-out',
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <polygon points="12,2 16,12 12,9 8,12" fill="#EF4444" />
-                <polygon points="12,22 16,12 12,15 8,12" fill="#F8FAFC" />
-              </svg>
-            </div>
-          </button>
+              <Plus size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => mapRef.current?.zoomOut()}
+              title="Zoom Out"
+              style={{
+                width: 44,
+                height: 40,
+                background: 'transparent',
+                border: 'none',
+                color: '#FFFFFF',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Minus size={18} />
+            </button>
+          </div>
 
-          {/* Search / Route Inspect FAB */}
+          {/* Layer Mode Toggle (Roads vs Satellite vs Night GPS) */}
           <button
             type="button"
-            onClick={() => setShowQuickSearch(prev => !prev)}
-            title="Inspect Route Stops"
+            onClick={() => {
+              const next = layerType === 'streets' ? 'satellite' : layerType === 'satellite' ? 'navigation' : 'streets';
+              switchLayer(next);
+            }}
+            title={`Current map: ${layerType === 'streets' ? 'Road Navigation' : layerType === 'satellite' ? 'Satellite View' : 'Night Navigation'}. Tap to switch.`}
             style={{
               width: 44,
               height: 44,
               borderRadius: '50%',
-              background: 'rgba(15, 23, 42, 0.88)',
+              background: 'rgba(15, 23, 42, 0.90)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#FFFFFF',
+              fontSize: 18,
             }}
           >
-            <Search size={19} />
+            {layerType === 'streets' ? '🚗' : layerType === 'satellite' ? '🛰️' : '🌙'}
           </button>
 
           {/* Audio Mute / Unmute FAB */}
@@ -800,41 +888,18 @@ export function DeliveryTrackingMap({
               width: 44,
               height: 44,
               borderRadius: '50%',
-              background: 'rgba(15, 23, 42, 0.88)',
+              background: 'rgba(15, 23, 42, 0.90)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: soundEnabled ? '#00E5FF' : '#94A3B8',
+              color: soundEnabled ? '#10B981' : '#94A3B8',
             }}
           >
             {soundEnabled ? <Volume2 size={19} /> : <VolumeX size={19} />}
-          </button>
-
-          {/* Layer Mode Toggle (Dark Navigation vs Satellite) */}
-          <button
-            type="button"
-            onClick={() => switchLayer(layerType === 'navigation' ? 'satellite' : 'navigation')}
-            title={layerType === 'navigation' ? 'Switch to Satellite Map' : 'Switch to Dark GPS Map'}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: '50%',
-              background: 'rgba(15, 23, 42, 0.88)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 16,
-            }}
-          >
-            {layerType === 'navigation' ? '🌙' : '🛰️'}
           </button>
         </div>
       )}
@@ -1025,31 +1090,58 @@ export function DeliveryTrackingMap({
             </div>
           </div>
 
-          {/* Action Buttons: Direct Phone Call */}
-          {driverPhone && (
-            <button
-              type="button"
-              onClick={(e) => openPhoneDialer(driverPhone, e)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '8px 16px',
-                borderRadius: 10,
-                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                color: '#FFFFFF',
-                border: 'none',
-                fontSize: 13,
-                fontWeight: 800,
-                cursor: 'pointer',
-                boxShadow: '0 2px 10px rgba(16, 185, 129, 0.45)',
-                flexShrink: 0,
-              }}
-              title={`Call ${otherPartyLabel}: ${formatPhoneDisplay(driverPhone)}`}
-            >
-              <Phone size={14} /> Call
-            </button>
-          )}
+          {/* Action Buttons: Direct GPS Navigation & Phone Call */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            {googleMapsNavUrl && (
+              <a
+                href={googleMapsNavUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '8px 14px',
+                  borderRadius: 10,
+                  background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                  color: '#FFFFFF',
+                  textDecoration: 'none',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  boxShadow: '0 2px 10px rgba(37, 99, 235, 0.45)',
+                  flexShrink: 0,
+                }}
+                title="Open Turn-by-Turn Driving Directions in Google Maps"
+              >
+                <Navigation size={14} /> GPS App
+              </a>
+            )}
+
+            {driverPhone && (
+              <button
+                type="button"
+                onClick={(e) => openPhoneDialer(driverPhone, e)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '8px 14px',
+                  borderRadius: 10,
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 10px rgba(16, 185, 129, 0.45)',
+                  flexShrink: 0,
+                }}
+                title={`Call ${otherPartyLabel}: ${formatPhoneDisplay(driverPhone)}`}
+              >
+                <Phone size={14} /> Call
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

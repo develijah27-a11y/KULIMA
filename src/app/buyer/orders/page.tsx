@@ -147,6 +147,15 @@ function getStepStatusGuidance(status: string, farmerName: string | null, totalA
         border: 'var(--color-success)',
         color: 'var(--color-success)',
       };
+    case 'disputed':
+      return {
+        badge: 'Dispute Under Review · Escrow Frozen',
+        title: 'Escrow Protected — Moderation Team Arbitrating',
+        desc: `You raised a dispute regarding produce quality on this order. Your funds are safely held in Cropify Escrow. The arbitration team is reviewing the claim with ${farmerName || 'the seller'}. You will be notified immediately upon resolution.`,
+        bg: 'var(--color-danger-bg)',
+        border: 'var(--color-danger-border)',
+        color: 'var(--color-danger)',
+      };
     default:
       return null;
   }
@@ -334,6 +343,11 @@ function OrderCard({ order, onAction }: { order: Order; onAction: () => void }) 
               {order.status === 'confirmed' && (
                 <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: C.greenBg, color: C.green }}>
                   Payment due
+                </span>
+              )}
+              {order.status === 'disputed' && (
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: C.redBg, color: C.red }}>
+                  Dispute in review
                 </span>
               )}
             </div>

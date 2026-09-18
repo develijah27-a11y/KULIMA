@@ -32,7 +32,8 @@ async function handlePATCH(req: Request) {
       return NextResponse.json({ error: 'outcome must be "refund_buyer" or "release_to_farmer"' }, { status: 400 });
     }
 
-    const { data: dispute } = await (supabase.from as any)('disputes').select('order_id').eq('id', id).single();
+    const { strike_seller } = await req.json().catch(() => ({}));
+    const { data: dispute } = await (supabase.from as any)('disputes').select('order_id, reason, description').eq('id', id).single();
     if (!dispute?.order_id) {
       return NextResponse.json({ error: 'This dispute has no linked order — cannot settle funds automatically' }, { status: 400 });
     }
@@ -61,28 +62,55 @@ async function handlePATCH(req: Request) {
       }).eq('id', dispute.order_id);
     }
 
-    await (supabase.from as any)('disputes').update({
-      status: transition.status,
-      resolution: outcome === 'refund_buyer' ? 'Refunded to buyer' : 'Released to farmer',
-      resolved_at: new Date().toISOString(),
-    }).eq('id', id);
-
     // A dispute resolution moves real money — both sides need to be told
     // what was decided, not just find out from their balance changing.
-    // orders has no seller_id column — the farmer side is farmer_profile_id,
-    // which points at profiles.id, not auth.users.id, so it has to be
-    // resolved separately before it can be used as a notification userId.
     const { data: order } = await (admin.from as any)('orders').select('buyer_id, farmer_profile_id, crop_type').eq('id', dispute.order_id).single();
     const { data: farmerProfile } = order?.farmer_profile_id
       ? await (admin.from as any)('profiles').select('user_id').eq('id', order.farmer_profile_id).single()
       : { data: null };
     const sellerUserId = farmerProfile?.user_id;
 
+    // Automatic quality strike recording if buyer was refunded due to poor produce
+    let strikeResult: any = null;
+    const isQualityComplaint =
+      strike_seller === true ||
+      dispute?.reason?.includes('quality') ||
+      dispute?.reason?.includes('grade') ||
+      dispute?.reason?.includes('damage') ||
+      dispute?.reason?.includes('rotten') ||
+      dispute?.description?.toLowerCase().includes('quality');
+
+    if (outcome === 'refund_buyer' && isQualityComplaint && sellerUserId) {
+      try {
+        const { recordQualityStrike } = await import('@/lib/moderation/quality-strikes');
+        strikeResult = await recordQualityStrike({
+          sellerUserId,
+          reporterUserId: order?.buyer_id || user.id,
+          orderId: dispute.order_id,
+          reason: dispute.reason || 'poor_quality',
+          description: `Dispute #${id.slice(0, 8)} resolved with refund to buyer for poor quality produce.`,
+        });
+      } catch (err) {
+        console.warn('[disputes] Could not record quality strike:', err);
+      }
+    }
+
+    const resolutionText = outcome === 'refund_buyer'
+      ? `Refunded to buyer${strikeResult ? ` (Seller issued Quality Strike #${strikeResult.strikeCount})` : ''}`
+      : 'Released to farmer';
+
+    await (supabase.from as any)('disputes').update({
+      status: transition.status,
+      resolution: resolutionText,
+      resolved_at: new Date().toISOString(),
+    }).eq('id', id);
+
     if (order?.buyer_id && sellerUserId) {
       const refundedBuyer = outcome === 'refund_buyer';
       await notifyUsers(admin, [
         {
           userId: order.buyer_id,
+          role: 'buyer',
           type: 'payment',
           title: refundedBuyer ? 'Dispute resolved — you were refunded' : 'Dispute resolved — funds released to seller',
           body: refundedBuyer
@@ -93,18 +121,19 @@ async function handlePATCH(req: Request) {
         },
         {
           userId: sellerUserId,
+          role: 'farmer',
           type: 'payment',
           title: refundedBuyer ? 'Dispute resolved — order refunded to buyer' : 'Dispute resolved — you were paid',
           body: refundedBuyer
-            ? `The dispute over ${order.crop_type ?? 'this order'} was resolved in the buyer's favour. The escrowed amount was refunded to them.`
+            ? `The dispute over ${order.crop_type ?? 'this order'} was resolved in the buyer's favour. The escrowed amount was refunded to them.${strikeResult ? ` ⚠️ A quality strike has been recorded on your seller account (Strike #${strikeResult.strikeCount} of 3).` : ''}`
             : `The dispute over ${order.crop_type ?? 'this order'} was resolved in your favour. The escrowed amount has been released to your wallet.`,
-          data: { order_id: dispute.order_id, dispute_id: id, outcome },
+          data: { order_id: dispute.order_id, dispute_id: id, outcome, strikes: strikeResult?.strikeCount },
           url: '/farmer/orders',
         },
       ]);
     }
 
-    return NextResponse.json({ success: true, status: transition.status });
+    return NextResponse.json({ success: true, status: transition.status, strikeResult });
   }
 
   const { error } = await (supabase.from as any)('disputes').update({

@@ -17,9 +17,17 @@ export const STREETS_TILE_URL = MAPBOX_TOKEN
   ? `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`
   : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
 
-// Google hybrid tile URL kept for optional alternate resolution
+// Google hybrid and streets tile URLs — blazing fast CDN, full Uganda road network and labels
 export const GOOGLE_HYBRID_TILE_URL = 'https://mt{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
 export const GOOGLE_STREETS_TILE_URL = 'https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
+
+// OpenStreetMap fallback
+export const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+export const OSM_TILE_OPTIONS = {
+  attribution: '',
+  subdomains: 'abc',
+  maxZoom: 19,
+};
 
 // Primary default tile URL across the application — pristine satellite view
 export const MAP_TILE_URL = SATELLITE_TILE_URL;
@@ -50,4 +58,5 @@ export const DARK_NAV_TILE_OPTIONS = {
   detectRetina: true,
   crossOrigin: true,
 };
+
 

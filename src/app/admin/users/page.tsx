@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { UsersTableClient } from './UsersTableClient';
 
 const C = {
   text: 'var(--d-text)', muted: 'var(--d-muted)', border: 'var(--d-border)',
@@ -145,76 +146,7 @@ export default async function AdminUsersPage({
             <p className="text-xs mt-1" style={{ color: C.muted }}>Try adjusting your search or role filter</p>
           </div>
         ) : (
-          <div className="divide-y" style={{ borderColor: C.border }}>
-            {rows.map((u: any) => {
-              const cfg = ROLE_CFG[u.role] ?? ROLE_CFG.farmer;
-              // profiles.verification_level is a DB-level enum constrained to
-              // grey/green/blue/gold (see 20260608000000_verification_trust.sql)
-              // — not the none/basic/standard/premium labels this table used
-              // to display. Falling back to 'grey' (the column's own DB
-              // default) rather than trusting an unexpected value here.
-              const VER_CFG: Record<string, { label: string; color: string }> = {
-                grey:  { label: 'Unverified', color: C.muted },
-                green: { label: 'Basic',      color: 'var(--color-harvest)' },
-                blue:  { label: 'Standard',   color: 'var(--color-sky)' },
-                gold:  { label: 'Premium',    color: 'var(--color-success)' },
-              };
-              const ver = VER_CFG[u.verification_level as string] ?? VER_CFG.grey;
-
-              return (
-                <div key={u.id} className="px-5 py-3.5 flex items-center gap-4">
-                  {/* Name + phone */}
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0" style={{ background: cfg.bg, color: cfg.color }}>
-                      {(u.full_name ?? '?')[0].toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold truncate" style={{ color: C.text }}>{u.full_name ?? 'Unknown'}</p>
-                        {u.is_suspended && (
-                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)', border: '1px solid var(--color-danger)' }}>
-                            SUSPENDED
-                          </span>
-                        )}
-                        {(u.quality_strikes ?? 0) > 0 && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'var(--color-harvest-bg)', color: 'var(--color-harvest)' }}>
-                            ⚠️ {u.quality_strikes} strike{u.quality_strikes > 1 ? 's' : ''}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] truncate" style={{ color: C.muted }}>{u.phone_number ?? '—'}</p>
-                    </div>
-                  </div>
-
-                  {/* Role */}
-                  <div className="hidden sm:block" style={{ width: 100 }}>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
-                  </div>
-
-                  {/* Location */}
-                  <div className="hidden sm:block flex-1 min-w-0">
-                    <p className="text-xs truncate" style={{ color: C.muted }}>{u.location ?? '—'}</p>
-                    {u.primary_crop && <p className="text-[10px] capitalize" style={{ color: C.muted }}>{u.primary_crop}</p>}
-                  </div>
-
-                  {/* Joined */}
-                  <div className="hidden sm:block" style={{ width: 80 }}>
-                    <p className="text-xs" style={{ color: C.muted }}>{timeAgo(u.created_at)}</p>
-                  </div>
-
-                  {/* Verification */}
-                  <div className="hidden sm:block" style={{ width: 90 }}>
-                    <p className="text-xs font-semibold" style={{ color: ver.color }}>{ver.label}</p>
-                  </div>
-
-                  {/* Mobile: role badge */}
-                  <div className="sm:hidden shrink-0">
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: cfg.bg, color: cfg.color }}>{cfg.label}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <UsersTableClient users={rows as any} />
         )}
 
         {/* Pagination */}

@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle, Navigation2, Phone } from 'lucide-react';
+import { Truck, Zap, Snowflake, Radio, Car, CheckCircle2, Package, MapPin, Target, MessageSquare, AlertTriangle, Navigation2, Navigation, Phone } from 'lucide-react';
 import { NavigateButton } from '@/components/delivery/NavigateButton';
 import { ShareLocationButton } from '@/components/delivery/ShareLocationButton';
 import { DriverTrackingSheet } from '@/components/delivery/DriverTrackingSheet';
@@ -29,11 +29,7 @@ function timeAgo(iso: string) {
   return `${Math.floor(mins / 60)}h ago`;
 }
 
-interface Props {
-  pending:   any[];
-  active:    any[];
-  completed: any[];
-}
+export type TripAction = 'start_pickup_trip' | 'arrive_pickup' | 'start_transit' | 'start_delivery_trip' | 'arrive_dropoff' | 'complete';
 
 const TAB_LABEL: Record<'pending' | 'active' | 'completed', string> = {
   pending:   'New Offers',
@@ -47,10 +43,18 @@ const TAB_HELP: Record<'pending' | 'active' | 'completed', string> = {
   completed: "Jobs you've delivered. Payout status is shown on each one.",
 };
 
-export function ActiveJobsClient({ pending, active, completed }: Props) {
+export function ActiveJobsClient({
+  pending,
+  active,
+  completed,
+}: {
+  pending: any[];
+  active: any[];
+  completed: any[];
+}) {
   const router = useRouter();
   const tabs   = ['pending', 'active', 'completed'] as const;
-  const [tab, setTab]     = useState<typeof tabs[number]>(pending.length > 0 ? 'pending' : active.length > 0 ? 'active' : 'completed');
+  const [tab, setTab]     = useState<'pending' | 'active' | 'completed'>('active');
   const [busy, setBusy]   = useState<string | null>(null);
   const [error, setError] = useState('');
   const [trackingId, setTrackingId] = useState<string | null>(null);
@@ -58,13 +62,13 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
 
   const counts = { pending: pending.length, active: active.length, completed: completed.length };
 
-  async function respondToDelivery(deliveryId: string, action: 'accept' | 'decline') {
+  async function respondToDelivery(deliveryId: string, act: 'accept' | 'decline') {
     setBusy(deliveryId); setError('');
     try {
-      const res  = await fetch('/api/deliveries/respond', {
+      const res  = await fetch(`/api/deliveries/${deliveryId}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ delivery_id: deliveryId, action }),
+        body: JSON.stringify({ action: act }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error ?? 'Action failed');
@@ -76,7 +80,7 @@ export function ActiveJobsClient({ pending, active, completed }: Props) {
     }
   }
 
-  async function updateDelivery(deliveryId: string, act: 'start_transit' | 'complete') {
+  async function updateDelivery(deliveryId: string, act: TripAction) {
     setBusy(deliveryId); setError('');
     try {
       const res  = await fetch('/api/deliveries', {
@@ -330,7 +334,7 @@ function ActiveJobGroup({ title, color, bg, children }: { title: string; color: 
 function ActiveJobsList({ active, busy, setTrackingId, updateDelivery }: {
   active: any[]; busy: string | null;
   setTrackingId: (id: string | null) => void;
-  updateDelivery: (id: string, action: 'start_transit' | 'complete') => void;
+  updateDelivery: (id: string, action: TripAction) => void;
 }) {
   // Multiple accepted jobs can be scattered across different pickup points in
   // the same district — grouping by picked-up-or-not (rather than one flat
@@ -362,7 +366,7 @@ function ActiveJobsList({ active, busy, setTrackingId, updateDelivery }: {
 function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
   d: any; busy: string | null;
   setTrackingId: (id: string | null) => void;
-  updateDelivery: (id: string, action: 'start_transit' | 'complete') => void;
+  updateDelivery: (id: string, action: TripAction) => void;
 }) {
   const tm     = TYPE_META[d.delivery_type] ?? TYPE_META.standard;
   const isBusy = busy === d.id;
@@ -497,34 +501,178 @@ function ActiveJobCard({ d, busy, setTrackingId, updateDelivery }: {
         />
       </div>
 
-      {/* Broadcasting is automatic once a job is accepted — matches
-          the expected default for a driver, not an opt-in toggle */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-        <ShareLocationButton deliveryId={d.id} active autoStart label="location visible to requester" />
-        {d.requester && (
+      {/* Navigation HUD Button */}
+      {d.requester && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
           <button
             onClick={() => setTrackingId(d.id)}
             style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: 'none',
-              cursor: 'pointer', fontSize: 12, fontWeight: 700,
-              background: 'var(--color-sky-bg, #E0F2FE)', color: 'var(--color-sky, #0EA5E9)',
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '10px 16px', borderRadius: 10, border: '1px solid var(--d-border)',
+              cursor: 'pointer', fontSize: 13, fontWeight: 700,
+              background: 'var(--color-surface-2)', color: 'var(--color-sky)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             }}
           >
-            <Navigation2 size={13} /> View live map
+            <Navigation2 size={15} /> Open Navigation HUD & Live Map
           </button>
-        )}
+        </div>
+      )}
+
+      {/* Live Trip Phase Status Indicator */}
+      <div style={{
+        padding: '10px 14px',
+        borderRadius: 10,
+        marginBottom: 12,
+        background: 'var(--color-surface-2)',
+        border: '1px solid var(--d-border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        fontSize: 12.5,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            width: 8, height: 8, borderRadius: '50%',
+            background: (d.trip_phase === 'heading_to_pickup' || d.status === 'in_transit') ? '#FBBF24' : '#10B981',
+            boxShadow: `0 0 8px ${(d.trip_phase === 'heading_to_pickup' || d.status === 'in_transit') ? '#FBBF24' : '#10B981'}`,
+          }} />
+          <span style={{ fontWeight: 700, color: 'var(--d-text)' }}>
+            {(!d.trip_phase || d.trip_phase === 'assigned') && (d.status === 'assigned' ? 'Job accepted · Ready to set off' : 'In transit')}
+            {d.trip_phase === 'heading_to_pickup' && 'On the way to pickup location'}
+            {d.trip_phase === 'arrived_pickup' && 'At pickup · Loading cargo'}
+            {(d.trip_phase === 'in_transit' || (!d.trip_phase && d.status === 'in_transit')) && 'In transit · Heading to destination'}
+            {d.trip_phase === 'arrived_delivery' && 'At dropoff · Handover in progress'}
+            {d.status === 'delivered' && 'Delivery completed'}
+          </span>
+        </div>
+        <span style={{ fontSize: 11, color: 'var(--d-muted)', fontWeight: 600 }}>
+          {d.distance_km ? `${d.distance_km} km` : ''}
+        </span>
       </div>
 
-      {isAssigned && (
-        <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'start_transit')}
-          style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: isBusy ? 'var(--color-surface-2)' : 'var(--color-harvest)', color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
-          {isBusy ? 'Updating…' : <><Package size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Mark Cargo Picked Up</>}
+      {/* Dynamic Trip Action Progression Buttons */}
+      {(!d.trip_phase || d.trip_phase === 'assigned') && d.status === 'assigned' && (
+        <button
+          disabled={isBusy}
+          onClick={() => updateDelivery(d.id, 'start_pickup_trip')}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: 12,
+            border: 'none',
+            background: isBusy ? 'var(--color-surface-2)' : 'linear-gradient(135deg, #16A34A 0%, #15803D 100%)',
+            color: isBusy ? C.muted : '#fff',
+            fontWeight: 800,
+            fontSize: 14.5,
+            cursor: isBusy ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            boxShadow: isBusy ? 'none' : '0 4px 14px rgba(22, 163, 74, 0.35)',
+          }}
+        >
+          {isBusy ? 'Updating…' : <><Navigation size={16} /> Start Trip to Pickup</>}
         </button>
       )}
-      {isInTransit && (
-        <button disabled={isBusy} onClick={() => updateDelivery(d.id, 'complete')}
-          style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: isBusy ? 'var(--color-surface-2)' : '#7C3AED', color: isBusy ? C.muted : '#fff', fontWeight: 700, fontSize: 14, cursor: isBusy ? 'not-allowed' : 'pointer' }}>
-          {isBusy ? 'Updating…' : <><CheckCircle2 size={14} style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 5 }} />Mark Delivered</>}
+
+      {d.trip_phase === 'heading_to_pickup' && (
+        <button
+          disabled={isBusy}
+          onClick={() => updateDelivery(d.id, 'arrive_pickup')}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: 12,
+            border: 'none',
+            background: isBusy ? 'var(--color-surface-2)' : 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+            color: isBusy ? C.muted : '#fff',
+            fontWeight: 800,
+            fontSize: 14.5,
+            cursor: isBusy ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            boxShadow: isBusy ? 'none' : '0 4px 14px rgba(217, 119, 6, 0.35)',
+          }}
+        >
+          {isBusy ? 'Updating…' : <><MapPin size={16} /> Arrived at Pickup Location</>}
+        </button>
+      )}
+
+      {d.trip_phase === 'arrived_pickup' && (
+        <button
+          disabled={isBusy}
+          onClick={() => updateDelivery(d.id, 'start_transit')}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: 12,
+            border: 'none',
+            background: isBusy ? 'var(--color-surface-2)' : 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+            color: isBusy ? C.muted : '#fff',
+            fontWeight: 800,
+            fontSize: 14.5,
+            cursor: isBusy ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            boxShadow: isBusy ? 'none' : '0 4px 14px rgba(2, 132, 199, 0.35)',
+          }}
+        >
+          {isBusy ? 'Updating…' : <><Package size={16} /> Cargo Loaded — Start Delivery Trip</>}
+        </button>
+      )}
+
+      {(d.trip_phase === 'in_transit' || (!d.trip_phase && d.status === 'in_transit')) && (
+        <button
+          disabled={isBusy}
+          onClick={() => updateDelivery(d.id, 'arrive_dropoff')}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: 12,
+            border: 'none',
+            background: isBusy ? 'var(--color-surface-2)' : 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)',
+            color: isBusy ? C.muted : '#fff',
+            fontWeight: 800,
+            fontSize: 14.5,
+            cursor: isBusy ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            boxShadow: isBusy ? 'none' : '0 4px 14px rgba(124, 58, 237, 0.35)',
+          }}
+        >
+          {isBusy ? 'Updating…' : <><MapPin size={16} /> Arrived at Delivery Point</>}
+        </button>
+      )}
+
+      {d.trip_phase === 'arrived_delivery' && (
+        <button
+          disabled={isBusy}
+          onClick={() => updateDelivery(d.id, 'complete')}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: 12,
+            border: 'none',
+            background: isBusy ? 'var(--color-surface-2)' : 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+            color: isBusy ? C.muted : '#fff',
+            fontWeight: 800,
+            fontSize: 14.5,
+            cursor: isBusy ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            boxShadow: isBusy ? 'none' : '0 4px 14px rgba(16, 185, 129, 0.35)',
+          }}
+        >
+          {isBusy ? 'Updating…' : <><CheckCircle2 size={16} /> Confirm Delivery Completed</>}
         </button>
       )}
     </div>

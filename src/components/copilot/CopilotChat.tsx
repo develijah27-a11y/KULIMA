@@ -539,9 +539,11 @@ export function CopilotChat({ role }: { role: string }) {
         style={{
           display: 'flex',
           gap: 8,
-          padding: 12,
+          padding: '12px 14px',
           borderTop: `1px solid ${C.border}`,
-          background: 'rgba(0,0,0,0.1)',
+          background: 'rgba(0,0,0,0.18)',
+          position: 'relative',
+          zIndex: 50,
         }}
       >
         <input

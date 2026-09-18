@@ -71,27 +71,38 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   let location = '';
   let roles: string[] = [];
   let unreadCount = 0;
+  let openTicketsCount = 0;
+  let openDisputesCount = 0;
+  let pendingKycCount = 0;
 
   if (data) {
     profile = { name: (data as any).full_name ?? 'Admin', role: 'Admin' };
     location = (data as any).location ?? '';
     roles = (data as any).roles ?? [];
 
-    const { count } = await supabase
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('read', false)
-      .eq('role', 'admin');
-    unreadCount = count ?? 0;
+    const [notifRes, ticketRes, disputeRes, kycRes] = await Promise.allSettled([
+      supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false).eq('role', 'admin'),
+      (supabase.from as any)('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress']),
+      (supabase.from as any)('disputes').select('id', { count: 'exact', head: true }).in('status', ['open', 'under_review']),
+      (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    ]);
+
+    unreadCount = notifRes.status === 'fulfilled' ? (notifRes.value.count ?? 0) : 0;
+    openTicketsCount = ticketRes.status === 'fulfilled' ? (ticketRes.value.count ?? 0) : 0;
+    openDisputesCount = disputeRes.status === 'fulfilled' ? (disputeRes.value.count ?? 0) : 0;
+    pendingKycCount = kycRes.status === 'fulfilled' ? (kycRes.value.count ?? 0) : 0;
   }
 
   const first = profile?.name.split(' ')[0] ?? 'Admin';
   const greeting = getTimeGreeting(first);
 
-  const navWithBadge = ADMIN_NAV.map(item =>
-    item.href === '/admin/notifications' && unreadCount > 0 ? { ...item, badge: unreadCount } : item,
-  );
+  const navWithBadge = ADMIN_NAV.map(item => {
+    if (item.href === '/admin/notifications' && unreadCount > 0) return { ...item, badge: unreadCount };
+    if (item.href === '/admin/support' && openTicketsCount > 0) return { ...item, badge: openTicketsCount };
+    if (item.href === '/admin/disputes' && openDisputesCount > 0) return { ...item, badge: openDisputesCount };
+    if (item.href === '/admin/verification' && pendingKycCount > 0) return { ...item, badge: pendingKycCount };
+    return item;
+  });
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'var(--d-page)' }}>

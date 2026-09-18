@@ -38,8 +38,8 @@ export function ThemeToggle() {
       }}
     >
       {isDark
-        ? <Sun  size={15} style={{ color: 'var(--color-accent)' }}    aria-hidden="true" />
-        : <Moon size={15} style={{ color: 'var(--color-text-muted)' }} aria-hidden="true" />
+        ? <Sun  size={16} style={{ color: '#FBBF24' }}    aria-hidden="true" />
+        : <Moon size={16} style={{ color: 'var(--color-text-muted)' }} aria-hidden="true" />
       }
     </button>
   );

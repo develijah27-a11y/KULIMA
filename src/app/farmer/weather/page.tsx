@@ -317,7 +317,7 @@ export default async function WeatherPage({
                 ? 'Temperate northern agriculture follows four distinct seasons: Spring drilling (Mar–May), Summer crop combining (Jun–Aug), Autumn drilling and maize harvesting (Sep–Nov), and Winter dormancy (Dec–Feb).'
                 : seasonSummary.climateZone === 'temperate_south'
                 ? 'Southern temperate regions follow an inverted four-season cycle with spring planting in September–November and winter crop harvesting in December–February.'
-                : 'Equatorial Africa operates on a bimodal cycle: Season A (March–May) main rains for maize and legumes, and Season B (September–November) second rains for short-cycle beans, sweet potatoes, and vegetables.'}
+                : 'Uganda operates on two primary agricultural seasons: the First Wet Season (March–May) main rains for maize and legumes, and the Second Wet Season (August–November) second rains for short-cycle beans, sweet potatoes, and market vegetables.'}
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               {(seasonSummary.climateZone === 'temperate_north'
@@ -331,8 +331,8 @@ export default async function WeatherPage({
                     { season: 'Autumn · Winter Grains', months: 'Mar – May', crops: 'Winter Wheat, Canola, Barley' },
                   ]
                 : [
-                    { season: 'Season A · Long Rains', months: 'Mar – May', crops: 'Maize, Beans, Groundnuts, Sunflower' },
-                    { season: 'Season B · Second Rains', months: 'Sep – Nov', crops: 'Beans, Sweet Potato, Tomato, Sorghum' },
+                    { season: 'First Wet Season · Main Rains', months: 'Mar – May', crops: 'Maize, Beans, Groundnuts, Sunflower' },
+                    { season: 'Second Wet Season · Second Rains', months: 'Aug – Nov', crops: 'Beans, Sweet Potato, Tomato, Sorghum' },
                   ]
               ).map((s) => (
                 <div key={s.season} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px' }}>

@@ -87,15 +87,19 @@ export async function POST(_req: Request, { params }: Params) {
     .eq('delivery_request_id', id)
     .eq('status', 'paid');
 
-  // Notify requester
+  // Notify requester with dynamic role matching
+  const validRoles = ['farmer', 'buyer', 'transporter', 'supplier', 'pathologist', 'offtaker', 'groups'];
+  const reqRole = (validRoles.includes(dr.requester_role) ? dr.requester_role : 'buyer') as any;
+  const reqUrl = `/${reqRole}/deliveries`;
+
   await notifyUser(admin, {
     userId: dr.requester_id,
-    role:   dr.requester_role === 'farmer' ? 'farmer' : 'buyer',
+    role:   reqRole,
     type:   'delivery',
     title:  `Driver assigned — ${dr.cargo_type ?? 'cargo'}`,
     body:   `A transporter has accepted your delivery of ${dr.cargo_kg} kg from ${dr.pickup_district}.`,
     data:   { delivery_id: id },
-    url:    dr.requester_role === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries',
+    url:    reqUrl,
   });
 
   return NextResponse.json({ success: true });
@@ -124,6 +128,9 @@ export async function PATCH(req: Request, { params }: Params) {
   if (dr.transporter_id !== user.id) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   const now = new Date().toISOString();
+  const validRoles = ['farmer', 'buyer', 'transporter', 'supplier', 'pathologist', 'offtaker', 'groups'];
+  const patchRole = (validRoles.includes(dr.requester_role) ? dr.requester_role : 'buyer') as any;
+  const patchUrl = `/${patchRole}/deliveries`;
 
   if (action === 'pickup') {
     if (dr.status !== 'assigned') return NextResponse.json({ error: 'Cannot mark pickup at this stage' }, { status: 400 });
@@ -133,12 +140,12 @@ export async function PATCH(req: Request, { params }: Params) {
       .eq('delivery_request_id', id);
     await notifyUser(admin, {
       userId: dr.requester_id,
-      role:   dr.requester_role === 'farmer' ? 'farmer' : 'buyer',
+      role:   patchRole,
       type:   'delivery',
       title:  `Your ${dr.cargo_type} is on the way!`,
       body:   `The transporter has picked up your ${dr.cargo_kg} kg.`,
       data:   { delivery_id: id },
-      url:    dr.requester_role === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries',
+      url:    patchUrl,
     });
   } else if (action === 'deliver') {
     if (dr.status !== 'in_transit') return NextResponse.json({ error: 'Must be in transit first' }, { status: 400 });
@@ -148,14 +155,14 @@ export async function PATCH(req: Request, { params }: Params) {
       .eq('delivery_request_id', id);
     await notifyUser(admin, {
       userId: dr.requester_id,
-      role:   dr.requester_role === 'farmer' ? 'farmer' : 'buyer',
+      role:   patchRole,
       type:   'delivery',
       title:  `Delivered — ${dr.cargo_type}`,
       body:   dr.estimated_fare
         ? `Your ${dr.cargo_kg} kg of ${dr.cargo_type} has arrived. Confirm receipt to release payment to the farmer, and pay UGX ${Math.round(Number(dr.estimated_fare)).toLocaleString()} to release the driver's earnings.`
         : `Your ${dr.cargo_kg} kg of ${dr.cargo_type} has been delivered. Please confirm receipt.`,
       data:   { delivery_id: id },
-      url:    dr.requester_role === 'farmer' ? '/farmer/deliveries' : '/buyer/deliveries',
+      url:    patchUrl,
     });
   } else {
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 });

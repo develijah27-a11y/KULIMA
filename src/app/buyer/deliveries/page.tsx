@@ -7,6 +7,7 @@ import { TrackDeliveryButton } from '@/components/delivery/TrackDeliveryButton';
 import { CancelDeliveryButton } from '@/components/delivery/CancelDeliveryButton';
 import { DeliveryTrackingMap } from '@/components/delivery/DeliveryTrackingMap';
 import { LiveDeliveryStatusBanner } from '@/components/delivery/LiveDeliveryStatusBanner';
+import { ShipmentStatusCard } from '@/components/delivery/ShipmentStatusCard';
 import type { JSX } from 'react';
 import { Truck, Search, Car, Package, Snowflake, Zap, CheckCircle2, User, Phone } from 'lucide-react';
 import { getTelUri, formatPhoneDisplay } from '@/lib/phone-dialer';
@@ -86,6 +87,16 @@ export default async function BuyerDeliveriesPage() {
   const delivered = rows.filter((d: any) => d.status === 'delivered');
   const past      = rows.filter((d: any) => d.status === 'cancelled');
 
+  const featured = active.find((d: any) => d.status === 'in_transit') ?? active.find((d: any) => d.status === 'assigned');
+  const FEATURED_PROGRESS: Record<string, number> = { open: 15, assigned: 40, in_transit: 75 };
+  const featuredVehicle = featured ? vehicleByUser.get(featured.transporter_id) as any : null;
+  const featuredEtaLabel = featured?.distance_km
+    ? `~${Math.max(5, Math.round((Number(featured.distance_km) / 24) * 60))} min away`
+    : null;
+  const featuredRecentUpdate = featured?.updated_at
+    ? Date.now() - new Date(featured.updated_at).getTime() < 30 * 60 * 1000
+    : false;
+
   return (
     <div className="max-w-2xl mx-auto space-y-5">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
@@ -100,6 +111,23 @@ export default async function BuyerDeliveriesPage() {
           + New
         </Link>
       </div>
+
+      {featured && (
+        <ShipmentStatusCard
+          statusLabel={featured.status === 'in_transit' ? 'Shipment in transit' : 'Driver heading to pickup'}
+          referenceNumber={`CRP-UG-${String(featured.id).replace(/-/g, '').slice(0, 6).toUpperCase()}`}
+          etaLabel={featuredEtaLabel}
+          progressPercent={FEATURED_PROGRESS[featured.status] ?? 40}
+          pickupLabel={featured.pickup_district}
+          dropoffLabel={featured.dropoff_district}
+          rider={featured.transporter ? {
+            name: featured.transporter.full_name ?? 'Assigned Driver',
+            idLabel: featuredVehicle?.plate_number ? `Plate: ${featuredVehicle.plate_number}` : null,
+            avatarUrl: photoByUser.get(featured.transporter_id) ?? null,
+          } : null}
+          hasRecentUpdate={featuredRecentUpdate}
+        />
+      )}
 
       {rows.length === 0 && (
         <div style={{ background: C.cardBg, borderRadius: 16, boxShadow: C.cardShadow, padding: '48px 24px', textAlign: 'center' }}>

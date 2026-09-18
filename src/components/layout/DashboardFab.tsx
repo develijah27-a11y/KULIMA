@@ -10,16 +10,28 @@ interface Props {
   children: ReactNode;
 }
 
-// Every role dashboard has one fixed-position floating action button for its
-// primary quick action. When that action is itself a chat/messaging page
-// (e.g. groups → /groups/chat), the FAB stayed on screen even once you'd
-// already navigated there, sitting fixed in the same corner as — and
-// visually on top of — that page's own send button. Hiding the FAB whenever
-// its target is the page you're already on fixes that for every dashboard,
-// not just the one bug report happened to be filed against.
+const SUPPRESSED_PATTERNS = [
+  '/assistant',
+  '/chat',
+  '/messages',
+  '/direct',
+  '/support',
+  '/new',
+  '/edit',
+];
+
 export function DashboardFab({ href, ariaLabel, children }: Props) {
   const pathname = usePathname();
-  if (pathname === href || pathname.startsWith(href + '/')) return null;
+
+  // Hide the FAB whenever on the destination page, or on any chat/assistant/messaging/form page
+  // where a floating button would obstruct the bottom Send button or action controls.
+  if (
+    pathname === href ||
+    pathname.startsWith(href + '/') ||
+    SUPPRESSED_PATTERNS.some((p) => pathname.includes(p))
+  ) {
+    return null;
+  }
 
   return (
     <Link href={href} className="fab fab-primary" aria-label={ariaLabel} style={{ textDecoration: 'none' }}>

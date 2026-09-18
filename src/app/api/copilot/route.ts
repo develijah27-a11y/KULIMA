@@ -174,12 +174,12 @@ export async function POST(req: Request) {
     }
   }
 
-  const internalRole = ((profile as any)?.role as string | undefined)?.toLowerCase();
   const reqRole = (requestedRole as string | undefined)?.toLowerCase();
+  const internalRole = ((profile as any)?.role as string | undefined)?.toLowerCase();
   const copilotRole: CopilotUserContext['role'] =
-    (internalRole ? SUPPORTED_ROLES[internalRole] : undefined) ||
     (reqRole ? SUPPORTED_ROLES[reqRole] : undefined) ||
-    'buyer';
+    (internalRole ? SUPPORTED_ROLES[internalRole] : undefined) ||
+    'farmer';
 
   const profileId = (profile as any)?.id ?? null;
   const displayName = (profile as any)?.full_name ?? 'there';

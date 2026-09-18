@@ -63,25 +63,25 @@ async function PlatformKPIs() {
   const supabase = await createClient();
   const weekAgo  = new Date(Date.now() - 7 * 864e5).toISOString();
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
-  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
 
   const [
     totalRes, newWeekRes, activeListRes, gmvRes,
-    kycRes, walletRes, openJobsRes, scansRes,
+    kycRes, ticketsRes, disputesRes,
   ] = await Promise.allSettled([
     (supabase.from as any)('profiles').select('id', { count: 'exact', head: true }),
     (supabase.from as any)('profiles').select('id', { count: 'exact', head: true }).gte('created_at', weekAgo),
     (supabase.from as any)('listings').select('id', { count: 'exact', head: true }).eq('status', 'active'),
     (supabase.from as any)('offers').select('offered_price, listing:listings(quantity_kg)').eq('status', 'completed').gte('created_at', monthStart),
     (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    (supabase.from as any)('wallets').select('balance'),
-    (supabase.from as any)('delivery_requests').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-    (supabase.from as any)('disease_scans').select('id', { count: 'exact', head: true }).gte('created_at', todayStart.toISOString()),
+    (supabase.from as any)('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress']),
+    (supabase.from as any)('disputes').select('id', { count: 'exact', head: true }).in('status', ['open', 'under_review']),
   ]);
 
   const gmv = ((gmvRes.status === 'fulfilled' ? gmvRes.value.data : null) ?? []).reduce((s: number, o: any) => s + ((o?.listing?.quantity_kg ?? 0) * (o.offered_price ?? 0)), 0);
-  const tvl = (((walletRes.status === 'fulfilled' ? walletRes.value.data : null) ?? []) as any[]).reduce((s: number, w: any) => s + (w.balance ?? 0), 0);
   const kycPending = kycRes.status === 'fulfilled' ? (kycRes.value.count ?? 0) : 0;
+  const ticketsCount = ticketsRes.status === 'fulfilled' ? (ticketsRes.value.count ?? 0) : 0;
+  const disputesCount = disputesRes.status === 'fulfilled' ? (disputesRes.value.count ?? 0) : 0;
+  const careTotal = ticketsCount + disputesCount;
 
   const totalCount      = totalRes.status      === 'fulfilled' ? (totalRes.value.count      ?? 0) : 0;
   const newWeekCount    = newWeekRes.status    === 'fulfilled' ? (newWeekRes.value.count    ?? 0) : 0;
@@ -92,8 +92,8 @@ async function PlatformKPIs() {
     { label: 'New This Week',   value: `+${newWeekCount.toLocaleString()}`,                      sub: '7-day growth',            icon: <TrendingUp size={16} />,     border: C.greenBright,color: C.greenMed },
     { label: 'Active Listings', value: activeListCount.toLocaleString(),                         sub: 'Live on marketplace',     icon: <Package size={16} />,        border: C.amber,      color: C.amber   },
     { label: 'GMV This Month',  value: gmv >= 1e9 ? `${(gmv/1e9).toFixed(1)}B` : gmv >= 1e6 ? `${(gmv/1e6).toFixed(1)}M` : gmv > 0 ? `${Math.round(gmv/1000)}K` : '—', sub: 'UGX gross market value', icon: <DollarSign size={16} />, border: C.blue, color: C.blue },
-    { label: 'Pending KYC',     value: kycPending.toString(),                                    sub: kycPending ? 'Awaiting review' : 'All clear', icon: kycPending ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />, border: kycPending ? C.red : C.greenBright, color: kycPending ? C.red : C.greenMed, alert: kycPending > 0 },
-    { label: 'Wallet TVL',      value: tvl >= 1e9 ? `${(tvl/1e9).toFixed(1)}B` : tvl >= 1e6 ? `${(tvl/1e6).toFixed(1)}M` : tvl > 0 ? `${Math.round(tvl/1000)}K` : '—', sub: 'UGX total in wallets', icon: <Building2 size={16} />, border: C.indigo, color: C.indigo },
+    { label: 'Customer Care',   value: careTotal.toString(),                                     sub: careTotal > 0 ? `${ticketsCount} tickets · ${disputesCount} disputes` : 'All issues resolved', icon: careTotal > 0 ? <MessageCircle size={16} /> : <CheckCircle2 size={16} />, border: careTotal > 0 ? C.red : C.greenBright, color: careTotal > 0 ? C.red : C.greenMed, alert: careTotal > 0 },
+    { label: 'Pending KYC',     value: kycPending.toString(),                                    sub: kycPending ? 'Awaiting review' : 'All clear', icon: kycPending ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />, border: kycPending ? C.amber : C.greenBright, color: kycPending ? C.amber : C.greenMed, alert: kycPending > 0 },
   ];
 
   return (
@@ -265,30 +265,38 @@ async function RecentRegistrations() {
 // ─── Pending Actions ──────────────────────────────────────────────────────────
 async function PendingActions() {
   const supabase = await createClient();
-  const [kycRes, offersRes, reportsRes, deliveriesRes] = await Promise.allSettled([
+  const [ticketsRes, urgentRes, disputesRes, kycRes, offersRes, reportsRes, deliveriesRes] = await Promise.allSettled([
+    (supabase.from as any)('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress']),
+    (supabase.from as any)('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress']).eq('priority', 'urgent'),
+    (supabase.from as any)('disputes').select('id', { count: 'exact', head: true }).in('status', ['open', 'under_review']),
     (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     (supabase.from as any)('offers').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     (supabase.from as any)('disease_reports').select('id', { count: 'exact', head: true }).eq('status', 'reported'),
     (supabase.from as any)('delivery_requests').select('id', { count: 'exact', head: true }).eq('status', 'open'),
   ]);
 
+  const ticketsCount    = ticketsRes.status    === 'fulfilled' ? (ticketsRes.value.count    ?? 0) : 0;
+  const urgentCount     = urgentRes.status     === 'fulfilled' ? (urgentRes.value.count     ?? 0) : 0;
+  const disputesCount   = disputesRes.status   === 'fulfilled' ? (disputesRes.value.count   ?? 0) : 0;
   const kycCount        = kycRes.status        === 'fulfilled' ? (kycRes.value.count        ?? 0) : 0;
   const offersCount     = offersRes.status     === 'fulfilled' ? (offersRes.value.count     ?? 0) : 0;
   const reportsCount    = reportsRes.status    === 'fulfilled' ? (reportsRes.value.count    ?? 0) : 0;
   const deliveriesCount = deliveriesRes.status === 'fulfilled' ? (deliveriesRes.value.count ?? 0) : 0;
 
   const items = [
-    { label: 'KYC Verifications',  count: kycCount,        href: '/admin/verification', icon: <CreditCard size={16} />,    urgency: kycCount > 5 },
-    { label: 'Open Buyer Offers',  count: offersCount,     href: '/admin/buyers',       icon: <MessageCircle size={16} />, urgency: false },
-    { label: 'Disease Reports',    count: reportsCount,    href: '/admin/disease-reports', icon: <Microscope size={16} />, urgency: reportsCount > 0 },
-    { label: 'Open Delivery Jobs', count: deliveriesCount, href: '/admin/deliveries',   icon: <Truck size={16} />,         urgency: false },
+    { label: 'Support Tickets',    count: ticketsCount,    href: '/admin/support',         icon: <MessageCircle size={16} />, urgency: urgentCount > 0 || ticketsCount > 3 },
+    { label: 'Escrow Disputes',    count: disputesCount,   href: '/admin/disputes',        icon: <ShieldCheck size={16} />,   urgency: disputesCount > 0 },
+    { label: 'KYC Verifications',  count: kycCount,        href: '/admin/verification',    icon: <CreditCard size={16} />,    urgency: kycCount > 5 },
+    { label: 'Open Buyer Offers',  count: offersCount,     href: '/admin/buyers',          icon: <ShoppingCart size={16} />,  urgency: false },
+    { label: 'Disease Reports',    count: reportsCount,    href: '/admin/disease-reports', icon: <Microscope size={16} />,    urgency: reportsCount > 0 },
+    { label: 'Open Delivery Jobs', count: deliveriesCount, href: '/admin/deliveries',      icon: <Truck size={16} />,         urgency: false },
   ];
 
   return (
     <Card>
       <div className="px-5 py-4" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Pending Actions</p>
-        <p className="text-xs mt-0.5" style={{ color: C.muted }}>Items requiring admin attention</p>
+        <p className="text-sm font-bold" style={{ color: C.text, fontFamily: "'Poppins', 'Inter', system-ui, sans-serif" }}>Customer & Operations Queue</p>
+        <p className="text-xs mt-0.5" style={{ color: C.muted }}>Escalations and items requiring admin attention</p>
       </div>
       <div className="divide-y" style={{ borderColor: C.border }}>
         {items.map(({ label, count, href, icon, urgency }) => (
@@ -625,22 +633,58 @@ function AdminTools() {
 // ─── Alert banner ─────────────────────────────────────────────────────────────
 async function AlertBanner() {
   const supabase = await createClient();
-  const { count } = await (supabase.from as any)('verifications')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'pending');
+  const [kycRes, disputesRes, urgentTicketsRes] = await Promise.allSettled([
+    (supabase.from as any)('verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    (supabase.from as any)('disputes').select('id', { count: 'exact', head: true }).in('status', ['open', 'under_review']),
+    (supabase.from as any)('support_tickets').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress']).eq('priority', 'urgent'),
+  ]);
 
-  if (!count || count === 0) return null;
+  const kycCount      = kycRes.status      === 'fulfilled' ? (kycRes.value.count      ?? 0) : 0;
+  const disputeCount  = disputesRes.status === 'fulfilled' ? (disputesRes.value.count  ?? 0) : 0;
+  const urgentTickets = urgentTicketsRes.status === 'fulfilled' ? (urgentTicketsRes.value.count ?? 0) : 0;
+
+  if (kycCount === 0 && disputeCount === 0 && urgentTickets === 0) return null;
 
   return (
-    <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: 'var(--color-harvest-bg)', border: '1px solid var(--color-warning-border)' }}>
-      <AlertTriangle size={18} style={{ color: 'var(--color-harvest)', flexShrink: 0 }} />
-      <div className="flex-1">
-        <p className="text-sm font-bold" style={{ color: 'var(--color-harvest)' }}>{count} KYC verification{count > 1 ? 's' : ''} pending review</p>
-        <p className="text-xs" style={{ color: 'var(--color-harvest)' }}>Users are waiting to be verified. Review the queue to unlock their full access.</p>
-      </div>
-      <Link href="/admin/verification" className="px-4 py-2 rounded-lg text-xs font-bold shrink-0" style={{ background: 'var(--color-harvest)', color: '#fff', textDecoration: 'none' }}>
-        Review →
-      </Link>
+    <div className="space-y-2.5">
+      {disputeCount > 0 && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: 'var(--color-danger-bg)', border: '1px solid var(--color-danger-border)' }}>
+          <AlertTriangle size={18} style={{ color: C.red, flexShrink: 0 }} />
+          <div className="flex-1">
+            <p className="text-sm font-bold" style={{ color: C.red }}>{disputeCount} Escrow Dispute{disputeCount > 1 ? 's' : ''} Pending Resolution</p>
+            <p className="text-xs" style={{ color: C.red }}>Customer funds are frozen in escrow. Arbitrate and settle orders to ensure smooth trade.</p>
+          </div>
+          <Link href="/admin/disputes" className="px-4 py-2 rounded-lg text-xs font-bold shrink-0" style={{ background: C.red, color: '#fff', textDecoration: 'none' }}>
+            Resolve Disputes →
+          </Link>
+        </div>
+      )}
+
+      {urgentTickets > 0 && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: 'var(--color-harvest-bg)', border: '1px solid var(--color-warning-border)' }}>
+          <MessageCircle size={18} style={{ color: 'var(--color-harvest)', flexShrink: 0 }} />
+          <div className="flex-1">
+            <p className="text-sm font-bold" style={{ color: 'var(--color-harvest)' }}>{urgentTickets} Urgent Support Ticket{urgentTickets > 1 ? 's' : ''} Awaiting Reply</p>
+            <p className="text-xs" style={{ color: 'var(--color-harvest)' }}>Customers reported high-priority complaints. Reply promptly to maintain customer trust.</p>
+          </div>
+          <Link href="/admin/support?priority=urgent" className="px-4 py-2 rounded-lg text-xs font-bold shrink-0" style={{ background: 'var(--color-harvest)', color: '#fff', textDecoration: 'none' }}>
+            View Urgent →
+          </Link>
+        </div>
+      )}
+
+      {kycCount > 0 && (
+        <div className="flex items-center gap-3 px-5 py-3 rounded-xl" style={{ background: 'var(--color-sky-bg)', border: '1px solid var(--color-sky-muted)' }}>
+          <ShieldCheck size={18} style={{ color: C.blue, flexShrink: 0 }} />
+          <div className="flex-1">
+            <p className="text-sm font-bold" style={{ color: C.blue }}>{kycCount} KYC verification{kycCount > 1 ? 's' : ''} pending review</p>
+            <p className="text-xs" style={{ color: C.blue }}>Users are waiting to be verified. Review documents to unlock their platform access.</p>
+          </div>
+          <Link href="/admin/verification" className="px-4 py-2 rounded-lg text-xs font-bold shrink-0" style={{ background: C.blue, color: '#fff', textDecoration: 'none' }}>
+            Review KYC →
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

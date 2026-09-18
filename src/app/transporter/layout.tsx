@@ -44,10 +44,11 @@ export default async function TransporterLayout({ children }: { children: React.
   let location = '';
   let roles: string[] = [];
 
-  const [profileRes, unreadRes, vehicleRes] = await Promise.all([
+  const [profileRes, unreadRes, vehicleRes, activeDeliveryRes] = await Promise.all([
     supabase.from('profiles').select('id, full_name, location, role, roles').eq('user_id', user.id).single(),
     supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('read', false).eq('role', 'transporter'),
     (supabase.from as any)('vehicles').select('is_available').eq('user_id', user.id).maybeSingle(),
+    (supabase.from as any)('delivery_requests').select('id').eq('transporter_id', user.id).in('status', ['assigned', 'in_transit']).limit(1),
   ]);
 
   if (profileRes.data) {
@@ -80,7 +81,7 @@ export default async function TransporterLayout({ children }: { children: React.
       <Sidebar navItems={navWithBadge} profile={profile} roleSwitcher={<RoleSwitcher currentRole="transporter" allRoles={roles} />} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopBar greeting={greeting} location={location} unreadCount={unreadCount} notificationsHref="/transporter/notifications" currentRole="transporter" allRoles={roles} />
-        {Boolean((vehicleRes.data as any)?.is_available) && (
+        {Boolean((vehicleRes.data as any)?.is_available) && !(activeDeliveryRes.data?.length) && (
           <div className="px-5 md:px-6 pt-3 pb-0 flex items-center justify-end">
             <DriverPresenceBroadcaster isAvailable={true} />
           </div>

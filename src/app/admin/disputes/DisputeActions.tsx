@@ -45,10 +45,10 @@ export function DisputeActions({ disputeId, currentStatus, orderId }: Props) {
     return (
       <div className="flex flex-col items-end gap-1.5 shrink-0">
         <div className="flex gap-2">
-          <button disabled={!!loading || !orderId} title={!orderId ? 'No order linked to this dispute' : 'Refund the buyer'}
-            onClick={() => act({ action: 'resolve', outcome: 'refund_buyer' }, 'resolved', 'refund')}
+          <button disabled={!!loading || !orderId} title={!orderId ? 'No order linked to this dispute' : 'Refund buyer and record quality strike against seller'}
+            onClick={() => act({ action: 'resolve', outcome: 'refund_buyer', strike_seller: true }, 'resolved', 'refund')}
             style={btnStyle('var(--color-danger)')}>
-            {loading === 'refund' ? 'Refunding…' : 'Refund Buyer'}
+            {loading === 'refund' ? 'Refunding…' : 'Refund Buyer (Strike Seller)'}
           </button>
           <button disabled={!!loading || !orderId} title={!orderId ? 'No order linked to this dispute' : 'Release payment to the farmer'}
             onClick={() => act({ action: 'resolve', outcome: 'release_to_farmer' }, 'resolved', 'release')}
