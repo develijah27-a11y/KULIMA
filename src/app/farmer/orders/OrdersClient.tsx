@@ -247,6 +247,29 @@ function OrderCard({ order, onAction }: { order: Order; onAction: (id: string, n
           </div>
         </div>
       )}
+
+      {['paid', 'dispatched', 'in_transit'].includes(order.status) && (
+        <div style={{ padding: '0 20px 14px' }}>
+          <Link
+            href="/farmer/deliveries"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '8px 14px',
+              borderRadius: 10,
+              background: 'var(--color-primary-bg, #E8F5E9)',
+              color: 'var(--color-primary, #166B3A)',
+              fontSize: 12,
+              fontWeight: 800,
+              textDecoration: 'none',
+              border: '1px solid rgba(22, 107, 58, 0.25)',
+            }}
+          >
+            <Truck size={13} /> Track Transporter Pickup on Live Map ➔
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

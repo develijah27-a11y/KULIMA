@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { ClipboardList, Truck, CheckCircle2, AlertTriangle, CreditCard, Banknote, Package, Car } from 'lucide-react';
+import { AdminDeliveryTracker } from '@/components/delivery/AdminDeliveryTracker';
 
 const C = {
   text:        'var(--d-text)',
@@ -189,7 +190,7 @@ async function DeliveriesList({ status }: { status: string }) {
   const supabase = await createClient();
 
   let q = (supabase.from as any)('delivery_requests')
-    .select('id, status, delivery_type, cargo_kg, cargo_type, pickup_district, dropoff_district, estimated_fare, distance_km, commission_amount, driver_earnings, payment_status, created_at, delivered_at, requester_id, transporter_id')
+    .select('id, status, delivery_type, cargo_kg, cargo_type, pickup_district, dropoff_district, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, estimated_fare, distance_km, commission_amount, driver_earnings, payment_status, created_at, delivered_at, requester_id, transporter_id')
     .order('created_at', { ascending: false })
     .limit(60);
 
@@ -198,17 +199,19 @@ async function DeliveriesList({ status }: { status: string }) {
   const { data: deliveries } = await q;
   const rows = (deliveries ?? []) as any[];
 
-  // Two-step join: fetch profile names for all referenced user IDs
+  // Two-step join: fetch profile names and phone numbers for all referenced user IDs
   const userIds = [...new Set(
     [...rows.map((r: any) => r.requester_id), ...rows.map((r: any) => r.transporter_id)].filter(Boolean) as string[]
   )];
 
-  const nameMap: Record<string, string> = {};
+  const profileMap: Record<string, { name: string; phone?: string | null }> = {};
   if (userIds.length > 0) {
     const { data: profiles } = await (supabase.from as any)('profiles')
-      .select('user_id, full_name')
+      .select('user_id, full_name, phone_number')
       .in('user_id', userIds);
-    (profiles ?? []).forEach((p: any) => { nameMap[p.user_id] = p.full_name ?? 'Unknown'; });
+    (profiles ?? []).forEach((p: any) => {
+      profileMap[p.user_id] = { name: p.full_name ?? 'Unknown', phone: p.phone_number ?? null };
+    });
   }
 
   if (rows.length === 0) {
@@ -228,8 +231,10 @@ async function DeliveriesList({ status }: { status: string }) {
       {rows.map((d: any) => {
         const st  = STATUS_CFG[d.status as keyof typeof STATUS_CFG] ?? STATUS_CFG.open;
         const typ = TYPE_CFG[d.delivery_type as keyof typeof TYPE_CFG]  ?? TYPE_CFG.standard;
-        const requesterName   = nameMap[d.requester_id]  ?? '—';
-        const transporterName = nameMap[d.transporter_id] ?? null;
+        const requesterProfile = profileMap[d.requester_id];
+        const transporterProfile = profileMap[d.transporter_id];
+        const requesterName   = requesterProfile?.name ?? '—';
+        const transporterName = transporterProfile?.name ?? null;
         const payColor        = d.payment_status === 'paid' ? C.greenMed : d.payment_status === 'failed' ? C.red : C.amber;
 
         return (
@@ -266,6 +271,25 @@ async function DeliveriesList({ status }: { status: string }) {
                     : <span className="text-[10px]" style={{ color: C.amber }}>No driver yet</span>
                   }
                 </div>
+
+                {['assigned', 'in_transit'].includes(d.status) && (
+                  <div>
+                    <AdminDeliveryTracker
+                      deliveryId={d.id}
+                      status={d.status}
+                      pickupDistrict={d.pickup_district}
+                      dropoffDistrict={d.dropoff_district}
+                      pickupCoords={d.pickup_lat != null && d.pickup_lng != null ? { lat: d.pickup_lat, lng: d.pickup_lng } : null}
+                      dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
+                      transporterName={transporterName}
+                      transporterPhone={transporterProfile?.phone}
+                      requesterName={requesterName}
+                      cargoType={d.cargo_type}
+                      cargoKg={d.cargo_kg}
+                      deliveryType={d.delivery_type}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Right: fare + commission + payment status */}

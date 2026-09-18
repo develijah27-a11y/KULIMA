@@ -185,6 +185,10 @@ function DeliveryRow({ d, showPay }: { d: any; showPay?: boolean }) {
               dropoffCoords={d.dropoff_lat != null && d.dropoff_lng != null ? { lat: d.dropoff_lat, lng: d.dropoff_lng } : null}
               otherPartyLabel={d.transporter?.full_name ?? 'Driver'}
               driverPhone={d.transporter?.phone_number}
+              cargoType={d.cargo_type}
+              cargoKg={d.cargo_kg}
+              deliveryType={d.delivery_type}
+              viewerRole="requester"
             />
           </div>
         )}
